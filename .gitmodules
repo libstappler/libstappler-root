@@ -1,0 +1,9 @@
+[submodule "build"]
+	path = build
+	url = ../libstappler-build.git
+[submodule "deps"]
+	path = deps
+	url = ../libstappler-deps.git
+[submodule "core"]
+	path = core
+	url = ../libstappler-core.git
