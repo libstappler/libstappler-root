@@ -210,7 +210,8 @@ SP_EXTERN_C int _spMain(argc, argv) {
 	memory::pool::push(mempool);
 
 	if (argc > 1) {
-		if (StringView(argv[1]) == "all") {
+		StringView testName(argv[1]);
+		if (testName == "all") {
 			Test::RunAll();
 		} else {
 			for (int i = 1; i < argc; ++ i) {

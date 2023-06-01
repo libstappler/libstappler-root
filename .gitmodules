@@ -7,3 +7,6 @@
 [submodule "core"]
 	path = core
 	url = ../libstappler-core.git
+[submodule "doc"]
+	path = doc
+	url = ../libstappler-doc.git

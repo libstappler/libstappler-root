@@ -65,7 +65,7 @@ struct PoolJsonTest : MemPoolTest {
 				v += (Time::now() - t).toMicroseconds();
 			}
 			stream << v / ntests;
-			return data;
+			return true;
 		});
 
 		runTest(stream, "PoolJsonTest", count, passed, [&] {
