@@ -10,3 +10,6 @@
 [submodule "doc"]
 	path = doc
 	url = ../libstappler-doc.git
+[submodule "xenolith"]
+	path = xenolith
+	url = git@github.com:libstappler/libstappler-xenolith.git
