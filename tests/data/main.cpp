@@ -56,7 +56,7 @@ static int parseOptionString(Value &ret, const StringView &str, int argc, const 
 }
 
 template <typename Interface>
-static void runTest(const Vector<Bytes> &bytes, data::EncodeFormat fmt) {
+static void runTest(std::ostream &out, const Vector<Bytes> &bytes, data::EncodeFormat fmt) {
 	uint64_t accum1 = 0;
 	uint64_t accum2 = 0;
 	auto t = Time::now();
@@ -64,6 +64,9 @@ static void runTest(const Vector<Bytes> &bytes, data::EncodeFormat fmt) {
 	Vector<data::ValueTemplate<Interface>> data;
 
 	size_t objects = 0;
+
+	size_t compressed = 0;
+	size_t uncompressed = 0;
 
 	for (auto &it : bytes) {
 		auto mempool = memory::pool::create();
@@ -90,6 +93,16 @@ static void runTest(const Vector<Bytes> &bytes, data::EncodeFormat fmt) {
 			t = Time::now();
 			auto d = data::write(it, fmt, reserve);
 			accum2 += (Time::now() - t).toMicros();
+			compressed += d.size();
+			if (fmt.compression != data::EncodeFormat::Compression::NoCompression) {
+				EncodeFormat fmt2;
+				fmt2.format = fmt.format;
+
+				auto d = data::write(it, fmt2, reserve);
+				uncompressed += d.size();
+			} else {
+				uncompressed += d.size();
+			}
 			if (!d.empty()) {
 				++ objects;
 			}
@@ -100,7 +113,7 @@ static void runTest(const Vector<Bytes> &bytes, data::EncodeFormat fmt) {
 		++ idx;
 	}
 
-	std::cout << accum1 << " " << accum2 << " (" << objects << " object)\n";
+	out << accum1 << ", " << accum2 << ", " << float(uncompressed) / float(compressed) << "\n";
 }
 
 SP_EXTERN_C int _spMain(argc, argv) {
@@ -141,15 +154,15 @@ SP_EXTERN_C int _spMain(argc, argv) {
 	Vector<Vector<Bytes>> testSources;
 
 	Vector<Pair<data::EncodeFormat, String>> formats {
-		pair(data::EncodeFormat::Pretty, "Format: Pretty     "),
-		pair(data::EncodeFormat::Json,   "Format: Json       "),
-		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::LZ4Compression),   "Format: Json/lz4   "),
-		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::LZ4HCCompression), "Format: Json/lz4HC "),
-		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::Brotli),           "Format: Json/Brotli"),
-		pair(data::EncodeFormat::Cbor,   "Format: Cbor       "),
-		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::LZ4Compression)  , "Format: Cbor/lz4   "),
-		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::LZ4HCCompression), "Format: Cbor/lz4HC "),
-		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::Brotli),           "Format: Cbor/Brotli"),
+		pair(data::EncodeFormat::Pretty, "Pretty,      "),
+		pair(data::EncodeFormat::Json,   "Json,        "),
+		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::LZ4Compression),   "Json/lz4,    "),
+		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::LZ4HCCompression), "Json/lz4HC,  "),
+		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::Brotli),           "Json/Brotli, "),
+		pair(data::EncodeFormat::Cbor,   "Cbor,        "),
+		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::LZ4Compression)  , "Cbor/lz4,    "),
+		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::LZ4HCCompression), "Cbor/lz4HC,  "),
+		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::Brotli),           "Cbor/Brotli, "),
 	};
 
 	testSources.resize(formats.size());
@@ -162,23 +175,42 @@ SP_EXTERN_C int _spMain(argc, argv) {
 		}
 	}
 
+	auto mempool2 = memory::pool::create();
+	StringStream tmp;
 	size_t i = 0;
 	for (auto &fmt : formats) {
-		std::cout << "Pool: " << fmt.second << ": ";
-		auto mempool = memory::pool::create();
-		memory::pool::push(mempool);
-		runTest<memory::PoolInterface>(testSources[i], fmt.first);
+		memory::pool::push(mempool2);
+		runTest<memory::PoolInterface>(tmp, testSources[i], fmt.first);
 		memory::pool::pop();
-		memory::pool::destroy(mempool);
+		memory::pool::clear(mempool2);
 		++ i;
 	}
 
-	i = 0;
-	for (auto &fmt : formats) {
-		std::cout << "Std: " << fmt.second << ": ";
-		runTest<Interface>(testSources[i], fmt.first);
-		++ i;
+	std::cout << "Type, Test, Read, Write, Compress\n";
+
+	size_t n = 16;
+
+	while (n > 0) {
+		i = 0;
+		for (auto &fmt : formats) {
+			std::cout << "Pool, " << fmt.second;
+			memory::pool::push(mempool2);
+			runTest<memory::PoolInterface>(std::cout, testSources[i], fmt.first);
+			memory::pool::pop();
+			memory::pool::clear(mempool2);
+			++ i;
+		}
+
+		i = 0;
+		for (auto &fmt : formats) {
+			std::cout << "Std,  " << fmt.second;
+			runTest<Interface>(std::cout, testSources[i], fmt.first);
+			++ i;
+		}
+		-- n;
 	}
+
+	memory::pool::destroy(mempool);
 
 	memory::pool::pop();
 

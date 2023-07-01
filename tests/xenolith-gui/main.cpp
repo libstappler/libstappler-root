@@ -32,11 +32,11 @@ THE SOFTWARE.
 
 #include "XLVkPlatform.h"
 #include "XLVkLoop.h"
-#include "XLCoreFrameEmitter.h"
+#include "XLCoreFrameRequest.h"
 #include "XLCoreFrameQueue.h"
+#include "XLMainLoop.h"
 
-#include "Queue.h"
-#include "MainLoop.h"
+#include "../xenolith-cli/src/Queue.h"
 
 static constexpr auto HELP_STRING(
 R"HelpString(sptest <options> <test-name|all>
@@ -69,50 +69,22 @@ int parseOptionString(Value &ret, const StringView &str, int argc, const char * 
 }
 #endif
 
-static void runQueue(MainLoop *mainLoop, core::Loop *glLoop, NoiseQueue *queue) {
-	// create frame request for queue on 1024x768 image
-	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(queue), core::FrameContraints{Extent2(1024, 768)});
-
-	auto inputData = Rc<NoiseDataInput>::alloc();
-	inputData->data = NoiseData{0, 0, 0.0f, 0.0f};
-
-	req->addInput(queue->getDataAttachment(), move(inputData));
-	req->setOutput(queue->getImageAttachment(), [glLoop, mainLoop] (core::FrameAttachmentData &data, bool success, Ref *) {
-		glLoop->captureImage([success, mainLoop] (core::ImageInfo info, BytesView view) {
-			if (!view.empty()) {
-				auto fmt = core::getImagePixelFormat(info.format);
-				bitmap::PixelFormat pixelFormat = bitmap::PixelFormat::Auto;
-				switch (fmt) {
-				case core::PixelFormat::A: pixelFormat = bitmap::PixelFormat::A8; break;
-				case core::PixelFormat::IA: pixelFormat = bitmap::PixelFormat::IA88; break;
-				case core::PixelFormat::RGB: pixelFormat = bitmap::PixelFormat::RGB888; break;
-				case core::PixelFormat::RGBA: pixelFormat = bitmap::PixelFormat::RGBA8888; break;
-				default: break;
-				}
-				if (pixelFormat != bitmap::PixelFormat::Auto) {
-					Bitmap bmp(view.data(), info.extent.width, info.extent.height, pixelFormat);
-					bmp.save(toString(Time::now().toMicros(), ".png"));
-				}
-			}
-			mainLoop->end();
-		}, data.image->getImage(), core::AttachmentLayout::General);
-		return true;
-	});
-
-	glLoop->runRenderQueue(move(req), 0);
-}
-
 static void run() {
-	// create main looper
-	auto mainLoop = Rc<MainLoop>::create("MainLoop", [] (uint64_t t, uint64_t dt) {
-		// std::cout << "Update: " << t << "\n";
-	});
-
 	// create graphics instance
 	auto instance = vk::platform::createInstance([] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
 		data.applicationName = StringView("xenolith-cli");
 		data.applicationVersion = XL_MAKE_API_VERSION(0, 0, 1, 0);
 		return true;
+	});
+
+	// create main looper
+	auto mainLoop = Rc<MainLoop>::create("MainLoop", MainLoopInfo{
+		.instance = instance,
+		.updateCallback = [] (const MainLoop &loop, const UpdateTime &time) {
+			if (time.app == 0) {
+
+			}
+		}
 	});
 
 	// define device selector/initializer
@@ -124,24 +96,8 @@ static void run() {
 	core::LoopInfo info;
 	info.platformData = data;
 
-	// create graphics loop
-	auto loop = instance->makeLoop(move(info));
-
-	// wait until graphics hardware initialized
-	loop->waitRinning();
-
-	// create pipeline queue
-	auto queue = Rc<NoiseQueue>::create();
-
-	// then compile it on graphics device
-	loop->compileRenderQueue(queue, [mainLoop = mainLoop.get(), loop = loop.get(), queue] (bool success) {
-		mainLoop->onMainThread([success, mainLoop, loop, queue] {
-			runQueue(mainLoop, loop, queue);
-		}, nullptr);
-	});
-
 	// run main loop with 2 additional threads and 0.5sec update interval
-	mainLoop->run(2, TimeInterval::microseconds(500000));
+	mainLoop->run(move(info), 2, TimeInterval::microseconds(500000));
 }
 
 SP_EXTERN_C int _spMain(argc, argv) {

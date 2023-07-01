@@ -20,11 +20,11 @@
  THE SOFTWARE.
  **/
 
-#include "XLCommon.h"
+#include "../../xenolith-cli/stappler-build/host/gcc/debug/include/XLCommon.h"
 
 namespace stappler::xenolith::test {
 
-#include "noise.comp"
+#include "../../xenolith-cli/stappler-build/host/glslangValidator/debug/embedded/home/sbkarr/stappler/libstappler-root/tests/xenilith-cli/shaders/noise.comp"
 
 SpanView<uint32_t> NoiseComp((const uint32_t *)noise_comp, noise_comp_len / sizeof(uint32_t));
 

@@ -20,8 +20,8 @@
  THE SOFTWARE.
  **/
 
-#ifndef TESTS_XENILITH_CLI_SRC_QUEUE_H_
-#define TESTS_XENILITH_CLI_SRC_QUEUE_H_
+#ifndef TESTS_XENOLITH_CLI_SRC_QUEUE_H_
+#define TESTS_XENOLITH_CLI_SRC_QUEUE_H_
 
 #include "XLVkQueuePass.h"
 #include "XLCoreAttachment.h"
@@ -57,4 +57,4 @@ protected:
 
 }
 
-#endif /* TESTS_XENILITH_CLI_SRC_QUEUE_H_ */
+#endif /* TESTS_XENOLITH_CLI_SRC_QUEUE_H_ */

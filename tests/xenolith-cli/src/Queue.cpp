@@ -20,8 +20,9 @@
  THE SOFTWARE.
  **/
 
-#include "XLCommon.h"
-#include "Queue.h"
+#include "../../xenolith-cli/src/Queue.h"
+
+#include "../../xenolith-cli/stappler-build/host/gcc/debug/include/XLCommon.h"
 #include "XLVkAttachment.h"
 #include "XLVkRenderPass.h"
 #include "XLVkPipeline.h"
