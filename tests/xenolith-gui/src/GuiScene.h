@@ -20,12 +20,22 @@
  THE SOFTWARE.
  **/
 
-#include "XLCommon.h"
+#ifndef TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
+#define TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
+
+#include "XLScene.h"
 
 namespace stappler::xenolith::test {
 
-#include "noise.comp"
+class GuiScene : public Scene {
+public:
+	virtual ~GuiScene();
 
-SpanView<uint32_t> NoiseComp((const uint32_t *)noise_comp, noise_comp_len / sizeof(uint32_t));
+	virtual bool init(MainLoop *loop, const core::FrameContraints &);
+
+protected:
+};
 
 }
+
+#endif /* TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_ */

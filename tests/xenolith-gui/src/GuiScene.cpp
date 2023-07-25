@@ -20,12 +20,41 @@
  THE SOFTWARE.
  **/
 
-#include "XLCommon.h"
+#include "GuiScene.h"
+#include "GuiSceneContent.h"
+
+#include "backend/vk/XL2dVkShadowPass.h"
 
 namespace stappler::xenolith::test {
 
-#include "noise.comp"
+GuiScene::~GuiScene() { }
 
-SpanView<uint32_t> NoiseComp((const uint32_t *)noise_comp, noise_comp_len / sizeof(uint32_t));
+bool GuiScene::init(MainLoop *loop, const core::FrameContraints &constraints) {
+	core::Queue::Builder builder("Loader");
+
+	basic2d::vk::ShadowPass::RenderQueueInfo info{
+		loop, Extent2(constraints.extent.width, constraints.extent.height), basic2d::vk::ShadowPass::Flags::None,
+		[&] (core::Resource::Builder &resourceBuilder) {
+			resourceBuilder.addImage("xenolith-1-480.png",
+					core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, core::ImageHints::Opaque),
+					FilePath("resources/xenolith-1-480.png"));
+			resourceBuilder.addImage("xenolith-2-480.png",
+					core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, core::ImageHints::Opaque),
+					FilePath("resources/xenolith-2-480.png"));
+		}
+	};
+
+	basic2d::vk::ShadowPass::makeDefaultRenderQueue(builder, info);
+
+	if (!Scene::init(move(builder), constraints)) {
+		return false;
+	}
+
+	auto content = Rc<GuiSceneContent>::create();
+
+	setContent(content);
+
+	return true;
+}
 
 }

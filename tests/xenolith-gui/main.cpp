@@ -30,13 +30,12 @@ THE SOFTWARE.
 #include "SPData.h"
 #endif
 
-#include "XLVkPlatform.h"
-#include "XLVkLoop.h"
+#include "XLVkGuiMainLoop.h"
 #include "XLCoreFrameRequest.h"
 #include "XLCoreFrameQueue.h"
-#include "XLMainLoop.h"
+#include "XLView.h"
 
-#include "../xenolith-cli/src/Queue.h"
+#include "GuiScene.h"
 
 static constexpr auto HELP_STRING(
 R"HelpString(sptest <options> <test-name|all>
@@ -69,35 +68,80 @@ int parseOptionString(Value &ret, const StringView &str, int argc, const char * 
 }
 #endif
 
+static constexpr uint32_t SwapchainImageCount = 3;
+
+static core::SwapchainConfig selectConfig(const core::SurfaceInfo &info) {
+	core::SwapchainConfig ret;
+	ret.extent = info.currentExtent;
+	ret.imageCount = std::max(uint32_t(2), info.minImageCount);
+
+	ret.presentMode = info.presentModes.front();
+
+	if (std::find(info.presentModes.begin(), info.presentModes.end(), core::PresentMode::Immediate) != info.presentModes.end()) {
+		ret.presentModeFast = core::PresentMode::Immediate;
+	}
+
+	auto it = info.formats.begin();
+	while (it != info.formats.end()) {
+		if (it->first != platform::getCommonFormat()) {
+			++ it;
+		} else {
+			break;
+		}
+	}
+
+	if (it == info.formats.end()) {
+		ret.imageFormat = info.formats.front().first;
+		ret.colorSpace = info.formats.front().second;
+	} else {
+		ret.imageFormat = it->first;
+		ret.colorSpace = it->second;
+	}
+
+	if ((info.supportedCompositeAlpha & core::CompositeAlphaFlags::Opaque) != core::CompositeAlphaFlags::None) {
+		ret.alpha = core::CompositeAlphaFlags::Opaque;
+	} else if ((info.supportedCompositeAlpha & core::CompositeAlphaFlags::Inherit) != core::CompositeAlphaFlags::None) {
+		ret.alpha = core::CompositeAlphaFlags::Inherit;
+	}
+
+	ret.transfer = (info.supportedUsageFlags & core::ImageUsage::TransferDst) != core::ImageUsage::None;
+
+	if (ret.presentMode == core::PresentMode::Mailbox) {
+		ret.imageCount = std::max(SwapchainImageCount, ret.imageCount);
+	}
+
+	ret.transform = info.currentTransform;
+	return ret;
+}
+
 static void run() {
 	// create graphics instance
-	auto instance = vk::platform::createInstance([] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
-		data.applicationName = StringView("xenolith-cli");
-		data.applicationVersion = XL_MAKE_API_VERSION(0, 0, 1, 0);
-		return true;
-	});
 
-	// create main looper
-	auto mainLoop = Rc<MainLoop>::create("MainLoop", MainLoopInfo{
-		.instance = instance,
-		.updateCallback = [] (const MainLoop &loop, const UpdateTime &time) {
-			if (time.app == 0) {
+	auto mainLoop = Rc<vk::GuiMainLoop>::create("xenolith-gui");
 
-			}
+	MainLoop::CallbackInfo callbacks({
+		.initCallback = [&] (const MainLoop &) {
+			mainLoop->addView(ViewInfo{
+				.name = "xenolith-gui",
+				.bundleId = "xenolith-gui",
+				.selectConfig = [] (View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
+					return selectConfig(info);
+				},
+				.onCreated = [mainLoop = mainLoop.get()] (View &view, const core::FrameContraints &constraints) {
+					auto scene = Rc<GuiScene>::create(mainLoop, constraints);
+					view.getDirector()->runScene(move(scene));
+				},
+				.onClosed = [mainLoop = mainLoop.get()] (View &view) {
+					mainLoop->end();
+				}
+			});
+		},
+		.updateCallback = [&] (const MainLoop &, const UpdateTime &time) {
+
 		}
 	});
 
-	// define device selector/initializer
-	auto data = Rc<vk::LoopData>::alloc();
-	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
-		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
-	};
-
-	core::LoopInfo info;
-	info.platformData = data;
-
-	// run main loop with 2 additional threads and 0.5sec update interval
-	mainLoop->run(move(info), 2, TimeInterval::microseconds(500000));
+	mainLoop->run(callbacks);
 }
 
 SP_EXTERN_C int _spMain(argc, argv) {

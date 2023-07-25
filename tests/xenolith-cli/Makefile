@@ -44,6 +44,6 @@ LOCAL_INCLUDES_OBJS := src
 
 LOCAL_MAIN := main.cpp
 
-LOCAL_SHADERS_DIRS := shaders
+LOCAL_SHADERS_DIR := shaders
 
 include $(STAPPLER_ROOT)/build/make/universal.mk

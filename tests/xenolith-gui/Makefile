@@ -24,22 +24,23 @@ STAPPLER_ROOT ?= ../..
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 
 LOCAL_OUTDIR := stappler-build
-LOCAL_EXECUTABLE := xenolith-cli
+LOCAL_EXECUTABLE := xenolith-gui
 
 LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/core/stappler-modules.mk \
 	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk
 
 LOCAL_MODULES ?= \
-	xenolith_backend_vkgui
+	xenolith_backend_vkgui \
+	xenolith_renderer_basic2d
 
 LOCAL_ROOT = .
 
-LOCAL_SRCS_DIRS :=
+LOCAL_SRCS_DIRS := src
 LOCAL_SRCS_OBJS :=
 
 LOCAL_INCLUDES_DIRS :=
-LOCAL_INCLUDES_OBJS :=
+LOCAL_INCLUDES_OBJS := src
 
 LOCAL_MAIN := main.cpp
 

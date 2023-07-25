@@ -188,7 +188,7 @@ EaJgTeg1KHGtAgMBAAE=
 -----END RSA PUBLIC KEY-----
 )PubKey");
 
-static constexpr StringView SPUNUSED s_PrivSsh(
+SPUNUSED static constexpr StringView s_PrivSsh(
 R"PrivKey(-----BEGIN OPENSSH PRIVATE KEY-----
 b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
 NhAAAAAwEAAQAAAYEA3uI8dE+X8LPliBrIqNWzpWM3Wm/lbz7/jEDbr0PICvIhNIqGBCFF

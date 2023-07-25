@@ -123,14 +123,7 @@ static void run() {
 	});
 
 	// create main looper
-	auto mainLoop = Rc<MainLoop>::create("MainLoop", MainLoopInfo{
-		.instance = instance,
-		.updateCallback = [] (const MainLoop &loop, const UpdateTime &time) {
-			if (time.app == 0) {
-				compileQueue(loop);
-			}
-		}
-	});
+	auto mainLoop = Rc<MainLoop>::create("MainLoop", instance.get());
 
 	// define device selector/initializer
 	auto data = Rc<vk::LoopData>::alloc();
@@ -138,11 +131,19 @@ static void run() {
 		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
 	};
 
+	MainLoop::CallbackInfo callbackInfo {
+		.updateCallback = [] (const MainLoop &loop, const UpdateTime &time) {
+			if (time.app == 0) {
+				compileQueue(loop);
+			}
+		}
+	};
+
 	core::LoopInfo info;
 	info.platformData = data;
 
 	// run main loop with 2 additional threads and 0.5sec update interval
-	mainLoop->run(move(info), 2, TimeInterval::microseconds(500000));
+	mainLoop->run(callbackInfo, move(info), 2, TimeInterval::microseconds(500000));
 }
 
 SP_EXTERN_C int _spMain(argc, argv) {

@@ -247,7 +247,7 @@ auto NoisePass::makeFrameHandle(const FrameQueue &queue) -> Rc<QueuePassHandle> 
 }
 
 bool NoisePassHandle::prepare(FrameQueue &q, Function<void(bool)> &&cb) {
-	auto pass = (NoisePass *)_renderPass.get();
+	auto pass = (NoisePass *)_queuePass.get();
 
 	if (auto imageAttachment = q.getAttachment(pass->getImageAttachment())) {
 		_image = (const vk::ImageAttachmentHandle *)imageAttachment->handle.get();

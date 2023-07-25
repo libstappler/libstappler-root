@@ -20,12 +20,27 @@
  THE SOFTWARE.
  **/
 
-#include "XLCommon.h"
+#include "GuiSceneContent.h"
 
 namespace stappler::xenolith::test {
 
-#include "noise.comp"
+GuiSceneContent::~GuiSceneContent() { }
 
-SpanView<uint32_t> NoiseComp((const uint32_t *)noise_comp, noise_comp_len / sizeof(uint32_t));
+bool GuiSceneContent::init() {
+	if (!SceneContent2d::init()) {
+		return false;
+	}
+
+	_layer = addChild(Rc<basic2d::Layer>::create(Color::Red_500));
+	_layer->setContentSize(Size2(48.0f, 48.0f));
+
+	return true;
+}
+
+void GuiSceneContent::onContentSizeDirty() {
+	SceneContent2d::onContentSizeDirty();
+
+	_layer->setPosition(_contentSize / 2.0f);
+}
 
 }
