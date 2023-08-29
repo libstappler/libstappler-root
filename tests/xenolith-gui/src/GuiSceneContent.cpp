@@ -33,6 +33,19 @@ bool GuiSceneContent::init() {
 
 	_layer = addChild(Rc<basic2d::Layer>::create(Color::Red_500));
 	_layer->setContentSize(Size2(48.0f, 48.0f));
+	_layer->setAnchorPoint(Anchor::Middle);
+
+	_layer2 = addChild(Rc<basic2d::Layer>::create(Color::Blue_500));
+	_layer2->setContentSize(Size2(48.0f, 48.0f));
+	_layer2->setAnchorPoint(Anchor::Middle);
+
+	_layer3 = addChild(Rc<basic2d::Layer>::create(Color::Green_500));
+	_layer3->setContentSize(Size2(48.0f, 48.0f));
+	_layer3->setAnchorPoint(Anchor::Middle);
+
+	_layer4 = addChild(Rc<basic2d::Layer>::create(Color::Grey_500));
+	_layer4->setContentSize(Size2(48.0f, 48.0f));
+	_layer4->setAnchorPoint(Anchor::Middle);
 
 	return true;
 }
@@ -40,7 +53,10 @@ bool GuiSceneContent::init() {
 void GuiSceneContent::onContentSizeDirty() {
 	SceneContent2d::onContentSizeDirty();
 
-	_layer->setPosition(_contentSize / 2.0f);
+	_layer->setPosition(_contentSize / 2.0f + Vec2(48.0f, 48.0f));
+	_layer2->setPosition(_contentSize / 2.0f + Vec2(-48.0f, 48.0f));
+	_layer3->setPosition(_contentSize / 2.0f + Vec2(48.0f, -48.0f));
+	_layer4->setPosition(_contentSize / 2.0f + Vec2(-48.0f, -48.0f));
 }
 
 }

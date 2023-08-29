@@ -32,11 +32,14 @@ LOCAL_MODULES_PATHS = \
 
 LOCAL_MODULES ?= \
 	xenolith_backend_vkgui \
-	xenolith_renderer_basic2d
+	xenolith_renderer_material2d \
+	xenolith_resources_icons \
+	xenolith_resources_network \
+	xenolith_font
 
 LOCAL_ROOT = .
 
-LOCAL_SRCS_DIRS := src
+LOCAL_SRCS_DIRS := src proj.android/src
 LOCAL_SRCS_OBJS :=
 
 LOCAL_INCLUDES_DIRS :=
@@ -45,5 +48,13 @@ LOCAL_INCLUDES_OBJS := src
 LOCAL_MAIN := main.cpp
 
 LOCAL_SHADERS_DIRS :=
+
+
+# Android config
+LOCAL_ANDROID_MK := proj.android/app/Android.mk # path to root Android.mk
+LOCAL_APPLICATION_MK := proj.android/app/Application.mk # path to Application.mk
+LOCAL_ANDROID_TARGET := application # target to build
+LOCAL_ANDROID_PLATFORM := android-24 # android platform version
+
 
 include $(STAPPLER_ROOT)/build/make/universal.mk

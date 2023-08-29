@@ -45,14 +45,14 @@ struct GeomTest : Test {
 			geom::Vec3 vec3_1(0.5f, -1.5f, 2.5f);
 			geom::Vec4 vec4_1(0.5f, -1.5f, 2.5f, -3.5f);
 
-			return geom::abs(-1.5f) == std::abs(-1.5f)
-					&& geom::abs(vec2_1) == geom::Vec2(std::abs(vec2_1.x), std::abs(vec2_1.y))
-					&& geom::abs(vec3_1) == geom::Vec3(std::abs(vec3_1.x), std::abs(vec3_1.y), std::abs(vec3_1.z))
-					&& geom::abs(vec4_1) == geom::Vec4(std::abs(vec4_1.x), std::abs(vec4_1.y), std::abs(vec4_1.z), std::abs(vec4_1.w))
-					&& geom::floor(-1.5f) == std::floor(-1.5f)
-					&& geom::floor(vec2_1) == geom::Vec2(std::floor(vec2_1.x), std::floor(vec2_1.y))
-					&& geom::floor(vec3_1) == geom::Vec3(std::floor(vec3_1.x), std::floor(vec3_1.y), std::floor(vec3_1.z))
-					&& geom::floor(vec4_1) == geom::Vec4(std::floor(vec4_1.x), std::floor(vec4_1.y), std::floor(vec4_1.z), std::floor(vec4_1.w));
+			return geom::_abs(-1.5f) == std::abs(-1.5f)
+					&& geom::_abs(vec2_1) == geom::Vec2(std::abs(vec2_1.x), std::abs(vec2_1.y))
+					&& geom::_abs(vec3_1) == geom::Vec3(std::abs(vec3_1.x), std::abs(vec3_1.y), std::abs(vec3_1.z))
+					&& geom::_abs(vec4_1) == geom::Vec4(std::abs(vec4_1.x), std::abs(vec4_1.y), std::abs(vec4_1.z), std::abs(vec4_1.w))
+					&& geom::_floor(-1.5f) == std::floor(-1.5f)
+					&& geom::_floor(vec2_1) == geom::Vec2(std::floor(vec2_1.x), std::floor(vec2_1.y))
+					&& geom::_floor(vec3_1) == geom::Vec3(std::floor(vec3_1.x), std::floor(vec3_1.y), std::floor(vec3_1.z))
+					&& geom::_floor(vec4_1) == geom::Vec4(std::floor(vec4_1.x), std::floor(vec4_1.y), std::floor(vec4_1.z), std::floor(vec4_1.w));
 		});
 
 		_desc = stream.str();

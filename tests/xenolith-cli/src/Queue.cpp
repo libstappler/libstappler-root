@@ -20,14 +20,19 @@
  THE SOFTWARE.
  **/
 
-#include "../../xenolith-cli/src/Queue.h"
+#include "XLCommon.h"
+#include "Queue.h"
 
-#include "../../xenolith-cli/stappler-build/host/gcc/debug/include/XLCommon.h"
+#include "SPBitmap.h"
+#include "XLApplication.h"
+#include "XLVkPlatform.h"
+#include "XLVkLoop.h"
 #include "XLVkAttachment.h"
 #include "XLVkRenderPass.h"
 #include "XLVkPipeline.h"
 #include "XLVkBuffer.h"
 #include "XLCoreFrameQueue.h"
+#include "XLCoreFrameRequest.h"
 
 namespace stappler::xenolith::test {
 
@@ -37,7 +42,7 @@ class NoiseDataAttachment : public vk::BufferAttachment {
 public:
 	virtual ~NoiseDataAttachment();
 
-	virtual bool init(AttachmentBuilder &);
+	virtual bool init(AttachmentBuilder &) override;
 
 	virtual bool validateInput(const Rc<core::AttachmentInputData> &) const override;
 
@@ -92,11 +97,54 @@ public:
 	virtual bool prepare(FrameQueue &q, Function<void(bool)> &&cb) override;
 
 protected:
-	virtual Vector<const vk::CommandBuffer *> doPrepareCommands(FrameHandle &);
+	virtual Vector<const vk::CommandBuffer *> doPrepareCommands(FrameHandle &) override;
 
 	const vk::ImageAttachmentHandle *_image = nullptr;
 };
 
+void NoiseQueue::runTest() {
+	Application::CommonInfo commonInfo({
+		.bundleName = String("org.stappler.xenolith.cli"),
+		.applicationName = String("xenolith-cli"),
+		.applicationVersion = String("0.1.0")
+	});
+
+	auto instance = vk::platform::createInstance([&] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
+		data.applicationName = commonInfo.applicationName;
+		data.applicationVersion = commonInfo.applicationVersion;
+		return true;
+	});
+
+	// create main looper
+	auto app = Rc<Application>::create(move(commonInfo), move(instance));
+
+	// define device selector/initializer
+	auto data = Rc<vk::LoopData>::alloc();
+	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
+		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
+	};
+
+	Application::CallbackInfo callbackInfo({
+		.updateCallback = [] (const Application &app, const UpdateTime &time) {
+			if (time.app == 0) {
+				auto queue = Rc<NoiseQueue>::create();
+
+				// then compile it on graphics device
+				app.getGlLoop()->compileQueue(queue, [app = &app, queue] (bool success) {
+					Application::getInstance()->performOnMainThread([success, app, queue] {
+						queue->run(app);
+					}, nullptr);
+				});
+			}
+		}
+	});
+
+	core::LoopInfo info;
+	info.platformData = data;
+
+	// run main loop with 2 additional threads and 0.5sec update interval
+	app->run(callbackInfo, move(info), 2, TimeInterval::microseconds(500000));
+}
 
 NoiseQueue::~NoiseQueue() { }
 
@@ -131,6 +179,38 @@ bool NoiseQueue::init() {
 		return true;
 	}
 	return false;
+}
+
+void NoiseQueue::run(const Application *app) {
+	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this), core::FrameContraints{Extent2(1024, 768)});
+
+	auto inputData = Rc<NoiseDataInput>::alloc();
+	inputData->data = NoiseData{0, 0, 0.0f, 0.0f};
+
+	req->addInput(getDataAttachment(), move(inputData));
+	req->setOutput(getImageAttachment(), [app] (core::FrameAttachmentData &data, bool success, Ref *) {
+		app->getGlLoop()->captureImage([success, app] (core::ImageInfoData info, BytesView view) {
+			if (!view.empty()) {
+				auto fmt = core::getImagePixelFormat(info.format);
+				bitmap::PixelFormat pixelFormat = bitmap::PixelFormat::Auto;
+				switch (fmt) {
+				case core::PixelFormat::A: pixelFormat = bitmap::PixelFormat::A8; break;
+				case core::PixelFormat::IA: pixelFormat = bitmap::PixelFormat::IA88; break;
+				case core::PixelFormat::RGB: pixelFormat = bitmap::PixelFormat::RGB888; break;
+				case core::PixelFormat::RGBA: pixelFormat = bitmap::PixelFormat::RGBA8888; break;
+				default: break;
+				}
+				if (pixelFormat != bitmap::PixelFormat::Auto) {
+					Bitmap bmp(view.data(), info.extent.width, info.extent.height, pixelFormat);
+					bmp.save(toString(Time::now().toMicros(), ".png"));
+				}
+			}
+			app->end();
+		}, data.image->getImage(), core::AttachmentLayout::General);
+		return true;
+	});
+
+	app->getGlLoop()->runRenderQueue(move(req), 0);
 }
 
 NoiseDataAttachment::~NoiseDataAttachment() { }

@@ -38,6 +38,9 @@ public:
 
 protected:
 	basic2d::Layer *_layer = nullptr;
+	basic2d::Layer *_layer2 = nullptr;
+	basic2d::Layer *_layer3 = nullptr;
+	basic2d::Layer *_layer4 = nullptr;
 };
 
 }

@@ -51,103 +51,105 @@ Options are one of:
 	--authorized - установить роль по умолчанию
 	--system - установить роль по умолчанию)HelpString");
 
-static int parseOptionSwitch(Value &ret, char c, const char *str) {
+struct Options {
+	db::AccessRoleId role = db::AccessRoleId::Admin;
+	String driver = "pgsql";
+	String host = "localhost";
+	String dbname = "dbtest";
+	String user = "admin";
+	String password = "admin";
+	String data;
+
+	bool help = false;
+	bool verbose = false;
+
+	Value encode() const {
+		Value ret;
+		ret.setString(driver, "driver");
+		ret.setString(host, "host");
+		ret.setString(dbname, "dbname");
+		ret.setString(user, "user");
+		ret.setString(password, "password");
+		ret.setString(data, "data");
+		if (help) { ret.setBool(true, "help"); }
+		if (verbose) { ret.setBool(true, "verbose"); }
+		ret.setInteger(toInt(role), "role");
+		return ret;
+	}
+};
+
+static int parseOptionSwitch(Options &ret, char c, const char *str) {
 	if (c == 'h') {
-		ret.setBool(true, "help");
+		ret.help = true;
 	} else if (c == 'v') {
-		ret.setBool(true, "verbose");
+		ret.verbose = true;
 	}
 	return 1;
 }
 
-static int parseOptionString(Value &ret, const StringView &str, int argc, const char * argv[]) {
+static int parseOptionString(Options &ret, const StringView &str, int argc, const char * argv[]) {
 	if (str == "help") {
-		ret.setBool(true, "help");
+		ret.help = true;
 	} else if (str == "verbose") {
-		ret.setBool(true, "verbose");
+		ret.verbose = true;
 	} else if (str == "admin") {
-		ret.setString("admin", "role");
+		ret.role = db::AccessRoleId::Admin;
 	} else if (str == "nobody") {
-		ret.setString("nobody", "role");
+		ret.role = db::AccessRoleId::Nobody;
 	} else if (str == "authorized") {
-		ret.setString("authorized", "role");
+		ret.role = db::AccessRoleId::Authorized;
 	} else if (str == "system") {
-		ret.setString("system", "role");
+		ret.role = db::AccessRoleId::System;
 	} else if (str.starts_with("data=")) {
-		ret.setString(str.sub("data="_len), "data");
+		ret.data = str.sub("data="_len).str<Interface>();
 	} else if (str.starts_with("user=")) {
-		ret.setString(str.sub("user="_len), "user");
+		ret.user = str.sub("user="_len).str<Interface>();
 	} else if (str.starts_with("password=")) {
-		ret.setString(str.sub("password="_len), "password");
+		ret.password = str.sub("password="_len).str<Interface>();
 	} else if (str.starts_with("dbname=")) {
-		ret.setString(str.sub("dbname="_len), "dbname");
+		ret.password = str.sub("dbname="_len).str<Interface>();
 	}
 	return 1;
 }
 
 SP_EXTERN_C int _spMain(argc, argv) {
-	Value opts = data::parseCommandLineOptions<Interface>(argc, argv,
+	auto opts = data::parseCommandLineOptions<Interface, Options>(argc, argv,
 			&parseOptionSwitch, &parseOptionString);
-	if (opts.getBool("help")) {
+	if (opts.first.help) {
 		std::cout << HELP_STRING << "\n";
 		return 0;
 	}
 
-	if (opts.getBool("verbose")) {
+	if (opts.first.verbose) {
 		std::cout << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
 		std::cout << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
 		std::cout << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
 		std::cout << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
-		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts << "\n";
-	}
-
-	Value params;
-	params.setString("pgsql", "driver");
-	params.setString("localhost", "host");
-	params.setString("dbtest", "dbname");
-	params.setString("admin", "user");
-	params.setString("admin", "password");
-
-	if (opts.isString("user")) {
-		params.setString(opts.getString("user"), "user");
-	}
-	if (opts.isString("password")) {
-		params.setString(opts.getString("password"), "password");
-	}
-	if (opts.isString("dbname")) {
-		params.setString(opts.getString("dbname"), "dbname");
-	}
-
-	filesystem::mkdir_recursive(".db", false);
-
-	db::AccessRoleId roleId = db::AccessRoleId::Admin;
-	if (opts.isString("role")) {
-		auto role = opts.getString("role");
-		if (role == "admin") {
-			roleId = db::AccessRoleId::Admin;
-		} else if (role == "nobody") {
-			roleId = db::AccessRoleId::Nobody;
-		} else if (role == "authorized") {
-			roleId = db::AccessRoleId::Authorized;
-		} else if (role == "system") {
-			roleId = db::AccessRoleId::System;
+		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts.first.encode() << "\n";
+		std::cout << " Arguments: \n";
+		for (auto &it : opts.second) {
+			std::cout << "\t" << it << "\n";
 		}
 	}
 
-	if (opts.getValue("args").size() > 1) {
-		auto arg = StringView(opts.getValue("args").getString(1));
+	Value params = opts.first.encode();
+
+	filesystem::mkdir_recursive(".db", false);
+
+	if (opts.second.size() > 1) {
+		auto arg = StringView(opts.second.at(1));
 		if (StringView(arg).starts_with("update-test-")) {
 			arg += "update-test-"_len;
 			Server server(params, [&] (memory::pool_t *pool) -> Rc<ServerScheme> {
 				return Rc<SchemeUpdateTest>::alloc(pool, arg.readInteger(10).get(0));
-			}, roleId);
+			}, opts.first.role);
 			return 0;
 		} else if (arg == "virtual-test") {
 			Rc<SchemeVirtualTest> test;
 			Server server(params, [&] (memory::pool_t *pool) -> Rc<ServerScheme> {
 				test = Rc<SchemeVirtualTest>::alloc(pool, arg.readInteger(10).get(0));
 				return test;
-			}, roleId);
+			}, opts.first.role);
 
 			server.perform([&] (const db::Transaction &t) {
 				test->runTest(t);
@@ -159,7 +161,7 @@ SP_EXTERN_C int _spMain(argc, argv) {
 			Server server(params, [&] (memory::pool_t *pool) -> Rc<ServerScheme> {
 				test = Rc<SchemeRelationTest>::alloc(pool, arg.readInteger(10).get(0));
 				return test;
-			}, roleId);
+			}, opts.first.role);
 
 			int64_t id = int64_t(Time::now().toMicros());
 
@@ -178,7 +180,7 @@ SP_EXTERN_C int _spMain(argc, argv) {
 			Server server(params, [&] (memory::pool_t *pool) -> Rc<ServerScheme> {
 				test = Rc<SchemeDeltaTest>::alloc(pool);
 				return test;
-			}, roleId);
+			}, opts.first.role);
 
 			test->runTestGlobal(server);
 			return 0;
@@ -187,7 +189,7 @@ SP_EXTERN_C int _spMain(argc, argv) {
 			Server server(params, [&] (memory::pool_t *pool) -> Rc<ServerScheme> {
 				test = Rc<SchemeCompressionTest>::alloc(pool);
 				return test;
-			}, roleId);
+			}, opts.first.role);
 
 			server.perform([&] (const db::Transaction &t) {
 				test->runTest(t);
@@ -199,7 +201,7 @@ SP_EXTERN_C int _spMain(argc, argv) {
 			Server server(params, [&] (memory::pool_t *pool) -> Rc<ServerScheme> {
 				test = Rc<SchemeAccessTest>::alloc(pool);
 				return test;
-			}, roleId);
+			}, opts.first.role);
 
 			server.perform([&] (const db::Transaction &t) {
 				test->runTest(t);
@@ -211,7 +213,7 @@ SP_EXTERN_C int _spMain(argc, argv) {
 
 	Server server(params, [] (memory::pool_t *pool) -> Rc<ServerScheme> {
 		return Rc<ServerScheme>::alloc(pool);
-	}, roleId);
+	}, opts.first.role);
 
 	return 0;
 }

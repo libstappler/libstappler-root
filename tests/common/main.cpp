@@ -188,21 +188,25 @@ int parseOptionString(Value &ret, const StringView &str, int argc, const char * 
 
 SP_EXTERN_C int _spMain(argc, argv) {
 #if MODULE_STAPPLER_DATA
-	Value opts = data::parseCommandLineOptions<Interface>(argc, argv,
+	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv,
 			&parseOptionSwitch, &parseOptionString);
-	if (opts.getBool("help")) {
+	if (opts.first.getBool("help")) {
 		std::cout << HELP_STRING << "\n";
 		return 0;
 	}
 
-	if (opts.getBool("verbose")) {
+	if (opts.first.getBool("verbose")) {
 #if MODULE_STAPPLER_FILESYSTEM
 		std::cout << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
 		std::cout << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
 		std::cout << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
 		std::cout << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
 #endif
-		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts << "\n";
+		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts.first << "\n";
+		std::cout << " Arguments: \n";
+		for (auto &it : opts.second) {
+			std::cout << "\t" << it << "\n";
+		}
 	}
 #endif
 

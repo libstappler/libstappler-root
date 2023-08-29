@@ -138,7 +138,7 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 			for (auto &it : initParams) {
 				out << "\n\t" << it.first << ": " << it.second;
 			}
-			log::vtext("Server", "Fail to initialize DB with params: ", out.str());
+			log::error("Server", "Fail to initialize DB with params: ", out.str());
 		}
 	}, _staticPool);
 

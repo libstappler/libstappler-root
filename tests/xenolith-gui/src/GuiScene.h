@@ -23,15 +23,15 @@
 #ifndef TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
 #define TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
 
-#include "XLScene.h"
+#include "XL2dScene.h"
 
 namespace stappler::xenolith::test {
 
-class GuiScene : public Scene {
+class GuiScene : public basic2d::Scene2d {
 public:
 	virtual ~GuiScene();
 
-	virtual bool init(MainLoop *loop, const core::FrameContraints &);
+	virtual bool init(Application *loop, const core::FrameContraints &);
 
 protected:
 };

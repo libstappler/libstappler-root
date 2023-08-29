@@ -24,7 +24,6 @@ THE SOFTWARE.
 #include "SPCommon.h"
 #include "SPMemory.h"
 #include "SPTime.h"
-#include "SPBitmap.h"
 
 #if MODULE_STAPPLER_DATA
 #include "SPData.h"
@@ -34,7 +33,7 @@ THE SOFTWARE.
 #include "XLVkLoop.h"
 #include "XLCoreFrameRequest.h"
 #include "XLCoreFrameQueue.h"
-#include "XLMainLoop.h"
+#include "XLApplication.h"
 
 #include "Queue.h"
 
@@ -69,107 +68,34 @@ int parseOptionString(Value &ret, const StringView &str, int argc, const char * 
 }
 #endif
 
-static void runQueue(const MainLoop *mainLoop, NoiseQueue *queue) {
-	// create frame request for queue on 1024x768 image
-	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(queue), core::FrameContraints{Extent2(1024, 768)});
-
-	auto inputData = Rc<NoiseDataInput>::alloc();
-	inputData->data = NoiseData{0, 0, 0.0f, 0.0f};
-
-	req->addInput(queue->getDataAttachment(), move(inputData));
-	req->setOutput(queue->getImageAttachment(), [mainLoop] (core::FrameAttachmentData &data, bool success, Ref *) {
-		mainLoop->getGlLoop()->captureImage([success, mainLoop] (core::ImageInfoData info, BytesView view) {
-			if (!view.empty()) {
-				auto fmt = core::getImagePixelFormat(info.format);
-				bitmap::PixelFormat pixelFormat = bitmap::PixelFormat::Auto;
-				switch (fmt) {
-				case core::PixelFormat::A: pixelFormat = bitmap::PixelFormat::A8; break;
-				case core::PixelFormat::IA: pixelFormat = bitmap::PixelFormat::IA88; break;
-				case core::PixelFormat::RGB: pixelFormat = bitmap::PixelFormat::RGB888; break;
-				case core::PixelFormat::RGBA: pixelFormat = bitmap::PixelFormat::RGBA8888; break;
-				default: break;
-				}
-				if (pixelFormat != bitmap::PixelFormat::Auto) {
-					Bitmap bmp(view.data(), info.extent.width, info.extent.height, pixelFormat);
-					bmp.save(toString(Time::now().toMicros(), ".png"));
-				}
-			}
-			mainLoop->end();
-		}, data.image->getImage(), core::AttachmentLayout::General);
-		return true;
-	});
-
-	mainLoop->getGlLoop()->runRenderQueue(move(req), 0);
-}
-
-static void compileQueue(const MainLoop &loop) {
-	// create pipeline queue
-	auto queue = Rc<NoiseQueue>::create();
-
-	// then compile it on graphics device
-	loop.getGlLoop()->compileQueue(queue, [mainLoop = &loop, queue] (bool success) {
-		MainLoop::getInstance()->performOnMainThread([success, mainLoop, queue] {
-			runQueue(mainLoop, queue);
-		}, nullptr);
-	});
-}
-
-static void run() {
-	// create graphics instance
-	auto instance = vk::platform::createInstance([] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
-		data.applicationName = StringView("xenolith-cli");
-		data.applicationVersion = XL_MAKE_API_VERSION(0, 0, 1, 0);
-		return true;
-	});
-
-	// create main looper
-	auto mainLoop = Rc<MainLoop>::create("MainLoop", instance.get());
-
-	// define device selector/initializer
-	auto data = Rc<vk::LoopData>::alloc();
-	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
-		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
-	};
-
-	MainLoop::CallbackInfo callbackInfo {
-		.updateCallback = [] (const MainLoop &loop, const UpdateTime &time) {
-			if (time.app == 0) {
-				compileQueue(loop);
-			}
-		}
-	};
-
-	core::LoopInfo info;
-	info.platformData = data;
-
-	// run main loop with 2 additional threads and 0.5sec update interval
-	mainLoop->run(callbackInfo, move(info), 2, TimeInterval::microseconds(500000));
-}
-
 SP_EXTERN_C int _spMain(argc, argv) {
 #if MODULE_STAPPLER_DATA
-	Value opts = data::parseCommandLineOptions<Interface>(argc, argv,
+	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv,
 			&parseOptionSwitch, &parseOptionString);
-	if (opts.getBool("help")) {
+	if (opts.first.getBool("help")) {
 		std::cout << HELP_STRING << "\n";
 		return 0;
 	}
 
-	if (opts.getBool("verbose")) {
+	if (opts.first.getBool("verbose")) {
 #if MODULE_STAPPLER_FILESYSTEM
 		std::cout << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
 		std::cout << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
 		std::cout << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
 		std::cout << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
 #endif
-		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts << "\n";
+		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts.first << "\n";
+		std::cout << " Arguments: \n";
+		for (auto &it : opts.second) {
+			std::cout << "\t" << it << "\n";
+		}
 	}
 #endif
 
 	auto mempool = memory::pool::create();
 	memory::pool::push(mempool);
 
-	run();
+	NoiseQueue::runTest();
 
 	memory::pool::pop();
 

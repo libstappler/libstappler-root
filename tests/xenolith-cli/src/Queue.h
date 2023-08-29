@@ -25,6 +25,7 @@
 
 #include "XLVkQueuePass.h"
 #include "XLCoreAttachment.h"
+#include "XLApplication.h"
 
 namespace stappler::xenolith::test {
 
@@ -41,12 +42,16 @@ struct NoiseDataInput : core::AttachmentInputData {
 
 class NoiseQueue : public core::Queue {
 public:
+	static void runTest();
+
 	virtual ~NoiseQueue();
 
 	bool init();
 
 	const AttachmentData *getDataAttachment() const { return _dataAttachment; }
 	const AttachmentData *getImageAttachment() const { return _imageAttachment; }
+
+	void run(const Application *);
 
 protected:
 	using core::Queue::init;

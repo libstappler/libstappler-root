@@ -21,6 +21,7 @@
  **/
 
 #include "GuiScene.h"
+
 #include "GuiSceneContent.h"
 
 #include "backend/vk/XL2dVkShadowPass.h"
@@ -29,7 +30,7 @@ namespace stappler::xenolith::test {
 
 GuiScene::~GuiScene() { }
 
-bool GuiScene::init(MainLoop *loop, const core::FrameContraints &constraints) {
+bool GuiScene::init(Application *loop, const core::FrameContraints &constraints) {
 	core::Queue::Builder builder("Loader");
 
 	basic2d::vk::ShadowPass::RenderQueueInfo info{
@@ -46,7 +47,7 @@ bool GuiScene::init(MainLoop *loop, const core::FrameContraints &constraints) {
 
 	basic2d::vk::ShadowPass::makeDefaultRenderQueue(builder, info);
 
-	if (!Scene::init(move(builder), constraints)) {
+	if (!Scene2d::init(move(builder), constraints)) {
 		return false;
 	}
 

@@ -30,12 +30,12 @@ THE SOFTWARE.
 #include "SPData.h"
 #endif
 
-#include "XLVkGuiMainLoop.h"
+#include "XLVkGuiApplication.h"
 #include "XLCoreFrameRequest.h"
 #include "XLCoreFrameQueue.h"
 #include "XLView.h"
 
-#include "GuiScene.h"
+#include "GuiApplication.h"
 
 static constexpr auto HELP_STRING(
 R"HelpString(sptest <options> <test-name|all>
@@ -68,99 +68,39 @@ int parseOptionString(Value &ret, const StringView &str, int argc, const char * 
 }
 #endif
 
-static constexpr uint32_t SwapchainImageCount = 3;
-
-static core::SwapchainConfig selectConfig(const core::SurfaceInfo &info) {
-	core::SwapchainConfig ret;
-	ret.extent = info.currentExtent;
-	ret.imageCount = std::max(uint32_t(2), info.minImageCount);
-
-	ret.presentMode = info.presentModes.front();
-
-	if (std::find(info.presentModes.begin(), info.presentModes.end(), core::PresentMode::Immediate) != info.presentModes.end()) {
-		ret.presentModeFast = core::PresentMode::Immediate;
-	}
-
-	auto it = info.formats.begin();
-	while (it != info.formats.end()) {
-		if (it->first != platform::getCommonFormat()) {
-			++ it;
-		} else {
-			break;
-		}
-	}
-
-	if (it == info.formats.end()) {
-		ret.imageFormat = info.formats.front().first;
-		ret.colorSpace = info.formats.front().second;
-	} else {
-		ret.imageFormat = it->first;
-		ret.colorSpace = it->second;
-	}
-
-	if ((info.supportedCompositeAlpha & core::CompositeAlphaFlags::Opaque) != core::CompositeAlphaFlags::None) {
-		ret.alpha = core::CompositeAlphaFlags::Opaque;
-	} else if ((info.supportedCompositeAlpha & core::CompositeAlphaFlags::Inherit) != core::CompositeAlphaFlags::None) {
-		ret.alpha = core::CompositeAlphaFlags::Inherit;
-	}
-
-	ret.transfer = (info.supportedUsageFlags & core::ImageUsage::TransferDst) != core::ImageUsage::None;
-
-	if (ret.presentMode == core::PresentMode::Mailbox) {
-		ret.imageCount = std::max(SwapchainImageCount, ret.imageCount);
-	}
-
-	ret.transform = info.currentTransform;
-	return ret;
-}
-
 static void run() {
 	// create graphics instance
 
-	auto mainLoop = Rc<vk::GuiMainLoop>::create("xenolith-gui");
+	auto info = vk::GuiApplication::CommonInfo {
+		.bundleName = "org.stappler.xenolith.gui",
+		.applicationName = "xenolith-gui",
+		.applicationVersion = "1.0.0",
+	};
 
-	MainLoop::CallbackInfo callbacks({
-		.initCallback = [&] (const MainLoop &) {
-			mainLoop->addView(ViewInfo{
-				.name = "xenolith-gui",
-				.bundleId = "xenolith-gui",
-				.selectConfig = [] (View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
-					return selectConfig(info);
-				},
-				.onCreated = [mainLoop = mainLoop.get()] (View &view, const core::FrameContraints &constraints) {
-					auto scene = Rc<GuiScene>::create(mainLoop, constraints);
-					view.getDirector()->runScene(move(scene));
-				},
-				.onClosed = [mainLoop = mainLoop.get()] (View &view) {
-					mainLoop->end();
-				}
-			});
-		},
-		.updateCallback = [&] (const MainLoop &, const UpdateTime &time) {
-
-		}
-	});
-
-	mainLoop->run(callbacks);
+	runApplication(move(info), 1.0f, [] {});
 }
 
 SP_EXTERN_C int _spMain(argc, argv) {
 #if MODULE_STAPPLER_DATA
-	Value opts = data::parseCommandLineOptions<Interface>(argc, argv,
+	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv,
 			&parseOptionSwitch, &parseOptionString);
-	if (opts.getBool("help")) {
+	if (opts.first.getBool("help")) {
 		std::cout << HELP_STRING << "\n";
 		return 0;
 	}
 
-	if (opts.getBool("verbose")) {
+	if (opts.first.getBool("verbose")) {
 #if MODULE_STAPPLER_FILESYSTEM
 		std::cout << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
 		std::cout << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
 		std::cout << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
 		std::cout << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
 #endif
-		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts << "\n";
+		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts.first << "\n";
+		std::cout << " Arguments: \n";
+		for (auto &it : opts.second) {
+			std::cout << "\t" << it << "\n";
+		}
 	}
 #endif
 

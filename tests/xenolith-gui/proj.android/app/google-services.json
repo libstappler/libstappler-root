@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "385329144112",
+    "firebase_url": "https://stappler-apps.firebaseio.com",
+    "project_id": "stappler-apps",
+    "storage_bucket": "stappler-apps.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:385329144112:android:5f99eb986e89b7fd8528f5",
+        "android_client_info": {
+          "package_name": "org.stappler.xenolith.gui"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "385329144112-uujkbf42u6bbgbg79v0lqfkaviic8j1k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMD9_vzpkI7h6DkIPc-BOhIyGsi5LFSCk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "385329144112-uujkbf42u6bbgbg79v0lqfkaviic8j1k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:385329144112:android:5a59291ccb336e528528f5",
+        "android_client_info": {
+          "package_name": "org.stappler.xenolith.test"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "385329144112-uujkbf42u6bbgbg79v0lqfkaviic8j1k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMD9_vzpkI7h6DkIPc-BOhIyGsi5LFSCk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "385329144112-uujkbf42u6bbgbg79v0lqfkaviic8j1k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
