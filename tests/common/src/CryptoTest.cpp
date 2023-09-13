@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include "SPCommon.h"
 #include "SPString.h"
 #include "SPTime.h"
+#include "SPValid.h"
 #include "Test.h"
 
 #if MODULE_STAPPLER_CRYPTO
@@ -229,6 +230,383 @@ DJMh5uA3JW2Op5AAAAF3Nia2FyckBzYmthcnItaG9tZS1tYWluAQID
 -----END OPENSSH PRIVATE KEY-----
 )PrivKey");
 
+SPUNUSED static constexpr StringView s_GostPrivKey(
+R"GostKey(-----BEGIN PRIVATE KEY-----
+MGgCAQAwIQYIKoUDBwEBAQIwFQYJKoUDBwECAQIBBggqhQMHAQECAwRAzyYtvsjl
+i2APv6u/DaGuR5t5tek8+rERoIE/hI9AuMu0JyIMo4Hd26NIMXsR9NODV+Nh8a9L
+E8OCKW9N7veiLA==
+-----END PRIVATE KEY-----
+)GostKey");
+
+SPUNUSED static constexpr StringView s_GostPubKey(
+R"GostKey(-----BEGIN PUBLIC KEY-----
+MIGqMCEGCCqFAwcBAQECMBUGCSqFAwcBAgECAQYIKoUDBwEBAgMDgYQABIGALi2S
++Um6ZifvkpmdmZU2cugiw147adXKI8mcHoffwLY7Xo/q/9GiftqZzu56p/VMzyRm
+hF/x7IotkwHA6WrFs680jwIEWxS7vzUiBWnn+angRTNTsWRXzCfkLpHuA7SopeNq
+Hnk1VdlqrfqjyV13si/4BEYpYmC75paNA5opHYg=
+-----END PUBLIC KEY-----
+)GostKey");
+
+
+
+static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b) {
+	crypto::PrivateKey key(b);
+	key.generate(crypto::KeyBits::_2048);
+
+	String pemPKCS1;
+	String derPKCS1;
+
+	String pemPKCS8;
+	String derPKCS8;
+
+	if (key.isSupported(crypto::KeyFormat::PKCS1)) {
+		key.exportPem([&] (const uint8_t *data, size_t size) {
+			pemPKCS1 = StringView((const char *)data, size).str<Interface>();
+		}, crypto::KeyFormat::PKCS1);
+
+		key.exportDer([&] (const uint8_t *data, size_t size) {
+			StringStream derKeyData;
+			derKeyData << "-----BEGIN RSA PRIVATE KEY-----\n";
+			size_t counter = 0;
+			base64::encode([&] (char c) {
+				if (counter ++ > 63) {
+					derKeyData << "\n";
+					counter = 1;
+				}
+				derKeyData << c;
+			}, BytesView(data, size));
+			derKeyData << "\n-----END RSA PRIVATE KEY-----\n";
+			derPKCS1 = derKeyData.str();
+		}, crypto::KeyFormat::PKCS1);
+
+		if (pemPKCS1.empty() || derPKCS1.empty() || pemPKCS1 != derPKCS1) {
+			std::cout << pemPKCS1 << "\n\n" << derPKCS1 << "\n";
+			stream << "PKCS1: DER != PEM";
+			return false;
+		}
+	}
+
+	if (key.isSupported(crypto::KeyFormat::PKCS8)) {
+		key.exportPem([&] (const uint8_t *data, size_t size) {
+			pemPKCS8 = StringView((const char *)data, size).str<Interface>();
+		}, crypto::KeyFormat::PKCS8);
+
+		key.exportDer([&] (const uint8_t *data, size_t size) {
+			StringStream derKeyData;
+			StringStream encodedData;
+			derKeyData << "-----BEGIN PRIVATE KEY-----\n";
+			size_t counter = 0;
+			base64::encode([&] (char c) {
+				if (counter ++ > 63) {
+					encodedData << "\n";
+					counter = 1;
+				}
+				encodedData << c;
+			}, BytesView(data, size));
+			derKeyData << encodedData.str() << "\n-----END PRIVATE KEY-----\n";
+
+			auto tmp = base64::decode<Interface>(encodedData.str());
+			if (tmp != BytesView(data, size)) {
+				stream << "Invalid base64 decoder;";
+			}
+
+			derPKCS8 = derKeyData.str();
+		}, crypto::KeyFormat::PKCS8);
+
+		if (pemPKCS8 != derPKCS8) {
+			stream << "PKCS8: DER != PEM";
+			return false;
+		}
+	}
+
+	crypto::PublicKey pub(key);
+
+	String pemPub;
+	String derPub;
+
+	pub.exportPem([&] (const uint8_t *data, size_t size) {
+		pemPub = StringView((const char *)data, size).str<Interface>();
+	});
+
+	pub.exportDer([&] (const uint8_t *data, size_t size) {
+		StringStream derKeyData;
+		derKeyData << "-----BEGIN PUBLIC KEY-----\n";
+		size_t counter = 0;
+		base64::encode([&] (char c) {
+			if (counter ++ > 63) {
+				derKeyData << "\n";
+				counter = 1;
+			}
+			derKeyData << c;
+		}, BytesView(data, size));
+		derKeyData << "\n-----BEGIN PUBLIC KEY-----\n";
+		derPub = derKeyData.str();
+	});
+
+	if (pemPKCS8 != derPKCS8) {
+		stream << "Pub: DER != PEM";
+		return false;
+	}
+
+	return key;
+}
+
+static bool CryptoTest_load(std::ostream &stream, crypto::Backend b) {
+	bool success = true;
+	crypto::PrivateKey key1(b, BytesView((const uint8_t *)s_PKCS1PemKey.data(), s_PKCS1PemKey.size()));
+	if (!key1) {
+		return false;
+	}
+
+	auto key3Data = base64::decode<Interface>(s_PKCS1DerKey);
+	auto key4Data = base64::decode<Interface>(s_PKCS8DerKey);
+
+	if (key1.isSupported(crypto::KeyFormat::PKCS8)) {
+		key1.exportDer([&] (const uint8_t *data, size_t len) {
+			if (BytesView(key4Data) != BytesView(data, len)) {
+				stream << " PKCS8 export not match;";
+				success = false;
+			}
+			crypto::PrivateKey tmp(BytesView(data, len));
+			if (!tmp) {
+				stream << " PKCS1 -> Der failed;";
+				success = false;
+			}
+		}, crypto::KeyFormat::PKCS8);
+	}
+
+	if (key1.isSupported(crypto::KeyFormat::PKCS1)) {
+		key1.exportDer([&] (const uint8_t *data, size_t len) {
+			if (BytesView(key3Data) != BytesView(data, len)) {
+				stream << " PKCS1 export not match;";
+				success = false;
+
+				std::cout << "\n";
+				size_t counter = 0;
+				base64::encode([&] (char c) {
+					if (counter ++ > 63) {
+						std::cout << "\n";
+						counter = 1;
+					}
+					std::cout << c;
+				}, BytesView(data, len));
+
+				std::cout << "\nVS\n" << s_PKCS1DerKey << "\n";
+			}
+			crypto::PrivateKey tmp(BytesView(data, len));
+			if (!tmp) {
+				stream << " PKCS8 -> Der failed;";
+				success = false;
+			}
+		}, crypto::KeyFormat::PKCS1);
+	}
+
+	crypto::PrivateKey key2(b, BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size()));
+	if (!key2) {
+		stream << "fail to loaded s_PKCS8PemKey;";
+		return false;
+	}
+
+	crypto::PrivateKey key3(b, key3Data);
+	if (!key3) {
+		stream << "fail to loaded key3Data;";
+		return false;
+	}
+
+	crypto::PrivateKey key4(b, key4Data);
+	if (!key4) {
+		stream << "fail to loaded key4Data;";
+		return false;
+	}
+
+	if (key1.isSupported(crypto::KeyFormat::PKCS8)) {
+		key1.exportPem([&] (const uint8_t *data, size_t len) {
+			if (s_PKCS8PemKey != StringView((const char *)data, len)) {
+				stream << " PKCS1 -> PKCS8 != PKCS8;";
+				success = false;
+			}
+		}, crypto::KeyFormat::PKCS8);
+	}
+
+	if (key1.isSupported(crypto::KeyFormat::PKCS1)) {
+		key2.exportPem([&] (const uint8_t *data, size_t len) {
+			if (s_PKCS1PemKey != StringView((const char *)data, len)) {
+				stream << " PKCS8 -> PKCS1 != PKCS1;";
+				success = false;
+			}
+		}, crypto::KeyFormat::PKCS1);
+	}
+
+	return success;
+}
+
+static bool CryptoTest_pubload(std::ostream &stream, crypto::Backend b) {
+	bool success = true;
+	auto key1Data = base64::decode<Interface>(s_PubDerKey);
+	crypto::PublicKey key1(b, s_PubPemKey);
+	crypto::PublicKey key2(b, key1Data);
+
+	if (!key1) {
+		stream << " fail to load s_PubPemKey;";
+		return false;
+	}
+
+	if (!key2) {
+		stream << " fail to load s_PubDerKey;";
+		return false;
+	}
+
+	key1.exportPem([&] (const uint8_t *data, size_t len) {
+		if (s_PubPemKey != StringView((const char *)data, len)) {
+			stream << " PUB1 -> PEM != PUB1(PEM);";
+			success = false;
+		}
+	});
+
+	key1.exportDer([&] (const uint8_t *data, size_t len) {
+		if (key1Data != BytesView(data, len)) {
+			stream << " PUB1 -> DER != PUB2(DER);";
+			success = false;
+		}
+	});
+
+	key2.exportPem([&] (const uint8_t *data, size_t len) {
+		if (s_PubPemKey != StringView((const char *)data, len)) {
+			stream << " PUB2 -> PEM != PUB1(PEM);";
+			success = false;
+		}
+	});
+
+	key2.exportDer([&] (const uint8_t *data, size_t len) {
+		if (key1Data != BytesView(data, len)) {
+			stream << " PUB2 -> DER != PUB2(DER);";
+			success = false;
+		}
+	});
+
+	return success;
+}
+
+static bool CryptoTest_ssh(std::ostream &stream, crypto::Backend b) {
+	crypto::PublicKey key1(b);
+	key1.importOpenSSH(s_PubSsh);
+	if (!key1) {
+		return false;
+	}
+
+	crypto::PublicKey key2(b, s_PubSshPem);
+	if (!key2) {
+		return false;
+	}
+
+	String key2Data;
+
+	key2.exportPem([&] (const uint8_t *data, size_t len) {
+		key2Data = StringView((const char *)data, len).str<Interface>();
+	});
+
+	bool success = false;
+	if (key1) {
+		key1.exportPem([&] (const uint8_t *data, size_t len) {
+			if (key2Data != StringView((const char *)data, len)) {
+				stream << "ssh-pubkey != ssh-pem-pubkey;";
+				std::cout << key2Data << "\n" << StringView((const char *)data, len) << "\n";
+			} else {
+				success = true;
+			}
+		});
+	}
+	return success;
+}
+
+static bool CryptoTest_sign_validate(std::ostream &stream, crypto::Backend b) {
+	bool success = false;
+
+	crypto::PrivateKey pk(b, BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size()));
+
+	auto pub = pk.exportPublic();
+
+	String signData;
+
+	// follow serenity pkey auth method
+	pub.exportDer([&] (const uint8_t *pub, size_t pubLen) {
+		crypto::PublicKey spub(b, BytesView(pub, pubLen));
+		if (!spub) {
+			return;
+		}
+
+		pk.sign([&] (const uint8_t *sign, size_t signLen) {
+			signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
+				data::ValueTemplate<Interface>(BytesView(pub, pubLen)),
+				data::ValueTemplate<Interface>(BytesView(sign, signLen))
+			})));
+		}, BytesView(pub, pubLen), crypto::SignAlgorithm::RSA_SHA512);
+	});
+
+	if (!signData.empty()) {
+		auto data = data::read<Interface>(base64::decode<Interface>(signData));
+
+		BytesView signedKey = data.getBytes(0);
+		BytesView signature = data.getBytes(1);
+
+		crypto::PublicKey spub(b, signedKey);
+
+		success = spub.verify(signedKey, signature, crypto::SignAlgorithm::RSA_SHA512);
+		if (!success) {
+			stream << "verification failed;";
+		}
+	}
+
+	return success;
+}
+
+static bool CryptoTest_gost_sign(std::ostream &stream, crypto::Backend b) {
+	crypto::PrivateKey pk(b, BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size()));
+	if (pk.getType() != crypto::KeyType::GOST3410_2012_512) {
+		return false;
+	}
+
+	String pkStr;
+	pk.exportPem([&] (const uint8_t *data, size_t size) {
+		pkStr = StringView((const char *)data, size).str<Interface>();
+	});
+
+	crypto::PublicKey pub(b, BytesView((const uint8_t *)s_GostPubKey.data(), s_GostPubKey.size()));
+	if (pub.getType() != crypto::KeyType::GOST3410_2012_512) {
+		return false;
+	}
+
+	Bytes pubStr;
+	pub.exportDer([&] (const uint8_t *data, size_t size) {
+		pubStr = BytesView(data, size).bytes<Interface>();
+	});
+
+	String signData;
+	pk.sign([&] (const uint8_t *sign, size_t signLen) {
+		signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
+			data::ValueTemplate<Interface>(pubStr),
+			data::ValueTemplate<Interface>(BytesView(sign, signLen))
+		})));
+	}, pubStr, crypto::SignAlgorithm::GOST_512);
+
+	if (!signData.empty()) {
+		auto data = data::read<Interface>(base64::decode<Interface>(signData));
+
+		BytesView signedKey = data.getBytes(0);
+		BytesView signature = data.getBytes(1);
+
+		crypto::PublicKey spub(b, signedKey);
+
+		auto success = spub.verify(signedKey, signature, crypto::SignAlgorithm::GOST_512);
+		if (!success) {
+			stream << "verification failed;";
+		}
+		return success;
+	}
+
+	return false;
+}
+
 struct CryptoTest : Test {
 	CryptoTest() : Test("CryptoTest") { }
 
@@ -238,237 +616,154 @@ struct CryptoTest : Test {
 		size_t passed = 0;
 		stream << "\n";
 
-		runTest(stream, "genkey", count, passed, [&] () -> bool {
-			crypto::PrivateKey key;
-			key.generate(crypto::KeyBits::_2048);
+		runTest(stream, toString("gost3411-interop"), count, passed, [&] () -> bool {
+			auto test = [] (const CoderSource & msg, BytesView result256, BytesView result512) {
+				auto v256_1 = crypto::hash256(crypto::Backend::Embedded, msg, crypto::HashFunction::GOST_3411);
+				auto v256_2 = crypto::hash256(crypto::Backend::GnuTLS, msg, crypto::HashFunction::GOST_3411);
+				auto v256_3 = crypto::hash256(crypto::Backend::OpenSSL, msg, crypto::HashFunction::GOST_3411);
 
-			String pemPKCS1;
-			String derPKCS1;
+				auto v512_1 = crypto::hash512(crypto::Backend::Embedded, msg, crypto::HashFunction::GOST_3411);
+				auto v512_2 = crypto::hash512(crypto::Backend::GnuTLS, msg, crypto::HashFunction::GOST_3411);
+				auto v512_3 = crypto::hash512(crypto::Backend::OpenSSL, msg, crypto::HashFunction::GOST_3411);
 
-			String pemPKCS8;
-			String derPKCS8;
+				return v256_1 == v256_2 && v256_2 == v256_3 && v256_3 == result256
+						&& v512_1 == v512_2 && v512_2 == v512_3 && v512_3 == result512;
+			};
 
-			if (key.isSupported(crypto::KeyFormat::PKCS1)) {
-				key.exportPem([&] (const uint8_t *data, size_t size) {
-					pemPKCS1 = StringView((const char *)data, size).str<Interface>();
-				}, crypto::KeyFormat::PKCS1);
-
-				key.exportDer([&] (const uint8_t *data, size_t size) {
-					StringStream derKeyData;
-					derKeyData << "-----BEGIN RSA PRIVATE KEY-----\n";
-					size_t counter = 0;
-					base64::encode([&] (char c) {
-						if (counter ++ > 63) {
-							derKeyData << "\n";
-							counter = 1;
-						}
-						derKeyData << c;
-					}, BytesView(data, size));
-					derKeyData << "\n-----END RSA PRIVATE KEY-----\n";
-					derPKCS1 = derKeyData.str();
-				}, crypto::KeyFormat::PKCS1);
-
-				if (pemPKCS1 != derPKCS1) {
-					std::cout << pemPKCS1 << "\n\n" << derPKCS1 << "\n";
-					stream << "PKCS1: DER != PEM";
-					return false;
-				}
-			}
-
-			if (key.isSupported(crypto::KeyFormat::PKCS8)) {
-				key.exportPem([&] (const uint8_t *data, size_t size) {
-					pemPKCS8 = StringView((const char *)data, size).str<Interface>();
-				}, crypto::KeyFormat::PKCS8);
-
-				key.exportDer([&] (const uint8_t *data, size_t size) {
-					StringStream derKeyData;
-					StringStream encodedData;
-					derKeyData << "-----BEGIN PRIVATE KEY-----\n";
-					size_t counter = 0;
-					base64::encode([&] (char c) {
-						if (counter ++ > 63) {
-							encodedData << "\n";
-							counter = 1;
-						}
-						encodedData << c;
-					}, BytesView(data, size));
-					derKeyData << encodedData.str() << "\n-----END PRIVATE KEY-----\n";
-
-					auto tmp = base64::decode<Interface>(encodedData.str());
-					if (tmp != BytesView(data, size)) {
-						stream << "Invalid base64 decoder;";
-					}
-
-					derPKCS8 = derKeyData.str();
-				}, crypto::KeyFormat::PKCS8);
-
-				if (pemPKCS8 != derPKCS8) {
-					stream << "PKCS8: DER != PEM";
-					return false;
-				}
-			}
-
-			crypto::PublicKey pub(key);
-
-			String pemPub;
-			String derPub;
-
-			pub.exportPem([&] (const uint8_t *data, size_t size) {
-				pemPub = StringView((const char *)data, size).str<Interface>();
-			});
-
-			pub.exportDer([&] (const uint8_t *data, size_t size) {
-				StringStream derKeyData;
-				derKeyData << "-----BEGIN PUBLIC KEY-----\n";
-				size_t counter = 0;
-				base64::encode([&] (char c) {
-					if (counter ++ > 63) {
-						derKeyData << "\n";
-						counter = 1;
-					}
-					derKeyData << c;
-				}, BytesView(data, size));
-				derKeyData << "\n-----BEGIN PUBLIC KEY-----\n";
-				derPub = derKeyData.str();
-			});
-
-			if (pemPKCS8 != derPKCS8) {
-				stream << "Pub: DER != PEM";
-				return false;
-			}
-
-			return key;
+			return test(
+					"012345678901234567890123456789012345678901234567890123456789012",
+					base16::decode<Interface>("9d151eefd8590b89daa6ba6cb74af9275dd051026bb149a452fd84e5e57b5500"),
+					base16::decode<Interface>("1b54d01a4af5b9d5cc3d86d68d285462b19abc2475222f35c085122be4ba1ffa00ad30f8767b3a82384c6574f024c311e2a481332b08ef7f41797891c1646f48")
+					)
+				&& test(
+					base16::decode<Interface>("D1E520E2E5F2F0E82C20D1F2F0E8E1EEE6E820E2EDF3F6E82C20E2E5FEF2FA20F120ECEEF0FF20F1F2F0E5EBE0ECE820EDE020F5F0E0E1F0FBFF20EFEBFAEAFB20C8E3EEF0E5E2FB"),
+					base16::decode<Interface>("9dd2fe4e90409e5da87f53976d7405b0c0cac628fc669a741d50063c557e8f50"),
+					base16::decode<Interface>("1e88e62226bfca6f9994f1f2d51569e0daf8475a3b0fe61a5300eee46d961376035fe83549ada2b8620fcd7c496ce5b33f0cb9dddc2b6460143b03dabac9fb28")
+					)
+				&& test(
+					base16::decode<Interface>("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+					base16::decode<Interface>("df1fda9ce83191390537358031db2ecaa6aa54cd0eda241dc107105e13636b95"),
+					base16::decode<Interface>("b0fd29ac1b0df441769ff3fdb8dc564df67721d6ac06fb28ceffb7bbaa7948c6c014ac999235b58cb26fb60fb112a145d7b4ade9ae566bf2611402c552d20db7")
+					)
+				&& test(
+					"",
+					base16::decode<Interface>("3f539a213e97c802cc229d474c6aa32a825a360b2a933a949fd925208d9ce1bb"),
+					base16::decode<Interface>("8e945da209aa869f0455928529bcae4679e9873ab707b55315f56ceb98bef0a7362f715528356ee83cda5f2aac4c6ad2ba3a715c1bcd81cb8e9f90bf4c1c1a8a")
+					);
 		});
 
-		runTest(stream, "load", count, passed, [&] () -> bool {
+		runTest(stream, toString("ssh-2-interop"), count, passed, [&] () -> bool {
+			auto sha256_1 = crypto::hash256(crypto::Backend::MbedTLS, CoderSource(s_PKCS8PemKey), crypto::HashFunction::SHA_2);
+			auto sha256_2 = crypto::hash256(crypto::Backend::GnuTLS, CoderSource(s_PKCS8PemKey), crypto::HashFunction::SHA_2);
+			auto sha256_3 = crypto::hash256(crypto::Backend::OpenSSL, CoderSource(s_PKCS8PemKey), crypto::HashFunction::SHA_2);
+			auto sha256_4 = crypto::hash256(crypto::Backend::Embedded, CoderSource(s_PKCS8PemKey), crypto::HashFunction::SHA_2);
+
+			auto sha512_1 = crypto::hash512(crypto::Backend::MbedTLS, CoderSource(s_PKCS8PemKey), crypto::HashFunction::SHA_2);
+			auto sha512_2 = crypto::hash512(crypto::Backend::GnuTLS, CoderSource(s_PKCS8PemKey), crypto::HashFunction::SHA_2);
+			auto sha512_3 = crypto::hash512(crypto::Backend::OpenSSL, CoderSource(s_PKCS8PemKey), crypto::HashFunction::SHA_2);
+			auto sha512_4 = crypto::hash512(crypto::Backend::Embedded, CoderSource(s_PKCS8PemKey), crypto::HashFunction::SHA_2);
+
+			return sha256_1 == sha256_2 && sha256_3 == sha256_4 && sha256_2 == sha256_3
+					&& sha512_1 == sha512_2 && sha512_3 == sha512_4 && sha512_2 == sha512_3;
+		});
+
+		runTest(stream, toString("block-cipher-gost"), count, passed, [&] () -> bool {
 			bool success = true;
-			crypto::PrivateKey key1(BytesView((const uint8_t *)s_PKCS1PemKey.data(), s_PKCS1PemKey.size()));
-			if (!key1) {
-				return false;
-			}
 
-			auto key3Data = base64::decode<Interface>(s_PKCS1DerKey);
-			auto key4Data = base64::decode<Interface>(s_PKCS8DerKey);
+			auto randomBytes = valid::makeRandomBytes<Interface>(crypto::BlockKeySize256);
 
-			if (key1.isSupported(crypto::KeyFormat::PKCS8)) {
-				key1.exportDer([&] (const uint8_t *data, size_t len) {
-					if (BytesView(key4Data) != BytesView(data, len)) {
-						stream << " PKCS8 export not match;";
+			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_GostPrivKey);
+			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_GostPrivKey);
+
+			Bytes opensslPkEncrypted;
+			opensslPk.encrypt([&] (const uint8_t *buf, size_t size) {
+				opensslPkEncrypted = BytesView(buf, size).bytes<Interface>();;
+			}, randomBytes);
+
+			Bytes gnutlsPkEncrypted;
+			gnutlsPk.encrypt([&] (const uint8_t *buf, size_t size) {
+				gnutlsPkEncrypted = BytesView(buf, size).bytes<Interface>();;
+			}, randomBytes);
+
+			if (!opensslPkEncrypted.empty()) {
+				opensslPk.decrypt([&] (const uint8_t *buf, size_t size) {
+					if (BytesView(buf, size).bytes<Interface>() != BytesView(randomBytes)) {
+						stream << "OpenTLS: GOST decryption failed";
 						success = false;
 					}
-					crypto::PrivateKey tmp(BytesView(data, len));
-					if (!tmp) {
-						stream << " PKCS1 -> Der failed;";
+				}, opensslPkEncrypted);
+			} else {
+				success = false;
+			}
+
+			if (!gnutlsPkEncrypted.empty()) {
+				gnutlsPk.decrypt([&] (const uint8_t *buf, size_t size) {
+					if (BytesView(buf, size).bytes<Interface>() != BytesView(randomBytes)) {
+						stream << "OpenTLS: GOST decryption failed";
 						success = false;
 					}
-				}, crypto::KeyFormat::PKCS8);
-			}
-
-			if (key1.isSupported(crypto::KeyFormat::PKCS1)) {
-				key1.exportDer([&] (const uint8_t *data, size_t len) {
-					if (BytesView(key3Data) != BytesView(data, len)) {
-						stream << " PKCS1 export not match;";
-						success = false;
-
-						std::cout << "\n";
-						size_t counter = 0;
-						base64::encode([&] (char c) {
-							if (counter ++ > 63) {
-								std::cout << "\n";
-								counter = 1;
-							}
-							std::cout << c;
-						}, BytesView(data, len));
-
-						std::cout << "\nVS\n" << s_PKCS1DerKey << "\n";
-					}
-					crypto::PrivateKey tmp(BytesView(data, len));
-					if (!tmp) {
-						stream << " PKCS8 -> Der failed;";
-						success = false;
-					}
-				}, crypto::KeyFormat::PKCS1);
-			}
-
-			crypto::PrivateKey key2(BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size()));
-			if (!key2) {
-				stream << "fail to loaded s_PKCS8PemKey;";
-				return false;
-			}
-
-			crypto::PrivateKey key3(key3Data);
-			if (!key3) {
-				stream << "fail to loaded key3Data;";
-				return false;
-			}
-
-			crypto::PrivateKey key4(key4Data);
-			if (!key4) {
-				stream << "fail to loaded key4Data;";
-				return false;
-			}
-
-			if (key1.isSupported(crypto::KeyFormat::PKCS8)) {
-				key1.exportPem([&] (const uint8_t *data, size_t len) {
-					if (s_PKCS8PemKey != StringView((const char *)data, len)) {
-						stream << " PKCS1 -> PKCS8 != PKCS8;";
-						success = false;
-					}
-				}, crypto::KeyFormat::PKCS8);
-			}
-
-			if (key1.isSupported(crypto::KeyFormat::PKCS1)) {
-				key2.exportPem([&] (const uint8_t *data, size_t len) {
-					if (s_PKCS1PemKey != StringView((const char *)data, len)) {
-						stream << " PKCS8 -> PKCS1 != PKCS1;";
-						success = false;
-					}
-				}, crypto::KeyFormat::PKCS1);
+				}, gnutlsPkEncrypted);
+			} else {
+				success = false;
 			}
 
 			return success;
 		});
 
-		runTest(stream, "pubload", count, passed, [&] () -> bool {
+		runTest(stream, toString("block-cipher-gost+RSA"), count, passed, [&] () -> bool {
+			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_PKCS8PemKey);
+			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_PKCS8PemKey);
+
+			auto gnutlsGostKey = crypto::makeBlockKey(gnutlsPk, s_GostPrivKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
+			auto opensslGostKey = crypto::makeBlockKey(opensslPk, s_GostPrivKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
+
+			if (opensslGostKey != gnutlsGostKey) {
+				return false;
+			}
+
 			bool success = true;
-			auto key1Data = base64::decode<Interface>(s_PubDerKey);
-			crypto::PublicKey key1(s_PubPemKey);
-			crypto::PublicKey key2(key1Data);
 
-			if (!key1) {
-				stream << " fail to load s_PubPemKey;";
-				return false;
+			Bytes opensslEncoded;
+			Bytes gnutlsEncoded;
+
+			crypto::encryptBlock(crypto::Backend::GnuTLS, gnutlsGostKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
+				gnutlsEncoded = BytesView(buf, size).bytes<Interface>();
+			});
+
+			crypto::encryptBlock(crypto::Backend::OpenSSL, opensslGostKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
+				opensslEncoded = BytesView(buf, size).bytes<Interface>();
+			});
+
+			if constexpr (crypto::SafeBlockEncoding) {
+				if (opensslEncoded != gnutlsEncoded) {
+					return false;
+				}
 			}
 
-			if (!key2) {
-				stream << " fail to load s_PubDerKey;";
-				return false;
-			}
-
-			key1.exportPem([&] (const uint8_t *data, size_t len) {
-				if (s_PubPemKey != StringView((const char *)data, len)) {
-					stream << " PUB1 -> PEM != PUB1(PEM);";
+			crypto::decryptBlock(crypto::Backend::GnuTLS, gnutlsGostKey, gnutlsEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "GnuTLS: GOST decryption failed";
 					success = false;
 				}
 			});
 
-			key1.exportDer([&] (const uint8_t *data, size_t len) {
-				if (key1Data != BytesView(data, len)) {
-					stream << " PUB1 -> DER != PUB2(DER);";
+			crypto::decryptBlock(crypto::Backend::OpenSSL, opensslGostKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "OpenSSL: GOST decryption failed";
 					success = false;
 				}
 			});
 
-			key2.exportPem([&] (const uint8_t *data, size_t len) {
-				if (s_PubPemKey != StringView((const char *)data, len)) {
-					stream << " PUB2 -> PEM != PUB1(PEM);";
+			crypto::decryptBlock(crypto::Backend::GnuTLS, gnutlsGostKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "GnuTLS: GOST-cross decryption failed";
 					success = false;
 				}
 			});
 
-			key2.exportDer([&] (const uint8_t *data, size_t len) {
-				if (key1Data != BytesView(data, len)) {
-					stream << " PUB2 -> DER != PUB2(DER);";
+			crypto::decryptBlock(crypto::Backend::OpenSSL, opensslGostKey, gnutlsEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "OpenSSL: GOST-cross decryption failed";
 					success = false;
 				}
 			});
@@ -476,77 +771,201 @@ struct CryptoTest : Test {
 			return success;
 		});
 
-		runTest(stream, "ssh", count, passed, [&] () -> bool {
-			crypto::PublicKey key1;
-			key1.importOpenSSH(s_PubSsh);
-			if (!key1) {
+		runTest(stream, toString("block-cipher-aes"), count, passed, [&] () -> bool {
+			crypto::PrivateKey mbedtlsPk(crypto::Backend::MbedTLS, s_PKCS8PemKey);
+			auto mbedtlsAesKey = crypto::makeBlockKey(mbedtlsPk, s_PKCS8PemKey, crypto::BlockCipher::AES_CBC);
+
+			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_PKCS8PemKey);
+			auto opensslAesKey = crypto::makeBlockKey(opensslPk, s_PKCS8PemKey, crypto::BlockCipher::AES_CBC);
+
+			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_PKCS8PemKey);
+			auto gnutlsAesKey = crypto::makeBlockKey(gnutlsPk, s_PKCS8PemKey, crypto::BlockCipher::AES_CBC);
+
+			if (opensslAesKey != gnutlsAesKey) {
 				return false;
 			}
 
-			crypto::PublicKey key2(s_PubSshPem);
-			if (!key2) {
+			if (mbedtlsAesKey != gnutlsAesKey) {
 				return false;
 			}
 
-			String key2Data;
+			Bytes opensslEncoded;
+			Bytes gnutlsEncoded;
+			Bytes mbedtlsEncoded;
 
-			key2.exportPem([&] (const uint8_t *data, size_t len) {
-				key2Data = StringView((const char *)data, len).str<Interface>();
+			bool success = true;
+
+			crypto::encryptBlock(crypto::Backend::GnuTLS, gnutlsAesKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
+				gnutlsEncoded = BytesView(buf, size).bytes<Interface>();
 			});
 
-			bool success = false;
-			if (key1) {
-				key1.exportPem([&] (const uint8_t *data, size_t len) {
-					if (key2Data != StringView((const char *)data, len)) {
-						stream << "ssh-pubkey != ssh-pen-pubkey;";
-						std::cout << key2Data << "\n" << StringView((const char *)data, len) << "\n";
-					} else {
-						success = true;
+			crypto::decryptBlock(crypto::Backend::GnuTLS, gnutlsAesKey, gnutlsEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "GnuTLS: AES decryption failed";
+					success = false;
+				}
+			});
+
+			crypto::encryptBlock(crypto::Backend::OpenSSL, opensslAesKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
+				opensslEncoded = BytesView(buf, size).bytes<Interface>();
+			});
+
+			crypto::decryptBlock(crypto::Backend::OpenSSL, opensslAesKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "OpenSSL: AES decryption failed";
+					success = false;
+				}
+			});
+
+			crypto::encryptBlock(crypto::Backend::MbedTLS, mbedtlsAesKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
+				mbedtlsEncoded = BytesView(buf, size).bytes<Interface>();
+			});
+
+			crypto::decryptBlock(crypto::Backend::MbedTLS, mbedtlsAesKey, mbedtlsEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "MbedTLS: AES decryption failed";
+					success = false;
+				}
+			});
+
+			crypto::decryptBlock(crypto::Backend::GnuTLS, gnutlsAesKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "GnuTLS: AES-cross decryption failed";
+					success = false;
+				}
+			});
+
+			crypto::decryptBlock(crypto::Backend::OpenSSL, gnutlsAesKey, mbedtlsEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "OpenSSL: AES-cross decryption failed";
+					success = false;
+				}
+			});
+
+			crypto::decryptBlock(crypto::Backend::MbedTLS, mbedtlsAesKey, gnutlsEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "MbedTLS: AES-cross decryption failed";
+					success = false;
+				}
+			});
+
+			if constexpr (crypto::SafeBlockEncoding) {
+				if (mbedtlsEncoded != gnutlsEncoded) {
+					return false;
+				}
+				if (opensslEncoded != gnutlsEncoded) {
+					return false;
+				}
+			}
+
+			return success;
+		});
+
+		runTest(stream, toString("pk-rsa-encrypt"), count, passed, [&] () -> bool {
+			bool success = true;
+
+			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_PKCS8PemKey);
+			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_PKCS8PemKey);
+			crypto::PrivateKey mbedtlsPk(crypto::Backend::MbedTLS, s_PKCS8PemKey);
+
+			Bytes gnutlsPkEncrypted;
+			gnutlsPk.encrypt([&] (const uint8_t *buf, size_t size) {
+				gnutlsPkEncrypted = BytesView(buf, size).bytes<Interface>();;
+			}, s_GostPrivKey);
+
+			Bytes opensslPkEncrypted;
+			opensslPk.exportPublic().encrypt([&] (const uint8_t *buf, size_t size) {
+				opensslPkEncrypted = BytesView(buf, size).bytes<Interface>();;
+			}, s_GostPrivKey);
+
+			Bytes mbedtlsPkEncrypted;
+			mbedtlsPk.exportPublic().encrypt([&] (const uint8_t *buf, size_t size) {
+				mbedtlsPkEncrypted = BytesView(buf, size).bytes<Interface>();;
+			}, s_GostPrivKey);
+
+			if (!opensslPkEncrypted.empty()) {
+				gnutlsPk.decrypt([&] (const uint8_t *buf, size_t size) {
+					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
+						stream << "OpenSSL -> GnuTLS: RSA decryption failed";
+						success = false;
 					}
+				}, opensslPkEncrypted);
+
+				mbedtlsPk.decrypt([&] (const uint8_t *buf, size_t size) {
+					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
+						stream << "OpenSSL -> MbedTLS: RSA decryption failed";
+						success = false;
+					}
+				}, opensslPkEncrypted);
+			} else {
+				success = false;
+			}
+
+			if (!gnutlsPkEncrypted.empty()) {
+				opensslPk.decrypt([&] (const uint8_t *buf, size_t size) {
+					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
+						stream << "GnuTLS -> OpenSSL: RSA decryption failed";
+						success = false;
+					}
+				}, gnutlsPkEncrypted);
+
+				mbedtlsPk.decrypt([&] (const uint8_t *buf, size_t size) {
+					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
+						stream << "GnuTLS -> MbedTLS: RSA decryption failed";
+						success = false;
+					}
+				}, gnutlsPkEncrypted);
+			} else {
+				success = false;
+			}
+
+			if (!mbedtlsPkEncrypted.empty()) {
+				opensslPk.decrypt([&] (const uint8_t *buf, size_t size) {
+					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
+						stream << "MbedTLS -> OpenSSL: RSA decryption failed";
+						success = false;
+					}
+				}, mbedtlsPkEncrypted);
+
+				gnutlsPk.decrypt([&] (const uint8_t *buf, size_t size) {
+					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
+						stream << "MbedTLS -> GnuTLS: RSA decryption failed";
+						success = false;
+					}
+				}, mbedtlsPkEncrypted);
+			} else {
+				success = false;
+			}
+
+			return success;
+		});
+
+		crypto::listBackends([&] (crypto::Backend b, StringView title, crypto::BackendFlags flags) {
+			if ((flags & crypto::BackendFlags::SupportsGost3410_2012) != crypto::BackendFlags::None) {
+				runTest(stream, toString(title, "-gost-sign"), count, passed, [&] () -> bool {
+					return CryptoTest_gost_sign(stream, b);
 				});
 			}
-			return success;
-		});
 
-		runTest(stream, "sign-validate", count, passed, [&] () -> bool {
-			bool success = false;
-
-			crypto::PrivateKey pk(BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size()));
-
-			auto pub = pk.exportPublic();
-
-			String signData;
-
-			// follow serenity pkey auth method
-			pub.exportDer([&] (const uint8_t *pub, size_t pubLen) {
-				crypto::PublicKey spub(BytesView(pub, pubLen));
-				if (!spub) {
-					return;
-				}
-
-				pk.sign([&] (const uint8_t *sign, size_t signLen) {
-					signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
-						data::ValueTemplate<Interface>(BytesView(pub, pubLen)),
-						data::ValueTemplate<Interface>(BytesView(sign, signLen))
-					})));
-				}, BytesView(pub, pubLen), crypto::SignAlgorithm::RSA_SHA512);
+			runTest(stream, toString(title, "-genkey"), count, passed, [&] () -> bool {
+				return CryptoTest_genkey(stream, b);
 			});
 
-			if (!signData.empty()) {
-				auto data = data::read<Interface>(base64::decode<Interface>(signData));
+			runTest(stream, toString(title, "-load"), count, passed, [&] () -> bool {
+				return CryptoTest_load(stream, b);
+			});
 
-				BytesView signedKey = data.getBytes(0);
-				BytesView signature = data.getBytes(1);
+			runTest(stream, toString(title, "-pubload"), count, passed, [&] () -> bool {
+				return CryptoTest_pubload(stream, b);
+			});
 
-				crypto::PublicKey spub(signedKey);
+			runTest(stream, toString(title, "-ssh"), count, passed, [&] () -> bool {
+				return CryptoTest_ssh(stream, b);
+			});
 
-				success = spub.verify(signedKey, signature, crypto::SignAlgorithm::RSA_SHA512);
-				if (!success) {
-					stream << "verification failed;";
-				}
-			}
-
-			return success;
+			runTest(stream, toString(title, "-sign-validate"), count, passed, [&] () -> bool {
+				return CryptoTest_sign_validate(stream, b);
+			});
 		});
 
 		_desc = stream.str();

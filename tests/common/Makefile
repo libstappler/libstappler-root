@@ -37,7 +37,10 @@ LOCAL_MODULES ?= \
 	stappler_zip \
 	stappler_threads \
 	stappler_network \
-	stappler_backtrace
+	stappler_backtrace \
+	stappler_crypto_openssl \
+	stappler_crypto_gnutls \
+	stappler_crypto_mbedtls
 
 LOCAL_ROOT = .
 
