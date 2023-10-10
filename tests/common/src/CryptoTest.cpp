@@ -670,42 +670,65 @@ struct CryptoTest : Test {
 		runTest(stream, toString("block-cipher-gost"), count, passed, [&] () -> bool {
 			bool success = true;
 
-			auto randomBytes = valid::makeRandomBytes<Interface>(crypto::BlockKeySize256);
-
 			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_GostPrivKey);
 			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_GostPrivKey);
 
-			Bytes opensslPkEncrypted;
-			opensslPk.encrypt([&] (const uint8_t *buf, size_t size) {
-				opensslPkEncrypted = BytesView(buf, size).bytes<Interface>();;
-			}, randomBytes);
+			auto gnutlsGostKey = crypto::makeBlockKey(gnutlsPk, s_GostPrivKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
+			auto opensslGostKey = crypto::makeBlockKey(opensslPk, s_GostPrivKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
 
-			Bytes gnutlsPkEncrypted;
-			gnutlsPk.encrypt([&] (const uint8_t *buf, size_t size) {
-				gnutlsPkEncrypted = BytesView(buf, size).bytes<Interface>();;
-			}, randomBytes);
-
-			if (!opensslPkEncrypted.empty()) {
-				opensslPk.decrypt([&] (const uint8_t *buf, size_t size) {
-					if (BytesView(buf, size).bytes<Interface>() != BytesView(randomBytes)) {
-						stream << "OpenTLS: GOST decryption failed";
-						success = false;
-					}
-				}, opensslPkEncrypted);
-			} else {
-				success = false;
+			if (gnutlsGostKey != opensslGostKey) {
+				stream << "Keys not equal: ";
+				base16::encode(stream, opensslGostKey.data);
+				stream << " vs. ";
+				base16::encode(stream, gnutlsGostKey.data);
+				return false;
 			}
 
-			if (!gnutlsPkEncrypted.empty()) {
-				gnutlsPk.decrypt([&] (const uint8_t *buf, size_t size) {
-					if (BytesView(buf, size).bytes<Interface>() != BytesView(randomBytes)) {
-						stream << "OpenTLS: GOST decryption failed";
-						success = false;
-					}
-				}, gnutlsPkEncrypted);
-			} else {
-				success = false;
+			base16::encode(std::cout, opensslGostKey.data);
+
+			Bytes opensslEncoded;
+			crypto::encryptBlock(crypto::Backend::OpenSSL, opensslGostKey, s_GostPrivKey, [&] (const uint8_t *buf, size_t size) {
+				opensslEncoded = BytesView(buf, size).bytes<Interface>();
+			});
+
+			Bytes gnutlsEncoded;
+			crypto::encryptBlock(crypto::Backend::GnuTLS, gnutlsGostKey, s_GostPrivKey, [&] (const uint8_t *buf, size_t size) {
+				gnutlsEncoded = BytesView(buf, size).bytes<Interface>();
+			});
+
+			if constexpr (crypto::SafeBlockEncoding) {
+				if (opensslEncoded != gnutlsEncoded) {
+					return false;
+				}
 			}
+
+			crypto::decryptBlock(crypto::Backend::OpenSSL, opensslGostKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size) != BytesView(s_GostPrivKey)) {
+					stream << "OpenSSL: GOST decryption failed";
+					success = false;
+				}
+			});
+
+			crypto::decryptBlock(crypto::Backend::GnuTLS, gnutlsGostKey, gnutlsEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size) != BytesView(s_GostPrivKey)) {
+					stream << "GnuTLS: GOST decryption failed";
+					success = false;
+				}
+			});
+
+			crypto::decryptBlock(crypto::Backend::GnuTLS, opensslGostKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size) != BytesView(s_GostPrivKey)) {
+					stream << "GnuTLS: GOST decryption failed";
+					success = false;
+				}
+			});
+
+			crypto::decryptBlock(crypto::Backend::OpenSSL, gnutlsGostKey, gnutlsEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size) != BytesView(s_GostPrivKey)) {
+					stream << "OpenSSL: GOST decryption failed";
+					success = false;
+				}
+			});
 
 			return success;
 		});
@@ -714,8 +737,8 @@ struct CryptoTest : Test {
 			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_PKCS8PemKey);
 			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_PKCS8PemKey);
 
-			auto gnutlsGostKey = crypto::makeBlockKey(gnutlsPk, s_GostPrivKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
-			auto opensslGostKey = crypto::makeBlockKey(opensslPk, s_GostPrivKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
+			auto gnutlsGostKey = crypto::makeBlockKey(gnutlsPk, s_PKCS8PemKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
+			auto opensslGostKey = crypto::makeBlockKey(opensslPk, s_PKCS8PemKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
 
 			if (opensslGostKey != gnutlsGostKey) {
 				return false;

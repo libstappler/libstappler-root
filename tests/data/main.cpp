@@ -63,8 +63,6 @@ static void runTest(std::ostream &out, const Vector<Bytes> &bytes, data::EncodeF
 
 	Vector<data::ValueTemplate<Interface>> data;
 
-	size_t objects = 0;
-
 	size_t compressed = 0;
 	size_t uncompressed = 0;
 
@@ -102,9 +100,6 @@ static void runTest(std::ostream &out, const Vector<Bytes> &bytes, data::EncodeF
 				uncompressed += d.size();
 			} else {
 				uncompressed += d.size();
-			}
-			if (!d.empty()) {
-				++ objects;
 			}
 		} while (0);
 

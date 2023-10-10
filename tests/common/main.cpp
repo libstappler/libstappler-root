@@ -187,6 +187,8 @@ int parseOptionString(Value &ret, const StringView &str, int argc, const char * 
 #endif
 
 SP_EXTERN_C int _spMain(argc, argv) {
+	memory::pool::initialize();
+
 #if MODULE_STAPPLER_DATA
 	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv,
 			&parseOptionSwitch, &parseOptionString);
@@ -227,7 +229,7 @@ SP_EXTERN_C int _spMain(argc, argv) {
 	}
 
 	memory::pool::pop();
-
+	memory::pool::terminate();
 	return 0;
 }
 
