@@ -21,9 +21,10 @@
  **/
 
 #include "Queue.h"
-#include <jni.h>
 
 #if ANDROID
+
+#include <jni.h>
 
 extern "C"
 JNIEXPORT void JNICALL

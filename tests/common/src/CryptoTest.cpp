@@ -671,10 +671,23 @@ struct CryptoTest : Test {
 			bool success = true;
 
 			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_GostPrivKey);
-			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_GostPrivKey);
-
-			auto gnutlsGostKey = crypto::makeBlockKey(gnutlsPk, s_GostPrivKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
 			auto opensslGostKey = crypto::makeBlockKey(opensslPk, s_GostPrivKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
+
+			Bytes opensslEncoded;
+			crypto::encryptBlock(crypto::Backend::OpenSSL, opensslGostKey, s_GostPrivKey, [&] (const uint8_t *buf, size_t size) {
+				opensslEncoded = BytesView(buf, size).bytes<Interface>();
+			});
+
+			crypto::decryptBlock(crypto::Backend::OpenSSL, opensslGostKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size) != BytesView(s_GostPrivKey)) {
+					stream << "OpenSSL: GOST decryption failed";
+					success = false;
+				}
+			});
+
+#ifdef MODULE_STAPPLER_CRYPTO_GNUTLS
+			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_GostPrivKey);
+			auto gnutlsGostKey = crypto::makeBlockKey(gnutlsPk, s_GostPrivKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
 
 			if (gnutlsGostKey != opensslGostKey) {
 				stream << "Keys not equal: ";
@@ -683,13 +696,6 @@ struct CryptoTest : Test {
 				base16::encode(stream, gnutlsGostKey.data);
 				return false;
 			}
-
-			base16::encode(std::cout, opensslGostKey.data);
-
-			Bytes opensslEncoded;
-			crypto::encryptBlock(crypto::Backend::OpenSSL, opensslGostKey, s_GostPrivKey, [&] (const uint8_t *buf, size_t size) {
-				opensslEncoded = BytesView(buf, size).bytes<Interface>();
-			});
 
 			Bytes gnutlsEncoded;
 			crypto::encryptBlock(crypto::Backend::GnuTLS, gnutlsGostKey, s_GostPrivKey, [&] (const uint8_t *buf, size_t size) {
@@ -701,14 +707,6 @@ struct CryptoTest : Test {
 					return false;
 				}
 			}
-
-			crypto::decryptBlock(crypto::Backend::OpenSSL, opensslGostKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
-				if (BytesView(buf, size) != BytesView(s_GostPrivKey)) {
-					stream << "OpenSSL: GOST decryption failed";
-					success = false;
-				}
-			});
-
 			crypto::decryptBlock(crypto::Backend::GnuTLS, gnutlsGostKey, gnutlsEncoded, [&] (const uint8_t *buf, size_t size) {
 				if (BytesView(buf, size) != BytesView(s_GostPrivKey)) {
 					stream << "GnuTLS: GOST decryption failed";
@@ -729,32 +727,41 @@ struct CryptoTest : Test {
 					success = false;
 				}
 			});
+#endif
 
 			return success;
 		});
 
 		runTest(stream, toString("block-cipher-gost+RSA"), count, passed, [&] () -> bool {
-			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_PKCS8PemKey);
 			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_PKCS8PemKey);
-
-			auto gnutlsGostKey = crypto::makeBlockKey(gnutlsPk, s_PKCS8PemKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
 			auto opensslGostKey = crypto::makeBlockKey(opensslPk, s_PKCS8PemKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
+
+			Bytes opensslEncoded;
+			crypto::encryptBlock(crypto::Backend::OpenSSL, opensslGostKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
+				opensslEncoded = BytesView(buf, size).bytes<Interface>();
+			});
+
+			bool success = true;
+
+			crypto::decryptBlock(crypto::Backend::OpenSSL, opensslGostKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "OpenSSL: GOST decryption failed";
+					success = false;
+				}
+			});
+
+#ifdef MODULE_STAPPLER_CRYPTO_GNUTLS
+			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_PKCS8PemKey);
+			auto gnutlsGostKey = crypto::makeBlockKey(gnutlsPk, s_PKCS8PemKey, crypto::BlockCipher::Gost3412_2015_CTR_ACPKM);
 
 			if (opensslGostKey != gnutlsGostKey) {
 				return false;
 			}
 
-			bool success = true;
-
-			Bytes opensslEncoded;
 			Bytes gnutlsEncoded;
 
 			crypto::encryptBlock(crypto::Backend::GnuTLS, gnutlsGostKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
 				gnutlsEncoded = BytesView(buf, size).bytes<Interface>();
-			});
-
-			crypto::encryptBlock(crypto::Backend::OpenSSL, opensslGostKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
-				opensslEncoded = BytesView(buf, size).bytes<Interface>();
 			});
 
 			if constexpr (crypto::SafeBlockEncoding) {
@@ -766,13 +773,6 @@ struct CryptoTest : Test {
 			crypto::decryptBlock(crypto::Backend::GnuTLS, gnutlsGostKey, gnutlsEncoded, [&] (const uint8_t *buf, size_t size) {
 				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
 					stream << "GnuTLS: GOST decryption failed";
-					success = false;
-				}
-			});
-
-			crypto::decryptBlock(crypto::Backend::OpenSSL, opensslGostKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
-				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
-					stream << "OpenSSL: GOST decryption failed";
 					success = false;
 				}
 			});
@@ -790,6 +790,7 @@ struct CryptoTest : Test {
 					success = false;
 				}
 			});
+#endif
 
 			return success;
 		});
@@ -801,6 +802,16 @@ struct CryptoTest : Test {
 			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_PKCS8PemKey);
 			auto opensslAesKey = crypto::makeBlockKey(opensslPk, s_PKCS8PemKey, crypto::BlockCipher::AES_CBC);
 
+			if (opensslAesKey != mbedtlsAesKey) {
+				return false;
+			}
+
+			bool success = true;
+
+			Bytes opensslEncoded;
+			Bytes mbedtlsEncoded;
+
+#ifdef MODULE_STAPPLER_CRYPTO_GNUTLS
 			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_PKCS8PemKey);
 			auto gnutlsAesKey = crypto::makeBlockKey(gnutlsPk, s_PKCS8PemKey, crypto::BlockCipher::AES_CBC);
 
@@ -812,11 +823,7 @@ struct CryptoTest : Test {
 				return false;
 			}
 
-			Bytes opensslEncoded;
 			Bytes gnutlsEncoded;
-			Bytes mbedtlsEncoded;
-
-			bool success = true;
 
 			crypto::encryptBlock(crypto::Backend::GnuTLS, gnutlsAesKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
 				gnutlsEncoded = BytesView(buf, size).bytes<Interface>();
@@ -828,6 +835,7 @@ struct CryptoTest : Test {
 					success = false;
 				}
 			});
+#endif
 
 			crypto::encryptBlock(crypto::Backend::OpenSSL, opensslAesKey, s_PKCS8PemKey, [&] (const uint8_t *buf, size_t size) {
 				opensslEncoded = BytesView(buf, size).bytes<Interface>();
@@ -851,6 +859,7 @@ struct CryptoTest : Test {
 				}
 			});
 
+#ifdef MODULE_STAPPLER_CRYPTO_GNUTLS
 			crypto::decryptBlock(crypto::Backend::GnuTLS, gnutlsAesKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
 				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
 					stream << "GnuTLS: AES-cross decryption failed";
@@ -880,6 +889,21 @@ struct CryptoTest : Test {
 					return false;
 				}
 			}
+#endif
+
+			crypto::decryptBlock(crypto::Backend::OpenSSL, opensslAesKey, mbedtlsEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "OpenSSL: AES-cross decryption failed";
+					success = false;
+				}
+			});
+
+			crypto::decryptBlock(crypto::Backend::MbedTLS, mbedtlsAesKey, opensslEncoded, [&] (const uint8_t *buf, size_t size) {
+				if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size())) {
+					stream << "MbedTLS: AES-cross decryption failed";
+					success = false;
+				}
+			});
 
 			return success;
 		});
@@ -887,14 +911,8 @@ struct CryptoTest : Test {
 		runTest(stream, toString("pk-rsa-encrypt"), count, passed, [&] () -> bool {
 			bool success = true;
 
-			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_PKCS8PemKey);
 			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_PKCS8PemKey);
 			crypto::PrivateKey mbedtlsPk(crypto::Backend::MbedTLS, s_PKCS8PemKey);
-
-			Bytes gnutlsPkEncrypted;
-			gnutlsPk.encrypt([&] (const uint8_t *buf, size_t size) {
-				gnutlsPkEncrypted = BytesView(buf, size).bytes<Interface>();;
-			}, s_GostPrivKey);
 
 			Bytes opensslPkEncrypted;
 			opensslPk.exportPublic().encrypt([&] (const uint8_t *buf, size_t size) {
@@ -906,13 +924,23 @@ struct CryptoTest : Test {
 				mbedtlsPkEncrypted = BytesView(buf, size).bytes<Interface>();;
 			}, s_GostPrivKey);
 
+#ifdef MODULE_STAPPLER_CRYPTO_GNUTLS
+			crypto::PrivateKey gnutlsPk(crypto::Backend::GnuTLS, s_PKCS8PemKey);
+			Bytes gnutlsPkEncrypted;
+			gnutlsPk.encrypt([&] (const uint8_t *buf, size_t size) {
+				gnutlsPkEncrypted = BytesView(buf, size).bytes<Interface>();;
+			}, s_GostPrivKey);
+#endif
+
 			if (!opensslPkEncrypted.empty()) {
+#ifdef MODULE_STAPPLER_CRYPTO_GNUTLS
 				gnutlsPk.decrypt([&] (const uint8_t *buf, size_t size) {
 					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
 						stream << "OpenSSL -> GnuTLS: RSA decryption failed";
 						success = false;
 					}
 				}, opensslPkEncrypted);
+#endif
 
 				mbedtlsPk.decrypt([&] (const uint8_t *buf, size_t size) {
 					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
@@ -924,6 +952,7 @@ struct CryptoTest : Test {
 				success = false;
 			}
 
+#ifdef MODULE_STAPPLER_CRYPTO_GNUTLS
 			if (!gnutlsPkEncrypted.empty()) {
 				opensslPk.decrypt([&] (const uint8_t *buf, size_t size) {
 					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
@@ -941,6 +970,7 @@ struct CryptoTest : Test {
 			} else {
 				success = false;
 			}
+#endif
 
 			if (!mbedtlsPkEncrypted.empty()) {
 				opensslPk.decrypt([&] (const uint8_t *buf, size_t size) {
@@ -950,12 +980,14 @@ struct CryptoTest : Test {
 					}
 				}, mbedtlsPkEncrypted);
 
+#ifdef MODULE_STAPPLER_CRYPTO_GNUTLS
 				gnutlsPk.decrypt([&] (const uint8_t *buf, size_t size) {
 					if (BytesView(buf, size).bytes<Interface>() != BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size())) {
 						stream << "MbedTLS -> GnuTLS: RSA decryption failed";
 						success = false;
 					}
 				}, mbedtlsPkEncrypted);
+#endif
 			} else {
 				success = false;
 			}

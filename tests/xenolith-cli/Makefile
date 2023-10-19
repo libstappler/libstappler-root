@@ -31,7 +31,7 @@ LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk
 
 LOCAL_MODULES ?= \
-	xenolith_backend_vkgui \
+	xenolith_backend_vk \
 	xenolith_application
 
 LOCAL_ROOT = .

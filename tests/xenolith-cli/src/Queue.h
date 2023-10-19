@@ -51,7 +51,7 @@ public:
 	const AttachmentData *getDataAttachment() const { return _dataAttachment; }
 	const AttachmentData *getImageAttachment() const { return _imageAttachment; }
 
-	void run(const Application *);
+	void run(Application *);
 
 protected:
 	using core::Queue::init;

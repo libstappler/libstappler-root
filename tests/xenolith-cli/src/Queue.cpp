@@ -131,8 +131,8 @@ void NoiseQueue::runTest() {
 
 				// then compile it on graphics device
 				app.getGlLoop()->compileQueue(queue, [app = &app, queue] (bool success) {
-					Application::getInstance()->performOnMainThread([success, app, queue] {
-						queue->run(app);
+					Application::getInstance()->performOnMainThread([app, queue] {
+						queue->run(const_cast<Application *>(app));
 					}, nullptr);
 				});
 			}
@@ -181,7 +181,7 @@ bool NoiseQueue::init() {
 	return false;
 }
 
-void NoiseQueue::run(const Application *app) {
+void NoiseQueue::run(Application *app) {
 	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this), core::FrameContraints{Extent2(1024, 768)});
 
 	auto inputData = Rc<NoiseDataInput>::alloc();
@@ -189,7 +189,7 @@ void NoiseQueue::run(const Application *app) {
 
 	req->addInput(getDataAttachment(), move(inputData));
 	req->setOutput(getImageAttachment(), [app] (core::FrameAttachmentData &data, bool success, Ref *) {
-		app->getGlLoop()->captureImage([success, app] (core::ImageInfoData info, BytesView view) {
+		app->getGlLoop()->captureImage([app] (core::ImageInfoData info, BytesView view) {
 			if (!view.empty()) {
 				auto fmt = core::getImagePixelFormat(info.format);
 				bitmap::PixelFormat pixelFormat = bitmap::PixelFormat::Auto;

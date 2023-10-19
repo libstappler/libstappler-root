@@ -39,8 +39,11 @@ LOCAL_MODULES ?= \
 	stappler_network \
 	stappler_backtrace \
 	stappler_crypto_openssl \
-	stappler_crypto_gnutls \
 	stappler_crypto_mbedtls
+
+ifndef WIN32
+LOCAL_MODULES += stappler_crypto_gnutls
+endif
 
 LOCAL_ROOT = .
 

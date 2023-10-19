@@ -21,6 +21,7 @@
  **/
 
 #include "GuiSceneContent.h"
+#include "XLInputListener.h"
 
 namespace stappler::xenolith::test {
 
@@ -46,6 +47,30 @@ bool GuiSceneContent::init() {
 	_layer4 = addChild(Rc<basic2d::Layer>::create(Color::Grey_500));
 	_layer4->setContentSize(Size2(48.0f, 48.0f));
 	_layer4->setAnchorPoint(Anchor::Middle);
+
+	auto l = addInputListener(Rc<InputListener>::create());
+
+	GestureKeyRecognizer::KeyMask keys;
+	keys.set();
+	l->addKeyRecognizer([] (const GestureData &gesture) {
+		log::verbose("Scene", gesture.event, ": ", core::getInputKeyCodeName(gesture.input->data.key.keycode),
+				", ", gesture.input->data.key.keysym, ",", getInputModifiersNames(gesture.input->data.modifiers),
+				", ", std::hex, uint32_t(gesture.input->data.key.keychar));
+		return true;
+	}, move(keys));
+
+	GestureKeyRecognizer::ButtonMask buttons;
+	buttons.set();
+	l->addTouchRecognizer([] (const GestureData &gesture) {
+		log::verbose("Scene", gesture.event, ": ", core::getInputButtonName(gesture.input->data.button),
+				",", getInputModifiersNames(gesture.input->data.modifiers), ", ", gesture.input->currentLocation);
+		return true;
+	}, move(buttons));
+
+	l->addScrollRecognizer([] (const GestureScroll &scroll) {
+		log::verbose("Scene", scroll.amount, " ", scroll.pos);
+		return true;
+	});
 
 	return true;
 }
