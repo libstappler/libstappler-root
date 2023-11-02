@@ -26,7 +26,9 @@ LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 LOCAL_OUTDIR := stappler-build
 LOCAL_EXECUTABLE := testapp
 
-LOCAL_MODULES_PATHS = $(STAPPLER_ROOT)/core/stappler-modules.mk
+LOCAL_MODULES_PATHS = \
+	$(STAPPLER_ROOT)/core/stappler-modules.mk \
+	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk
 
 LOCAL_MODULES ?= \
 	stappler_bitmap \
@@ -39,7 +41,10 @@ LOCAL_MODULES ?= \
 	stappler_network \
 	stappler_backtrace \
 	stappler_crypto_openssl \
-	stappler_crypto_mbedtls
+	stappler_crypto_mbedtls \
+	xenolith_backend_vkgui \
+	xenolith_resources_assets \
+	xenolith_renderer_material2d
 
 ifndef WIN32
 LOCAL_MODULES += stappler_crypto_gnutls
@@ -47,12 +52,14 @@ endif
 
 LOCAL_ROOT = .
 
-LOCAL_SRCS_DIRS :=  src
+LOCAL_SRCS_DIRS :=  src xenolith
 LOCAL_SRCS_OBJS :=
 
-LOCAL_INCLUDES_DIRS := src
+LOCAL_INCLUDES_DIRS := src xenolith
 LOCAL_INCLUDES_OBJS :=
 
 LOCAL_MAIN := main.cpp
+
+LOCAL_SHADERS_DIR := shaders
 
 include $(STAPPLER_ROOT)/build/make/universal.mk

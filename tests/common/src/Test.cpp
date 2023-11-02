@@ -125,19 +125,21 @@ bool TestManager::run(StringView str) const {
 	bool success = true;
 	for (auto &it : tests) {
 		if (it->name() == str) {
-			std::cout << it->name() << ": ";
+			StringStream out;
+			out << it->name() << ": ";
 			if (!it->run()) {
 				success = false;
-				std::cout << "[Failed]";
+				out << "[Failed]";
 			} else {
-				std::cout << "[Passed]";
+				out << "[Passed]";
 			}
 
 			const auto &desc = it->desc();
 			if (!desc.empty()) {
-				std::cout << ": " << it->desc();
+				out << ": " << it->desc();
 			}
-			std::cout << "\n";
+			out << "\n";
+			log::debug("Test", out.str());
 		}
 	}
 	return success;

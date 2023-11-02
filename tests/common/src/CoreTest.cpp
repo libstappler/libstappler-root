@@ -157,6 +157,53 @@ struct CoreTest : Test {
 			&& !defaultResult.valid();
 		});
 
+
+		runTest(stream, "itoa/dtoa", count, passed, [&] {
+			WideString wout;
+			String out;
+
+			auto cb = [&] (StringView iout) {
+				out = iout.str<memory::StandartInterface>();
+			};
+
+			auto wcb = [&] (WideStringView iout) {
+				wout = iout.str<memory::StandartInterface>();
+			};
+
+			Callback<void(StringView)> callback(cb);
+			Callback<void(WideStringView)> wcallback(wcb);
+
+			callback << double(12.34);
+			wcallback << double(12.34);
+			auto retd1 = out == "12.34" && wout == u"12.34";
+
+			callback << int64_t(1234);
+			wcallback << int64_t(1234);
+			auto ret1 = out == "1234" && wout == u"1234";
+
+			callback << int64_t(-1234);
+			wcallback << int64_t(-1234);
+			auto ret2 = out == "-1234" && wout == u"-1234";
+
+			callback << int64_t(-1234567890123456);
+			wcallback << int64_t(-1234567890123456);
+			auto ret3 = out == "-1234567890123456" && wout == u"-1234567890123456";
+
+			callback << int64_t(1234567890123456);
+			wcallback << int64_t(1234567890123456);
+			auto ret4 = out == "1234567890123456" && wout == u"1234567890123456";
+
+			callback << int64_t(12345);
+			wcallback << int64_t(12345);
+			auto ret5 = out == "12345" && wout == u"12345";
+
+			callback << int64_t(-12345);
+			wcallback << int64_t(-12345);
+			auto ret6 = out == "-12345" && wout == u"-12345";
+
+			return ret1 && ret2 && ret3 && ret4 && ret5 && ret6 && retd1;
+		});
+
 		_desc = stream.str();
 		return count == passed;
 	}

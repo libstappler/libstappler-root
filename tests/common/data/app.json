@@ -70,17 +70,17 @@
 	"roundtrip": true
 },{
 	"cbor": "+QAA",
-	"decoded": 0,
+	"decoded": 0.0,
 	"hex": "f90000",
 	"roundtrip": true
 },{
 	"cbor": "+YAA",
-	"decoded": -0,
+	"decoded": -0.0,
 	"hex": "f98000",
 	"roundtrip": true
 },{
 	"cbor": "+TwA",
-	"decoded": 1,
+	"decoded": 1.0,
 	"hex": "f93c00",
 	"roundtrip": true
 },{
@@ -95,12 +95,12 @@
 	"roundtrip": true
 },{
 	"cbor": "+Xv/",
-	"decoded": 65504,
+	"decoded": 65504.0,
 	"hex": "f97bff",
 	"roundtrip": true
 },{
 	"cbor": "+kfDUAA=",
-	"decoded": 100000,
+	"decoded": 100000.0,
 	"hex": "fa47c35000",
 	"roundtrip": true
 },{
@@ -125,7 +125,7 @@
 	"roundtrip": true
 },{
 	"cbor": "+cQA",
-	"decoded": -4,
+	"decoded": -4.0,
 	"hex": "f9c400",
 	"roundtrip": true
 },{

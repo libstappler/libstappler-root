@@ -76,8 +76,6 @@ bool SchemeAccessTest::runTest(const db::Transaction &t) {
 	using namespace db;
 	auto v = _accessTest.select(t, Query());
 
-	std::cout << v << "\n";
-
 	_accessTest.create(t, Value({
 		pair("name", Value(toString("Access.", Time::now().toMicros()))),
 		pair("role", Value(256))

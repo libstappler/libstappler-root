@@ -148,7 +148,25 @@ struct CborDataTest : Test {
 				} else {
 					Value cValue = it.second;
 					Value dValue = jIt->second;
-					stream << it.first << " failed: " << cValue << " vs " << dValue << "\n";
+					if (cValue.isArray()) {
+						if (cValue.size() != dValue.size()) {
+							stream << it.first << " failed: " << cValue << " vs " << dValue << "\n";
+						} else {
+							auto &cArr = cValue.asArray();
+							auto &dArr = dValue.asArray();
+
+							for (size_t i = 0; i < cArr.size(); ++ i) {
+								auto &v1 = cArr[i];
+								auto &v2 = dArr[i];
+								if (v1 != v2) {
+									stream << it.first << " failed: " << v1 << " vs " << v2 << "\n";
+									std::cout << it.first << " failed: " << v1 << " vs " << v2 << "\n";
+								}
+							}
+						}
+					} else {
+						stream << it.first << " failed: " << cValue << " vs " << dValue << "\n";
+					}
 				}
 			} else {
 				auto dIt = diagData.find(it.first);
