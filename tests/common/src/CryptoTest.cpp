@@ -249,9 +249,14 @@ Hnk1VdlqrfqjyV13si/4BEYpYmC75paNA5opHYg=
 
 
 
-static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b) {
+static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b, crypto::KeyType type) {
 	crypto::PrivateKey key(b);
-	key.generate(crypto::KeyBits::_2048);
+
+	if (!key.isGenerateSupported(type)) {
+		return true;
+	}
+
+	key.generate(crypto::KeyBits::_2048, type);
 
 	String pemPKCS1;
 	String derPKCS1;
@@ -259,7 +264,7 @@ static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b) {
 	String pemPKCS8;
 	String derPKCS8;
 
-	if (key.isSupported(crypto::KeyFormat::PKCS1)) {
+	if (type == crypto::KeyType::RSA && key.isSupported(crypto::KeyFormat::PKCS1)) {
 		key.exportPem([&] (const uint8_t *data, size_t size) {
 			pemPKCS1 = StringView((const char *)data, size).str<Interface>();
 		}, crypto::KeyFormat::PKCS1);
@@ -1003,7 +1008,9 @@ struct CryptoTest : Test {
 			}
 
 			runTest(stream, toString(title, "-genkey"), count, passed, [&] () -> bool {
-				return CryptoTest_genkey(stream, b);
+				return CryptoTest_genkey(stream, b, crypto::KeyType::GOST3410_2012_256)
+						&& CryptoTest_genkey(stream, b, crypto::KeyType::GOST3410_2012_512)
+						&& CryptoTest_genkey(stream, b, crypto::KeyType::RSA);
 			});
 
 			runTest(stream, toString(title, "-load"), count, passed, [&] () -> bool {

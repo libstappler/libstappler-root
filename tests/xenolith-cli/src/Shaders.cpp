@@ -24,7 +24,7 @@
 
 namespace stappler::xenolith::test {
 
-#include "noise.comp"
+#include "noise.comp.h"
 
 SpanView<uint32_t> NoiseComp((const uint32_t *)noise_comp, noise_comp_len / sizeof(uint32_t));
 

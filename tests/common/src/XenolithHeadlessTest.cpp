@@ -33,14 +33,13 @@
 #include "XLVkRenderPass.h"
 #include "XLVkQueuePass.h"
 #include "XLVkPipeline.h"
-#include "XLVkBuffer.h"
 #include "XLCoreAttachment.h"
 #include "XLCoreFrameQueue.h"
 #include "XLCoreFrameRequest.h"
 
 namespace stappler::xenolith::test::detail {
 
-#include "noise.comp"
+#include "noise.comp.h"
 
 SpanView<uint32_t> NoiseComp((const uint32_t *)noise_comp, noise_comp_len / sizeof(uint32_t));
 
@@ -73,40 +72,6 @@ protected:
 
 	const AttachmentData *_dataAttachment = nullptr;
 	const AttachmentData *_imageAttachment = nullptr;
-};
-
-class NoiseDataAttachment : public vk::BufferAttachment {
-public:
-	virtual ~NoiseDataAttachment();
-
-	virtual bool init(AttachmentBuilder &) override;
-
-	virtual bool validateInput(const Rc<core::AttachmentInputData> &) const override;
-
-protected:
-	using BufferAttachment::init;
-
-	virtual Rc<AttachmentHandle> makeFrameHandle(const FrameQueue &) override;
-};
-
-class NoiseDataAttachmentHandle : public vk::BufferAttachmentHandle {
-public:
-	virtual ~NoiseDataAttachmentHandle();
-
-	virtual void submitInput(FrameQueue &, Rc<core::AttachmentInputData> &&, Function<void(bool)> &&) override;
-
-	virtual bool isDescriptorDirty(const PassHandle &, const vk::PipelineDescriptor &,
-			uint32_t, bool isExternal) const override;
-
-	virtual bool writeDescriptor(const core::QueuePassHandle &, vk::DescriptorBufferInfo &) override;
-
-	const Rc<vk::DeviceBuffer> &getBuffer() const { return _data; }
-
-protected:
-	void loadData(vk::DeviceFrameHandle *devFrame);
-
-	Rc<vk::DeviceBuffer> _data;
-	Rc<NoiseDataInput> _input;
 };
 
 class NoisePass : public vk::QueuePass {
@@ -191,7 +156,34 @@ bool NoiseQueue::init() {
 
 	auto dataAttachment = builder.addAttachemnt("NoiseDataAttachment", [&] (AttachmentBuilder &attachmentBuilder) -> Rc<Attachment> {
 		attachmentBuilder.defineAsInput();
-		return Rc<NoiseDataAttachment>::create(attachmentBuilder);
+		auto a = Rc<vk::BufferAttachment>::create(attachmentBuilder, core::BufferInfo(
+			core::BufferUsage::UniformBuffer, sizeof(NoiseData)
+		));
+
+		a->setValidateInputCallback([] (const Attachment &, const Rc<AttachmentInputData> &data) {
+			return dynamic_cast<NoiseDataInput *>(data.get()) != nullptr;
+		});
+
+		a->setFrameHandleCallback([] (Attachment &a, const FrameQueue &queue) {
+			auto h = Rc<vk::BufferAttachmentHandle>::create(a, queue);
+			h->setInputCallback([] (AttachmentHandle &handle, FrameQueue &queue, AttachmentInputData *input, Function<void(bool)> &&cb) {
+				auto a = static_cast<vk::BufferAttachment *>(handle.getAttachment().get());
+				auto d = static_cast<NoiseDataInput *>(input);
+				auto devFrame = static_cast<vk::DeviceFrameHandle *>(queue.getFrame().get());
+				auto buf = devFrame->getMemPool(devFrame)->spawn(vk::AllocationUsage::DeviceLocalHostVisible, a->getInfo());
+				auto b = static_cast<vk::BufferAttachmentHandle *>(&handle);
+
+				buf->map([&] (uint8_t *buf, VkDeviceSize) {
+					memcpy(buf, &d->data, sizeof(NoiseData));
+				});
+
+				b->addBufferView(move(buf));
+
+				cb(true);
+			});
+			return h;
+		});
+		return a;
 	});
 
 	auto imageAttachment = builder.addAttachemnt("NoiseImageAttachment", [&] (AttachmentBuilder &attachmentBuilder) -> Rc<Attachment> {
@@ -199,7 +191,7 @@ bool NoiseQueue::init() {
 		return Rc<vk::ImageAttachment>::create(attachmentBuilder,
 			ImageInfo(Extent2(1024, 768), ImageUsage::Storage | ImageUsage::TransferSrc, ImageTiling::Optimal, ImageFormat::R8G8B8A8_UNORM),
 			ImageAttachment::AttachmentInfo{
-				.initialLayout = AttachmentLayout::Undefined,
+				.initialLayout = AttachmentLayout::General,
 				.finalLayout = AttachmentLayout::General,
 				.clearOnLoad = true,
 				.clearColor = Color4F(0.0f, 0.0f, 0.0f, 0.0f)}
@@ -252,84 +244,6 @@ void NoiseQueue::run(Application *app) {
 	app->getGlLoop()->runRenderQueue(move(req), 0);
 }
 
-NoiseDataAttachment::~NoiseDataAttachment() { }
-
-bool NoiseDataAttachment::init(AttachmentBuilder &builder) {
-	return vk::BufferAttachment::init(builder, core::BufferInfo(
-		core::BufferUsage::UniformBuffer, sizeof(NoiseData)
-	));
-}
-
-bool NoiseDataAttachment::validateInput(const Rc<core::AttachmentInputData> &data) const {
-	if (dynamic_cast<NoiseDataInput *>(data.get())) {
-		return true;
-	}
-	return false;
-}
-
-auto NoiseDataAttachment::makeFrameHandle(const FrameQueue &handle) -> Rc<AttachmentHandle> {
-	return Rc<NoiseDataAttachmentHandle>::create(this, handle);
-}
-
-NoiseDataAttachmentHandle::~NoiseDataAttachmentHandle() { }
-
-void NoiseDataAttachmentHandle::submitInput(FrameQueue &q, Rc<core::AttachmentInputData> &&data, Function<void(bool)> &&cb) {
-	auto d = data.cast<NoiseDataInput>();
-	if (!d || q.isFinalized()) {
-		cb(false);
-		return;
-	}
-
-	q.getFrame()->waitForDependencies(data->waitDependencies, [this, d = move(d), cb = move(cb)] (FrameHandle &handle, bool success) mutable {
-		if (!success || !handle.isValidFlag()) {
-			cb(false);
-			return;
-		}
-
-		auto devFrame = (vk::DeviceFrameHandle *)(&handle);
-
-		_input = move(d);
-		_data = devFrame->getMemPool(devFrame)->spawn(vk::AllocationUsage::DeviceLocalHostVisible,
-					core::BufferInfo(((vk::BufferAttachment *)_attachment.get())->getInfo()));
-
-		loadData(devFrame);
-
-		cb(true);
-	});
-}
-
-bool NoiseDataAttachmentHandle::isDescriptorDirty(const PassHandle &, const vk::PipelineDescriptor &,
-		uint32_t, bool isExternal) const {
-	return _data;
-}
-
-bool NoiseDataAttachmentHandle::writeDescriptor(const core::QueuePassHandle &, vk::DescriptorBufferInfo &info) {
-	info.buffer = _data;
-	info.offset = 0;
-	info.range = _data->getSize();
-	return true;
-}
-
-void NoiseDataAttachmentHandle::loadData(vk::DeviceFrameHandle *devFrame) {
-	NoiseData *data = nullptr;
-	vk::DeviceBuffer::MappedRegion mapped;
-	if (devFrame->isPersistentMapping()) {
-		mapped = _data->map();
-		data = (NoiseData *)mapped.ptr;
-	} else {
-		data = new NoiseData;
-	}
-
-	memcpy(data, &_input->data, sizeof(NoiseData));
-
-	if (devFrame->isPersistentMapping()) {
-		_data->unmap(mapped, true);
-	} else {
-		_data->setData(BytesView((const uint8_t *)data, sizeof(NoiseData)));
-		delete data;
-	}
-}
-
 NoisePass::~NoisePass() { }
 
 bool NoisePass::init(Queue::Builder &queueBuilder, QueuePassBuilder &builder, const AttachmentData *data, const AttachmentData *image) {
@@ -379,15 +293,7 @@ Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle
 	auto buf = _pool->recordBuffer(*_device, [&] (vk::CommandBuffer &buf) {
 		auto pass = _data->impl.cast<vk::RenderPass>().get();
 		pass->perform(*this, buf, [&] {
-			auto sdfImage = (vk::Image *)_image->getImage()->getImage().get();
 			auto extent = handle.getFrameConstraints().extent;
-
-			vk::ImageMemoryBarrier inImageBarriers[] = {
-				vk::ImageMemoryBarrier(sdfImage, 0, VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL)
-			};
-
-			buf.cmdPipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
-					inImageBarriers);
 
 			buf.cmdBindDescriptorSets(pass, 0);
 
@@ -396,7 +302,7 @@ Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle
 			buf.cmdBindPipeline(pipeline);
 
 			buf.cmdDispatch((extent.width - 1) / pipeline->getLocalX() + 1, (extent.height - 1) / pipeline->getLocalY() + 1);
-		});
+		}, true);
 		return true;
 	});
 	return Vector<const vk::CommandBuffer *>{buf};

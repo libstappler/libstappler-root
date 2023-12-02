@@ -120,6 +120,63 @@ struct JwtTest : Test {
 		size_t passed = 0;
 		stream << "\n";
 
+		runTest(stream, "jwt-gost", count, passed, [&] () -> bool {
+			crypto::PrivateKey key(crypto::Backend::OpenSSL);
+			key.generate(crypto::KeyType::GOST3410_2012_512);
+
+			auto pub = key.exportPublic();
+
+			JsonWebToken<Interface> token({
+				pair("data", Value("data")),
+				pair("int", Value(42)),
+			});
+
+			auto d = token.exportSigned(key);
+
+			JsonWebToken<Interface> tmpToken(d);
+
+			if (!tmpToken.validate(pub)) {
+				return false;
+			}
+			return true;
+		});
+
+		runTest(stream, "aes-gost", count, passed, [&] () -> bool {
+			auto secret = string::Sha512::make(PUBLIC_KEY);
+
+			crypto::PrivateKey priv(crypto::Backend::OpenSSL);
+			priv.generate(crypto::KeyType::GOST3410_2012_512);
+
+			auto pub = priv.exportPublic();
+
+			AesToken<Interface>::Keys keys({
+				&pub,
+				&priv,
+				BytesView(secret)
+			});
+
+			AesToken<Interface> tok = AesToken<Interface>::create(keys);
+
+			tok.setString(StringView("String"), "string");
+			tok.setInteger(42, "integer");
+
+			auto fp = AesToken<Interface>::Fingerprint(crypto::HashFunction::GOST_3411, BytesView(secret));
+			auto d = tok.exportData(fp);
+			auto jwtTok = tok.exportToken("stappler.org", fp, 720_sec, "stappler.org");
+
+			auto next = AesToken<Interface>::parse(d, fp, keys);
+			auto jwtNext = AesToken<Interface>::parse(jwtTok, fp, "stappler.org", "stappler.org", keys);
+
+			if (next.getData() != tok.getData()) {
+				std::cout << data::EncodeFormat::Pretty << next.getData() << "\n" << tok.getData() << "\n";
+				return false;
+			}
+			if (jwtNext.getData() != tok.getData()) {
+				std::cout << data::EncodeFormat::Pretty << jwtNext.getData() << "\n" << tok.getData() << "\n";
+				return false;
+			}
+			return true;
+		});
 		runTest(stream, "pubkey", count, passed, [&] () -> bool {
 			return sshPk.exportPem([] (const uint8_t *, size_t) { }) && pub.exportPem([] (const uint8_t *, size_t) { });
 		});
@@ -161,7 +218,7 @@ struct JwtTest : Test {
 			tok.setString(StringView("String"), "string");
 			tok.setInteger(42, "integer");
 
-			auto fp = AesToken<Interface>::Fingerprint(secret);
+			auto fp = AesToken<Interface>::Fingerprint(crypto::HashFunction::GOST_3411, BytesView(secret));
 			auto d = tok.exportData(fp);
 
 			auto next = AesToken<Interface>::parse(d, fp, keys);
