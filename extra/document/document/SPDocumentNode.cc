@@ -20,24 +20,23 @@
  THE SOFTWARE.
  **/
 
-#ifndef TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
-#define TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
+#include "SPDocumentNode.h"
 
-#include "XL2dScene.h"
+namespace stappler::document {
 
-namespace stappler::xenolith::test {
+Node::Node() { }
 
-class GuiScene : public basic2d::Scene2d {
-public:
-	virtual ~GuiScene();
+Node::Node(StyleList &&style, WideString &&value)
+: _style(move(style)), _value(move(value)) { }
 
-	virtual bool init(Application *loop, const core::FrameContraints &);
+Node::Node(StringView htmlName, StringView htmlId)
+: _htmlId(htmlId.str<Interface>())
+, _htmlName(htmlName.str<Interface>()) { }
 
-	virtual void onEnter(Scene *) override;
-
-protected:
-};
+Node::Node(StringView htmlName, StringView htmlId, StyleList &&style, Map<String, String> &&map)
+: _htmlId(htmlId.str<Interface>())
+, _htmlName(htmlName.str<Interface>())
+, _style(move(style))
+, _attributes(move(map)) { }
 
 }
-
-#endif /* TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_ */

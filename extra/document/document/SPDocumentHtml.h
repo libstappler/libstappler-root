@@ -20,24 +20,33 @@
  THE SOFTWARE.
  **/
 
-#ifndef TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
-#define TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
+#ifndef EXTRA_DOCUMENT_DOCUMENT_SPDOCUMENTHTML_H_
+#define EXTRA_DOCUMENT_DOCUMENT_SPDOCUMENTHTML_H_
 
-#include "XL2dScene.h"
+#include "SPDocument.h"
+#include "SPDocumentPageContainer.h"
 
-namespace stappler::xenolith::test {
+namespace stappler::document {
 
-class GuiScene : public basic2d::Scene2d {
+class DocumentHtml : public Document {
 public:
-	virtual ~GuiScene();
+	static bool isHtml(StringView);
+	static bool isHtml(FilePath);
+	static bool isHtml(BytesView);
 
-	virtual bool init(Application *loop, const core::FrameContraints &);
+	virtual ~DocumentHtml() = default;
 
-	virtual void onEnter(Scene *) override;
+	virtual bool init(FilePath, StringView ct = StringView());
+	virtual bool init(BytesView, StringView ct = StringView());
+	virtual bool init(memory::pool_t *, FilePath, StringView ct = StringView());
+	virtual bool init(memory::pool_t *, BytesView, StringView ct = StringView());
 
 protected:
+	virtual bool read(BytesView, StringView ct);
+
+	Rc<PageContainer> _root;
 };
 
 }
 
-#endif /* TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_ */
+#endif /* EXTRA_DOCUMENT_DOCUMENT_SPDOCUMENTHTML_H_ */

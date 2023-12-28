@@ -20,24 +20,32 @@
  THE SOFTWARE.
  **/
 
-#ifndef TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
-#define TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
+#ifndef EXTRA_DOCUMENT_DOCUMENT_SPDOCUMENTPAGECONTAINER_H_
+#define EXTRA_DOCUMENT_DOCUMENT_SPDOCUMENTPAGECONTAINER_H_
 
-#include "XL2dScene.h"
+#include "SPDocumentStyleContainer.h"
+#include "SPDocumentNode.h"
 
-namespace stappler::xenolith::test {
+namespace stappler::document {
 
-class GuiScene : public basic2d::Scene2d {
+class PageContainer : public StyleContainer {
 public:
-	virtual ~GuiScene();
+	virtual ~PageContainer() = default;
 
-	virtual bool init(Application *loop, const core::FrameContraints &);
+	virtual bool init();
 
-	virtual void onEnter(Scene *) override;
+	Node *getRoot() { return &_root; }
+
+	void setTitle(const StringView &);
+	void setMeta(const StringView &);
+	void setBase(const StringView &);
+	void addLink(const StringView &);
 
 protected:
+	String _title;
+	Node _root;
 };
 
 }
 
-#endif /* TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_ */
+#endif /* EXTRA_DOCUMENT_DOCUMENT_SPDOCUMENTPAGECONTAINER_H_ */

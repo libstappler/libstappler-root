@@ -21,6 +21,7 @@
  **/
 
 #include "SPCommon.h"
+#include "SPString.h"
 #include "Test.h"
 
 namespace stappler::app::test {
@@ -157,7 +158,6 @@ struct CoreTest : Test {
 			&& !defaultResult.valid();
 		});
 
-
 		runTest(stream, "itoa/dtoa", count, passed, [&] {
 			WideString wout;
 			String out;
@@ -202,6 +202,20 @@ struct CoreTest : Test {
 			auto ret6 = out == "-12345" && wout == u"-12345";
 
 			return ret1 && ret2 && ret3 && ret4 && ret5 && ret6 && retd1;
+		});
+
+		runTest(stream, "toupper/tolower", count, passed, [&] {
+			StringViewUtf8 str("тестовая Строка");
+			auto s1 = string::tolower<memory::StandartInterface>(str);
+			auto s2 = string::toupper<memory::StandartInterface>(str);
+			auto s3 = string::totitle<memory::StandartInterface>(str);
+
+			if (s1 == StringViewUtf8("тестовая строка") &&  s2 == StringViewUtf8("ТЕСТОВАЯ СТРОКА")) {
+				return true;
+			} else {
+				std::cout << "'" << s1 << "': '" <<  "тестовая строка" << "' '" << s2 << "': '" << "ТЕСТОВАЯ СТРОКА" << "'\n";
+				return false;
+			}
 		});
 
 		_desc = stream.str();

@@ -33,16 +33,15 @@ GuiScene::~GuiScene() { }
 bool GuiScene::init(Application *loop, const core::FrameContraints &constraints) {
 	core::Queue::Builder builder("Loader");
 
+	builder.addImage("xenolith-1-480.png",
+			core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, core::ImageHints::Opaque),
+			FilePath("resources/xenolith-1-480.png"));
+	builder.addImage("xenolith-2-480.png",
+			core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, core::ImageHints::Opaque),
+			FilePath("resources/xenolith-2-480.png"));
+
 	basic2d::vk::ShadowPass::RenderQueueInfo info{
-		loop, Extent2(constraints.extent.width, constraints.extent.height), basic2d::vk::ShadowPass::Flags::None,
-		[&] (core::Resource::Builder &resourceBuilder) {
-			resourceBuilder.addImage("xenolith-1-480.png",
-					core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, core::ImageHints::Opaque),
-					FilePath("resources/xenolith-1-480.png"));
-			resourceBuilder.addImage("xenolith-2-480.png",
-					core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, core::ImageHints::Opaque),
-					FilePath("resources/xenolith-2-480.png"));
-		}
+		loop, Extent2(constraints.extent.width, constraints.extent.height), basic2d::vk::ShadowPass::Flags::None
 	};
 
 	basic2d::vk::ShadowPass::makeDefaultRenderQueue(builder, info);
@@ -56,6 +55,19 @@ bool GuiScene::init(Application *loop, const core::FrameContraints &constraints)
 	setContent(content);
 
 	return true;
+}
+
+void GuiScene::onEnter(Scene *scene) {
+	Scene2d::onEnter(scene);
+
+	std::thread thread([] {
+		String testString("test String");
+
+		log::debug("GuiScene", string::tolower<Interface>(testString));
+		log::debug("GuiScene", string::toupper<Interface>(testString));
+		log::debug("GuiScene", string::totitle<Interface>(testString));
+	});
+	thread.detach();
 }
 
 }

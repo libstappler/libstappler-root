@@ -20,24 +20,37 @@
  THE SOFTWARE.
  **/
 
-#ifndef TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
-#define TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_
+#ifndef EXTRA_DOCUMENT_DOCUMENT_SPDOCUMENT_H_
+#define EXTRA_DOCUMENT_DOCUMENT_SPDOCUMENT_H_
 
-#include "XL2dScene.h"
+#include "SPRef.h"
+#include "SPFilesystem.h"
+#include "SPBytesView.h"
+#include "SPMemory.h"
 
-namespace stappler::xenolith::test {
+namespace stappler::document {
 
-class GuiScene : public basic2d::Scene2d {
+class Document : public RefBase<memory::StandartInterface> {
 public:
-	virtual ~GuiScene();
+	static bool canOpen(FilePath path, StringView ct = StringView());
+	static bool canOpen(BytesView data, StringView ct = StringView());
+	static bool canOpen(memory::pool_t *, FilePath path, StringView ct = StringView());
+	static bool canOpen(memory::pool_t *, BytesView data, StringView ct = StringView());
 
-	virtual bool init(Application *loop, const core::FrameContraints &);
+	static Rc<Document> open(FilePath path, StringView ct = StringView());
+	static Rc<Document> open(BytesView data, StringView ct = StringView());
+	static Rc<Document> open(memory::pool_t *, FilePath path, StringView ct = StringView());
+	static Rc<Document> open(memory::pool_t *, BytesView data, StringView ct = StringView());
 
-	virtual void onEnter(Scene *) override;
+	virtual ~Document();
+
+	virtual bool init();
+	virtual bool init(memory::pool_t *);
 
 protected:
+	memory::pool_t *_pool = nullptr;
 };
 
 }
 
-#endif /* TESTS_XENOLITH_GUI_SRC_XENOLITHGUISCENE_H_ */
+#endif /* EXTRA_DOCUMENT_DOCUMENT_SPDOCUMENT_H_ */
