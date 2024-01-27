@@ -56,7 +56,6 @@ protected:
 	core::SwapchainConfig selectConfig(const core::SurfaceInfo &info);
 
 	Value _storageParams;
-	storage::StorageRoot _storageRoot;
 	Rc<xenolith::storage::Server> _storageServer;
 	Rc<xenolith::network::Controller> _networkController;
 	Rc<xenolith::storage::AssetLibrary> _assetLibrary;

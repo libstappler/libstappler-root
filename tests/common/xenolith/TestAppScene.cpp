@@ -20,6 +20,8 @@
  THE SOFTWARE.
  **/
 
+#if MODULE_XENOLITH_SCENE
+
 #include "TestAppScene.h"
 #include "TestAppDelegate.h"
 #include "TestGeneralUpdate.h"
@@ -126,3 +128,5 @@ void TestAppScene::runNext(LayoutName name) {
 }
 
 }
+
+#endif

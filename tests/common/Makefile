@@ -28,7 +28,8 @@ LOCAL_EXECUTABLE := testapp
 
 LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/core/stappler-modules.mk \
-	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk
+	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk \
+	$(STAPPLER_ROOT)/extra/webserver/webserver-modules.mk
 
 LOCAL_MODULES ?= \
 	stappler_bitmap \
@@ -42,6 +43,9 @@ LOCAL_MODULES ?= \
 	stappler_backtrace \
 	stappler_crypto_openssl \
 	stappler_crypto_mbedtls \
+	stappler_webserver_pug \
+	stappler_webserver_webserver \
+	stappler_webserver_unix \
 	xenolith_backend_vkgui \
 	xenolith_resources_assets \
 	xenolith_renderer_material2d
@@ -52,7 +56,7 @@ endif
 
 LOCAL_ROOT = .
 
-LOCAL_SRCS_DIRS :=  src xenolith
+LOCAL_SRCS_DIRS :=  src xenolith web
 LOCAL_SRCS_OBJS :=
 
 LOCAL_INCLUDES_DIRS := src xenolith
@@ -61,5 +65,8 @@ LOCAL_INCLUDES_OBJS :=
 LOCAL_MAIN := main.cpp
 
 LOCAL_SHADERS_DIR := shaders
+
+# For dynamic self-loading
+LDFLAGS := -Wl,--export-dynamic
 
 include $(STAPPLER_ROOT)/build/make/universal.mk

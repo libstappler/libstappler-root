@@ -1,0 +1,269 @@
+html {
+	font-size: 18px;
+}
+
+body {
+	background: #aaa;
+	margin: 0;
+	padding: 0;
+}
+
+h6.components {
+	font-family: "Roboto";
+	margin: 0;
+	padding: 0 0 0 1rem;
+	font-weigth: bold;
+	font-size: 0.9rem;
+	color: #999;
+}
+
+span {
+	font-family: "Roboto";
+}
+
+span.method {
+	font-weight: bold;
+	color: #666;
+}
+
+span.pattern {
+	font-family: "monospace";
+	color: #333;
+}
+
+.body {
+	margin: 1% auto;
+	padding: 4px;
+	max-width: 1380px;
+	width: 98%;
+	background: #fff;
+	box-shadow: 0 2px 8px #666;
+}
+
+.title {
+	margin: 16px;
+	border-bottom: 1px #ccc solid;
+	display: flex;
+	justify-content: space-between;
+}
+
+.title > h1 {
+	font-family: "Roboto";
+	font-size: 1.2rem;
+	margin: 0;
+	padding: 0;
+	font-weight: 300;
+}
+
+.title > h1 > span.name {
+	font-weight: 500;
+}
+
+.title > p.nav {
+	text-align: right;
+	font-family: "Roboto";
+	font-size: 1.2rem;
+	margin: 0;
+	padding: 0;
+}
+
+a {
+	font-family: "Roboto";
+	margin: 6px;
+	color: #00bfa5ff;
+	font-weight: 500;
+	font-size: 1.1rem;
+}
+
+.title > p.nav > span.id {
+	color: #999;
+}
+
+.main {
+	margin: 16px;
+}
+
+.main > form#setup > input {
+	width: 160px;
+	display: block;
+	margin: 4px auto;
+	padding: 0;
+}
+
+div.map {
+	padding-left: 2rem;
+}
+
+div.map > p.components {
+	padding: 0;
+	margin: 0;
+}
+
+p.components > span.component {
+	font-family: "Roboto";
+	display: inline-block;
+	background-color: #64ffda;
+	outline: 1px #00bfa5 solid;
+	padding: 2px 6px;
+	margin: 4px;
+}
+
+p.components span.version {
+	color: #999;
+}
+
+p.components > span.db {
+	background-color: #ffd180;
+	outline: 1px #e65100 solid;
+}
+
+p.components > span.root {
+	background-color: #ea80fc;
+	outline: 1px #6a1b9a solid;
+}
+p.components > span.rootserver {
+	background-color: #eee;
+	outline: 1px #999 solid;
+}
+p.components > span.map {
+	background-color: #ccc;
+	outline: 1px #999 solid;
+}
+
+p.components > span.scheme {
+	background-color: #8c9eff;
+	outline: 1px #304ffe solid;
+}
+
+#output p {
+	margin: 0;
+	padding: 0;
+	white-space: pre-wrap;
+}
+
+.content {
+	width: 99%;
+	height: 1600px;
+	padding-left: 10px;
+	white-space: pre-wrap;
+	font-family: monospace;
+	-moz-tab-size: 4;
+}
+
+.key { font-weight: bold }
+.bool,.integer,.float { color: blue }
+.string,.bytes { color: green }
+.null { color: red }
+.key > .quote { opacity: 0 }
+
+.actions { }
+
+.delete {
+	color: white;
+	background: #d50000
+}
+
+.edit {
+	color: white;
+	background: #303f9f
+}
+
+.edit,.delete {
+	opacity: 0.4;
+	line-height: 3em;
+	padding: 0.5em;
+	text-decoration: none;
+	border-radius: 0.5em;
+	box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.5);
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	-webkit-touch-callout: none;
+}
+
+.edit:hover,.delete:hover { opacity: 1.0 }
+.error { color: red }
+
+pre {
+	margin: 0;
+	padding: 0;
+}
+
+.code {
+	font-family: monospace;
+	margin: 0;
+	padding: 0;
+	-moz-tab-size: 4;
+}
+
+span.time {
+	font-family: monospace;
+	color: gray;
+}
+
+span.ip {
+	font-family: monospace;
+	color: blue;
+}
+
+span.server {
+	font-weight: bold;
+}
+
+.headers {
+	margin: 4px 0;
+	overflow-x: scroll;
+	background-color: #ddd;
+}
+
+.data {
+	margin: 4px 0;
+	overflow-x: scroll;
+	background-color: #a7ffeb;
+}
+p.editbutton {
+	text-align: right;
+}
+p.editbutton > a {
+	font-size: 0.8rem;
+}
+.editorclosed {
+	display: none;
+}
+.CodeMirror, .CodeMirror-scroll {
+	min-height: 200px;
+}
+a.selected:before {
+  content: "< ";
+}
+a.selected:after {
+  content: " >";
+}
+
+form input[type=submit] {
+	outline:none;
+	border:none;
+	text-transform: uppercase;
+	background-color: #607d8b;
+	padding: 6px 12px;
+	color: white;
+}
+
+form input[type=text] {
+	width: 140px;
+	display: inline;
+}
+
+form input {
+	display: block;
+	padding: 2px 0;
+	margin: 4px;
+	border: none;
+	border-bottom: 2px solid #bbb;
+}
+
+form {
+	background-color: #e0f2f1;
+	padding: 4px;
+	margin: 4px;
+}

@@ -26,8 +26,8 @@ THE SOFTWARE.
 
 #if MODULE_STAPPLER_DB
 
-#include "STSqlDriver.h"
-#include "STStorageScheme.h"
+#include "SPSqlDriver.h"
+#include "SPDbScheme.h"
 
 namespace stappler::app::test {
 
@@ -42,7 +42,7 @@ struct DbTest : MemPoolTest {
 		// open db driver interface
 		// driver sqlite3 build with static library
 		// for pqsql, you can manually specify path to libpq with pqsql:<path>
-		auto driver = db::sql::Driver::open(pool, "sqlite3");
+		auto driver = db::sql::Driver::open(pool, nullptr, "sqlite3");
 		if (!driver) {
 			return false;
 		}

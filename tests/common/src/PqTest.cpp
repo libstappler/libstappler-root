@@ -26,10 +26,10 @@
 #if MODULE_STAPPLER_DB
 
 #include "SPData.h"
-#include "STSqlDriver.h"
-#include "STStorageScheme.h"
-#include "STFieldTextArray.h"
-#include "STPqHandle.h"
+#include "SPSqlDriver.h"
+#include "SPDbScheme.h"
+#include "SPDbFieldTextArray.h"
+#include "SPPqHandle.h"
 
 namespace stappler::db::test::detail {
 
@@ -74,32 +74,36 @@ protected:
 	db::Scheme _virtualTest = db::Scheme("virtual_test");
 };
 
-class Server : public db::StorageRoot {
+class Server : public db::ApplicationInterface, public AllocBase {
 public:
 	virtual ~Server();
 	Server(const mem_std::Value &, const Callback<Rc<ServerScheme>(memory::pool_t *)> &, db::AccessRoleId);
 
-	virtual void scheduleAyncDbTask(const db::Callback<db::Function<void(const db::Transaction &)>(db::pool_t *)> &setupCb) override;
-	virtual db::String getDocuemntRoot() const override;
+	virtual void scheduleAyncDbTask(const db::Callback<db::Function<void(const db::Transaction &)>(db::pool_t *)> &setupCb) const override;
+
+	virtual StringView getDocuemntRoot() const override;
 	virtual const db::Scheme *getFileScheme() const override;
 	virtual const db::Scheme *getUserScheme() const override;
 
-	virtual void onLocalBroadcast(const db::Value &) override;
-	virtual void onStorageTransaction(db::Transaction &) override;
+	virtual void initTransaction(db::Transaction &) const override;
 
 	void update();
 	void perform(const Callback<bool(const db::Transaction &)> &cb);
+
+	virtual void pushErrorMessage(Value &&) const override;
+	virtual void pushDebugMessage(Value &&) const override;
 
 protected:
 	memory::pool_t *_staticPool = nullptr;
 	memory::pool_t *_contextPool = nullptr;
 	Rc<ServerScheme> _scheme;
 
+	db::String _documentRoot;
 	db::AccessRoleId _defaultRole;
 	db::sql::Driver *_driver = nullptr;
 	db::sql::Driver::Handle _handle;
 	db::BackendInterface::Config interfaceConfig;
-	db::Vector<db::Function<void(const db::Transaction &)>> *asyncTasks = nullptr;
+	mutable db::Vector<db::Function<void(const db::Transaction &)>> *asyncTasks = nullptr;
 };
 
 ServerScheme::ServerScheme(memory::pool_t *p, uint32_t version) : _pool(p) {
@@ -420,7 +424,7 @@ bool ServerScheme::runCompressionTest(const db::Transaction &t) {
 
 		size_t messageSize = data.size();
 
-		auto handle = (pq::Handle *)t.getAdapter().interface();
+		auto handle = (pq::Handle *)t.getAdapter().getBackendInterface();
 		auto query = toString("SELECT LENGTH(message) FROM ", _compressionTest.getName(), " WHERE __oid=", val.getInteger("__oid"));
 		handle->performSimpleSelect(query, [&] (db::sql::Result &res) {
 			messageSize = size_t(res.readId());
@@ -451,10 +455,10 @@ bool ServerScheme::runDeltaTest(Server &server) {
 
 	auto checkTest = [&] (const db::Transaction &t, Time time) {
 		t.perform([&] {
-			QueryList list(&_deltaTest);
+			QueryList list(&server, &_deltaTest);
 			list.setDelta(time);
 			list.setAll();
-			list.resolve(Vector<String>{"name"});
+			list.resolve(Vector<StringView>{"name"});
 
 			auto objs = t.performQueryList(list);
 			return objs.size() == 4 && objs.getValue(3).getValue("__delta").getString("action") == "delete";
@@ -580,7 +584,7 @@ bool ServerScheme::runVirtualTest(const db::Transaction &t) {
 
 Server::~Server() {
 	_scheme = nullptr;
-	db::setStorageRoot(nullptr);
+	//db::setStorageRoot(nullptr);
 	if (_staticPool) {
 		memory::pool::destroy(_staticPool);
 	}
@@ -589,8 +593,6 @@ Server::~Server() {
 
 Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(memory::pool_t *)> &cb, db::AccessRoleId role)
 : _defaultRole(role) {
-	db::setStorageRoot(this);
-
 	memory::pool::initialize();
 	_staticPool = memory::pool::create();
 	_contextPool = memory::pool::create();
@@ -614,7 +616,7 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 			driver = StringView("sqlite");
 		}
 
-		_driver = db::sql::Driver::open(_staticPool, driver);
+		_driver = db::sql::Driver::open(_staticPool, this, driver);
 	}, _staticPool);
 
 	if (!_driver || !_scheme) {
@@ -631,6 +633,8 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 			}
 			log::error("Server", "Fail to initialize DB with params: ", out.str());
 		}
+
+		_documentRoot = filesystem::writablePath<db::Interface>();
 	}, _staticPool);
 
 	if (!_handle.get()) {
@@ -667,15 +671,15 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 	memory::pool::clear(_contextPool);
 }
 
-void Server::scheduleAyncDbTask(const db::Callback<db::Function<void(const db::Transaction &)>(db::pool_t *)> &setupCb) {
+void Server::scheduleAyncDbTask(const db::Callback<db::Function<void(const db::Transaction &)>(db::pool_t *)> &setupCb) const {
 	if (!asyncTasks) {
 		asyncTasks = new (_contextPool) db::Vector<db::Function<void(const db::Transaction &)>>;
 	}
 	asyncTasks->emplace_back(setupCb(_contextPool));
 }
 
-db::String Server::getDocuemntRoot() const {
-	return StringView(filesystem::writablePath<db::Interface>()).str<db::Interface>();
+StringView Server::getDocuemntRoot() const {
+	return _documentRoot;
 }
 
 const db::Scheme *Server::getFileScheme() const {
@@ -686,11 +690,15 @@ const db::Scheme *Server::getUserScheme() const {
 	return &_scheme->getUserScheme();
 }
 
-void Server::onLocalBroadcast(const db::Value &val) {
-	//onBroadcast(nullptr, Value(val));
+void Server::pushErrorMessage(Value &&value) const {
+	log::error("PqTest::Server", data::EncodeFormat::Pretty, value);
 }
 
-void Server::onStorageTransaction(db::Transaction &t) {
+void Server::pushDebugMessage(Value &&value) const {
+	log::debug("PqTest::Server", data::EncodeFormat::Pretty, value);
+}
+
+void Server::initTransaction(db::Transaction &t) const {
 	t.setRole(_defaultRole);
 }
 
@@ -788,7 +796,7 @@ struct PqTest : MemPoolTest {
 		// open db driver interface
 		// driver sqlite3 build with static library
 		// for pqsql, you can manually specify path to libpq with pqsql:<path>
-		auto driver = db::sql::Driver::open(pool, "pgsql");
+		auto driver = db::sql::Driver::open(pool, nullptr, "pgsql");
 		if (!driver) {
 			return false;
 		}
@@ -812,13 +820,6 @@ struct PqTest : MemPoolTest {
 
 		size_t count = 0;
 		size_t passed = 0;
-
-/*
-		bool runAccessTest(const db::Transaction &t);
-		bool runCompressionTest(const db::Transaction &t);
-		bool runDeltaTest(Server &server);
-		bool runRelationTest(Server &server);
-		bool runVirtualTest(const db::Transaction &t);*/
 
 		runTest(stream, "AccessTest", count, passed, [&] () -> bool {
 			auto ret = true;

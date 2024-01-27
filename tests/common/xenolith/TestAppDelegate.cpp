@@ -20,6 +20,8 @@
  THE SOFTWARE.
  **/
 
+#if MODULE_XENOLITH_SCENE
+
 #include "TestAppDelegate.h"
 #include "TestAppScene.h"
 #include "XLPlatform.h"
@@ -52,8 +54,6 @@ bool TestAppDelegate::init(ViewCommandLineData &&data, void *native) {
 }
 
 void TestAppDelegate::run(Function<void()> &&initCb) {
-	db::setStorageRoot(&_storageRoot);
-
 	if (_storageParams.getString("driver") == "sqlite") {
 		auto path = _storageParams.getString("dbname");
 		filesystem::mkdir(filepath::root(filepath::root(path)));
@@ -181,3 +181,5 @@ core::SwapchainConfig TestAppDelegate::selectConfig(const core::SurfaceInfo &inf
 }
 
 }
+
+#endif

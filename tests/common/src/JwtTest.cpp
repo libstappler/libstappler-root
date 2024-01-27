@@ -178,13 +178,13 @@ struct JwtTest : Test {
 			return true;
 		});
 		runTest(stream, "pubkey", count, passed, [&] () -> bool {
-			return sshPk.exportPem([] (const uint8_t *, size_t) { }) && pub.exportPem([] (const uint8_t *, size_t) { });
+			return sshPk.exportPem([] (BytesView) { }) && pub.exportPem([] (BytesView) { });
 		});
 
 		runTest(stream, "privkey", count, passed, [&] () -> bool {
 			auto pubKey = priv.exportPublic();
 
-			return pubKey.exportPem([&] (const uint8_t *data, size_t len) { });
+			return pubKey.exportPem([&] (BytesView) { });
 		});
 
 		runTest(stream, "jwt", count, passed, [&] () -> bool {

@@ -20,8 +20,12 @@
  THE SOFTWARE.
  **/
 
+#if MODULE_XENOLITH_SCENE
+
 #include "XLCommon.h"
 
 #include "TestCheckbox.cc"
 #include "TestMaterial.cc"
 #include "TestMaterialColorPicker.cc"
+
+#endif
