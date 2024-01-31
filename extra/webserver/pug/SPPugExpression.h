@@ -25,7 +25,7 @@
 
 #include "SPPug.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct Expression : memory::AllocPool {
 	enum Op : uint8_t {

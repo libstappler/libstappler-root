@@ -25,7 +25,7 @@
 
 #include "SPWeb.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Host;
 class AsyncTask;
@@ -47,6 +47,8 @@ public:
 	bool perform(const Callback<void(AsyncTask &)> &cb);
 
 	Pair<size_t, size_t> getCounters() const; // <completed, added>
+
+	Host getHost() const { return _host; }
 
 protected:
 	Time _lastUpdate = Time::now();

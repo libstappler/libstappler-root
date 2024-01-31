@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include "SPZip.h"
 #include "Test.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct ZipTest : Test {
 	ZipTest() : Test("ZipTest") { }

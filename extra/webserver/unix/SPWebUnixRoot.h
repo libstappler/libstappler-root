@@ -26,7 +26,7 @@
 #include "SPWebRoot.h"
 #include "SPWebAsyncTask.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class ConnectionQueue;
 class UnixHostController;

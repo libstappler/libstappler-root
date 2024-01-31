@@ -30,7 +30,7 @@
 #include "SPPadding.h"
 #include "SPMemory.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 struct StyleParameter;
 

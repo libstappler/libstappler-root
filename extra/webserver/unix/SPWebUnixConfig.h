@@ -25,7 +25,7 @@
 
 #include "SPWebInfo.h"
 
-namespace stappler::web::config {
+namespace STAPPLER_VERSIONIZED stappler::web::config {
 
 static constexpr size_t UNIX_CLIENT_BUFFER_SIZE = 8_KiB;
 static constexpr size_t UNIX_MAX_REQUEST_LINE = 64_KiB;

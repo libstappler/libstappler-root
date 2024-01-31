@@ -23,7 +23,7 @@
 #include "SPWebDbd.h"
 #include "SPWebRoot.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 struct DbConnection : public AllocBase {
 	db::sql::Driver::Handle handle;

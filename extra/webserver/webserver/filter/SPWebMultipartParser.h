@@ -25,7 +25,7 @@
 
 #include "SPWebInputFilter.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class MultipartParser : public InputParser {
 public:

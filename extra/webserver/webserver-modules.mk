@@ -21,6 +21,10 @@
 # current dir
 WEBSERVER_MODULE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
+WEBSERVER_VERSION_NUMBER := 1
+WEBSERVER_VERSION_BUILD := 1
+
 include $(WEBSERVER_MODULE_DIR)/webserver/webserver.mk
 include $(WEBSERVER_MODULE_DIR)/pug/pug.mk
 include $(WEBSERVER_MODULE_DIR)/unix/unix.mk
+include $(WEBSERVER_MODULE_DIR)/httpd/httpd.mk

@@ -40,7 +40,7 @@
 
 #include "TestAppDelegate.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct XenolithGuiTest : Test {
 	XenolithGuiTest() : Test("XenolithGuiTest") { }

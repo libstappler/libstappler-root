@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "SPVec3.h"
 #include "SPQuaternion.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct MathTest : Test {
 	MathTest() : Test("MathTest") { }

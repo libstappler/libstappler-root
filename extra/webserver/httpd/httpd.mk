@@ -1,15 +1,15 @@
-# Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
-#
+# Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+# 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-#
+# 
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-#
+# 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18,30 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-STAPPLER_ROOT ?= ../..
+APACHE_HTTPD_INCLUDE ?= /usr/local/include/apache
 
-# force to rebuild if this makefile changed
-LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
+MODULE_STAPPLER_WEBSERVER_HTTPD_PRECOMPILED_HEADERS :=
+MODULE_STAPPLER_WEBSERVER_HTTPD_SRCS_DIRS := $(WEBSERVER_MODULE_DIR)/httpd
+MODULE_STAPPLER_WEBSERVER_HTTPD_SRCS_OBJS :=
+MODULE_STAPPLER_WEBSERVER_HTTPD_INCLUDES_DIRS := $(WEBSERVER_MODULE_DIR)/httpd
+MODULE_STAPPLER_WEBSERVER_HTTPD_INCLUDES_OBJS := $(APACHE_HTTPD_INCLUDE)
+MODULE_STAPPLER_WEBSERVER_HTTPD_DEPENDS_ON := stappler_webserver_webserver stappler_apr
 
-LOCAL_OUTDIR := stappler-build
-LOCAL_EXECUTABLE := dataapp
-
-LOCAL_MODULES_PATHS = $(STAPPLER_ROOT)/core/stappler-modules.mk
-
-LOCAL_MODULES ?= \
-	stappler_data \
-	stappler_brotli_lib \
-	stappler_filesystem \
-	stappler_db
-
-LOCAL_ROOT = .
-
-LOCAL_SRCS_DIRS := src
-LOCAL_SRCS_OBJS :=
-
-LOCAL_INCLUDES_DIRS :=
-LOCAL_INCLUDES_OBJS := src
-
-LOCAL_MAIN := main.cpp
-
-include $(STAPPLER_ROOT)/build/make/universal.mk
+# module name resolution
+MODULE_stappler_webserver_httpd := MODULE_STAPPLER_WEBSERVER_HTTPD

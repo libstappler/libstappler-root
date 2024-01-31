@@ -29,7 +29,7 @@
 #include "SPVec3.h"
 #include "SPVec4.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct GeomTest : Test {
 	GeomTest() : Test("GeomTest") { }

@@ -27,7 +27,7 @@
 #include "SPWebRequest.h"
 #include "SPThread.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 SharedRc<UnixRoot> UnixRoot::create(Config &&cfg) {
 	return SharedRc<UnixRoot>::create(SharedMode::Allocator, move(cfg));
@@ -44,46 +44,6 @@ bool UnixRoot::init(Config &&config) {
 			workers = size_t(config.nworkers);
 		}
 
-		Vector<StringView> databases;
-		if (config.db) {
-			for (auto &it : config.db.getDict()) {
-				if (it.first == "databases") {
-					for (auto &iit : it.second.asArray()) {
-						if (iit.isString() && !iit.empty()) {
-							databases.emplace_back(iit.getString());
-						}
-					}
-				} else {
-					_dbParams.emplace(StringView(it.first).pdup(), StringView(it.second.getString()).pdup());
-				}
-			}
-		}
-
-		if (!_dbParams.empty()) {
-			auto it = _dbParams.find(StringView("driver"));
-			if (it != _dbParams.end()) {
-				_primaryDriver = db::sql::Driver::open(_rootPool, this, it->second);
-				if (_primaryDriver) {
-					_dbDrivers.emplace(it->second, _primaryDriver);
-				}
-			}
-		}
-
-		if (!_primaryDriver) {
-			_primaryDriver = db::sql::Driver::open(_rootPool, this, "pgsql");
-			if (_primaryDriver) {
-				_dbDrivers.emplace(StringView("pgsql"), _primaryDriver);
-			}
-		}
-
-		if (_primaryDriver && !databases.empty()) {
-			auto h = _primaryDriver->connect(_dbParams);
-			if (h.get()) {
-				_primaryDriver->init(h, databases);
-				_primaryDriver->finish(h);
-			}
-		}
-
 		for (auto &it : config.hosts) {
 			auto p = pool::create(_rootPool);
 			pool::push(p);
@@ -94,6 +54,8 @@ bool UnixRoot::init(Config &&config) {
 
 			pool::pop();
 		}
+
+		initDatabases();
 
 		_queue = new (_rootPool) ConnectionQueue(this, _rootPool, workers, move(config));
 

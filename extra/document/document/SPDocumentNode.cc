@@ -22,7 +22,7 @@
 
 #include "SPDocumentNode.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 Node::Node() { }
 

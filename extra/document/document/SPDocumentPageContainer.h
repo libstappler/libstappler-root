@@ -26,7 +26,7 @@
 #include "SPDocumentStyleContainer.h"
 #include "SPDocumentNode.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 class PageContainer : public StyleContainer {
 public:

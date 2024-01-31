@@ -22,7 +22,7 @@
 
 #include "SPWebRequestFilter.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 bool RequestFilter::readRequestLine(StringView &r, RequestInfo &req) {
 	r.skipChars<StringView::WhiteSpace>();

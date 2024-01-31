@@ -23,10 +23,70 @@
 #ifndef EXTRA_WEBSERVER_WEBSERVER_WEBSOCKET_SPWEBWEBSOCKETCONNECTION_H_
 #define EXTRA_WEBSERVER_WEBSERVER_WEBSOCKET_SPWEBWEBSOCKETCONNECTION_H_
 
-class SPWebWebsocketConnection {
+#include "SPWebWebsocket.h"
+#include "SPWebAsyncTask.h"
+
+namespace STAPPLER_VERSIONIZED stappler::web {
+
+class Request;
+class WebserverHandler;
+
+class WebsocketConnection : public AllocBase {
 public:
-	SPWebWebsocketConnection();
-	virtual ~SPWebWebsocketConnection();
+	static WebsocketConnection *create(allocator_t *alloc, pool_t *pool, const Request &);
+	static void destroy(WebsocketConnection *);
+
+	virtual ~WebsocketConnection();
+
+	bool isEnabled() const { return _enabled; }
+
+	virtual bool write(WebsocketFrameType t, const uint8_t *bytes = nullptr, size_t count = 0) = 0;
+
+	virtual bool run(WebsocketHandler *, const Callback<void()> &beginCb, const Callback<void()> &endCb) = 0;
+
+	virtual void wakeup() = 0;
+
+	virtual void terminate();
+
+	db::AccessRoleId getAccessRole() const { return _accessRole; }
+	void setAccessRole(db::AccessRoleId);
+
+	void setStatusCode(WebsocketStatusCode, StringView = StringView());
+
+	pool_t *getPool() const { return _pool; }
+
+	pool_t *getHandlePool() const;
+
+	Host getHost() const;
+
+	bool performAsync(const Callback<void(AsyncTask &)> &cb) const;
+
+protected:
+	// updates with last read status
+	WebsocketStatusCode resolveStatus(WebsocketStatusCode code);
+
+	WebsocketConnection(allocator_t *, pool_t *, HostController *);
+
+	allocator_t *_allocator = nullptr;
+	pool_t *_pool = nullptr;
+	Mutex _mutex;
+	std::atomic_flag _shouldTerminate;
+
+	bool _enabled = false;
+	bool _connected = true;
+
+	String _serverReason;
+	WebsocketStatusCode _clientCloseCode = WebsocketStatusCode::None;
+	WebsocketStatusCode _serverCloseCode = WebsocketStatusCode::Auto;
+
+	db::AccessRoleId _accessRole = db::AccessRoleId::Nobody;
+
+	mutable AsyncTaskGroup _group;
+
+	WebsocketFrameReader *_commonReader = nullptr;
+	WebsocketFrameWriter *_commonWriter = nullptr;
 };
+
+}
 
 #endif /* EXTRA_WEBSERVER_WEBSERVER_WEBSOCKET_SPWEBWEBSOCKETCONNECTION_H_ */

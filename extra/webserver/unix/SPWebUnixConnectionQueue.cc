@@ -32,7 +32,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 bool ConnectionQueue::setNonblocking(int fd) {
 	int flags = fcntl(fd, F_GETFL, 0);

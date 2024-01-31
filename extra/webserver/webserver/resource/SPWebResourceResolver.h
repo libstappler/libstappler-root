@@ -27,13 +27,13 @@
 #include "SPWebInfo.h"
 #include "SPDbScheme.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Resource;
 
 class ResourceResolver : public AllocBase {
 public:
-	ResourceResolver(const db::Adapter &a, const db::Scheme &scheme);
+	ResourceResolver(const db::Transaction &a, const db::Scheme &scheme);
 
 	bool selectById(uint64_t); // objects/id123
 	bool selectByAlias(const StringView &); // objects/named-alias
@@ -68,7 +68,7 @@ protected:
 	};
 
 	bool _all = false;
-	db::Adapter _storage;
+	db::Transaction _storage;
 	const db::Scheme *_scheme = nullptr;
 	InternalResourceType _type = Objects;
 	Resource *_resource = nullptr;

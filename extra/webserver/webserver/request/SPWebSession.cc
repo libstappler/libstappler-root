@@ -25,7 +25,7 @@
 #include "SPCrypto.h"
 #include "SPDbUser.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 #define SA_SESSION_EXISTS(var, def) ((var == NULL)?def:var)
 

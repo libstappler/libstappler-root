@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include "SPCommon.h"
 #include "SPMemory.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 // import std memory interface
 using namespace stappler::mem_std;

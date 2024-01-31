@@ -25,7 +25,7 @@
 #include "XLInputListener.h"
 #include "MaterialLabel.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 bool TestCheckbox::init(bool value, Function<void(bool)> &&cb) {
 	if (!Layer::init(Color::Grey_200)) {

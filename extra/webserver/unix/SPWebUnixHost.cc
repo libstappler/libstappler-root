@@ -24,7 +24,7 @@
 #include "SPWebHostComponent.h"
 #include "SPDso.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 UnixHostController::~UnixHostController() { }
 

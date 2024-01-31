@@ -30,7 +30,7 @@
 #include "XLCoreInput.h"
 #include "XLVk.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct XenolithCoreTest : Test {
 	XenolithCoreTest() : Test("XenolithCoreTest") { }

@@ -22,7 +22,7 @@
 
 #include "SPDocumentPageContainer.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 bool PageContainer::init() {
 	if (!StyleContainer::init()) {

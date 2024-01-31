@@ -22,7 +22,7 @@
 
 #include "SPPugLexer.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 Lexer::Lexer(const StringView &str, const ErrCb &err)
 : content(str), root(Token::Root, content) {

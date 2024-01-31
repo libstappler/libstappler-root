@@ -22,12 +22,70 @@
 
 #include "SPWebWebsocketConnection.h"
 
-SPWebWebsocketConnection::SPWebWebsocketConnection() {
-	// TODO Auto-generated constructor stub
+namespace STAPPLER_VERSIONIZED stappler::web {
 
+void WebsocketConnection::destroy(WebsocketConnection *conn) {
+	auto p = conn->_pool;
+	auto a = conn->_allocator;
+
+	pool::destroy(p);
+	allocator::destroy(a);
 }
 
-SPWebWebsocketConnection::~SPWebWebsocketConnection() {
-	// TODO Auto-generated destructor stub
+WebsocketConnection::~WebsocketConnection() { }
+
+void WebsocketConnection::terminate() {
+	_shouldTerminate.clear();
+	wakeup();
 }
 
+pool_t *WebsocketConnection::getHandlePool() const {
+	return _commonReader->pool;
+}
+
+Host WebsocketConnection::getHost() const {
+	return _group.getHost();
+}
+
+bool WebsocketConnection::performAsync(const Callback<void(AsyncTask &)> &cb) const {
+	if (!_enabled) {
+		return false;
+	}
+	return _group.perform(cb);
+}
+
+void WebsocketConnection::setStatusCode(WebsocketStatusCode s, StringView r) {
+	_serverCloseCode = s;
+	if (!r.empty()) {
+		_serverReason = r.str<Interface>();
+	}
+}
+
+void WebsocketConnection::setAccessRole(db::AccessRoleId id) {
+	_accessRole = id;
+}
+
+WebsocketStatusCode WebsocketConnection::resolveStatus(WebsocketStatusCode code) {
+	if (code == WebsocketStatusCode::Auto) {
+		switch (_commonReader->error) {
+		case WebsocketFrameReader::Error::NotInitialized: return WebsocketStatusCode::UnexceptedCondition; break;
+		case WebsocketFrameReader::Error::ExtraIsNotEmpty: return WebsocketStatusCode::ProtocolError; break;
+		case WebsocketFrameReader::Error::NotMasked: return WebsocketStatusCode::ProtocolError; break;
+		case WebsocketFrameReader::Error::UnknownOpcode: return WebsocketStatusCode::ProtocolError; break;
+		case WebsocketFrameReader::Error::InvalidSegment: return WebsocketStatusCode::ProtocolError; break;
+		case WebsocketFrameReader::Error::InvalidSize: return WebsocketStatusCode::TooLarge; break;
+		case WebsocketFrameReader::Error::InvalidAction: return WebsocketStatusCode::UnexceptedCondition; break;
+		default: return WebsocketStatusCode::Ok; break;
+		}
+	} else if (code == WebsocketStatusCode::None) {
+		return WebsocketStatusCode::Ok;
+	}
+	return code;
+}
+
+WebsocketConnection::WebsocketConnection(allocator_t *a, pool_t *p, HostController *c)
+: _allocator(a), _pool(p), _group(Host(c), [this] {
+	wakeup();
+}) { }
+
+}

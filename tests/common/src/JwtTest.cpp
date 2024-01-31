@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "SPValid.h"
 #include "Test.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 static constexpr auto PRIVATE_KEY =
 R"PubKey(-----BEGIN RSA PRIVATE KEY-----

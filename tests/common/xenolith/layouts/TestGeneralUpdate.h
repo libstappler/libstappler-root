@@ -25,7 +25,7 @@
 
 #include "TestLayout.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 class TestGeneralUpdate : public TestLayout {
 public:

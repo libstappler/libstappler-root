@@ -25,7 +25,7 @@
 
 #include "SPWebHttpd.h"
 
-namespace stappler::web::httpd {
+namespace STAPPLER_VERSIONIZED stappler::web::httpd {
 
 class table : public AllocBase {
 public:
@@ -105,11 +105,11 @@ public:
 		return *this;
 	}
 
-	apr_pool_t *get_allocator() const { return apr_table_elts(_table)->pool; }
+	pool_t *get_allocator() const { return (pool_t *) (apr_table_elts(_table)->pool); }
 
 protected:
 	const char *clone_string(const String &str) {
-		auto mem = apr_pcalloc(get_allocator(), str.size() + 1);
+		auto mem = pool::palloc(get_allocator(), str.size() + 1);
 		memcpy(mem, str.data(), str.size());
 		return (const char *)mem;
 	}
@@ -131,7 +131,7 @@ protected:
 	}
 
 	const char *emplace_string(StringView value) {
-		return value.pdup(get_allocator());
+		return value.pdup(get_allocator()).data();
 	}
 
 	const char *emplace_string(const char *str) {
@@ -212,18 +212,18 @@ public:
 
 	StringView at(const StringView &key) {
 		return StringView(apr_table_get(_table,
-				key.terminated() ? key.data() : key.pdup().data()), get_allocator());
+				key.terminated() ? key.data() : key.pdup().data()));
 	}
 	StringView at(const StringView &key) const {
 		return StringView(apr_table_get(_table,
-				key.terminated() ? key.data() : key.pdup().data()), get_allocator());
+				key.terminated() ? key.data() : key.pdup().data()));
 	}
 
 	StringView at(const char *key) {
-		return StringView(apr_table_get(_table, key), get_allocator());
+		return StringView(apr_table_get(_table, key));
 	}
 	StringView at(const char *key) const {
-		return StringView(apr_table_get(_table, key), get_allocator());
+		return StringView(apr_table_get(_table, key));
 	}
 
 	StringView operator[](const StringView &pos) { return at(pos); }

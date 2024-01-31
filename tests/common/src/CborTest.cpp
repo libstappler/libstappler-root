@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "SPData.h"
 #include "Test.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 #if MODULE_STAPPLER_FILESYSTEM
 

@@ -26,7 +26,7 @@
 #include "SPWebHostController.h"
 #include "SPWebUnixRoot.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class UnixHostController : public HostController {
 public:

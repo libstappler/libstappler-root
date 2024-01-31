@@ -27,7 +27,7 @@
 #include "SPDataValue.h"
 #include "SPRef.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct Lexer;
 struct Expression;

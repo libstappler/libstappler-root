@@ -25,7 +25,7 @@
 
 #include "SPPugToken.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct Lexer {
 	using ErrCb = Callback<void(const StringView &)>;

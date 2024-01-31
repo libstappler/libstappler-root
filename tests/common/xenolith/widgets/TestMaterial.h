@@ -26,7 +26,7 @@
 #include "TestLayout.h"
 #include "MaterialFlexibleLayout.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 class TestMaterial : public material2d::FlexibleLayout {
 public:

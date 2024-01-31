@@ -24,7 +24,7 @@
 #include "SPString.h"
 #include "SPFilesystem.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 auto StyleContainer::StyleBuffers::getSelectorStream() {
 	selector.clear();

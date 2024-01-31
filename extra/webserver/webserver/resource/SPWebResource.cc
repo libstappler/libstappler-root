@@ -22,18 +22,16 @@
 
 #include "SPWebResource.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
-Resource::Resource(ResourceType t, const Adapter &a, QueryList &&list)
-: _type(t), _transaction(Transaction::acquire(a)), _queries(move(list)) {
+Resource::Resource(ResourceType t, const Transaction &a, QueryList &&list)
+: _type(t), _transaction(a), _queries(move(list)) {
 	if (_queries.isDeltaApplicable()) {
 		_delta = Time::microseconds(_transaction.getDeltaValue(*_queries.getScheme()));
 	}
 }
 
-Resource::~Resource() {
-	_transaction.release();
-}
+Resource::~Resource() { }
 
 ResourceType Resource::getType() const {
 	return _type;
@@ -465,7 +463,7 @@ const db::Scheme &Resource::getRequestScheme() const {
 	return getScheme();
 }
 
-ResourceObject::ResourceObject(const Adapter &a, QueryList &&q)
+ResourceObject::ResourceObject(const Transaction &a, QueryList &&q)
 : Resource(ResourceType::Object, a, move(q)) { }
 
 bool ResourceObject::prepareUpdate() {
@@ -603,7 +601,7 @@ Vector<int64_t> ResourceObject::getDatabaseId(const QueryList &q, size_t count) 
 	return _transaction.performQueryListForIds(q, count);
 }
 
-ResourceReslist::ResourceReslist(const Adapter &a, QueryList &&q)
+ResourceReslist::ResourceReslist(const Transaction &a, QueryList &&q)
 : ResourceObject(a, move(q)) {
 	_type = ResourceType::ResourceList;
 }
@@ -649,7 +647,7 @@ Value ResourceReslist::createObject(Value &data, Vector<db::InputFile> &file) {
 	return performCreateObject(data, file, Value());
 }
 
-ResourceSet::ResourceSet(const Adapter &a, QueryList &&q)
+ResourceSet::ResourceSet(const Transaction &a, QueryList &&q)
 : ResourceReslist(a, move(q)) {
 	_type = ResourceType::Set;
 }
@@ -733,7 +731,7 @@ Value ResourceSet::appendObject(Value &data) {
 }
 
 
-ResourceRefSet::ResourceRefSet(const Adapter &a, QueryList &&q)
+ResourceRefSet::ResourceRefSet(const Transaction &a, QueryList &&q)
 : ResourceSet(a, move(q)), _sourceScheme(_queries.getSourceScheme()), _field(_queries.getField()) {
 	_type = ResourceType::ReferenceSet;
 }
@@ -897,7 +895,7 @@ bool ResourceRefSet::doAppendObjectsTransaction(Value &ret, const Value &val, bo
 	return !ret.empty();
 }
 
-ResourceProperty::ResourceProperty(const Adapter &a, QueryList &&q, const Field *prop)
+ResourceProperty::ResourceProperty(const Transaction &a, QueryList &&q, const Field *prop)
 : Resource(ResourceType::File, a, move(q)), _field(prop) {
 	_queries.setProperty(prop);
 }
@@ -929,7 +927,7 @@ Value ResourceProperty::getObject(bool forUpdate) {
 }
 
 
-ResourceFile::ResourceFile(const Adapter &a, QueryList &&q, const Field *prop)
+ResourceFile::ResourceFile(const Transaction &a, QueryList &&q, const Field *prop)
 : ResourceProperty(a, move(q), prop) {
 	_type = ResourceType::File;
 }
@@ -1013,7 +1011,7 @@ Value ResourceFile::getDatabaseObject() {
 	return _transaction.performQueryListField(_queries, *_field);
 }
 
-ResourceArray::ResourceArray(const Adapter &a, QueryList &&q, const Field *prop)
+ResourceArray::ResourceArray(const Transaction &a, QueryList &&q, const Field *prop)
 : ResourceProperty(a, move(q), prop) {
 	_type = ResourceType::Array;
 }
@@ -1094,7 +1092,7 @@ Value ResourceArray::getArrayForObject(Value &object) {
 	return Value();
 }
 
-ResourceFieldObject::ResourceFieldObject(const Adapter &a, QueryList &&q)
+ResourceFieldObject::ResourceFieldObject(const Transaction &a, QueryList &&q)
 : ResourceObject(a, move(q)), _sourceScheme(_queries.getSourceScheme()), _field(_queries.getField()) {
 	_type = ResourceType::ObjectField;
 }
@@ -1222,7 +1220,7 @@ Value ResourceFieldObject::doCreateObject(Value &val, Vector<db::InputFile> &fil
 }
 
 
-ResourceView::ResourceView(const Adapter &h, QueryList &&q)
+ResourceView::ResourceView(const Transaction &h, QueryList &&q)
 : ResourceSet(h, move(q)), _field(_queries.getField()) {
 	if (_queries.isDeltaApplicable()) {
 		auto tag = _queries.getItems().front().query.getSingleSelectId();
@@ -1247,7 +1245,7 @@ Value ResourceView::getResultObject() {
 	return processResultList(_queries, ret);
 }
 
-ResourceSearch::ResourceSearch(const Adapter &a, QueryList &&q, const Field *prop)
+ResourceSearch::ResourceSearch(const Transaction &a, QueryList &&q, const Field *prop)
 : ResourceObject(a, move(q)), _field(prop) {
 	_type = ResourceType::Search;
 }

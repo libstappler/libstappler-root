@@ -27,7 +27,7 @@
 #include "SPWebHost.h"
 #include "SPSqlDriver.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class AsyncTask;
 class Host;
@@ -36,6 +36,13 @@ class RequestController;
 
 class Root : public db::ApplicationInterface, public AllocBase {
 public:
+	struct Stat {
+		uint64_t requestsReceived = 0;
+		uint64_t heartbeatCounter = 0;
+		uint64_t dbQueriesReleased = 0;
+		uint64_t dbQueriesPerformed = 0;
+	};
+
 	struct ErrorNotificator : public AllocBase {
 		Function<void(Value &&)> error;
 		Function<void(Value &&)> debug;
@@ -49,14 +56,15 @@ public:
 
 	static void setErrorNotification(pool_t *, Function<void(Value &&)> errorCb, Function<void(Value &&)> debugCb = nullptr);
 
+	static void dumpCurrentState(StringView filepath);
+
 	virtual ~Root();
 
 	Root(pool_t *);
 
-	StringView getServerNameLine() const { return _serverNameLine; }
+	Stat getStat() const;
 
-	void setProcPool(pool_t *);
-	pool_t *getProcPool() const;
+	StringView getServerNameLine() const { return _serverNameLine; }
 
 	bool isDebugEnabled() const { return _debug.load(); }
 	void setDebugEnabled(bool);
@@ -66,16 +74,22 @@ public:
 
 	virtual void foreachHost(const Callback<void(Host &)> &) = 0;
 
-	Host getRootHost() const;
+	virtual bool isSecureConnection(const Request &) const;
 
 	virtual db::sql::Driver * getDbDriver(StringView);
 
 	virtual db::sql::Driver::Handle dbdOpen(pool_t *, const Host &);
 	virtual void dbdClose(const Host &, db::sql::Driver::Handle);
+	virtual db::sql::Driver::Handle dbdAcquire(const Request &);
 
+	void addDb(StringView);
+	void setDbParams(StringView);
 	void setThreadsCount(StringView, StringView);
 
-	void handleBroadcast(const Value &);
+	virtual void handleHeartbeat(pool_t *pool);
+	virtual void handleBroadcast(const Value &);
+
+	virtual void handleChildInit(pool_t *);
 
 	Status runTypeChecker(Request &r);
 	Status runPostReadRequest(Request &r);
@@ -122,29 +136,34 @@ protected:
 	StringView findTypeCheckerContentLanguage(Request &r, StringView ext) const;
 	StringView findTypeCheckerContentEncoding(Request &r, StringView ext) const;
 
+	virtual void initDatabases();
+	virtual void initSignals();
+	virtual void initThreads();
+
+	db::sql::Driver *createDbDriver(StringView driverName);
+
 	pool_t *_workerPool = nullptr;
+	pool_t *_configPool = nullptr;
 	pool_t *_rootPool = nullptr;
-
-	StringView _serverNameLine = config::DEFAULT_SERVER_LINE;
-
-	Host _rootHost;
-
-	std::atomic<uint64_t> _requestsRecieved;
-	std::atomic<uint64_t> _filtersInit;
-	std::atomic<uint64_t> _tasksRunned;
-	std::atomic<uint64_t> _heartbeatCounter;
-
-	std::atomic<bool> _debug = false;
 
 	size_t _initThreads = std::thread::hardware_concurrency() / 2;
 	size_t _maxThreads = std::thread::hardware_concurrency();
+
+	StringView _serverNameLine;
+
+	std::atomic<uint64_t> _requestsReceived = 0;
+	std::atomic<uint64_t> _heartbeatCounter = 0;
+	std::atomic<uint64_t> _dbQueriesReleased = 0;
+	std::atomic<uint64_t> _dbQueriesPerformed = 0;
+
+	std::atomic<bool> _debug = false;
 
 	Vector<PendingTask> *_pending = nullptr;
 
 	Map<StringView, StringView> _extensionTypes;
 	Map<StringView, StringView> _dbParams;
 	Map<StringView, db::sql::Driver *> _dbDrivers;
-	Vector<StringView> *_dbs = nullptr;
+	Vector<StringView> _dbs;
 	db::sql::Driver *_primaryDriver = nullptr;
 
 	Mutex _mutex;

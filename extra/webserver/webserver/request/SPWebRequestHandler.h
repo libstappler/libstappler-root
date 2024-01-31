@@ -25,7 +25,7 @@
 
 #include "SPWebRequest.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class InputFilter;
 
@@ -81,20 +81,20 @@ public:
 	/** Be sure to call supermethod when overload this method! */
 	virtual Status onRequestRecieved(Request &, StringView origin, StringView path, const Value &);
 
-	virtual Status onPostReadRequest(Request &) { return DECLINED; }
-	virtual Status onTranslateName(Request &) { return DECLINED; }
-	virtual Status onQuickHandler(Request &, int v) { return DECLINED; }
-	virtual void onInsertFilter(Request &) { }
-	virtual Status onHandler(Request &) { return DECLINED; }
+	virtual Status onPostReadRequest(Request &);
+	virtual Status onTranslateName(Request &);
+	virtual Status onQuickHandler(Request &, int v);
+	virtual void onInsertFilter(Request &);
+	virtual Status onHandler(Request &);
 
-	virtual void onFilterInit(InputFilter *f) { }
-	virtual void onFilterUpdate(InputFilter *f) { }
-	virtual void onFilterComplete(InputFilter *f) { }
+	virtual void onFilterInit(InputFilter *f);
+	virtual void onFilterUpdate(InputFilter *f);
+	virtual void onFilterComplete(InputFilter *f);
 
-	virtual const Value &getOptions() const { return _options; }
+	virtual const Value &getOptions() const;
 
-	void setAccessRole(db::AccessRoleId role) { _accessRole = role; }
-	db::AccessRoleId getAccessRole() const { return _accessRole; }
+	void setAccessRole(db::AccessRoleId role);
+	db::AccessRoleId getAccessRole() const;
 
 protected:
 	Request _request;
@@ -103,6 +103,7 @@ protected:
 	Vector<StringView> _subPathVec;
 	Value _options;
 	db::AccessRoleId _accessRole = db::AccessRoleId::Nobody;
+	db::Transaction _transaction = nullptr;
 };
 
 class DefaultHandler : public RequestHandler {
@@ -169,13 +170,13 @@ public:
 
 	class Handler : public RequestHandler {
 	public: // simplified interface
-		virtual bool isPermitted() { return false; }
-		virtual Status onRequest() { return DECLINED; }
-		virtual Value onData() { return Value(); }
+		virtual bool isPermitted();
+		virtual Status onRequest();
+		virtual Value onData();
 
 	public:
-		Handler() { }
-		virtual ~Handler() { }
+		Handler();
+		virtual ~Handler();
 
 		virtual void onParams(const HandlerInfo *, Value &&);
 		virtual bool isRequestPermitted(Request &) override { return isPermitted(); }

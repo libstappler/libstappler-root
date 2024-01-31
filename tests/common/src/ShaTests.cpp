@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "SPTime.h"
 #include "Test.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 // test vectors from https://tools.ietf.org/html/rfc4231#section-4.1
 

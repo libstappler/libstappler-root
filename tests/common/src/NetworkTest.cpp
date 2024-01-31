@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #include "SPNetworkHandle.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct NetworkTest : Test {
 	NetworkTest() : Test("NetworkTest") { }

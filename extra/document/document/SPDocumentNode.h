@@ -25,7 +25,7 @@
 
 #include "SPDocumentStyle.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 using NodeId = uint32_t;
 

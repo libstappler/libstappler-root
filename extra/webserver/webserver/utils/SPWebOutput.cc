@@ -23,7 +23,7 @@
 #include "SPWebOutput.h"
 #include "SPDbFile.h"
 
-namespace stappler::web::output {
+namespace STAPPLER_VERSIONIZED stappler::web::output {
 
 constexpr static const char * HTML_LOAD_BEGIN =
 R"Html(<!doctype html>
@@ -318,7 +318,7 @@ void writeData(Request &rctx, std::basic_ostream<char> &stream, const Function<v
 		const Value &data, bool allowJsonP) {
 
 	auto &info = rctx.getInfo();
-	bool allowCbor = rctx.getConfig()->isAcceptable("application/cbor") > 0.0f;
+	bool allowCbor = rctx.getController()->isAcceptable("application/cbor") > 0.0f;
 	auto pretty = info.queryData.getValue("pretty");
 
 	if (allowCbor) {

@@ -27,7 +27,7 @@
 #include "MaterialColorHCT.h"
 #include "XL2dSprite.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 class MaterialColorPicker : public Sprite {
 public:

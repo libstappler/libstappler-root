@@ -23,299 +23,377 @@
 #include "SPWebWebsocket.h"
 #include "SPWebRoot.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
-constexpr auto WEBSOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-constexpr auto WEBSOCKET_GUID_LEN = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"_len;
-
-static String makeAcceptKey(const String &key) {
-	apr_byte_t digest[APR_SHA1_DIGESTSIZE];
-	apr_sha1_ctx_t context;
-
-	apr_sha1_init(&context);
-	apr_sha1_update(&context, key.c_str(), key.size());
-	apr_sha1_update(&context, (const char *)WEBSOCKET_GUID, (unsigned int)WEBSOCKET_GUID_LEN);
-	apr_sha1_final(digest, &context);
-
-	return base64::encode(CoderSource(digest, APR_SHA1_DIGESTSIZE));
+uint8_t WebsocketFrameWriter::getOpcodeFromType(WebsocketFrameType opcode) {
+	switch (opcode) {
+	case WebsocketFrameType::Continue: return 0x0; break;
+	case WebsocketFrameType::Text: return 0x1; break;
+	case WebsocketFrameType::Binary: return 0x2; break;
+	case WebsocketFrameType::Close: return 0x8; break;
+	case WebsocketFrameType::Ping: return 0x9; break;
+	case WebsocketFrameType::Pong: return 0xA; break;
+	default: break;
+	}
+	return 0;
 }
 
-WebsocketManager::WebsocketManager(const Host &host) : _pool(getCurrentPool()), _host(host) { }
-WebsocketManager::~WebsocketManager() { }
-
-WebsocketHandler * WebsocketManager::onAccept(const Request &req, pool_t *) {
-	return nullptr;
+WebsocketFrameType WebsocketFrameReader::getTypeFromOpcode(uint8_t opcode) {
+	switch (opcode) {
+	case 0x0: return WebsocketFrameType::Continue; break;
+	case 0x1: return WebsocketFrameType::Text; break;
+	case 0x2: return WebsocketFrameType::Binary; break;
+	case 0x8: return WebsocketFrameType::Close; break;
+	case 0x9: return WebsocketFrameType::Ping; break;
+	case 0xA: return WebsocketFrameType::Pong; break;
+	}
+	return WebsocketFrameType::None;
 }
-bool WebsocketManager::onBroadcast(const Value & val) {
+
+bool WebsocketFrameReader::isControlFrameType(WebsocketFrameType t) {
+	switch (t) {
+	case WebsocketFrameType::Close:
+	case WebsocketFrameType::Continue:
+	case WebsocketFrameType::Ping:
+	case WebsocketFrameType::Pong:
+		return true;
+		break;
+	default:
+		return false;
+		break;
+	}
 	return false;
 }
 
-size_t WebsocketManager::size() const {
-	return _count.load();
+void WebsocketFrameWriter::makeHeader(StackBuffer<32> &buf, size_t dataSize, WebsocketFrameType t) {
+	size_t sizeSize = (dataSize <= 125) ? 0 : ((dataSize > (size_t)maxOf<uint16_t>())? 8 : 2);
+	size_t frameSize = 2 + sizeSize;
+
+	buf.prepare(frameSize);
+
+	buf[0] = ((uint8_t)0b10000000 | getOpcodeFromType(t));
+	if (sizeSize == 0) {
+		buf[1] = ((uint8_t)dataSize);
+	} else if (sizeSize == 2) {
+		buf[1] = ((uint8_t)126);
+		uint16_t size = byteorder::HostToNetwork((uint16_t)dataSize);
+		memcpy(buf.data() + 2, &size, sizeof(uint16_t));
+	} else if (sizeSize == 8) {
+		buf[1] = ((uint8_t)127);
+		uint64_t size = byteorder::HostToNetwork((uint64_t)dataSize);
+		memcpy(buf.data() + 2, &size, sizeof(uint64_t));
+	}
+
+	buf.save(nullptr, frameSize);
 }
 
-void WebsocketManager::receiveBroadcast(const Value &val) {
-	if (onBroadcast(val)) {
-		_mutex.lock();
-		for (auto &it : _handlers) {
-			it->receiveBroadcast(val);
-		}
-		_mutex.unlock();
+void WebsocketFrameReader::unmask(uint32_t mask, size_t offset, uint8_t *data, size_t nbytes) {
+	uint8_t j = offset % 4;
+	for (size_t i = 0; i < nbytes; ++i, ++j) {
+		if (j >= 4) { j = 0; }
+		data[i] ^= ((mask >> (j * 8)) & 0xFF);
 	}
 }
 
-static void *WebsocketManager_spawnThread(apr_thread_t *self, void *data) {
-#if LINUX
-	pthread_setname_np(pthread_self(), "WebSocketThread");
-#endif
-
-	Handler *h = (Handler *)data;
-	Manager *m = h->manager();
-	mem::perform([&] {
-		mem::perform([&] {
-			m->run(h);
-		}, h->connection()->getConnection());
-	}, m->server());
-
-	Connection::destroy(h->connection());
-
-	return NULL;
-}
-
-static int WebsocketManager_abortfn(int retcode) {
-	std::cout << "WebSocket Handle allocation failed with code: " << retcode << "\n";
-	return retcode;
-}
-
-int WebsocketManager::accept(Request &req) {
-	auto version = req.getRequestHeader("sec-websocket-version");
-	auto key = req.getRequestHeader("sec-websocket-key");
-	auto decKey = base64::decode<Interface>(key);
-	if (decKey.size() != 16 || version != "13") {
-		req.setErrorHeader("Sec-WebSocket-Version", "13");
-		return HTTP_BAD_REQUEST;
-	}
-
-	allocator_t *alloc = nullptr;
-	pool_t *pool = nullptr;
-
-	auto FailCleanup = [&] (int code) -> int {
-		if (pool) {
-			pool::destroy(pool);
-		}
-
-		if (alloc) {
-			allocator::destroy(alloc);
-		}
-
-		return code;
-	};
-
-	alloc = allocator::create();
-	pool = pool::create(alloc);
-
-	allocator::max_free_set(alloc, 20_MiB);
-
-	auto orig = pool::acquire();
-	auto handler = onAccept(req, pool);
-
-	if (handler) {
-		auto hout = req.getResponseHeaders();
-
-		hout.clear();
-		req.setResponseHeader("Upgrade", "websocket");
-		req.setResponseHeader("Connection", "Upgrade");
-		req.setResponseHeader("Sec-WebSocket-Accept", makeAcceptKey(key));
-
-		auto r = req.config()->convertToWebsocket();
-		auto sock = ap_get_conn_socket(r->connection);
-
-		// send HTTP_SWITCHING_PROTOCOLS right f*cking NOW!
-		apr_socket_timeout_set(sock, -1);
-		req.setStatus(HTTP_SWITCHING_PROTOCOLS);
-		ap_send_interim_response(req.request(), 1);
-
-		// block any other output
-		ap_add_output_filter(WEBSOCKET_FILTER, (void *)handler, r, r->connection);
-
-		// duplicate connection
-		if (auto conn = Connection::create(alloc, pool, req)) {
-			handler->setConnection(conn);
-			apr_thread_t *thread = nullptr;
-			apr_threadattr_t *attr = nullptr;
-			apr_status_t error = apr_threadattr_create(&attr, orig);
-			if (error == APR_SUCCESS) {
-				apr_threadattr_detach_set(attr, 1);
-				conn->prepare(sock);
-				if (apr_thread_create(&thread, attr,
-						Manager_spawnThread, handler, orig) == APR_SUCCESS) {
-					return HTTP_OK;
-				}
-			} else {
-				conn->drop();
-			}
-		}
-	}
-	if (req.getStatus() == HTTP_OK) {
-		return FailCleanup(HTTP_BAD_REQUEST);
-	}
-	return FailCleanup(req.getStatus());
-}
-
-void WebsocketManager::run(WebsocketHandler *h) {
-	auto c = h->connection();
-	c->run(h, [&] {
-		addHandler(h);
-	}, [&] {
-		removeHandler(h);
-	});
-}
-
-void WebsocketManager::addHandler(WebsocketHandler * h) {
-	_mutex.lock();
-	_handlers.emplace_back(h);
-	++ _count;
-	_mutex.unlock();
-}
-
-void WebsocketManager::removeHandler(WebsocketHandler * h) {
-	_mutex.lock();
-	auto it = _handlers.begin();
-	while (it != _handlers.end() && *it != h) {
-		++ it;
-	}
-	if (it != _handlers.end()) {
-		_handlers.erase(it);
-	}
-	-- _count;
-	_mutex.unlock();
-}
-
-WebsocketHandler::WebsocketHandler(WebsocketManager *m, pool_t *p, StringView url, TimeInterval ttl, size_t max)
-: _pool(p), _manager(m), _url(url.pdup(_pool)), _ttl(ttl), _maxInputFrameSize(max), _broadcastMutex(_pool) {
-}
-
-WebsocketHandler::~WebsocketHandler() { }
-
-// Data frame was received from network
-bool WebsocketHandler::onFrame(WebsocketFrameType, const Bytes &) { return true; }
-
-// Message was received from broadcast
-bool WebsocketHandler::onMessage(const Value &) { return true; }
-
-void WebsocketHandler::sendBroadcast(Value &&val) const {
-	Value bcast {
-		std::make_pair("server", Value(_manager->host().getHostInfo().hostname)),
-		std::make_pair("url", Value(_url)),
-		std::make_pair("data", Value(std::move(val))),
-	};
-
-	performWithStorage([&] (const db::Transaction &t) {
-		t.getAdapter().broadcast(bcast);
-	});
-}
-
-void WebsocketHandler::setEncodeFormat(const data::EncodeFormat &fmt) {
-	_format = fmt;
-}
-
-bool WebsocketHandler::send(StringView str) {
-	return _conn->write(WebsocketFrameType::Text, (const uint8_t *)str.data(), str.size());
-}
-bool WebsocketHandler::send(BytesView bytes) {
-	return _conn->write(WebsocketFrameType::Binary, bytes.data(), bytes.size());
-}
-bool WebsocketHandler::send(const Value &data) {
-	if (_format.isTextual()) {
-		StringStream stream;
-		stream << _format << data;
-		return send(StringView(stream.weak()));
+WebsocketFrameReader::WebsocketFrameReader(Root *r, pool_t *p)
+: frame(Frame{false, WebsocketFrameType::None, Bytes(), 0, 0})
+, pool(memory::pool::create(p)), root(r) {
+	if (!pool) {
+		error = Error::NotInitialized;
 	} else {
-		return send(data::write(data, _format));
+		new (&frame.buffer) Bytes(pool); // switch allocator
 	}
 }
 
-void WebsocketHandler::performWithStorage(const Callback<void(const db::Transaction &)> &cb) const {
-	_manager->host().performWithStorage(cb);
-}
-
-bool WebsocketHandler::performAsync(const Callback<void(AsyncTask &)> &cb) const {
-	return _conn->performAsync(cb);
-}
-
-pool_t *WebsocketHandler::pool() const {
-	return _conn->getHandlePool();
-}
-
-void WebsocketHandler::setConnection(WebsocketConnection *c) {
-	_conn = c;
-}
-
-void WebsocketHandler::receiveBroadcast(const Value &data) {
-	if (_conn->isEnabled()) {
-		_broadcastMutex.lock();
-		if (!_broadcastsPool) {
-			_broadcastsPool = memory::pool::create(_pool);
-		}
-		if (_broadcastsPool) {
-			perform([&] {
-				if (!_broadcastsMessages) {
-					_broadcastsMessages = new (_broadcastsPool) Vector<Value>(_broadcastsPool);
-				}
-
-				_broadcastsMessages->emplace_back(data);
-			}, _broadcastsPool, config::TAG_WEBSOCKET, this);
-		}
-		_broadcastMutex.unlock();
-		_conn->wakeup();
+size_t WebsocketFrameReader::getRequiredBytes() const {
+	switch (status) {
+	case Status::Head: return getBufferRequiredBytes(buffer, 2); break;
+	case Status::Size16: return getBufferRequiredBytes(buffer, 2); break;
+	case Status::Size64: return getBufferRequiredBytes(buffer, 8); break;
+	case Status::Mask: return getBufferRequiredBytes(buffer, 4); break;
+	case Status::Body: return (frame.offset < size) ? (size - frame.offset) : 0; break;
+	case Status::Control: return getBufferRequiredBytes(buffer, size); break;
+	default: break;
 	}
+	return 0;
 }
 
-bool WebsocketHandler::processBroadcasts() {
-	pool_t *pool;
-	Vector<Value> * vec;
+uint8_t * WebsocketFrameReader::prepare(size_t &len) {
+	switch (status) {
+	case Status::Head:
+	case Status::Size16:
+	case Status::Size64:
+	case Status::Mask:
+	case Status::Control:
+		return buffer.prepare_preserve(len); break;
+	case Status::Body:
+		return frame.buffer.data() + frame.block + frame.offset; break;
+	default: break;
+	}
+	return nullptr;
+}
 
-	_broadcastMutex.lock();
+bool WebsocketFrameReader::save(uint8_t *b, size_t nbytes) {
+	switch (status) {
+	case Status::Head:
+	case Status::Size16:
+	case Status::Size64:
+	case Status::Mask:
+	case Status::Control:
+		buffer.save(b, nbytes); break;
+	case Status::Body:
+		unmask(mask, frame.offset, b, nbytes);
+		frame.offset += nbytes;
+		break;
+	default: break;
+	}
 
-	pool = _broadcastsPool;
-	vec = _broadcastsMessages;
+	if (getRequiredBytes() == 0) {
+		return updateState();
+	}
+	return true;
+}
 
-	_broadcastsPool = nullptr;
-	_broadcastsMessages = nullptr;
+bool WebsocketFrameReader::updateState() {
+	bool shouldPrepareBody = false;
+	switch (status) {
+	case Status::Head:
+		size = 0;
+		mask = 0;
+		type = WebsocketFrameType::None;
 
-	_broadcastMutex.unlock();
+		fin =		(buffer[0] & 0b10000000) != 0;
+		extra =		(buffer[0] & 0b01110000);
+		type = getTypeFromOpcode
+					(buffer[0] & 0b00001111);
+		masked =	(buffer[1] & 0b10000000) != 0;
+		size =		(buffer[1] & 0b01111111);
 
-	bool ret = true;
-	if (pool) {
-		perform([&] {
-			sendPendingNotifications(pool);
-			if (vec) {
-				for (auto & it : (*vec)) {
-					if (!onMessage(it)) {
-						ret = false;
-						break;
-					}
-				}
+		if (extra != 0 || !masked || type == WebsocketFrameType::None) {
+			if (extra != 0) {
+				error = Error::ExtraIsNotEmpty;
+			} else if (!masked) {
+				error = Error::NotMasked;
+			} else {
+				error = Error::UnknownOpcode;
 			}
-		}, pool, config::TAG_WEBSOCKET, this);
-		pool::destroy(pool);
+			root->error("Websocket", "Invalid control flow", Value(toInt(error)));
+			return false;
+		}
+
+		if (!frame.buffer.empty()) {
+			if (!isControlFrameType(type)) {
+				error = Error::InvalidSegment;
+				root->error("Websocket", "Invalid segment", Value(toInt(error)));
+				return false;
+			}
+		}
+
+		if (size > max) {
+			error = Error::InvalidSize;
+			root->error("Websocket", "Too large query", Value{{
+				pair("size", Value(size)),
+				pair("max", Value(max)),
+			}});
+			return false;
+		}
+
+		if (size == 126) {
+			size = 0;
+			status = Status::Size16;
+		} else if (size == 127) {
+			size = 0;
+			status = Status::Size64;
+		} else {
+			status = Status::Mask;
+		}
+
+		buffer.clear();
+		return true;
+		break;
+	case Status::Size16:
+		size = buffer.get<BytesViewNetwork>().readUnsigned16();
+		if (size > max) {
+			error = Error::InvalidSize;
+			root->error("Websocket", "Too large query", Value{{
+				pair("size", Value(size)),
+				pair("max", Value(max)),
+			}});
+			return false;
+		}
+		status = masked?Status::Mask:Status::Body;
+		buffer.clear();
+		shouldPrepareBody = true;
+		break;
+	case Status::Size64:
+		size = buffer.get<BytesViewNetwork>().readUnsigned64();
+		if (size > max) {
+			error = Error::InvalidSize;
+			root->error("Websocket", "Too large query", Value{{
+				pair("size", Value(size)),
+				pair("max", Value(max)),
+			}});
+			return false;
+		}
+		status = masked?Status::Mask:Status::Body;
+		buffer.clear();
+		shouldPrepareBody = true;
+		break;
+	case Status::Mask:
+		mask = buffer.get<BytesView>().readUnsigned32();
+		status = Status::Body;
+		buffer.clear();
+		shouldPrepareBody = true;
+		break;
+	case Status::Control:
+		break;
+	case Status::Body:
+		frame.fin = fin;
+		frame.block += size;
+		if (type != WebsocketFrameType::Continue) {
+			frame.type = type;
+		}
+		break;
+	default:
+		break;
 	}
 
-	return ret;
+	if (shouldPrepareBody && status == Status::Body) {
+		if (isControlFrameType(type)) {
+			status = Status::Control;
+		} else {
+			if (size + frame.block > max) {
+				error = Error::InvalidSize;
+				root->error("Websocket", "Too large query", Value{{
+					pair("size", Value(size + frame.block)),
+					pair("max", Value(max)),
+				}});
+				return false;
+			}
+			frame.buffer.resize(size + frame.block);
+		}
+	}
+	return true;
 }
 
-void WebsocketHandler::sendPendingNotifications(pool_t *pool) {
-	perform([&] {
-		_manager->host().getRoot()->setErrorNotification(pool, [this] (Value && data) {
-			send(Value({
-				std::make_pair("error", Value(std::move(data)))
-			}));
-		}, [this] (Value && data) {
-			send(Value({
-				std::make_pair("debug", Value(std::move(data)))
-			}));
-		});
-	}, pool, config::TAG_WEBSOCKET, this);
+bool WebsocketFrameReader::isControlReady() const {
+	if (status == Status::Control && getRequiredBytes() == 0) {
+		return true;
+	}
+	return false;
+}
+bool WebsocketFrameReader::isFrameReady() const {
+	if (status == Status::Body && getRequiredBytes() == 0 && frame.fin) {
+		return true;
+	}
+	return false;
+}
+void WebsocketFrameReader::popFrame() {
+	switch (status) {
+	case Status::Control:
+		buffer.clear();
+		status = Status::Head;
+		break;
+	case Status::Body:
+		clear();
+		break;
+	default:
+		error = Error::InvalidAction;
+		break;
+	}
+}
+
+void WebsocketFrameReader::clear() {
+	frame.buffer.force_clear();
+	frame.buffer.clear();
+	memory::pool::clear(pool); // clear frame-related data
+
+	status = Status::Head;
+	frame.block = 0;
+	frame.offset = 0;
+	frame.fin = true;
+	frame.type = WebsocketFrameType::None;
+}
+
+WebsocketFrameWriter::WriteSlot::WriteSlot(pool_t *p) : pool(p) { }
+
+bool WebsocketFrameWriter::WriteSlot::empty() const {
+	return firstData == nullptr;
+}
+
+void WebsocketFrameWriter::WriteSlot::emplace(const uint8_t *data, size_t size) {
+	auto mem = pool::palloc(pool, sizeof(Slice) + size);
+	Slice *next = (Slice*) mem;
+	next->data = (uint8_t*) mem + sizeof(Slice);
+	next->size = size;
+	next->next = nullptr;
+
+	memcpy(next->data, data, size);
+
+	if (lastData) {
+		lastData->next = next;
+		lastData = next;
+	} else {
+		firstData = next;
+		lastData = next;
+	}
+
+	alloc += size + sizeof(Slice);
+}
+
+void WebsocketFrameWriter::WriteSlot::pop(size_t size) {
+	if (size >= firstData->size - offset) {
+		firstData = firstData->next;
+		if (!firstData) {
+			lastData = nullptr;
+		}
+		offset = 0;
+	} else {
+		offset += size;
+	}
+}
+
+uint8_t* WebsocketFrameWriter::WriteSlot::getNextBytes() const {
+	return firstData->data + offset;
+}
+
+size_t WebsocketFrameWriter::WriteSlot::getNextLength() const {
+	return firstData->size - offset;
+}
+
+WebsocketFrameWriter::WebsocketFrameWriter(pool_t *p) : pool(p) { }
+
+bool WebsocketFrameWriter::empty() const {
+	return firstSlot == nullptr;
+}
+
+WebsocketFrameWriter::WriteSlot* WebsocketFrameWriter::nextReadSlot() const {
+	return firstSlot;
+}
+
+void WebsocketFrameWriter::popReadSlot() {
+	if (firstSlot->empty()) {
+		memory::pool::destroy(firstSlot->pool);
+		firstSlot = firstSlot->next;
+		if (!firstSlot) {
+			lastSlot = nullptr;
+		}
+	}
+}
+
+WebsocketFrameWriter::WriteSlot* WebsocketFrameWriter::nextEmplaceSlot(size_t sizeOfData) {
+	if (!lastSlot || lastSlot->alloc + sizeOfData > 16_KiB) {
+		auto p = memory::pool::create(pool);
+		WriteSlot *slot = new (p) WriteSlot(p);
+		if (lastSlot) {
+			lastSlot->next = slot;
+			lastSlot = slot;
+		} else {
+			firstSlot = slot;
+			lastSlot = slot;
+		}
+	}
+	return lastSlot;
 }
 
 }

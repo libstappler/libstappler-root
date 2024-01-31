@@ -27,7 +27,7 @@
 #include "SPPugVariable.h"
 #include "SPPugTemplate.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 class Context : public memory::AllocPool {
 public:

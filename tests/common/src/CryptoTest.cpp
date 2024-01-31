@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 #include "SPCrypto.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 static constexpr StringView s_PKCS1PemKey(
 R"PrivKey(-----BEGIN RSA PRIVATE KEY-----

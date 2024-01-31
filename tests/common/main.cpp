@@ -36,7 +36,7 @@ Options are one of:
     -h (--help))HelpString");
 
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct StringToNumberTest : Test {
 	StringToNumberTest() : Test("StringToNumberTest") { }
@@ -186,7 +186,7 @@ int parseOptionString(Value &ret, const StringView &str, int argc, const char * 
 }
 #endif
 
-SP_EXTERN_C int _spMain(argc, argv) {
+SP_EXTERN_C int main(int argc, const char *argv[]) {
 	memory::pool::initialize();
 
 #if MODULE_STAPPLER_DATA

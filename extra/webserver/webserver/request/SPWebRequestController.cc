@@ -24,13 +24,13 @@
 #include "SPWebRequest.h"
 #include "SPWebHost.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 RequestController::~RequestController() { }
 
 RequestController::RequestController(pool_t *pool, RequestInfo &&info)
 : _pool(pool), _info(move(info)) {
-	registerCleanupDestructor(this, pool);
+
 }
 
 bool RequestController::init() {
@@ -100,6 +100,12 @@ db::Adapter RequestController::acquireDatabase() {
 		_database = Host(_host).acquireDbForRequest(this);
 	}
 	return db::Adapter(_database, _host->getRoot());
+}
+
+InputFilter *RequestController::makeInputFilter(InputFilterAccept accept) {
+	return perform([&] {
+		return new (_pool) InputFilter(Request(this), accept);
+	}, _pool, config::TAG_REQUEST, this);
 }
 
 void RequestController::setInputFilter(InputFilter *f) {

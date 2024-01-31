@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,29 +20,38 @@
  THE SOFTWARE.
  **/
 
-#ifndef TESTS_DB_SRC_SCHEMEDELTATEST_H_
-#define TESTS_DB_SRC_SCHEMEDELTATEST_H_
+#ifndef EXTRA_WEBSERVER_HTTPD_SPWEBHTTPDHOST_H_
+#define EXTRA_WEBSERVER_HTTPD_SPWEBHTTPDHOST_H_
 
-#include "Server.h"
+#include "SPWebHostController.h"
 
-namespace stappler::dbtest {
+#include "httpd.h"
 
-class SchemeDeltaTest : public ServerScheme {
+namespace STAPPLER_VERSIONIZED stappler::web {
+
+class HttpdRoot;
+
+class HttpdHostController : public HostController {
 public:
-	virtual ~SchemeDeltaTest();
-	SchemeDeltaTest(memory::pool_t *);
+	static HttpdHostController *create(HttpdRoot *, server_rec *);
+	static HttpdHostController *get(server_rec *);
 
-	virtual void fillSchemes(db::Map<StringView, const db::Scheme *> &);
+	static HttpdHostController *merge(HttpdHostController *base, HttpdHostController *add);
 
-	void runTestGlobal(Server &);
+	HttpdHostController(Root *, pool_t *, server_rec *);
 
-	int64_t runTest(const db::Transaction &, int64_t);
-	void checkTest(const db::Transaction &, Time);
+	virtual void handleChildInit(const Host &serv, pool_t *p) override;
+
+	virtual bool loadComponent(const Host &serv, const HostComponentInfo &) override;
+
+	server_rec *getServer() const { return _server; }
 
 protected:
-	db::Scheme _deltaTest = db::Scheme("delta_test", db::Scheme::Options::WithDelta);
+	virtual db::sql::Driver * openInternalDriver(db::sql::Driver::Handle) override;
+
+	server_rec *_server = nullptr;
 };
 
 }
 
-#endif /* TESTS_DB_SRC_SCHEMEDELTATEST_H_ */
+#endif /* EXTRA_WEBSERVER_HTTPD_SPWEBHTTPDHOST_H_ */

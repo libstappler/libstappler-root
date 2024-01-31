@@ -29,14 +29,14 @@
 #include <sys/inotify.h>
 #endif
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 Rc<FileRef> FileRef::read(memory::pool_t *p, FilePath path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId) {
 	auto fpath = path.get();
 	if (filesystem::exists(fpath)) {
 		auto pool = memory::pool::create(p);
 
-		memory::pool::context ctx(pool, memory::pool::Template);
+		memory::pool::context ctx(pool);
 		return Rc<FileRef>::alloc(pool, path, opts, cb, watch, wId);
 	}
 
@@ -46,7 +46,7 @@ Rc<FileRef> FileRef::read(memory::pool_t *p, FilePath path, Template::Options op
 Rc<FileRef> FileRef::read(memory::pool_t *p, String && content, bool isTemplate, Template::Options opts, const Callback<void(const StringView &)> &cb) {
 	auto pool = memory::pool::create(p);
 
-	memory::pool::context ctx(pool, memory::pool::Template);
+	memory::pool::context ctx(pool);
 	return Rc<FileRef>::alloc(pool, move(content), isTemplate, opts, cb);
 }
 

@@ -23,7 +23,7 @@
 #include "SPPugContext.h"
 #include "SPPugVariable.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct ContextFn {
 	using VarScope = Context::VarScope;

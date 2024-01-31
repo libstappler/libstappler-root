@@ -25,7 +25,7 @@
 
 #include "SPWebRequest.h"
 
-namespace stappler::web::output {
+namespace STAPPLER_VERSIONIZED stappler::web::output {
 
 void formatJsonAsHtml(OutputStream &stream, const Value &, bool actionHandling = false);
 

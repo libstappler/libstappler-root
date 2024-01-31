@@ -25,7 +25,7 @@
 
 #include "SPWebRequestHandler.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Resource;
 
@@ -56,6 +56,7 @@ protected:
 	const db::Scheme &_scheme;
 	Resource *_resource = nullptr;
 	Value _value;
+	db::Transaction _transaction = nullptr;
 };
 
 class ResourceMultiHandler : public RequestHandler {
@@ -71,8 +72,8 @@ protected:
 	Status writeDataToRequest(Request &rctx, Value &&objs);
 
 	Value resultData;
-
 	Map<StringView, const Scheme *> _schemes;
+	db::Transaction _transaction = nullptr;
 };
 
 }

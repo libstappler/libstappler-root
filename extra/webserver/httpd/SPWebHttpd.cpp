@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,24 +20,14 @@
  THE SOFTWARE.
  **/
 
-#ifndef TESTS_DB_SRC_SCHEMEUPDATETEST_H_
-#define TESTS_DB_SRC_SCHEMEUPDATETEST_H_
+#include "SPCommon.h"
 
-#include "Server.h"
+#include "SPWebHttpdCompress.cc"
+#include "SPWebHttpdModule.cc"
 
-namespace stappler::dbtest {
+#include "SPWebHttpdRoot.cc"
+#include "SPWebHttpdHost.cc"
+#include "SPWebHttpdRequest.cc"
 
-class SchemeUpdateTest : public ServerScheme {
-public:
-	virtual ~SchemeUpdateTest();
-	SchemeUpdateTest(memory::pool_t *, uint32_t version);
-
-	virtual void fillSchemes(db::Map<StringView, const db::Scheme *> &);
-
-protected:
-	db::Scheme _updateTestScheme = db::Scheme("update_test_scheme");
-};
-
-}
-
-#endif /* TESTS_DB_SRC_SCHEMEUPDATETEST_H_ */
+#include "SPWebHttpdWebsocket.cc"
+#include "SPWebHttpdFilters.cc"

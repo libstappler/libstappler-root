@@ -28,7 +28,7 @@
 #include "SPBytesView.h"
 #include "SPMemory.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 class Document : public RefBase<memory::StandartInterface> {
 public:

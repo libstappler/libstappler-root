@@ -25,7 +25,7 @@
 
 #include "SPPugLexer.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 class Template : public memory::AllocPool {
 public:

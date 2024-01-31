@@ -33,7 +33,7 @@ THE SOFTWARE.
 static constexpr auto JsonNumberTestString(
 R"JsonString({"neg1":-1;"neg2": -123456})JsonString");
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 #if MODULE_STAPPLER_FILESYSTEM
 

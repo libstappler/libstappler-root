@@ -30,7 +30,7 @@
 #include "TestMaterialColorPicker.h"
 #include "XL2dLayerRounded.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 class TestMaterialColorSchemeNode : public Layer {
 public:

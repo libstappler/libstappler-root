@@ -29,7 +29,7 @@
 #include "SPCrypto.h"
 #include "SPSqlDriver.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Root;
 class AsyncTask;
@@ -54,7 +54,6 @@ public:
 	Host(const Host &);
 	Host & operator =(const Host &);
 
-	void initHeartBeat(pool_t *, int);
 	void checkBroadcasts();
 
 	void handleChildInit(pool_t *rootPool);
@@ -69,7 +68,7 @@ public:
 	void addComponentByParams(StringView w);
 	void addAllow(StringView);
 	void setSessionParams(StringView w);
-	void setHostSecret(StringView w, crypto::HashFunction);
+	void setHostSecret(StringView w);
 	void setWebHookParams(StringView w);
 	void setForceHttps();
 	void setProtectedList(StringView w);
@@ -90,16 +89,16 @@ public:
 
 	void addPreRequest(Function<Status(Request &)> &&) const;
 
-	void addHandler(const StringView &, const HandlerCallback &, const Value & = Value::Null) const;
+	void addHandler(StringView, const HandlerCallback &, const Value & = Value::Null) const;
 	void addHandler(std::initializer_list<StringView>, const HandlerCallback &, const Value & = Value::Null) const;
-	void addHandler(const StringView &, const RequestHandlerMap *) const;
+	void addHandler(StringView, const RequestHandlerMap *) const;
 	void addHandler(std::initializer_list<StringView>, const RequestHandlerMap *) const;
 
-	void addResourceHandler(const StringView &, const db::Scheme &) const;
-	void addResourceHandler(const StringView &, const db::Scheme &, const Value &val) const;
-	void addMultiResourceHandler(const StringView &, std::initializer_list<Pair<const StringView, const db::Scheme *>> &&) const;
+	void addResourceHandler(StringView, const db::Scheme &) const;
+	void addResourceHandler(StringView, const db::Scheme &, const Value &val) const;
+	void addMultiResourceHandler(StringView, std::initializer_list<Pair<const StringView, const db::Scheme *>> &&) const;
 
-	void addWebsocket(const StringView &, WebsocketManager *) const;
+	void addWebsocket(StringView, WebsocketManager *) const;
 
 	const db::Scheme * exportScheme(const db::Scheme &) const;
 
@@ -134,7 +133,7 @@ public:
 	const HostInfo &getHostInfo() const;
 	const SessionInfo &getSessionInfo() const;
 
-	HostController *getConfig() const { return _config; }
+	HostController *getController() const { return _config; }
 
 	Root *getRoot() const;
 
@@ -151,6 +150,8 @@ public:
 	bool isSecureAuthAllowed(const Request &rctx) const;
 
 	CompressionInfo *getCompressionConfig() const;
+
+	String getDocumentRootPath(StringView) const;
 
 protected:
 	void processReports() const;

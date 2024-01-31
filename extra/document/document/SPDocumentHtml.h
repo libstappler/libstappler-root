@@ -26,7 +26,7 @@
 #include "SPDocument.h"
 #include "SPDocumentPageContainer.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 class DocumentHtml : public Document {
 public:

@@ -25,7 +25,7 @@
 
 #include "SPWebInfo.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 struct VirtualFile {
 	static VirtualFile add(const StringView &, const StringView &);

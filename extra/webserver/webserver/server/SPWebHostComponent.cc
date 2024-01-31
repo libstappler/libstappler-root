@@ -22,7 +22,7 @@
 
 #include "SPWebHostComponent.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 HostComponent::Loader::Loader(const StringView &str, Symbol s) : name(str), loader(s) { }
 

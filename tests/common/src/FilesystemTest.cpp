@@ -27,7 +27,7 @@
 
 #include "SPFilesystem.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct FilesystemTest : Test {
 	FilesystemTest() : Test("FilesystemTest") { }

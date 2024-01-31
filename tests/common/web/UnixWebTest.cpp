@@ -24,13 +24,15 @@
 #include "SPNetworkHandle.h"
 #include "Test.h"
 
+#if MODULE_STAPPLER_WEBSERVER_UNIX
+
 #include "SPWebUnixRoot.h"
 
 #include "UnixWebTestComponent.cc"
 
 #include <unistd.h>
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct UnixWebTest : Test {
 	UnixWebTest() : Test("UnixWebTest") { }
@@ -141,3 +143,5 @@ struct UnixWebTest : Test {
 } _UnixWebTest;
 
 }
+
+#endif

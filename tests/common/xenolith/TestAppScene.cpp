@@ -37,7 +37,7 @@
 
 #include "backend/vk/XL2dVkShadowPass.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 bool TestAppScene::init(Application *app, const core::FrameContraints &constraints) {
 	// build presentation RenderQueue

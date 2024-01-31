@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "SPRefContainer.h"
 #include "Test.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct TestItem : public RefBase<memory::StandartInterface> {
 	virtual ~TestItem() {

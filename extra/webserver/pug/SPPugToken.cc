@@ -23,7 +23,7 @@
 #include "SPPugToken.h"
 #include "SPPugExpression.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 Token::Token(Type t, const StringView &d) : type(t), data(d) { }
 

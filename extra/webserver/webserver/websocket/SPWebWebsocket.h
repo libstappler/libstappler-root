@@ -28,11 +28,10 @@
 #include "SPWebHost.h"
 #include "SPBuffer.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class WebsocketManager;
 class WebsocketHandler;
-class WebsocketConnection;
 
 enum class WebsocketFrameType : uint8_t {
 	None,
@@ -65,103 +64,125 @@ enum class WebsocketStatusCode : uint16_t {
 	SSLError = 1015,
 };
 
-class WebsocketManager : public AllocBase {
-public:
-	WebsocketManager(const Host &);
-	virtual ~WebsocketManager();
 
-	virtual WebsocketHandler * onAccept(const Request &, pool_t *);
-	virtual bool onBroadcast(const Value &);
+struct WebsocketFrameReader : AllocBase {
+	enum class Status : uint8_t {
+		Head,
+		Size16,
+		Size64,
+		Mask,
+		Body,
+		Control
+	};
 
-	size_t size() const;
+	enum class Error : uint8_t {
+		None,
+		NotInitialized, // error in reader initialization
+		ExtraIsNotEmpty,// rsv 1-3 is not empty
+		NotMasked,// input frame is not masked
+		UnknownOpcode,// unknown opcode in frame
+		InvalidSegment,// invalid FIN or OPCODE sequence in segmented frames
+		InvalidSize,// frame (or sequence) is larger then max size
+		InvalidAction,// Handler tries to perform invalid reading action
+	};
 
-	void receiveBroadcast(const Value &);
-	int accept(Request &);
+	struct Frame {
+		bool fin; // fin value inside current frame
+		WebsocketFrameType type; // opcode from first frame
+		Bytes buffer; // common data buffer
+		size_t block; // size of completely written block when segmented
+		size_t offset; // offset inside current frame
+	};
 
-	void run(WebsocketHandler *);
+	static WebsocketFrameType getTypeFromOpcode(uint8_t opcode);
+	static bool isControlFrameType(WebsocketFrameType t);
 
-	const Host &host() const { return _host; }
+	static void unmask(uint32_t mask, size_t offset, uint8_t *data, size_t nbytes);
 
-protected:
-	void addHandler(WebsocketHandler *);
-	void removeHandler(WebsocketHandler *);
+	template <typename B>
+	static size_t getBufferRequiredBytes(const B &buf, size_t maxSize) {
+		return (buf.size() < maxSize) ? (maxSize - buf.size()) : 0;
+	}
 
-	pool_t *_pool;
-	Mutex _mutex;
-	std::atomic<size_t> _count;
-	Vector<WebsocketHandler *> _handlers;
-	Host _host;
+	bool fin = false;
+	bool masked = false;
+
+	Status status = Status::Head;
+	Error error = Error::None;
+	WebsocketFrameType type = WebsocketFrameType::None;
+	uint8_t extra = 0;
+	uint32_t mask = 0;
+	size_t size = 0;
+	size_t max = config::WEBSOCKET_DEFAULT_MAX_FRAME_SIZE; // absolute maximum (even for segmented frames)
+
+	Frame frame;
+	pool_t *pool = nullptr;
+	Root * root = nullptr;
+	StackBuffer<128> buffer;
+
+	WebsocketFrameReader(Root *r, pool_t *p);
+
+	operator bool() const {  return error == Error::None; }
+
+	size_t getRequiredBytes() const;
+	uint8_t * prepare(size_t &len);
+	bool save(uint8_t *, size_t nbytes);
+
+	bool isFrameReady() const;
+	bool isControlReady() const;
+	void popFrame();
+	void clear();
+
+	bool updateState();
 };
 
-class WebsocketHandler : public AllocBase {
-public:
-	WebsocketHandler(WebsocketManager *m, pool_t *p, StringView url,
-			TimeInterval ttl = config::WEBSOCKET_DEFAULT_TTL,
-			size_t max = config::WEBSOCKET_DEFAULT_MAX_FRAME_SIZE);
-	virtual ~WebsocketHandler();
+struct WebsocketFrameWriter : AllocBase {
+	static uint8_t getOpcodeFromType(WebsocketFrameType opcode);
 
-	// Client just connected
-	virtual void onBegin() { }
+	static void makeHeader(StackBuffer<32> &buf, size_t dataSize, WebsocketFrameType t);
 
-	// Data frame was recieved from network
-	virtual bool onFrame(WebsocketFrameType, const Bytes &);
+	struct Slice {
+		uint8_t *data;
+		size_t size;
+		Slice *next;
+	};
 
-	// Message was recieved from broadcast
-	virtual bool onMessage(const Value &);
+	struct WriteSlot : AllocBase {
+		pool_t *pool;
+		size_t alloc = 0;
+		size_t offset = 0;
+		Slice *firstData = nullptr;
+		Slice *lastData = nullptr;
 
-	// Client is about disconnected
-	// You can not send any frames in this call, because 'close' frame was already sent
-	virtual void onEnd() { }
+		WriteSlot *next = nullptr;
 
-	// Send system-wide broadcast, that can be received by any other websocket with same servername and url
-	// This socket also receive this broadcast
-	void sendBroadcast(Value &&) const;
+		WriteSlot(pool_t *p);
 
-	void setEncodeFormat(const data::EncodeFormat &);
+		bool empty() const;
 
-	bool send(StringView);
-	bool send(BytesView);
-	bool send(const Value &);
+		void emplace(const uint8_t *data, size_t size);
 
-	// get default storage adapter, that binds to current call context
-	WebsocketManager *manager() const { return _manager; }
-	WebsocketConnection *connection() const { return _conn; }
-	pool_t *pool() const;
+		void pop(size_t size);
 
-	StringView getUrl() const { return _url; }
-	TimeInterval getTtl() const { return _ttl; }
-	size_t getMaxInputFrameSize() const { return _maxInputFrameSize; }
+		uint8_t * getNextBytes() const;
+		size_t getNextLength() const;
+	};
 
-	bool isEnabled() const;
+	pool_t *pool = nullptr;
+	WriteSlot *firstSlot = nullptr;
+	WriteSlot *lastSlot = nullptr;
 
-	void sendPendingNotifications(pool_t *);
+	WebsocketFrameWriter(pool_t *p);
 
-	void performWithStorage(const Callback<void(const db::Transaction &)> &cb) const;
+	bool empty() const;
 
-	bool performAsync(const Callback<void(AsyncTask &)> &cb) const;
+	WriteSlot *nextReadSlot() const;
 
-protected:
-	friend class WebsocketManager;
-	friend class WebsocketConnection;
+	void popReadSlot();
 
-	void setConnection(WebsocketConnection *);
-	virtual void receiveBroadcast(const Value &);
-	bool processBroadcasts();
-
-	pool_t *_pool = nullptr;
-	WebsocketManager *_manager = nullptr;
-
-	data::EncodeFormat _format = data::EncodeFormat::Json;
-	StringView _url;
-	TimeInterval _ttl = config::WEBSOCKET_DEFAULT_TTL;
-	size_t _maxInputFrameSize = config::WEBSOCKET_DEFAULT_MAX_FRAME_SIZE;
-
-	Mutex _broadcastMutex;
-	pool_t *_broadcastsPool = nullptr;
-	Vector<Value> *_broadcastsMessages = nullptr;
-
-	WebsocketConnection *_conn = nullptr;
+	WriteSlot *nextEmplaceSlot(size_t sizeOfData);
 };
+
 
 }
 

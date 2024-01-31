@@ -27,11 +27,13 @@
 #include "SPUrl.h"
 #include "SPTime.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class HostController;
 class Session;
 class InputFilter;
+class WebsocketHandler;
+class WebsocketConnection;
 
 class RequestController : public AllocBase {
 public:
@@ -77,17 +79,22 @@ public:
 	virtual StringView getResponseHeader(StringView) const = 0;
 	virtual void foreachResponseHeaders(const Callback<void(StringView, StringView)> &) const = 0;
 	virtual void setResponseHeader(StringView, StringView) = 0;
+	virtual void clearResponseHeaders() = 0;
 
 	virtual StringView getErrorHeader(StringView) const = 0;
 	virtual void foreachErrorHeaders(const Callback<void(StringView, StringView)> &) const = 0;
 	virtual void setErrorHeader(StringView, StringView) = 0;
+	virtual void clearErrorHeaders() = 0;
 
 	virtual db::Adapter acquireDatabase();
 
+	virtual InputFilter *makeInputFilter(InputFilterAccept);
 	virtual void setInputFilter(InputFilter *);
 	virtual InputFilter *getInputFilter() const { return _filter; }
 
 	virtual Value getDefaultResult();
+
+	virtual WebsocketConnection *convertToWebsocket(WebsocketHandler *, allocator_t *, pool_t *) { return nullptr; }
 
 protected:
 	friend class Request;

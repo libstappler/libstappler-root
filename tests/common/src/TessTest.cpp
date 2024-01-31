@@ -28,7 +28,7 @@
 #include "XL2dVectorCanvas.h"
 #include "XLIcons.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct TessTest : Test {
 	struct PathData {

@@ -23,7 +23,7 @@
 #include "SPDocumentStyleContainer.h"
 #include "SPStringView.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 static bool css_readListStyleType(const StringView &value, const StyleCallback &cb) {
 	if (value.compare("none")) {

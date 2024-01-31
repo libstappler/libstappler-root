@@ -21,13 +21,50 @@
  **/
 
 #include "SPWebTools.h"
+#include "SPWebRequestHandler.h"
 
-SPWebTools::SPWebTools() {
-	// TODO Auto-generated constructor stub
+namespace STAPPLER_VERSIONIZED stappler::web::tools {
 
+void registerTools(StringView prefix, Host &host) {
+	host.addHandler(prefix, RequestHandler::Handler<tools::ServerGui>());
+	host.addHandler(toString(prefix, config::TOOLS_SHELL), RequestHandler::Handler<tools::ShellGui>());
+	host.addHandler(toString(prefix, config::TOOLS_ERRORS), RequestHandler::Handler<tools::ErrorsGui>());
+	//host.addHandler(toString(prefix, config::TOOLS_DOCS), RequestHandler::Handler<tools::VirtualGui>());
+	host.addHandler(toString(prefix, config::TOOLS_HANDLERS), RequestHandler::Handler<tools::HandlersGui>());
+	host.addHandler(toString(prefix, config::TOOLS_REPORTS), RequestHandler::Handler<tools::ReportsGui>());
+	host.addWebsocket(toString(prefix, config::TOOLS_SHELL_SOCKET), new tools::ShellSocket(host));
+
+	host.addHandler(toString(prefix, config::TOOLS_AUTH), RequestHandler::Handler<tools::AuthHandler>());
+	host.addHandler(toString(prefix, config::TOOLS_VIRTUALFS), RequestHandler::Handler<tools::VirtualFilesystem>());
 }
 
-SPWebTools::~SPWebTools() {
-	// TODO Auto-generated destructor stub
+Status VirtualFilesystem::onTranslateName(Request &rctx) {
+	if (rctx.getInfo().method != RequestMethod::Get) {
+		return DECLINED;
+	}
+
+	auto d = VirtualFile::getList();
+	for (auto &it : d) {
+		if (_subPath == it.name) {
+			if (_subPath.ends_with(".js")) {
+				rctx.setContentType("application/javascript");
+			} else if (_subPath.ends_with(".css")) {
+				rctx.setContentType("text/css");
+			} else if (_subPath.ends_with(".html")) {
+				rctx.setContentType("text/html;charset=UTF-8");
+			}
+
+			if (output::checkCacheHeaders(rctx, getCompileUnixTime(), hash::hash32(it.name.data(), it.name.size()))) {
+				return HTTP_NOT_MODIFIED;
+			}
+
+			rctx << it.content;
+			return DONE;
+			break;
+		}
+	}
+
+	return HTTP_NOT_FOUND;
 }
 
+}

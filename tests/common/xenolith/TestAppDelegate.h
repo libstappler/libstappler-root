@@ -29,7 +29,7 @@
 #include "XLNetworkController.h"
 #include "XLAssetLibrary.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 class TestAppDelegate : private vk::GuiApplication {
 public:

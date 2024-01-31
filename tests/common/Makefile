@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 STAPPLER_ROOT ?= ../..
+STAPPLER_VERSION_PREFIX := sp_test
 
 # force to rebuild if this makefile changed
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
@@ -66,7 +67,9 @@ LOCAL_MAIN := main.cpp
 
 LOCAL_SHADERS_DIR := shaders
 
+ifdef LINUX
 # For dynamic self-loading
-LDFLAGS := -Wl,--export-dynamic
+LOCAL_LDFLAGS := -Wl,--export-dynamic
+endif
 
 include $(STAPPLER_ROOT)/build/make/universal.mk

@@ -28,7 +28,7 @@
 #include "SPWebMultipartParser.h"
 #include "SPDbFile.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class FileParser : public InputParser {
 public:
@@ -107,11 +107,6 @@ void InputParser::cleanup() {
 
 const db::InputConfig &InputParser::getConfig() const {
 	return config;
-}
-
-void InputFilter::filterRegister() {
-	/*ap_register_input_filter("Serenity::InputFilter", &(filterFunc),
-			&(filterInit), AP_FTYPE_CONTENT_SET);*/
 }
 
 static InputFilter::Accept getAcceptedData(const Request &req, InputFilter::Exception &e) {
@@ -213,7 +208,7 @@ InputFilter::Exception InputFilter::insert(const Request &r) {
 			return e;
 		}
 
-		auto f = new (r.pool()) InputFilter(r, accept);
+		auto f = r.config()->makeInputFilter(accept);
 		Request(r).setInputFilter(f);
 		return e;
 	}, r.pool(), config::TAG_REQUEST, r.config());
@@ -233,7 +228,7 @@ InputFilter::InputFilter(const Request &r, Accept a) : _body() {
 	}
 }
 
-int InputFilter::init() {
+Status InputFilter::init() {
 	_startTime =_time = Time::now();
 	_isStarted = true;
 

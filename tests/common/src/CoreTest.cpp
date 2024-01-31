@@ -24,7 +24,7 @@
 #include "SPString.h"
 #include "Test.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct CoreTest : Test {
 	CoreTest() : Test("CoreTest") { }

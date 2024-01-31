@@ -27,7 +27,7 @@
 #include "SPWebHost.h"
 #include "SPPugContext.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Session;
 class RequestController;
@@ -52,7 +52,7 @@ public:
 	Request(const Request &);
 	Request & operator =(const Request &);
 
-	RequestController *getConfig() const { return _config; }
+	RequestController *getController() const { return _config; }
 	operator bool () const { return _config != nullptr; }
 
 	const RequestInfo &getInfo() const;
@@ -63,10 +63,12 @@ public:
 	StringView getResponseHeader(StringView) const;
 	void foreachResponseHeaders(const Callback<void(StringView, StringView)> &) const;
 	void setResponseHeader(StringView, StringView) const;
+	void clearResponseHeaders() const;
 
 	StringView getErrorHeader(StringView) const;
 	void foreachErrorHeaders(const Callback<void(StringView, StringView)> &) const;
 	void setErrorHeader(StringView, StringView) const;
+	void clearErrorHeaders() const;
 
 	void setRequestHandler(RequestHandler *);
 	RequestHandler *getRequestHandler() const;
@@ -133,6 +135,8 @@ public:
 
 	db::AccessRoleId getAccessRole() const;
 	void setAccessRole(db::AccessRoleId) const;
+
+	db::Transaction acquireDbTransaction() const;
 
 	const Vector<Value> & getDebugMessages() const;
 	const Vector<Value> & getErrorMessages() const;

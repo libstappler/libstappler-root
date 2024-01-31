@@ -28,7 +28,7 @@
 #include "XL2dLabel.h"
 #include "XL2dLayer.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 using namespace basic2d;
 

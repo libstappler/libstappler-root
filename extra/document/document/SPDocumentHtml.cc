@@ -25,7 +25,7 @@
 #include "SPDocumentHtml.h"
 #include "SPDocumentPageContainer.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 class Node;
 

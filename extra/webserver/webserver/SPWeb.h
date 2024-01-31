@@ -32,7 +32,7 @@
 
 #include <typeindex>
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 using namespace mem_pool;
 

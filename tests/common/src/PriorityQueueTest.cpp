@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "SPCommon.h"
 #include "Test.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct PriorityQueueTest : Test {
 	PriorityQueueTest() : Test("PriorityQueueTest") { }

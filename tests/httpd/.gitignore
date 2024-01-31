@@ -1,0 +1,5 @@
+stappler-build
+.db.conf.json
+www/.reports
+www/sqlite.*
+logs

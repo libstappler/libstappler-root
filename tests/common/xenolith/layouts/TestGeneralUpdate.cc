@@ -22,8 +22,9 @@
 
 #include "TestGeneralUpdate.h"
 #include "XLDirector.h"
+#include "SPTime.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 bool TestGeneralUpdate::init() {
 	if (!TestLayout::init(LayoutName::GeneralUpdateTest, "Gradient should spin monotonically")) {
@@ -52,11 +53,11 @@ void TestGeneralUpdate::onEnter(xenolith::Scene *scene) {
 void TestGeneralUpdate::update(const UpdateTime &time) {
 	TestLayout::update(time);
 
-	auto t = time.app % 5_usec;
+	auto t = time.app % (5_sec).toMicros();
 
 	if (_background) {
 		_background->setGradient(SimpleGradient(Color::Red_500, Color::Green_500,
-				Vec2::forAngle(M_PI * 2.0 * (float(t) / 5_usec))));
+				Vec2::forAngle(M_PI * 2.0 * (float(t) / (5_sec).toMicros()))));
 	}
 }
 

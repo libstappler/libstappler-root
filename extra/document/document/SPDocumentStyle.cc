@@ -23,7 +23,7 @@
 #include "SPDocumentStyle.h"
 #include "SPDocumentParser.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 template<> void StyleParameter::set<ParameterName::CssFontStyle, FontStyle>(const FontStyle &v) { value.fontStyle = v; }
 template<> void StyleParameter::set<ParameterName::CssFontWeight, FontWeight>(const FontWeight &v) { value.fontWeight = v; }

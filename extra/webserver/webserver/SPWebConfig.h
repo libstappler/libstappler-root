@@ -26,7 +26,10 @@
 #include "SPStringView.h"
 #include "SPTime.h"
 
-namespace stappler::web::config {
+namespace STAPPLER_VERSIONIZED stappler::web::config {
+
+constexpr auto HEARTBEAT_PAUSE = 1_sec;
+constexpr auto HEARTBEAT_TIME = 1_sec;
 
 #if DEBUG
 constexpr auto DEFAULT_PUG_UPDATE_INTERVAL = 3_sec;
@@ -35,6 +38,8 @@ constexpr auto DEFAULT_DATABASE_CLEANUP_INTERVAL = 60_sec;
 constexpr auto DEFAULT_PUG_UPDATE_INTERVAL = 30_sec;
 constexpr auto DEFAULT_DATABASE_CLEANUP_INTERVAL = 180_sec;
 #endif
+
+constexpr auto AUTH_MAX_TIME = 720_sec;
 
 constexpr auto DEFAULT_SERVER_LINE = "StapplerWebserver/1.0";
 
@@ -67,6 +72,16 @@ constexpr size_t MAX_INPUT_POST_SIZE = 2_GiB;
 constexpr size_t MAX_INPUT_FILE_SIZE = 2_GiB;
 constexpr size_t MAX_INPUT_VAR_SIZE =  8_KiB;
 
+constexpr auto TOOLS_SERVER_PREFIX = StringView("/__server");
+constexpr auto TOOLS_SHELL = StringView("/shell/");
+constexpr auto TOOLS_SHELL_SOCKET = StringView("/shell");
+constexpr auto TOOLS_ERRORS = StringView("/errors/");
+constexpr auto TOOLS_AUTH = StringView("/auth/");
+constexpr auto TOOLS_DOCS = StringView("/docs/");
+constexpr auto TOOLS_HANDLERS = StringView("/handlers");
+constexpr auto TOOLS_REPORTS = StringView("/reports/");
+constexpr auto TOOLS_VIRTUALFS = StringView("/virtual/");
+
 /* Этот ключ защищает хранимые в БД созданные автоматически ключи сервера
  * На его основе создаётся шифроблок, в котором хранятся созданные ключи
  * Второй ключ шифроблока - текстовый ключ HostSecret */
@@ -78,9 +93,13 @@ E8OCKW9N7veiLA==
 -----END PRIVATE KEY-----
 )GostKey");
 
-constexpr auto DIR_MAGIC_TYPE = "httpd/unix-directory";
+constexpr auto DIR_MIME_TYPE = "httpd/unix-directory";
 
 extern const char * MIME_TYPES;
+
+const char * getWebserverVersionString();
+uint32_t getWebserverVersionNumber();
+uint32_t getWebserverVersionBuild();
 
 }
 

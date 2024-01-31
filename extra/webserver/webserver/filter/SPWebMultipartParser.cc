@@ -24,7 +24,7 @@
 #include "SPValid.h"
 #include "SPDbFile.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 MultipartParser::MultipartParser(const db::InputConfig &c, size_t s, const StringView &b)
 : InputParser(c, s) {

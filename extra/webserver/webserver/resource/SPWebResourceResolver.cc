@@ -25,7 +25,7 @@
 #include "SPWebRoot.h"
 #include "SPValid.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 static Vector<StringView> parsePath(StringView path) {
 	Vector<StringView> pathVec;
@@ -427,12 +427,12 @@ static Resource *getResolvedResource(ResourceResolver *resv, Vector<StringView> 
 	return parseResource(resv, path);
 }
 
-Resource *Resource::resolve(const db::Adapter &a, const db::Scheme &scheme, const StringView &path) {
+Resource *Resource::resolve(const db::Transaction &a, const db::Scheme &scheme, const StringView &path) {
 	Value tmp;
 	return resolve(a, scheme, path, tmp);
 }
 
-Resource *Resource::resolve(const Adapter &a, const Scheme &scheme, const StringView &path, Value & sub) {
+Resource *Resource::resolve(const Transaction &a, const Scheme &scheme, const StringView &path, Value & sub) {
 	auto pathVec = parsePath(path);
 
 	ResourceResolver resolver(a, scheme);
@@ -472,13 +472,13 @@ Resource *Resource::resolve(const Adapter &a, const Scheme &scheme, const String
 	return getResolvedResource(&resolver, pathVec);
 }
 
-Resource *Resource::resolve(const db::Adapter &a, const db::Scheme &scheme, Vector<StringView> &pathVec) {
+Resource *Resource::resolve(const db::Transaction &a, const db::Scheme &scheme, Vector<StringView> &pathVec) {
 	ResourceResolver resolver(a, scheme);
 	return getResolvedResource(&resolver, pathVec);
 }
 
-ResourceResolver::ResourceResolver(const db::Adapter &a, const db::Scheme &scheme)
-: _storage(a), _scheme(&scheme), _queries(a.getApplicationInterface(), &scheme) {
+ResourceResolver::ResourceResolver(const db::Transaction &a, const db::Scheme &scheme)
+: _storage(a), _scheme(&scheme), _queries(a.getAdapter().getApplicationInterface(), &scheme) {
 	_type = Objects;
 }
 

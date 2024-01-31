@@ -25,7 +25,7 @@
 
 #include "SPWebHost.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class HostComponent : public AllocBase {
 public:

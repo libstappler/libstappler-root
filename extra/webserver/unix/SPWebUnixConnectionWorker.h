@@ -29,7 +29,7 @@
 
 #include <sys/epoll.h>
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class UnixRequestController;
 class ConnectionQueue;

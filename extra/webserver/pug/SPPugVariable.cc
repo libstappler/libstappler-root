@@ -22,7 +22,7 @@
 
 #include "SPPugVariable.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 VarData::~VarData() {
 	clear();

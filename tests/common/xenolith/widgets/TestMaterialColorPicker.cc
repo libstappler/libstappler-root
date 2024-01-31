@@ -26,7 +26,7 @@
 #include "XLInputListener.h"
 #include "XLTexture.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 bool MaterialColorPicker::init(Type type, const material2d::ColorHCT &color, Function<void(float)> &&cb) {
 	if (!Sprite::init()) {

@@ -24,7 +24,7 @@
 #include "SPPugContext.h"
 #include "SPPugToken.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct TemplateRender {
 	template <typename T>

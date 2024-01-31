@@ -31,7 +31,7 @@
 #include "SPDbFieldTextArray.h"
 #include "SPPqHandle.h"
 
-namespace stappler::db::test::detail {
+namespace STAPPLER_VERSIONIZED stappler::db::test::detail {
 
 using namespace stappler::mem_pool;
 
@@ -215,7 +215,7 @@ ServerScheme::ServerScheme(memory::pool_t *p, uint32_t version) : _pool(p) {
 		Field::Text("alias", Transform::Alias),
 		Field::Integer("mtime", Flags::AutoMTime | Flags::Indexed),
 		Field::Integer("index", Flags::Indexed),
-		Field::View("refs", _refs, ViewFn([this] (const Scheme &objScheme, const Value &obj) -> bool {
+		Field::View("refs", _refs, ViewFn([] (const Scheme &objScheme, const Value &obj) -> bool {
 			return true;
 		}), FieldView::Delta),
 
@@ -271,7 +271,7 @@ ServerScheme::ServerScheme(memory::pool_t *p, uint32_t version) : _pool(p) {
 		Field::Object("root", _hierarchy, Linkage::Manual, ForeignLink("sections")),
 		Field::Set("sections", _hierarchy, Linkage::Manual, ForeignLink("root")),
 
-		Field::View("pages", _pages, ViewFn([this] (const Scheme &, const Value &obj) -> bool {
+		Field::View("pages", _pages, ViewFn([] (const Scheme &, const Value &obj) -> bool {
 			return obj.getBool("hidden") ? false : true;
 		}), Vector<String>({ "hidden" })),
 
@@ -734,7 +734,7 @@ void Server::perform(const Callback<bool(const db::Transaction &)> &cb) {
 
 }
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct PqTest : MemPoolTest {
 	struct Options {

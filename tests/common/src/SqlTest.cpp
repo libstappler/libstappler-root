@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #include "SPSql.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct SqlTest : Test {
 	SqlTest() : Test("SqlTest") { }

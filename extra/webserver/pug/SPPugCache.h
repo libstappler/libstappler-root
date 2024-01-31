@@ -26,7 +26,7 @@
 #include "SPPug.h"
 #include "SPPugTemplate.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 class FileRef : public RefBase<memory::PoolInterface> {
 public:

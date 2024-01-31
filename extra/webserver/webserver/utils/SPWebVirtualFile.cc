@@ -22,9 +22,14 @@
 
 #include "SPWebVirtualFile.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 struct VirtualFilesystemHandle {
+	static VirtualFilesystemHandle *get() {
+		static VirtualFilesystemHandle s_handle;
+		return &s_handle;
+	}
+
 	VirtualFilesystemHandle() : count(0) { }
 
 	VirtualFile add(StringView n, const StringView &c) {
@@ -43,16 +48,16 @@ struct VirtualFilesystemHandle {
 	VirtualFile table[255] = { };
 };
 
-static VirtualFilesystemHandle s_handle;
 
 VirtualFile VirtualFile::add(const StringView &n, const StringView &c) {
-	return s_handle.add(n, c);
+	return VirtualFilesystemHandle::get()->add(n, c);
 }
 
 StringView VirtualFile::get(const StringView &path) {
-	for (size_t i = 0; i < s_handle.count; ++i) {
-		if (path == s_handle.table[i].name) {
-			return StringView(s_handle.table[i].content);
+	auto ptr = VirtualFilesystemHandle::get();
+	for (size_t i = 0; i < ptr->count; ++i) {
+		if (path == ptr->table[i].name) {
+			return StringView(ptr->table[i].content);
 			break;
 		}
 	}
@@ -60,7 +65,8 @@ StringView VirtualFile::get(const StringView &path) {
 }
 
 SpanView<VirtualFile> VirtualFile::getList() {
-	return SpanView<VirtualFile>(s_handle.table, s_handle.count);
+	auto ptr = VirtualFilesystemHandle::get();
+	return SpanView<VirtualFile>(ptr->table, ptr->count);
 }
 
 }

@@ -37,7 +37,7 @@
 #include "XLCoreFrameQueue.h"
 #include "XLCoreFrameRequest.h"
 
-namespace stappler::xenolith::test::detail {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::test::detail {
 
 #include "noise.comp.h"
 
@@ -310,7 +310,7 @@ Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle
 
 }
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct XenolithHeadlessTest : Test {
 	XenolithHeadlessTest() : Test("XenolithHeadlessTest") { }

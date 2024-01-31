@@ -28,7 +28,7 @@
 #include "SPPugCache.h"
 #include "SPSqlDriver.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Root;
 class WebsocketManager;
@@ -59,7 +59,7 @@ public:
 
 	void setForceHttps();
 
-	void setHostSecret(StringView w, crypto::HashFunction);
+	void setHostSecret(StringView w);
 	void setHostKey(crypto::PrivateKey &&);
 
 	void addAllowed(StringView r);
@@ -81,6 +81,8 @@ public:
 	const HostInfo &getHostInfo() const { return _hostInfo; }
 
 	Root *getRoot() const { return _root; }
+
+	const Map<StringView, StringView> &getDbParams() const { return _dbParams; }
 
 	virtual db::sql::Driver::Handle openConnection(pool_t *, bool bindConnection) const;
 	virtual void closeConnection(db::sql::Driver::Handle) const;

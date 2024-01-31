@@ -32,7 +32,7 @@
 #include "SPDocumentFormat.cc"
 #include "SPDocumentParser.cc"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 bool Document::canOpen(FilePath path, StringView ct) {
 	return canOpen(memory::pool::acquire(), path, ct);

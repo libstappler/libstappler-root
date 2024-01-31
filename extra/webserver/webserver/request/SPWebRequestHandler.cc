@@ -24,7 +24,7 @@
 #include "SPWebInputFilter.h"
 #include "SPDbFile.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 Status RequestHandler::onRequestRecieved(Request & rctx, StringView originPath, StringView path, const Value &data) {
 	_request = rctx;
@@ -34,6 +34,21 @@ Status RequestHandler::onRequestRecieved(Request & rctx, StringView originPath, 
 	_subPathVec = UrlView::parsePath<Interface>(_subPath);
 	return OK;
 }
+
+Status RequestHandler::onPostReadRequest(Request &) { return DECLINED; }
+Status RequestHandler::onTranslateName(Request &) { return DECLINED; }
+Status RequestHandler::onQuickHandler(Request &, int v) { return DECLINED; }
+void RequestHandler::onInsertFilter(Request &) { }
+Status RequestHandler::onHandler(Request &) { return DECLINED; }
+
+void RequestHandler::onFilterInit(InputFilter *f) { }
+void RequestHandler::onFilterUpdate(InputFilter *f) { }
+void RequestHandler::onFilterComplete(InputFilter *f) { }
+
+const Value &RequestHandler::getOptions() const { return _options; }
+
+void RequestHandler::setAccessRole(db::AccessRoleId role) { _accessRole = role; }
+db::AccessRoleId RequestHandler::getAccessRole() const { return _accessRole; }
 
 Status DataHandler::writeResult(Value &data) {
 	auto status = _request.getInfo().status;
@@ -145,6 +160,13 @@ Status FilesystemHandler::onTranslateName(Request &rctx) {
 		return rctx.sendFile(stappler::filesystem::writablePath<Interface>(_path), std::move(_contentType), _cacheTime);
 	}
 }
+
+bool RequestHandlerMap::Handler::isPermitted() { return false; }
+Status RequestHandlerMap::Handler::onRequest() { return DECLINED; }
+Value RequestHandlerMap::Handler::onData() { return Value(); }
+
+RequestHandlerMap::Handler::Handler() { }
+RequestHandlerMap::Handler::~Handler() { }
 
 void RequestHandlerMap::Handler::onParams(const HandlerInfo *info, Value &&val) {
 	_info = info;

@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "SPMemPriorityQueue.h"
 #include "Test.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct BacktraceTest : Test {
 	BacktraceTest() : Test("BacktraceTest") { }

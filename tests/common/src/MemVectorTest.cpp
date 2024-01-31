@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "SPString.h"
 #include "Test.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct MemVectorTest : MemPoolTest {
 	MemVectorTest() : MemPoolTest("MemVectorTest") { }

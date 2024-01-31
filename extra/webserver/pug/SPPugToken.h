@@ -25,7 +25,7 @@
 
 #include "SPPug.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct Token : memory::AllocPool {
 	enum Type : uint16_t {

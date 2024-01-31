@@ -23,7 +23,7 @@
 #include "SPWebUnixRequest.h"
 #include "SPWebInputFilter.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 UnixRequestController::UnixRequestController(pool_t *pool, RequestInfo &&info, ConnectionWorker::Client *client)
 : RequestController(pool, move(info)) {
@@ -181,6 +181,10 @@ void UnixRequestController::setResponseHeader(StringView key, StringView val) {
 	}
 }
 
+void UnixRequestController::clearResponseHeaders() {
+	_responseHeaders.clear();
+}
+
 StringView UnixRequestController::getErrorHeader(StringView key) const {
 	auto tmp = key.str<memory::StandartInterface>();
 	string::apply_tolower_c(tmp);
@@ -208,6 +212,10 @@ void UnixRequestController::setErrorHeader(StringView key, StringView val) {
 	} else {
 		_errorHeaders.emplace(StringView(tmp).pdup(_pool), val.pdup(_pool));
 	}
+}
+
+void UnixRequestController::clearErrorHeaders() {
+	_errorHeaders.clear();
 }
 
 Status UnixRequestController::processInput(ConnectionWorker::BufferChain &chain) {

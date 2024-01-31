@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "SPSearchConfiguration.h"
 #include "SPUrl.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 static constexpr auto SearchParserTest =
 R"( 7'/10,5' 2011 шт. 20 лестница крыши 7\' 2011 шт. 20 X - арматурный прут 2011 шт.7 шт. 10)";

@@ -23,10 +23,158 @@
 #ifndef EXTRA_WEBSERVER_WEBSERVER_TOOLS_SPWEBTOOLS_H_
 #define EXTRA_WEBSERVER_WEBSERVER_TOOLS_SPWEBTOOLS_H_
 
-class SPWebTools {
+#include "SPWebInfo.h"
+#include "SPWebRequestHandler.h"
+#include "SPWebWebsocketManager.h"
+
+namespace STAPPLER_VERSIONIZED stappler::web {
+
+class Resource;
+
+StringView getCompileDate();
+Time getCompileUnixTime();
+
+}
+
+namespace STAPPLER_VERSIONIZED stappler::web::tools {
+
+/* Simple auth handler, creates ащгк virtual pages:
+ *
+ * $PREFIX$/auth/setup? name=$NAME$ & passwd=$PASSWD$
+ *  - create new admin user, if there is no other users
+ *
+ * $PREFIX$/auth/login? name=$NAME$ & passwd=$PASSWD$ & maxAge=$MAXAGE$
+ *  - init new session for user, creates new token pair for $MAXAGE$ (720 seconds max)
+ *
+ * $PREFIX$/auth/update? token=$TOKEN$ & maxAge=$MAXAGE$
+ *  - updates session token pair for $MAXAGE$ (720 seconds max)
+ *
+ * $PREFIX$/auth/cancel? token=$TOKEN$
+ *  - cancel session
+ *
+ */
+class AuthHandler : public DataHandler {
 public:
-	SPWebTools();
-	virtual ~SPWebTools();
+	virtual bool isRequestPermitted(Request &) override;
+	virtual Status onTranslateName(Request &) override;
+	virtual bool processDataHandler(Request &, Value &result, Value &input) override;
 };
+
+/* WebSocket shell interface */
+class ShellSocket : public WebsocketManager {
+public:
+	virtual ~ShellSocket() = default;
+
+	ShellSocket(const Host &host) : WebsocketManager(host) { };
+
+	virtual WebsocketHandler * onAccept(const Request &, pool_t *) override;
+	virtual bool onBroadcast(const Value &) override;
+};
+
+/* WebSocket shell interface GUI */
+class ShellGui : public RequestHandler {
+public:
+	virtual bool isRequestPermitted(Request &) override { return true; }
+	virtual Status onPostReadRequest(Request &) override;
+
+	virtual void onInsertFilter(Request &) override;
+	virtual Status onHandler(Request &) override;
+
+	virtual void onFilterComplete(InputFilter *f) override;
+
+protected:
+	Resource *_resource = nullptr;
+};
+
+/* WebSocket shell interface GUI */
+class ServerGui : public DataHandler {
+public:
+	static void defineBasics(pug::Context &exec, Request &req, db::User *u);
+
+	ServerGui() {
+		_allow = AllowMethod::Get | AllowMethod::Post;
+		_config = db::InputConfig({
+			db::InputConfig::Require::Data | db::InputConfig::Require::FilesAsData,
+			512,
+			256,
+			0
+		});
+	}
+
+	virtual bool isRequestPermitted(Request &) override;
+	virtual Status onTranslateName(Request &) override;
+	virtual void onFilterComplete(InputFilter *f) override;
+
+protected:
+	db::Transaction _transaction = nullptr;
+};
+
+class TestHandler : public DataHandler {
+public:
+	TestHandler();
+	virtual bool isRequestPermitted(Request &) override;
+	virtual bool processDataHandler(Request &, Value &, Value &) override;
+
+protected:
+	bool processEmailTest(Request &rctx, Value &ret, const Value &input);
+	bool processUrlTest(Request &rctx, Value &ret, const Value &input);
+	bool processUserTest(Request &rctx, Value &ret, const Value &input);
+	bool processImageTest(Request &rctx, Value &ret, const Value &input, db::InputFile &);
+};
+
+class ErrorsGui : public RequestHandler {
+public:
+	virtual bool isRequestPermitted(Request &) override { return true; }
+	virtual Status onTranslateName(Request &) override;
+};
+
+class HandlersGui : public RequestHandler {
+public:
+	virtual bool isRequestPermitted(Request &) override { return true; }
+	virtual Status onTranslateName(Request &) override;
+};
+
+class ReportsGui : public RequestHandler {
+public:
+	virtual bool isRequestPermitted(Request &) override { return true; }
+	virtual Status onTranslateName(Request &) override;
+};
+
+class VirtualGui : public RequestHandler {
+public:
+	virtual bool isRequestPermitted(Request &) override { return true; }
+	virtual Status onTranslateName(Request &) override;
+	virtual Status onHandler(Request &) override;
+
+	virtual void onInsertFilter(Request &) override;
+	virtual void onFilterComplete(InputFilter *filter) override;
+
+protected:
+	Value readMeta(StringView) const;
+	void writeData(Value &) const;
+
+	bool createArticle(const Value &);
+	bool createCategory(const Value &);
+
+	void makeMdContents(Request &req, pug::Context &exec, StringView path) const;
+	Value makeDirInfo(StringView path, bool forFile = false) const;
+
+	bool _virtual = true;
+#if DEBUG
+	bool _editable = true;
+#else
+	bool _editable = false;
+#endif
+};
+
+class VirtualFilesystem : public RequestHandler {
+public:
+	virtual bool isRequestPermitted(Request &) override { return true; }
+	virtual Status onTranslateName(Request &) override;
+};
+
+void registerTools(StringView prefix, Host &);
+
+}
 
 #endif /* EXTRA_WEBSERVER_WEBSERVER_TOOLS_SPWEBTOOLS_H_ */

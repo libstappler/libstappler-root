@@ -25,7 +25,7 @@
 
 #include "SPWebRequest.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class InputParser : public AllocBase {
 public:
@@ -61,16 +61,7 @@ protected:
 class InputFilter : public AllocBase {
 public:
 	using FilterFunc = Function<void(InputFilter *filter)>;
-
-	static constexpr StringView FilterName = StringView("web::InputFilter");
-
-	enum class Accept {
-		None = 0,
-		Urlencoded = 1,
-		Multipart = 2,
-		Json = 3,
-		Files = 4
-	};
+	using Accept = InputFilterAccept;
 
 	enum class Exception {
 		None,
@@ -78,7 +69,6 @@ public:
 		Unrecognized,
 	};
 
-	static void filterRegister();
 	static Exception insert(const Request &);
 
 	/* file index can be coded as ordered index or negative id
@@ -87,10 +77,10 @@ public:
 	 * return nullptr if there is no such file */
 	static db::InputFile *getFileFromContext(int64_t);
 
+	InputFilter(const Request &, Accept a);
+
 	void step(StringView);
 	void finalize();
-
-	StringView getName() const { return FilterName; }
 
 	StringView getContentType() const;
 
@@ -122,21 +112,7 @@ public:
 	Request getRequest() const;
 
 protected:
-	/*static apr_status_t filterFunc(ap_filter_t *f, apr_bucket_brigade *bb,
-			ap_input_mode_t mode, apr_read_type_e block, apr_off_t readbytes);
-
-	static int filterInit(ap_filter_t *f);
-
-
-	apr_status_t func(ap_filter_t *f, apr_bucket_brigade *bb,
-			ap_input_mode_t mode, apr_read_type_e block, apr_off_t readbytes);
-
-	void step(apr_bucket *b, apr_read_type_e block);
-	*/
-
-	InputFilter(const Request &, Accept a);
-
-	int init();
+	Status init();
 
 	Accept _accept = Accept::None;
 

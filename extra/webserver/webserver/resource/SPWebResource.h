@@ -27,13 +27,12 @@
 #include "SPDbFile.h"
 #include "SPDbUser.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 using ResolveOptions = db::Resolve;
 
 class Resource : public AllocBase {
 public:
-	using Adapter = db::Adapter;
 	using Transaction = db::Transaction;
 	using Scheme = db::Scheme;
 	using Worker = db::Worker;
@@ -46,14 +45,14 @@ public:
 
 	using QueryFieldResolver = db::QueryFieldResolver;
 
-	static Resource *resolve(const Adapter &, const Scheme &scheme, const StringView &path);
-	static Resource *resolve(const Adapter &, const Scheme &scheme, const StringView &path, Value & sub);
+	static Resource *resolve(const Transaction &, const Scheme &scheme, const StringView &path);
+	static Resource *resolve(const Transaction &, const Scheme &scheme, const StringView &path, Value & sub);
 
 	/* PathVec should be inverted (so, first selectors should be last in vector */
-	static Resource *resolve(const Adapter &, const Scheme &scheme, Vector<StringView> &path);
+	static Resource *resolve(const Transaction &, const Scheme &scheme, Vector<StringView> &path);
 
 	virtual ~Resource();
-	Resource(ResourceType, const Adapter &, QueryList &&);
+	Resource(ResourceType, const Transaction &, QueryList &&);
 
 	ResourceType getType() const;
 	const Scheme &getScheme() const;
@@ -135,7 +134,7 @@ protected:
 
 class ResourceProperty : public Resource {
 public:
-	ResourceProperty(const Adapter &h, QueryList &&q, const Field *prop);
+	ResourceProperty(const Transaction &h, QueryList &&q, const Field *prop);
 
 	virtual bool removeObject() override;
 
@@ -148,7 +147,7 @@ protected:
 
 class ResourceFile : public ResourceProperty {
 public:
-	ResourceFile(const Adapter &h, QueryList &&q, const Field *prop);
+	ResourceFile(const Transaction &h, QueryList &&q, const Field *prop);
 
 	virtual bool prepareUpdate() override;
 	virtual bool prepareCreate() override;
@@ -164,7 +163,7 @@ protected:
 
 class ResourceArray : public ResourceProperty {
 public:
-	ResourceArray(const Adapter &h, QueryList &&q, const Field *prop);
+	ResourceArray(const Transaction &h, QueryList &&q, const Field *prop);
 
 	virtual bool prepareUpdate() override;
 	virtual bool prepareCreate() override;
@@ -179,7 +178,7 @@ protected:
 
 class ResourceObject : public Resource {
 public:
-	ResourceObject(const Adapter &a, QueryList &&q);
+	ResourceObject(const Transaction &a, QueryList &&q);
 
 	virtual bool prepareUpdate() override;
 	virtual bool prepareCreate() override;
@@ -201,7 +200,7 @@ protected:
 
 class ResourceReslist : public ResourceObject {
 public:
-	ResourceReslist(const Adapter &a, QueryList &&q);
+	ResourceReslist(const Transaction &a, QueryList &&q);
 
 	virtual bool prepareCreate() override;
 	virtual Value createObject(Value &, Vector<db::InputFile> &) override;
@@ -212,7 +211,7 @@ protected:
 
 class ResourceSet : public ResourceReslist {
 public:
-	ResourceSet(const Adapter &a, QueryList &&q);
+	ResourceSet(const Transaction &a, QueryList &&q);
 
 	virtual bool prepareAppend() override;
 	virtual Value createObject(Value &, Vector<db::InputFile> &) override;
@@ -221,7 +220,7 @@ public:
 
 class ResourceRefSet : public ResourceSet {
 public:
-	ResourceRefSet(const Adapter &a, QueryList &&q);
+	ResourceRefSet(const Transaction &a, QueryList &&q);
 
 	virtual bool prepareUpdate() override;
 	virtual bool prepareCreate() override;
@@ -253,7 +252,7 @@ protected:
 
 class ResourceFieldObject : public ResourceObject {
 public:
-	ResourceFieldObject(const Adapter &a, QueryList &&q);
+	ResourceFieldObject(const Transaction &a, QueryList &&q);
 
 	virtual bool prepareUpdate() override;
 	virtual bool prepareCreate() override;
@@ -282,7 +281,7 @@ protected:
 
 class ResourceView : public ResourceSet {
 public:
-	ResourceView(const Adapter &h, QueryList &&q);
+	ResourceView(const Transaction &h, QueryList &&q);
 
 	virtual bool prepareUpdate() override;
 	virtual bool prepareCreate() override;
@@ -300,7 +299,7 @@ protected:
 
 class ResourceSearch : public ResourceObject {
 public:
-	ResourceSearch(const Adapter &h, QueryList &&q, const Field *prop);
+	ResourceSearch(const Transaction &h, QueryList &&q, const Field *prop);
 
 	virtual Value getResultObject() override;
 

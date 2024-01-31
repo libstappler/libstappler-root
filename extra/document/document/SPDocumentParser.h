@@ -26,7 +26,7 @@
 #include "SPDocumentStyle.h"
 #include "SPMemory.h"
 
-namespace stappler::document::parser {
+namespace STAPPLER_VERSIONIZED stappler::document::parser {
 
 using namespace mem_pool;
 

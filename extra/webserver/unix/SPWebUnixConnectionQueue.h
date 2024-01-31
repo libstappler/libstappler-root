@@ -28,7 +28,7 @@
 
 #include <signal.h>
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class ConnectionWorker;
 

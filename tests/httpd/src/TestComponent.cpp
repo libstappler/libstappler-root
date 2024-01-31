@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,16 +20,57 @@
  THE SOFTWARE.
  **/
 
-#include "SchemeRelationTest.h"
+#include "SPWebHostComponent.h"
+#include "SPWebRequestHandler.h"
+#include "SPValid.h"
 
-namespace stappler::dbtest {
+namespace stappler::web::test {
 
-SchemeRelationTest::~SchemeRelationTest() { }
+class TestSelectHandler : public RequestHandler {
+public:
+	virtual bool isRequestPermitted(Request & rctx) override {
+		return true;
+	}
 
-SchemeRelationTest::SchemeRelationTest(memory::pool_t *p, uint32_t version) : ServerScheme(p) {
+	virtual Status onTranslateName(Request &rctx) override {
+		auto scheme = rctx.host().getScheme("refs");
+		if (scheme) {
+			Value d;
+			rctx.performWithStorage([&] (const db::Transaction &t) {
+				d = scheme->select(_transaction, db::Query::all());
+				return true;
+			});
+			rctx.writeData(d);
+			return DONE;
+		}
+		return HTTP_NOT_FOUND;
+	}
+};
+
+class TestHandler : public HostComponent {
+public:
+	TestHandler(const Host &serv, const HostComponentInfo &info);
+	virtual ~TestHandler() { }
+
+	virtual void handleChildInit(const Host &) override;
+	virtual void initTransaction(db::Transaction &) override;
+
+protected:
+	Scheme _objects = Scheme("objects");
+	Scheme _refs = Scheme("refs");
+	Scheme _subobjects = Scheme("subobjects");
+	Scheme _images = Scheme("images");
+	// Scheme _test = Scheme("test");
+	Scheme _detached = Scheme("detached", Scheme::Detouched);
+};
+
+TestHandler::TestHandler(const Host &serv, const HostComponentInfo &info)
+: HostComponent(serv, info) {
+	exportValues(_objects, _refs, _subobjects, _images, _detached);
+
 	using namespace db;
 
-	_objects.define(Vector<Field>({
+	_objects.define(Vector<Field>{
 		Field::Text("text", MinLength(3)),
 		Field::Extra("data", Vector<Field>{
 			Field::Array("strings", Field::Text("")),
@@ -44,7 +85,7 @@ SchemeRelationTest::SchemeRelationTest(memory::pool_t *p, uint32_t version) : Se
 		}), FieldView::Delta),
 
 		Field::Set("images", _images, Flags::Composed),
-	}),
+	},
 	AccessRole::Admin(AccessRoleId::Authorized));
 
 	_refs.define({
@@ -58,13 +99,13 @@ SchemeRelationTest::SchemeRelationTest(memory::pool_t *p, uint32_t version) : Se
 		Field::Array("array", Field::Text("", MaxLength(10))),
 		Field::Object("objectRef", _objects, Flags::Reference),
 
-		Field::Image("cover", MaxImageSize(1080, 1080, ImagePolicy::Resize), Vector<Thumbnail>({
+		Field::Image("cover", MaxImageSize(1080, 1080, ImagePolicy::Resize), Vector<Thumbnail>{
 			Thumbnail("thumb", 160, 160),
 			Thumbnail("cover512", 512, 512),
 			Thumbnail("cover256", 256, 256),
 			Thumbnail("cover128", 128, 128),
 			Thumbnail("cover64", 64, 64),
-		})),
+		}),
 
 		Field::Data("data")
 	});
@@ -76,96 +117,64 @@ SchemeRelationTest::SchemeRelationTest(memory::pool_t *p, uint32_t version) : Se
 		Field::Integer("index", Flags::Indexed),
 	});
 
-	_images.define(Vector<Field>({
+	_images.define(Vector<Field>{
 		Field::Integer("ctime", Flags::ReadOnly | Flags::AutoCTime | Flags::ForceInclude),
 		Field::Integer("mtime", Flags::ReadOnly | Flags::AutoMTime | Flags::ForceInclude),
 
 		Field::Text("name", Transform::Identifier, Flags::Required | Flags::Indexed | Flags::ForceInclude),
 
-		Field::Image("content", MaxImageSize(2048, 2048, ImagePolicy::Resize), Vector<Thumbnail>({
+		Field::Image("content", MaxImageSize(2048, 2048, ImagePolicy::Resize), Vector<Thumbnail>{
 			Thumbnail("thumb", 380, 380)
-		})),
-	}),
+		}),
+	},
 		AccessRole::Admin(AccessRoleId::Authorized)
 	);
 
-	_hierarchy.define(Vector<Field>({
-		Field::Text("name", MinLength(3)),
-		Field::Integer("id", Flags::Indexed),
-		Field::Object("root", _hierarchy, Linkage::Manual, ForeignLink("sections")),
-		Field::Set("sections", _hierarchy, Linkage::Manual, ForeignLink("root")),
+	/*_test.define({
+		Field::Text("key"),
+		Field::Integer("time", Flags::Indexed),
+		Field::Data("data"),
+		Field::Custom(new FieldBigIntArray("clusters")),
+		Field::Custom(new FieldIntArray("refs")), // PkkId
+		Field::Custom(new FieldPoint("coords")),
+	});*/
 
-		Field::View("pages", _pages, ViewFn([this] (const Scheme &, const Value &obj) -> bool {
-			return obj.getBool("hidden") ? false : true;
-		}), Vector<String>({ "hidden" })),
-
-		Field::Set("all_pages", _pages)
-	}));
-
-	_pages.define(Vector<Field>({
-		Field::Text("name", MinLength(3)),
-		Field::Boolean("hidden"),
-		Field::Object("root", _hierarchy),
-	}));
-}
-
-void SchemeRelationTest::fillSchemes(db::Map<StringView, const db::Scheme *> &schemes) {
-	ServerScheme::fillSchemes(schemes);
-
-	schemes.emplace(_objects.getName(), &_objects);
-	schemes.emplace(_refs.getName(), &_refs);
-	schemes.emplace(_subobjects.getName(), &_subobjects);
-	schemes.emplace(_images.getName(), &_images);
-	schemes.emplace(_hierarchy.getName(), &_hierarchy);
-	schemes.emplace(_pages.getName(), &_pages);
-}
-
-void SchemeRelationTest::fillTest(const db::Transaction &t, int64_t id) {
-	using namespace db;
-
-	t.performAsSystem([&] () {
-		auto cat = _hierarchy.create(t, Value({
-			pair("name", Value("TestCategory")),
-			pair("id", Value(id)),
-		}));
-
-		_pages.create(t, Value({
-			pair("name", Value("Page1")),
-			pair("root", Value(cat.getInteger("__oid"))),
-			pair("hidden", Value(false))
-		}));
-
-		_pages.create(t, Value({
-			pair("name", Value("Page2")),
-			pair("root", Value(cat.getInteger("__oid"))),
-			pair("hidden", Value(false))
-		}));
-
-		_pages.create(t, Value({
-			pair("name", Value("Page3")),
-			pair("root", Value(cat.getInteger("__oid"))),
-			pair("hidden", Value(true))
-		}));
-
-		return true;
+	_detached.define({
+		Field::Integer("time", Flags::Indexed),
+		Field::Text("text", MinLength(3)),
+		Field::Array("textArray", Type::Text),
+		Field::Array("integerArray", Type::Integer, Flags::Unique),
+		Field::Object("object", _objects, Flags::Reference),
+		Field::Object("strong", _objects, RemovePolicy::StrongReference),
 	});
 }
 
-bool SchemeRelationTest::checkTest(const db::Transaction &t, int64_t id) {
-	using namespace db;
+void TestHandler::handleChildInit(const Host &serv) {
+	serv.addResourceHandler("/objects/", _objects);
+	serv.addResourceHandler("/refs/", _refs);
 
-	return t.performAsSystem([&] () {
-		auto cat = _hierarchy.select(t, Query().select("id", Value(id))).getValue(0);
-		if (!cat) {
-			return false;
+	serv.addMultiResourceHandler("/multi", {
+		pair("objects", &_objects),
+		pair("refs", &_refs),
+		pair("subobjects", &_subobjects),
+	});
+
+	serv.addHandler("/handler", RequestHandler::Handler<TestSelectHandler>());
+
+	addOutputCommand("test", [&] (StringView str, const Callback<void(const Value &)> &cb) -> bool {
+		if (auto t = db::Transaction::acquireIfExists()) {
+			cb(Value("test"));
 		}
+		return true;
+	}, " - test");
+}
 
-		auto all = _hierarchy.getProperty(t, cat, "all_pages");
+void TestHandler::initTransaction(db::Transaction &t) {
+	t.setRole(db::AccessRoleId::Authorized);
+}
 
-		auto pages = _hierarchy.getProperty(t, cat, "pages");
-
-		return pages.size() == 2 && all.size() == 4;
-	});
+extern "C" HostComponent * CreateTestComponent(const Host &serv, const HostComponentInfo &info) {
+	return new TestHandler(serv, info);
 }
 
 }

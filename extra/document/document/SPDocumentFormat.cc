@@ -23,7 +23,7 @@
 #include "SPDocumentFormat.h"
 #include "SPDocument.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 struct FormatStorageLess {
 	bool operator () (Format *l, Format *r) const {

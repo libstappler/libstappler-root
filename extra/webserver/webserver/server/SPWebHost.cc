@@ -25,21 +25,23 @@
 #include "SPWebHostComponent.h"
 #include "SPWebRequestController.h"
 #include "SPWebResourceHandler.h"
+#include "SPWebWebsocketConnection.h"
 #include "SPWebAsyncTask.h"
 #include "SPWebRoot.h"
 #include "SPWebRequest.h"
+#include "SPWebTools.h"
 
-#include "SPNetworkHandle.h"
 #include "SPGost3411-2012.h"
 #include "SPDbUser.h"
 #include "SPValid.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 static HostController *getHostFromContext(pool_t *p, uint32_t tag, const void *ptr) {
 	switch (tag) {
 	case uint32_t(config::TAG_HOST): return (HostController *)ptr; break;
 	case uint32_t(config::TAG_REQUEST): return ((RequestController *)ptr)->getHost(); break;
+	case uint32_t(config::TAG_WEBSOCKET): return ((WebsocketConnection *)ptr)->getHost().getController(); break;
 	}
 	return nullptr;
 }
@@ -89,10 +91,10 @@ void Host::handleChildInit(pool_t *rootPool) {
 		filesystem::mkdir(filepath::merge<Interface>(_config->_hostInfo.documentRoot, "uploads"));
 
 		_config->_currentComponent = StringView("root");
-		// tools::registerTools(config::getServerToolsPrefix(), *this);
+		tools::registerTools(config::TOOLS_SERVER_PREFIX, *this);
 		_config->_currentComponent = StringView();
 
-		addProtectedLocation("/.serenity");
+		addProtectedLocation("/.reports");
 		addProtectedLocation("/uploads");
 
 		AsyncTask::perform(*this, [&] (AsyncTask &task) {
@@ -112,7 +114,7 @@ enum class HostReportType {
 
 template <typename Callback> static
 void Host_prepareEmail(HostController *cfg, Callback &&cb, HostReportType type) {
-	StringStream data;
+	/*StringStream data;
 	auto &webhookInfo = cfg->getWebhookInfo();
 	if (!webhookInfo.url.empty() && !webhookInfo.name.empty()) {
 		auto &from = webhookInfo.name;
@@ -157,7 +159,7 @@ void Host_prepareEmail(HostController *cfg, Callback &&cb, HostReportType type) 
 		}, data.size());
 
 		notify.perform();
-	}
+	}*/
 }
 
 void Host::processReports() const {
@@ -216,13 +218,20 @@ void Host::performWithStorage(const Callback<void(const db::Transaction &)> &cb,
 }
 
 db::BackendInterface *Host::acquireDbForRequest(const Request &req) const {
-	auto handle = _config->_customDbd->openConnection(req.pool());
-	if (handle.get()) {
-		pool::cleanup_register(req.pool(), [handle, dbd = _config->_customDbd] {
-			dbd->closeConnection(handle);
-		});
+	if (_config->_customDbd) {
+		auto handle = _config->_customDbd->openConnection(req.pool());
+		if (handle.get()) {
+			pool::cleanup_register(req.pool(), [handle, dbd = _config->_customDbd] {
+				dbd->closeConnection(handle);
+			});
 
-		return _config->_dbDriver->acquireInterface(handle, req.pool());
+			return _config->_dbDriver->acquireInterface(handle, req.pool());
+		}
+	} else {
+		auto handle = getRoot()->dbdAcquire(req);
+		if (handle.get()) {
+			return _config->_dbDriver->acquireInterface(handle, req.pool());
+		}
 	}
 	return nullptr;
 }
@@ -283,7 +292,11 @@ void Host::addComponentByParams(StringView str) {
 		r.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
 	}
 
-	if (idx >= 2) {
+	if (idx == 1) {
+		HostComponentInfo h;
+		h.symbol = args[0];
+		_config->_componentsToLoad.emplace_back(std::move(h));
+	} else if (idx >= 2) {
 		HostComponentInfo h;
 		h.symbol = args[idx - 1].pdup(_config->_rootPool);
 		h.file = args[idx - 2].pdup(_config->_rootPool);
@@ -360,9 +373,9 @@ void Host::setSessionParams(StringView str) {
 	}
 }
 
-void Host::setHostSecret(StringView w, crypto::HashFunction hash) {
+void Host::setHostSecret(StringView w) {
 	if (!w.empty()) {
-		_config->setHostSecret(w, hash);
+		_config->setHostSecret(w);
 	}
 }
 
@@ -458,68 +471,6 @@ auto Host_resolvePath(Map<StringView, T> &map, const StringView &path) -> typena
 		}
 	}
 	return ret;
-}
-
-void Host::initHeartBeat(pool_t *, int epoll) {
-	/*auto p = _config->_pugCache.getNotify();
-	if (p >= 0) {
-		auto c = new (getProcessPool()) PollClient();
-		c->type = PollClient::INotify;
-		c->ptr = &_config->_pugCache;
-		c->fd = p;
-		c->host = Host(*this);
-		c->event.data.ptr = c;
-		c->event.events = EPOLLIN;
-
-		auto err = epoll_ctl(epoll, EPOLL_CTL_ADD, p, &c->event);
-		if (err == -1) {
-			char buf[256] = { 0 };
-			std::cout << "Failed to start thread worker with socket epoll_ctl("
-					<< p << ", EPOLL_CTL_ADD): " << strerror_r(errno, buf, 255) << "\n";
-		}
-	}
-
-	auto t = _config->_templateCache.getNotify();
-	if (t >= 0) {
-		auto c = new (getProcessPool()) PollClient();
-		c->type = PollClient::TemplateINotify;
-		c->ptr = &_config->_templateCache;
-		c->fd = t;
-		c->host = Host(*this);
-		c->event.data.ptr = c;
-		c->event.events = EPOLLIN;
-
-		auto err = epoll_ctl(epoll, EPOLL_CTL_ADD, t, &c->event);
-		if (err == -1) {
-			char buf[256] = { 0 };
-			std::cout << "Failed to start thread worker with socket epoll_ctl("
-					<< p << ", EPOLL_CTL_ADD): " << strerror_r(errno, buf, 255) << "\n";
-		}
-	}*/
-
-	/*if (_config->_dbDriver && _config->_dbDriver->isNotificationsSupported()) {
-		auto handle = _config->openConnection(getProcessPool(), false);
-		int sock = _config->_dbDriver->listenForNotifications(handle);
-		if (sock >= 0) {
-			auto c = new (getProcessPool()) PollClient();
-			c->type = PollClient::Postgres;
-			c->ptr = handle.get();
-			c->fd = sock;
-			c->host = Host(*this);
-			c->event.data.ptr = c;
-			c->event.events = EPOLLIN | EPOLLERR | EPOLLET;
-
-			auto err = epoll_ctl(epoll, EPOLL_CTL_ADD, sock, &c->event);
-			if (err == -1) {
-				char buf[256] = { 0 };
-				std::cout << "Failed to start thread worker with socket epoll_ctl("
-						<< sock << ", EPOLL_CTL_ADD): " << strerror_r(errno, buf, 255) << "\n";
-				_config->closeConnection(handle);
-			}
-		} else {
-			_config->closeConnection(handle);
-		}
-	}*/
 }
 
 void Host::checkBroadcasts() {
@@ -804,7 +755,7 @@ Status Host::handleRequest(Request &req) {
 			if (!auth.empty()) {
 				Host_processAuth(req, auth);
 			}
-			//return it->second->accept(req);
+			return it->second->accept(req);
 		}
 		return DECLINED;
 	}
@@ -838,13 +789,13 @@ Status Host::handleRequest(Request &req) {
 
 			Status preflight = h->onRequestRecieved(req, move(originPath), move(subPath), ret->second.data);
 			if (preflight > 0 || preflight == DONE) {
-				req.getConfig()->startResponseTransmission();
+				req.getController()->startResponseTransmission();
 				return preflight;
 			}
 
 			preflight = Host_onRequestRecieved(req, *h);
 			if (preflight > 0 || preflight == DONE) {
-				req.getConfig()->startResponseTransmission();
+				req.getController()->startResponseTransmission();
 				return preflight;
 			}
 			req.setRequestHandler(h);
@@ -861,7 +812,7 @@ Status Host::handleRequest(Request &req) {
 
 	auto &data = req.getInfo().queryData;
 	if (data.hasValue("basic_auth")) {
-		if (req.getConfig()->isSecureAuthAllowed()) {
+		if (req.getController()->isSecureAuthAllowed()) {
 			if (req.getAuthorizedUser()) {
 				return req.redirectTo(req.getInfo().url.url);
 			}
@@ -878,6 +829,14 @@ void Host::initTransaction(db::Transaction &t) {
 
 CompressionInfo *Host::getCompressionConfig() const {
 	return &_config->_compression;
+}
+
+String Host::getDocumentRootPath(StringView sub) const {
+	if (sub.empty()) {
+		return _config->_hostInfo.documentRoot.str<Interface>();
+	} else {
+		return filepath::merge<Interface>(_config->_hostInfo.documentRoot, sub);
+	}
 }
 
 HostComponent *Host::getHostComponent(const StringView &name) const {
@@ -912,13 +871,14 @@ void Host::addPreRequest(Function<Status(Request &)> &&req) const {
 	_config->_preRequest.emplace_back(std::move(req));
 }
 
-void Host::addHandler(const StringView &path, const HandlerCallback &cb, const Value &d) const {
+void Host::addHandler(StringView path, const HandlerCallback &cb, const Value &d) const {
 	if (!path.empty() && path.front() == '/') {
-		_config->_requests.emplace(path,
+		_config->_requests.emplace(path.pdup(_config->_rootPool),
 				RequestSchemeInfo{_config->_currentComponent, cb, d});
 	}
 }
-void Host::addResourceHandler(const StringView &path, const db::Scheme &scheme) const {
+void Host::addResourceHandler(StringView path, const db::Scheme &scheme) const {
+	path = path.pdup(_config->_rootPool);
 	if (!path.empty() && path.front() == '/') {
 		_config->_requests.emplace(path,
 				RequestSchemeInfo{_config->_currentComponent,
@@ -932,7 +892,8 @@ void Host::addResourceHandler(const StringView &path, const db::Scheme &scheme) 
 	}
 }
 
-void Host::addResourceHandler(const StringView &path, const db::Scheme &scheme, const Value &val) const {
+void Host::addResourceHandler(StringView path, const db::Scheme &scheme, const Value &val) const {
+	path = path.pdup(_config->_rootPool);
 	if (!path.empty() && path.front() == '/') {
 		_config->_requests.emplace(path,
 				RequestSchemeInfo{_config->_currentComponent,
@@ -946,8 +907,9 @@ void Host::addResourceHandler(const StringView &path, const db::Scheme &scheme, 
 	}
 }
 
-void Host::addMultiResourceHandler(const StringView &path, std::initializer_list<Pair<const StringView, const db::Scheme *>> &&schemes) const {
+void Host::addMultiResourceHandler(StringView path, std::initializer_list<Pair<const StringView, const db::Scheme *>> &&schemes) const {
 	if (!path.empty() && path.front() == '/') {
+		path = path.pdup(_config->_rootPool);
 		_config->_requests.emplace(path,
 				RequestSchemeInfo{_config->_currentComponent,
 				[s = Map<StringView, const db::Scheme *>(move(schemes))] () -> RequestHandler * {
@@ -959,14 +921,15 @@ void Host::addMultiResourceHandler(const StringView &path, std::initializer_list
 void Host::addHandler(std::initializer_list<StringView> paths, const HandlerCallback &cb, const Value &d) const {
 	for (auto &it : paths) {
 		if (!it.empty() && it.front() == '/') {
-			_config->_requests.emplace(it,
+			_config->_requests.emplace(it.pdup(_config->_rootPool),
 					RequestSchemeInfo{_config->_currentComponent, cb, d});
 		}
 	}
 }
 
-void Host::addHandler(const StringView &path, const RequestHandlerMap *map) const {
+void Host::addHandler(StringView path, const RequestHandlerMap *map) const {
 	if (!path.empty() && path.front() == '/') {
+		path = path.pdup(_config->_rootPool);
 		_config->_requests.emplace(path,
 				RequestSchemeInfo{_config->_currentComponent, nullptr, Value(), nullptr, map});
 	}
@@ -975,14 +938,14 @@ void Host::addHandler(const StringView &path, const RequestHandlerMap *map) cons
 void Host::addHandler(std::initializer_list<StringView> paths, const RequestHandlerMap *map) const {
 	for (auto &it : paths) {
 		if (!it.empty() && it.front() == '/') {
-			_config->_requests.emplace(it,
+			_config->_requests.emplace(it.pdup(_config->_rootPool),
 					RequestSchemeInfo{_config->_currentComponent, nullptr, Value(), nullptr, map});
 		}
 	}
 }
 
-void Host::addWebsocket(const StringView &str, WebsocketManager *m) const {
-	_config->_websockets.emplace(str, m);
+void Host::addWebsocket(StringView str, WebsocketManager *m) const {
+	_config->_websockets.emplace(str.pdup(_config->_rootPool), m);
 }
 
 const db::Scheme * Host::exportScheme(const db::Scheme &scheme) const {
@@ -1092,9 +1055,9 @@ void Host::runErrorReportTask(const Request &req, const Vector<Value> &errors) {
 		return;
 	}
 
-	AsyncTask::perform(Host(*this), [&] (AsyncTask &task) {
+	AsyncTask::perform(Host(*this), [&, c = req.getController()] (AsyncTask &task) {
 		Value *err = nullptr;
-		if (req) {
+		if (c) {
 			err = new Value {
 				pair("documentRoot", Value(getHostInfo().documentRoot)),
 				pair("name", Value(getHostInfo().hostname)),
@@ -1104,7 +1067,7 @@ void Host::runErrorReportTask(const Request &req, const Vector<Value> &errors) {
 				pair("time", Value(Time::now().toMicros()))
 			};
 
-			req.foreachRequestHeaders([&] (StringView key, StringView value) {
+			c->foreachRequestHeaders([&] (StringView key, StringView value) {
 				err->emplace("headers").setString(value, key);
 			});
 		} else {

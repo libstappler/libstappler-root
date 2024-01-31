@@ -24,7 +24,7 @@
 #include "TestAppScene.h"
 #include "XL2dLabel.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 bool TestMaterial::init(LayoutName layout, StringView text) {
 	if (!FlexibleLayout::init()) {

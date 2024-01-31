@@ -44,7 +44,17 @@
 #include "SPWebOutput.cc"
 #include "SPWebVirtualFile.cc"
 
-namespace stappler::web::config {
+#include "SPWebWebsocket.cc"
+#include "SPWebWebsocketConnection.cc"
+#include "SPWebWebsocketManager.cc"
+
+#include "SPWebTools.cc"
+#include "SPWebToolsAuth.cc"
+#include "SPWebToolsErrors.cc"
+#include "SPWebToolsShell.cc"
+#include "SPWebToolsServer.cc"
+
+namespace STAPPLER_VERSIONIZED stappler::web::config {
 
 const char * MIME_TYPES =
 R"(application/andrew-inset			ez
@@ -812,6 +822,21 @@ video/x-msvideo					avi
 video/x-sgi-movie				movie
 video/x-smv					smv
 x-conference/x-cooltalk				ice)";
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+const char * getWebserverVersionString() {
+	return TOSTRING(WEBSERVER_VERSION_NUMBER) "/" TOSTRING(WEBSERVER_VERSION_BUILD);
+}
+
+uint32_t getWebserverVersionNumber() {
+	return WEBSERVER_VERSION_NUMBER;
+}
+
+uint32_t getWebserverVersionBuild() {
+	return WEBSERVER_VERSION_BUILD;
+}
 
 }
 

@@ -29,7 +29,7 @@
 
 #include "TestLayout.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 class TestAppScene : public basic2d::Scene2d {
 public:

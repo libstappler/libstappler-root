@@ -25,7 +25,7 @@
 #include "SPDbFieldIntArray.h"
 #include "SPDbFieldPoint.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class TestHandler : public HostComponent {
 public:

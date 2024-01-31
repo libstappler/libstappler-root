@@ -26,7 +26,7 @@
 #include "TestLayout.h"
 #include "XL2dLayer.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 class TestCheckbox : public Layer {
 public:

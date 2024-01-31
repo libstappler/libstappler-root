@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #include "SPData.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 static constexpr StringView JsonExampleString(
 R"JsonString({

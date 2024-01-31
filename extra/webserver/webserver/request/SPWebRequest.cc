@@ -28,7 +28,7 @@
 #include "SPWebSession.h"
 #include "SPDbUser.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 static RequestController *getRequestFromContext(pool_t *p, uint32_t tag, const void *ptr) {
 	switch (tag) {
@@ -109,6 +109,10 @@ void Request::setResponseHeader(StringView key, StringView value) const {
 	_config->setResponseHeader(key, value);
 }
 
+void Request::clearResponseHeaders() const {
+	_config->clearResponseHeaders();
+}
+
 StringView Request::getErrorHeader(StringView key) const {
 	return _config->getErrorHeader(key);
 }
@@ -119,6 +123,10 @@ void Request::foreachErrorHeaders(const Callback<void(StringView, StringView)> &
 
 void Request::setErrorHeader(StringView key, StringView value) const {
 	_config->setErrorHeader(key, value);
+}
+
+void Request::clearErrorHeaders() const {
+	_config->clearErrorHeaders();
 }
 
 Request::Buffer::Buffer(RequestController *cfg) : _config(cfg) { }
@@ -376,6 +384,10 @@ void Request::setAccessRole(db::AccessRoleId role) const {
 	if (auto t = db::Transaction::acquireIfExists(pool())) {
 		t.setRole(role);
 	}
+}
+
+db::Transaction Request::acquireDbTransaction() const {
+	return db::Transaction::acquire(_config->acquireDatabase());
 }
 
 Status Request::redirectTo(StringView location) {

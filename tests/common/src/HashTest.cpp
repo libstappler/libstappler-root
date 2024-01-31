@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include "SPTime.h"
 #include "Test.h"
 
-namespace stappler {
+namespace STAPPLER_VERSIONIZED stappler {
 
 class TestNamedRef : public NamedRef {
 public:
@@ -43,7 +43,7 @@ protected:
 
 }
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct HashMapTest : MemPoolTest {
 	HashMapTest() : MemPoolTest("HashMapTest") { }

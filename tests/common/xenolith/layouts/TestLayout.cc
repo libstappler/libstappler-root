@@ -28,7 +28,7 @@
 #include "XL2dVectorSprite.h"
 #include "XLIcons.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 struct MenuData {
 	LayoutName layout;

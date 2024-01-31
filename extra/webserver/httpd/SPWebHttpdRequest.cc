@@ -21,15 +21,40 @@
  **/
 
 #include "SPWebHttpdRequest.h"
-#include "SPWebInputFilter.h"
+#include "SPWebHttpdFilters.h"
+#include "SPWebHttpdHost.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
+
+HttpdRequestController *HttpdRequestController::get(request_rec *r) {
+	if (!r) {
+		return nullptr;
+	}
+	auto cfg = (HttpdRequestController*) ap_get_module_config(r->request_config, &stappler_web_module);
+	if (cfg) {
+		cfg->updateRequestInfo();
+		return cfg;
+	}
+
+	auto pool = (pool_t *)r->pool;
+
+	return perform([&] () -> HttpdRequestController * {
+		auto s = HttpdHostController::get(r->server);
+
+		RequestInfo info;
+		readRequestInfo(r, info);
+
+		auto c = new (pool) HttpdRequestController(s, r, move(info));
+		c->init();
+		return c;
+	}, pool);
+}
 
 void HttpdRequestController::readRequestInfo(request_rec *rec, RequestInfo &info) {
 	info.requestTime = Time::microseconds(rec->request_time);
 	info.method = RequestMethod(rec->method_number);
 	info.protocolVersion = rec->proto_num;
-	info.status = rec->status;
+	info.status = Status(rec->status);
 	info.contentLength = rec->clength;
 
 	info.stat.isDir = (rec->finfo.filetype == APR_DIR) ? true : false;
@@ -60,18 +85,25 @@ void HttpdRequestController::readRequestInfo(request_rec *rec, RequestInfo &info
 	info.url.query = StringView(rec->parsed_uri.query);
 	info.url.fragment = StringView(rec->parsed_uri.fragment);
 
+	if (info.url.host.empty()) {
+		info.url.host = StringView(rec->hostname);
+	}
+
 	info.headerRequest = rec->header_only ? true : false;
 }
 
 HttpdRequestController::HttpdRequestController(HostController *host, request_rec *req, RequestInfo &&info)
-: RequestController(req->pool, move(info)) {
-	_request = req;
-
-	_requestHeaders = httpd::table::wrap(_request->headers_in);
-	_responseHeaders = httpd::table::wrap(_request->headers_out);
-	_errorHeaders = httpd::table::wrap(_request->err_headers_out);
-
+: RequestController((pool_t *)req->pool, move(info)), _request(req)
+, _requestHeaders(httpd::table::wrap(_request->headers_in))
+, _responseHeaders(httpd::table::wrap(_request->headers_out))
+, _errorHeaders(httpd::table::wrap(_request->err_headers_out)) {
 	_host = host;
+
+	ap_set_module_config(req->request_config, &stappler_web_module, this);
+}
+
+bool HttpdRequestController::isSecureConnection() const {
+	return _host->getRoot()->isSecureConnection(Request(const_cast<HttpdRequestController *>(this)));
 }
 
 void HttpdRequestController::startResponseTransmission() {
@@ -86,8 +118,8 @@ void HttpdRequestController::putc(int c) {
 	ap_rputc(c, _request);
 }
 
-void HttpdRequestController::write(const uint8_t *buf, size_t size) {
-	ap_rwrite((const void *)buf, size, _request);
+size_t HttpdRequestController::write(const uint8_t *buf, size_t size) {
+	return size_t(ap_rwrite((const void *)buf, size, _request));
 }
 
 void HttpdRequestController::flush() {
@@ -112,20 +144,20 @@ void HttpdRequestController::setContentEncoding(StringView data) {
 	_info.contentEncoding = StringView(_request->content_encoding);
 }
 
-void HttpdRequestController::setStatus(int status, StringView str) {
-	_request->status = status;
+void HttpdRequestController::setStatus(Status status, StringView str) {
+	_request->status = toInt(status);
 	if (!str.empty()) {
-		_request->status_line = str.pdup(_pool);
+		_request->status_line = str.pdup(_pool).data();
 	} else {
 		_request->status_line = ap_get_status_line(status);
 	}
 
-	_info.status = _request->status;
+	_info.status = status;
 	_info.statusLine = StringView(_request->status_line);
 }
 
 void HttpdRequestController::setFilename(StringView data, bool updateStat, Time mtime) {
-	_request->filename = data.terminated() ? data.data() : data.pdup(_pool).data();
+	_request->filename = (char *)data.pdup(_pool).data();
 	_request->canonical_filename = _request->filename;
 	_info.filename = StringView(_request->filename);
 	if (updateStat) {
@@ -166,25 +198,88 @@ StringView HttpdRequestController::getRequestHeader(StringView key) const {
 	return _requestHeaders.at(key);
 }
 
+void HttpdRequestController::foreachRequestHeaders(const Callback<void(StringView, StringView)> &cb) const {
+	for (auto &it : _requestHeaders) {
+		cb(StringView(it.key), StringView(it.val));
+	}
+}
+
 StringView HttpdRequestController::getResponseHeader(StringView key) const {
 	return _responseHeaders.at(key);
 }
 
+void HttpdRequestController::foreachResponseHeaders(const Callback<void(StringView, StringView)> &cb) const {
+	for (auto &it : _responseHeaders) {
+		cb(StringView(it.key), StringView(it.val));
+	}
+}
+
 void HttpdRequestController::setResponseHeader(StringView key, StringView value) {
-	_responseHeaders.emplace(key, value);
+	if (value.empty()) {
+		_responseHeaders.erase(key);
+	} else {
+		_responseHeaders.emplace(key, value);
+	}
+}
+
+void HttpdRequestController::clearResponseHeaders() {
+	_responseHeaders.clear();
 }
 
 StringView HttpdRequestController::getErrorHeader(StringView key) const {
 	return _errorHeaders.at(key);
 }
 
+void HttpdRequestController::foreachErrorHeaders(const Callback<void(StringView, StringView)> &cb) const {
+	for (auto &it : _errorHeaders) {
+		cb(StringView(it.key), StringView(it.val));
+	}
+}
+
 void HttpdRequestController::setErrorHeader(StringView key, StringView value) {
-	_responseHeaders.emplace(key, value);
+	if (value.empty()) {
+		_errorHeaders.erase(key);
+	} else {
+		_errorHeaders.emplace(key, value);
+	}
+}
+
+void HttpdRequestController::clearErrorHeaders() {
+	_errorHeaders.clear();
+}
+
+InputFilter * HttpdRequestController::makeInputFilter(InputFilterAccept accept) {
+	return perform([&] {
+		return new (_pool) HttpdInputFilter(Request(this), accept);
+	}, _pool, config::TAG_REQUEST, this);
 }
 
 void HttpdRequestController::setInputFilter(InputFilter *f) {
-	ap_add_input_filter(f->getName().data(), (void *)f, _request, _request->connection);
+	ap_add_input_filter(HttpdInputFilter::Name, (void *)f, _request, _request->connection);
 	RequestController::setInputFilter(f);
+}
+
+WebsocketConnection *HttpdRequestController::convertToWebsocket(WebsocketHandler *handler, allocator_t *alloc, pool_t *pool) {
+	auto sock = ap_get_conn_socket(_request->connection);
+
+	// send HTTP_SWITCHING_PROTOCOLS right f*cking NOW!
+	apr_socket_timeout_set(sock, -1);
+	setStatus(Status(HTTP_SWITCHING_PROTOCOLS), StringView());
+	ap_send_interim_response(_request, 1);
+
+	// block any other output
+	ap_add_output_filter(HttpdWebsocketConnection::WEBSOCKET_FILTER, (void *)handler, _request, _request->connection);
+
+	// duplicate connection
+	if (auto conn = HttpdWebsocketConnection::create(alloc, pool, Request(this))) {
+		conn->prepare(sock);
+		return conn;
+	}
+	return nullptr;
+}
+
+void HttpdRequestController::updateRequestInfo() {
+	readRequestInfo(_request, _info);
 }
 
 }

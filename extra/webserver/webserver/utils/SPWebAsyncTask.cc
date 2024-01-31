@@ -23,7 +23,7 @@
 #include "SPWebAsyncTask.h"
 #include "SPWebHost.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 thread_local AsyncTaskGroup *tl_currentGroup = nullptr;
 thread_local AsyncTask *tl_currentTask = nullptr;
@@ -153,10 +153,12 @@ void AsyncTask::run(AsyncTask *t) {
 	if (auto g = t->getGroup()) {
 		tl_currentGroup = g;
 	}
-	t->setSuccessful(t->execute());
-	if (!t->getGroup()) {
-		t->onComplete();
-	}
+	web::perform([&] {
+		t->setSuccessful(t->execute());
+		if (!t->getGroup()) {
+			t->onComplete();
+		}
+	}, t->pool(), config::TAG_HOST, t->getHost().getController());
 	tl_currentTask = nullptr;
 }
 

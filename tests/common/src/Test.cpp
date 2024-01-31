@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 #include <random>
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct TestManager {
 	static TestManager *getInstance();

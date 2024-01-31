@@ -26,7 +26,7 @@
 #include "SPWebInfo.h"
 #include "SPSqlDriver.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Root;
 

@@ -27,7 +27,7 @@
 #include "SPBytesView.h"
 #include "SPRef.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 class Document;
 

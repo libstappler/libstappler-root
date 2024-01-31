@@ -28,12 +28,13 @@
 #include "SPWebRoot.h"
 #include "SPWebInputFilter.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 ResourceHandler::ResourceHandler(const db::Scheme &scheme, const Value &val)
 : _scheme(scheme), _value(val) { }
 
 bool ResourceHandler::isRequestPermitted(Request &rctx) {
+	_transaction = db::Transaction::acquire(db::Adapter(rctx.getController()->acquireDatabase()));
 	return true;
 }
 
@@ -265,7 +266,7 @@ void ResourceHandler::onFilterComplete(InputFilter *filter) {
 }
 
 Resource *ResourceHandler::getResource(Request &rctx) {
-	return Resource::resolve(db::Adapter(rctx.getConfig()->acquireDatabase()), _scheme, _subPath, _value);
+	return Resource::resolve(_transaction, _scheme, _subPath, _value);
 }
 
 Status ResourceHandler::writeDataToRequest(Request &rctx, Value &&result) {
@@ -333,6 +334,7 @@ ResourceMultiHandler::ResourceMultiHandler(const Map<StringView, const Scheme *>
 : _schemes(schemes) { }
 
 bool ResourceMultiHandler::isRequestPermitted(Request &rctx) {
+	_transaction = db::Transaction::acquire(db::Adapter(rctx.getController()->acquireDatabase()));
 	return true;
 }
 
@@ -366,7 +368,7 @@ Status ResourceMultiHandler::onTranslateName(Request &rctx) {
 		}
 		auto s_it = _schemes.find(scheme.str<Interface>());
 		if (s_it != _schemes.end()) {
-			if (auto resource = Resource::resolve(db::Adapter(rctx.getConfig()->acquireDatabase()), *s_it->second, path)) {
+			if (auto resource = Resource::resolve(_transaction, *s_it->second, path)) {
 				resource->setUser(user);
 				resource->applyQuery(it.second);
 				if (targetDelta > 0 && resource->isDeltaApplicable() && !resource->getQueryDelta()) {

@@ -22,7 +22,7 @@
 
 #include "SPPugExpression.h"
 
-namespace stappler::pug {
+namespace STAPPLER_VERSIONIZED stappler::pug {
 
 inline void Lexer_parseBufferString(StringView &r, std::ostream &stream) {
 #define Z16 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

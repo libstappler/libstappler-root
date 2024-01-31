@@ -22,7 +22,7 @@
 
 #include "SPDocumentParser.h"
 
-namespace stappler::document::parser {
+namespace STAPPLER_VERSIONIZED stappler::document::parser {
 
 using HtmlIdentifier = chars::Compose<char32_t,
 		chars::Range<char32_t, u'0', u'9'>,

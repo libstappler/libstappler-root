@@ -27,11 +27,13 @@
 #include "SPWebDbd.h"
 
 #include "SPValid.h"
-#include "SPDbFieldTextArray.h"
+#include "SPDbFieldExtensions.h"
 #include "SPJsonWebToken.h"
 #include "SPDso.h"
+#include "SPWebVirtualFile.h"
+#include "SPPugCache.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 HostController::~HostController() { }
 
@@ -42,19 +44,16 @@ HostController::HostController(Root *root, pool_t *pool)
 #else
 , _pugCache(pug::Template::Options::getDefault(), [this] (const StringView &str) { handleTemplateError(str); })
 #endif
-
 {
 	_rootPool = memory::pool::acquire();
-	// add virtual files to template engine
-	/*size_t count = 0;
-	auto d = tools::VirtualFile::getList(count);
-	for (size_t i = 0; i < count; ++ i) {
-		if (d[i].name.ends_with(".pug") || d[i].name.ends_with(".spug")) {
-			_pugCache.addTemplate(toString("virtual:/", d[i].name), d[i].content.str());
+	auto d = VirtualFile::getList();
+	for (auto &it : d) {
+		if (it.name.ends_with(".pug") || it.name.ends_with(".spug")) {
+			_pugCache.addTemplate(toString("virtual:/", it.name), it.content.str<Interface>());
 		} else {
-			_pugCache.addContent(toString("virtual:/", d[i].name), d[i].content.str());
+			_pugCache.addContent(toString("virtual:/", it.name), it.content.str<Interface>());
 		}
-	}*/
+	}
 
 	memset(_hostSecret.data(), 0, _hostSecret.size());
 }
@@ -168,15 +167,15 @@ void HostController::setForceHttps() {
 	_forceHttps = true;
 }
 
-void HostController::setHostSecret(StringView w, crypto::HashFunction fn) {
-	switch (fn) {
-	case crypto::HashFunction::SHA_2:
-		_hostSecret = crypto::Sha512::hmac(w, w);
-		break;
-	case crypto::HashFunction::GOST_3411:
+void HostController::setHostSecret(StringView w) {
+	if (w.starts_with("sha2:")) {
+		w += "sha2:"_len;
 		_hostSecret = crypto::Gost3411_512::hmac(w, w);
-		break;
-
+	} else if (w.starts_with("gost:")) {
+		w += "gost:"_len;
+		_hostSecret = crypto::Gost3411_512::hmac(w, w);
+	} else {
+		_hostSecret = crypto::Gost3411_512::hmac(w, w);
 	}
 }
 
@@ -334,17 +333,31 @@ void HostController::setDbParams(StringView str) {
 }
 
 db::sql::Driver::Handle HostController::openConnection(pool_t *pool, bool bindConnection) const {
-	auto h = _customDbd->openConnection(pool);
-	if (bindConnection) {
-		pool::cleanup_register(pool, [h, dbd = _customDbd] {
-			dbd->closeConnection(h);
-		});
+	if (_customDbd) {
+		auto h = _customDbd->openConnection(pool);
+		if (bindConnection) {
+			pool::cleanup_register(pool, [h, dbd = _customDbd] {
+				dbd->closeConnection(h);
+			});
+		}
+		return h;
+	} else {
+		auto h = _root->dbdOpen(pool, Host(const_cast<HostController *>(this)));
+		if (bindConnection) {
+			pool::cleanup_register(pool, [h, this] {
+				_root->dbdClose(Host(const_cast<HostController *>(this)), h);
+			});
+		}
+		return h;
 	}
-	return h;
 }
 
 void HostController::closeConnection(db::sql::Driver::Handle h) const {
-	_customDbd->closeConnection(h);
+	if (_customDbd) {
+		_customDbd->closeConnection(h);
+	} else {
+		_root->dbdClose(Host(const_cast<HostController *>(this)), h);
+	}
 }
 
 db::sql::Driver *HostController::openInternalDriver(db::sql::Driver::Handle) {

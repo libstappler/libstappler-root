@@ -26,7 +26,7 @@
 #include "SPRef.h"
 #include "SPDocumentStyle.h"
 
-namespace stappler::document {
+namespace STAPPLER_VERSIONIZED stappler::document {
 
 class StyleContainer : public RefBase<memory::StandartInterface> {
 public:

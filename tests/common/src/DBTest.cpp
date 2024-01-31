@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include "SPSqlDriver.h"
 #include "SPDbScheme.h"
 
-namespace stappler::app::test {
+namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 struct DbTest : MemPoolTest {
 	DbTest() : MemPoolTest("DbTest") { }

@@ -26,7 +26,7 @@
 #include "TestAppScene.h"
 #include "XLPlatform.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 XL_DECLARE_EVENT_CLASS(TestAppDelegate, onSwapchainConfig);
 

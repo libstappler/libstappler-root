@@ -30,7 +30,7 @@
 #include <sys/ioctl.h>
 #include <sys/sendfile.h>
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 static StringView s_getSignalName(int sig) {
 	switch (sig) {
@@ -246,7 +246,7 @@ void ConnectionWorker::runTask(AsyncTask *task) {
 	auto host = task->getHost();
 	perform([&] {
 		AsyncTask::run(task);
-	}, task->pool(), config::TAG_HOST, host.getConfig());
+	}, task->pool(), config::TAG_HOST, host.getController());
 	_queue->releaseTask(task);
 }
 

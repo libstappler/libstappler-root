@@ -26,7 +26,7 @@
 #include "SPWebRequestController.h"
 #include "SPWebUnixConnectionWorker.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class UnixRequestController : public RequestController {
 public:
@@ -60,10 +60,12 @@ public:
 	virtual StringView getResponseHeader(StringView) const override;
 	virtual void foreachResponseHeaders(const Callback<void(StringView, StringView)> &) const override;
 	virtual void setResponseHeader(StringView, StringView) override;
+	virtual void clearResponseHeaders() override;
 
 	virtual StringView getErrorHeader(StringView) const override;
 	virtual void foreachErrorHeaders(const Callback<void(StringView, StringView)> &) const override;
 	virtual void setErrorHeader(StringView, StringView) override;
+	virtual void clearErrorHeaders() override;
 
 	virtual Status processInput(ConnectionWorker::BufferChain &);
 

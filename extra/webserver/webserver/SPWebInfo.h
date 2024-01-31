@@ -26,7 +26,7 @@
 #include "SPWeb.h"
 #include "SPUrl.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class RequestHandler;
 class RequestHandlerMap;
@@ -151,6 +151,14 @@ enum Status : int {
 	HTTP_NETWORK_AUTHENTICATION_REQUIRED = 511,
 };
 
+enum class InputFilterAccept {
+	None = 0,
+	Urlencoded = 1,
+	Multipart = 2,
+	Json = 3,
+	Files = 4
+};
+
 enum class ResourceType {
 	ResourceList,
 	ReferenceSet,
@@ -219,9 +227,6 @@ struct HostInfo {
 
 	TimeInterval timeout;
 	TimeInterval keepAlive;
-	uint32_t maxRequestLineSize = 0;
-	uint32_t maxHeaderSize = 0;
-	uint32_t maxHeaders = 0;
 	uint32_t maxKeepAlives = 0;
 	uint16_t port = 0;
 	bool useKeepAlive;

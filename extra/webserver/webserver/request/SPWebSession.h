@@ -26,7 +26,7 @@
 #include "SPWebRequest.h"
 #include "SPDataWrapper.h"
 
-namespace stappler::web {
+namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Session : public data::WrapperTemplate<Interface> {
 public:

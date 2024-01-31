@@ -27,7 +27,7 @@
 #include "MaterialSurface.h"
 #include "MaterialLabel.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 bool TestMaterialColorSchemeNode::init(material2d::ColorRole name) {
 	if (!Layer::init()) {
