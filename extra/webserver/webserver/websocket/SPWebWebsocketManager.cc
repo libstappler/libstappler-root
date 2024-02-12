@@ -134,9 +134,9 @@ Status WebsocketManager::accept(Request &req) {
 
 void WebsocketManager::run(WebsocketHandler *h) {
 	auto c = h->connection();
-	c->run(h, [&] {
+	c->run(h, [&, this] {
 		addHandler(h);
-	}, [&] {
+	}, [&, this] {
 		removeHandler(h);
 	});
 }
@@ -227,7 +227,7 @@ void WebsocketHandler::receiveBroadcast(const Value &data) {
 			_broadcastsPool = memory::pool::create(_pool);
 		}
 		if (_broadcastsPool) {
-			perform([&] {
+			perform([&, this] {
 				if (!_broadcastsMessages) {
 					_broadcastsMessages = new (_broadcastsPool) Vector<Value>(_broadcastsPool);
 				}
@@ -256,7 +256,7 @@ bool WebsocketHandler::processBroadcasts() {
 
 	bool ret = true;
 	if (pool) {
-		perform([&] {
+		perform([&, this] {
 			sendPendingNotifications(pool);
 			if (vec) {
 				for (auto & it : (*vec)) {
@@ -274,7 +274,7 @@ bool WebsocketHandler::processBroadcasts() {
 }
 
 void WebsocketHandler::sendPendingNotifications(pool_t *pool) {
-	perform([&] {
+	perform([&, this] {
 		_manager->host().getRoot()->setErrorNotification(pool, [this] (Value && data) {
 			send(Value({
 				std::make_pair("error", Value(std::move(data)))

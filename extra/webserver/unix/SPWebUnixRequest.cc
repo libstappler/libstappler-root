@@ -223,7 +223,7 @@ Status UnixRequestController::processInput(ConnectionWorker::BufferChain &chain)
 		return DECLINED;
 	}
 
-	auto ret = chain.read([&] (const ConnectionWorker::Buffer *, const uint8_t *data, size_t len) {
+	auto ret = chain.read([&, this] (const ConnectionWorker::Buffer *, const uint8_t *data, size_t len) {
 		auto size = std::min(len, size_t(_info.contentLength));
 		StringView r((const char *)data, size);
 
@@ -295,7 +295,7 @@ void UnixRequestController::submitResponse(Status status) {
 	char dateBuf[30] = { 0 };
 	xt.encodeRfc822(dateBuf);
 
-	auto outFn = [&] (StringView str) {
+	auto outFn = [&, this] (StringView str) {
 		_client->write(_client->output, str);
 	};
 

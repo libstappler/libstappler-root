@@ -345,7 +345,7 @@ apr_status_t HttpdOutputFilter::outputHeaders(ap_filter_t* f, apr_bucket *e, con
 	if (_responseCode < 400 || (!_hookErrors && _responseCode != 401)) {
 		_skipFilter = true;
 	} else {
-		output::writeData(_request, _buffer, [&] (const String &ct) {
+		output::writeData(_request, _buffer, [&, this] (const String &ct) {
 			_headers.emplace("Content-Type", ct);
 		}, _request.getController()->getDefaultResult(), true);
 		_headers.emplace("Content-Length", apr_psprintf(r->pool, "%lu", _buffer.size()));

@@ -67,7 +67,7 @@ void WebhookInfo::setParam(StringView n, StringView v) {
 }
 
 RequestInfo RequestInfo::clone(pool_t *pool) {
-	return perform([&] {
+	return perform([&, this] {
 		RequestInfo ret(*this);
 
 		auto dupString = [&] (StringView &str) {

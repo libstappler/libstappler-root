@@ -47,6 +47,7 @@ struct TestManager {
 
 	bool runAll() const;
 	bool run(StringView) const;
+	void list() const;
 
 	bool colorsSupported = false;
 	Set<Test *> tests;
@@ -145,12 +146,23 @@ bool TestManager::run(StringView str) const {
 	return success;
 }
 
+void TestManager::list() const {
+	std::cout << "Available test:\n";
+	for (auto &it : tests) {
+		std::cout << "\t" << it->_name << "\n";
+	}
+}
+
 bool Test::RunAll() {
 	return TestManager::getInstance()->runAll();
 }
 
 bool Test::Run(StringView str) {
 	return TestManager::getInstance()->run(str);
+}
+
+void Test::List() {
+	return TestManager::getInstance()->list();
 }
 
 Test::Test(StringView name) : _name(name.str<Interface>()) {

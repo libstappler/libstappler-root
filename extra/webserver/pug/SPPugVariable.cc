@@ -392,7 +392,7 @@ Var Var::subscript(const StringView &str, bool mut) {
 			}
 		}
 	} else {
-		auto read = [&] () -> Var {
+		auto read = [&, this] () -> Var {
 			auto &r = readValue();
 			if (str == "length" && (r.isArray() || r.isDictionary())) {
 				return Var(Value(uint64_t(r.size())));

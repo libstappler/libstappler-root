@@ -56,28 +56,12 @@ struct MemMapTest : MemPoolTest {
 		size_t passed = 0;
 		stream << "\n";
 
-		/*memory::set<String> setTest;
-		setTest.emplace("One");
-		setTest.emplace("Two");
-		setTest.emplace("FourFour");
-		setTest.emplace("Five");
-		setTest.emplace("Nine");
-
-		memory::rbtree::TreeDebug::visit(setTest._tree, std::cout);
-
-		do { auto it = setTest.find("One"); if (it == setTest.end()) { std::cout << "Failed One\n"; } } while (0);
-		do { auto it = setTest.find("Two"); if (it == setTest.end()) { std::cout << "Failed Two\n"; } } while (0);
-		do { auto it = setTest.find("FourFour"); if (it == setTest.end()) { std::cout << "Failed FourFour\n"; } } while (0);
-		do { auto it = setTest.find("Five"); if (it == setTest.end()) { std::cout << "Failed Five\n"; } } while (0);
-		do { auto it = setTest.find("Nine"); if (it == setTest.end()) { std::cout << "Failed Nine\n"; } } while (0);*/
-
 		runTest(stream, "lower_bound test", count, passed, [&] {
 			memory::set<int> values;
 			values.emplace(1);
 			values.emplace(3);
 
 			auto it = values.lower_bound(4);
-			std::cout << *(--it) << "\n";
 			return  *(it) == 3;
 		});
 

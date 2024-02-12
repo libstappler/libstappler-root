@@ -248,7 +248,7 @@ struct GetCmd : ResourceCmd {
 
 		auto resolve = r.readUntil<StringView::CharGroup<CharGroupId::WhiteSpace>>();
 
-		h.performWithStorage([&] (const db::Transaction &t) {
+		h.performWithStorage([&, this] (const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, resolve)) {
 				auto data = r->getResultObject();
 				h.sendData(data);
@@ -393,7 +393,7 @@ struct MultiCmd : ResourceCmd {
 						++ path;
 					}
 
-					h.performWithStorage([&] (const db::Transaction &t) {
+					h.performWithStorage([&, this] (const db::Transaction &t) {
 						if (auto r = acquireResource(t, h, scheme, path, StringView(), it.second)) {
 							result.setValue(r->getResultObject(), it.first);
 							delete r;
@@ -430,7 +430,7 @@ struct CreateCmd : ResourceCmd {
 
 		bool success = false;
 		Value patch = (r.is('{') || r.is('[') || r.is('(')) ? data::read<Interface>(r) : UrlView::parseArgs<Interface>(r, 1_KiB);
-		h.performWithStorage([&] (const db::Transaction &t) {
+		h.performWithStorage([&, this] (const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				Vector<db::InputFile> f;
 				if (r->prepareCreate()) {
@@ -476,7 +476,7 @@ struct UpdateCmd : ResourceCmd {
 
 		bool success = false;
 		Value patch = (r.is('{') || r.is('[') || r.is('(')) ? data::read<Interface>(r) : UrlView::parseArgs<Interface>(r, 1_KiB);
-		h.performWithStorage([&] (const db::Transaction &t) {
+		h.performWithStorage([&, this] (const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				Vector<db::InputFile> f;
 				if (r->prepareUpdate()) {
@@ -521,7 +521,7 @@ struct UploadCmd : ResourceCmd {
 		}
 
 		bool success = false;
-		h.performWithStorage([&] (const db::Transaction &t) {
+		h.performWithStorage([&, this] (const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				if (r->prepareCreate()) {
 					Bytes bkey = valid::makeRandomBytes<Interface>(8);
@@ -581,7 +581,7 @@ struct AppendCmd : ResourceCmd {
 
 		bool success = false;
 		Value patch = (r.is('{') || r.is('[') || r.is('(')) ? data::read<Interface>(r) : UrlView::parseArgs<Interface>(r, 1_KiB);
-		h.performWithStorage([&] (const db::Transaction &t) {
+		h.performWithStorage([&, this] (const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				if (r->prepareAppend()) {
 					if (auto ret = r->appendObject(patch)) {
@@ -625,7 +625,7 @@ struct DeleteCmd : ResourceCmd {
 		}
 
 		bool success = false;
-		h.performWithStorage([&] (const db::Transaction &t) {
+		h.performWithStorage([&, this] (const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				if (r->removeObject()) {
 					success = true;
@@ -674,7 +674,7 @@ struct SearchCmd : ResourceCmd {
 			data.setString(r, "search");
 		}
 
-		h.performWithStorage([&] (const db::Transaction &t) {
+		h.performWithStorage([&, this] (const db::Transaction &t) {
 			if (auto res = acquireResource(t, h, schemeName, path, StringView(), data)) {
 				if (auto val = res->getResultObject()) {
 					h.sendData(val);
@@ -1046,9 +1046,9 @@ bool ShellSocketHandler::onCommand(StringView &r) {
 		for (auto &eit : *it.second) {
 			if (cmd == eit.second.name) {
 				bool ret = false;
-				performWithStorage([&] (const db::Transaction &t) {
+				performWithStorage([&, this] (const db::Transaction &t) {
 					t.setRole(db::AccessRoleId::Admin);
-					ret = eit.second.callback(r, [&] (const Value &val) {
+					ret = eit.second.callback(r, [&, this] (const Value &val) {
 						send(val);
 					});
 				});
@@ -1062,8 +1062,8 @@ bool ShellSocketHandler::onCommand(StringView &r) {
 }
 
 void ShellSocketHandler::handleBegin() {
-	performWithStorage([&] (const db::Transaction &t) {
-		web::perform([&] {
+	performWithStorage([&, this] (const db::Transaction &t) {
+		web::perform([&, this] {
 			_user = db::User::get(t.getAdapter(), _userId);
 		}, _pool);
 	});
@@ -1159,7 +1159,7 @@ WebsocketHandler * ShellSocket::onAccept(const Request &req, pool_t *pool) {
 		if (!user || !user->isAdmin()) {
 			rctx.setStatus(HTTP_FORBIDDEN);
 		} else {
-			web::perform([&] {
+			web::perform([&, this] {
 				ret = new ShellSocketHandler(this, pool, req.getInfo().url.path, user->getObjectId());
 			}, pool);
 		}
@@ -1177,7 +1177,7 @@ WebsocketHandler * ShellSocket::onAccept(const Request &req, pool_t *pool) {
 					rctx.setStatus(HTTP_FORBIDDEN);
 				} else {
 					rctx.setUser(user);
-					web::perform([&] {
+					web::perform([&, this] {
 						ret = new ShellSocketHandler(this, pool, req.getInfo().url.path, user->getObjectId());
 					}, pool);
 				}
@@ -1227,7 +1227,7 @@ Status ShellGui::onPostReadRequest(Request &rctx) {
 		} else {
 			path += "/upload/"_len;
 			Status status = HTTP_NOT_FOUND;
-			rctx.performWithStorage([&] (const db::Transaction &t) {
+			rctx.performWithStorage([&, this] (const db::Transaction &t) {
 				auto data = t.getAdapter().get(path);
 				if (!path.empty()) {
 					if (data) {
@@ -1297,8 +1297,8 @@ void ShellGui ::onFilterComplete(InputFilter *filter) {
 	Value data;
 	data.setBool(false, "OK");
 	if (_resource) {
-		_request.performWithStorage([&] (const db::Transaction &t) {
-			return t.performAsSystem([&] {
+		_request.performWithStorage([&, this] (const db::Transaction &t) {
+			return t.performAsSystem([&, this] {
 				data.setValue(_resource->createObject(filter->getData(), filter->getFiles()), "result");
 				data.setBool(true, "OK");
 				return true;

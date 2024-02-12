@@ -83,7 +83,7 @@ Host & Host::operator =(const Host &other) {
 }
 
 void Host::handleChildInit(pool_t *rootPool) {
-	perform([&] {
+	perform([&, this] {
 		_config->init(*this);
 		_config->handleChildInit(*this, rootPool);
 
@@ -97,7 +97,7 @@ void Host::handleChildInit(pool_t *rootPool) {
 		addProtectedLocation("/.reports");
 		addProtectedLocation("/uploads");
 
-		AsyncTask::perform(*this, [&] (AsyncTask &task) {
+		AsyncTask::perform(*this, [&, this] (AsyncTask &task) {
 			task.addExecuteFn([serv = *this] (const AsyncTask &task) -> bool {
 				serv.processReports();
 				return true;
@@ -203,7 +203,7 @@ void Host::performWithStorage(const Callback<void(const db::Transaction &)> &cb,
 	}
 
 	auto targetPool = pool::acquire();
-	perform([&] {
+	perform([&, this] {
 		auto handle = _config->openConnection(targetPool, false);
 		if (handle.get()) {
 			_config->_dbDriver->performWithStorage(handle, [&] (const db::Adapter &a) {
@@ -338,7 +338,7 @@ void Host::addComponentByParams(StringView str) {
 }
 
 void Host::addAllow(StringView ips) {
-	ips.split<StringView::CharGroup<CharGroupId::WhiteSpace>>([&] (StringView r) {
+	ips.split<StringView::CharGroup<CharGroupId::WhiteSpace>>([&, this] (StringView r) {
 		_config->addAllowed(r);
 	});
 
@@ -409,7 +409,7 @@ void Host::setWebHookParams(StringView str) {
 }
 
 void Host::setProtectedList(StringView str) {
-	str.split<StringView::Chars<' '>>([&] (StringView &value) {
+	str.split<StringView::Chars<' '>>([&, this] (StringView &value) {
 		addProtectedLocation(value);
 	});
 }
@@ -474,10 +474,10 @@ auto Host_resolvePath(Map<StringView, T> &map, const StringView &path) -> typena
 }
 
 void Host::checkBroadcasts() {
-	AsyncTask::perform(*this, [&] (AsyncTask &task) {
+	AsyncTask::perform(*this, [&, this] (AsyncTask &task) {
 		task.addExecuteFn([this] (const AsyncTask &task) -> bool {
 			task.performWithStorage([this] (const db::Transaction &t) {
-				_config->_broadcastId = t.getAdapter().getBackendInterface()->processBroadcasts([&] (BytesView bytes) {
+				_config->_broadcastId = t.getAdapter().getBackendInterface()->processBroadcasts([&, this] (BytesView bytes) {
 					handleBroadcast(bytes);
 				}, _config->_broadcastId);
 			});
@@ -487,13 +487,13 @@ void Host::checkBroadcasts() {
 }
 
 void Host::handleHeartBeat(pool_t *pool) {
-	perform([&] {
+	perform([&, this] {
 		auto now = Time::now();
 		if (!_config->_loadingFalled) {
 			if (now - _config->_lastDatabaseCleanup > config::DEFAULT_DATABASE_CLEANUP_INTERVAL) {
 				db::sql::Driver::Handle handle = _config->openConnection(pool, false);
 				if (handle.get()) {
-					_config->_dbDriver->performWithStorage(handle, [&] (const db::Adapter &a) {
+					_config->_dbDriver->performWithStorage(handle, [&, this] (const db::Adapter &a) {
 						_config->_lastDatabaseCleanup = now;
 						a.makeSessionsCleanup();
 					});
@@ -1055,7 +1055,7 @@ void Host::runErrorReportTask(const Request &req, const Vector<Value> &errors) {
 		return;
 	}
 
-	AsyncTask::perform(Host(*this), [&, c = req.getController()] (AsyncTask &task) {
+	AsyncTask::perform(Host(*this), [&, this, c = req.getController()] (AsyncTask &task) {
 		Value *err = nullptr;
 		if (c) {
 			err = new Value {

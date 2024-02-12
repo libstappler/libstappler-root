@@ -162,7 +162,7 @@ public:
 
 	template <typename Callback>
 	void perform(Callback &&cb) {
-		web::perform([&] {
+		web::perform([&, this] {
 			cb(_shared);
 		}, _pool);
 	}
@@ -416,7 +416,7 @@ auto Shared<T>::create(SharedMode mode, Args && ... args) -> Shared * {
 template <typename T>
 Shared<T>::~Shared() {
 	if (_shared) {
-		web::perform([&] {
+		web::perform([&, this] {
 			delete _shared;
 		}, _pool);
 		_shared = nullptr;

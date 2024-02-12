@@ -695,7 +695,7 @@ Token *Lexer::readCommonLine(const ErrCb &errCb, const StringView &line, StringV
 Token *Lexer::readKeywordLine(const ErrCb &errCb, const StringView &line, StringView &r) {
 	StringView tmp(r);
 
-	auto readKeywordExpression = [&] (StringView &r, Token::Type t) -> Token * {
+	auto readKeywordExpression = [&, this] (StringView &r, Token::Type t) -> Token * {
 		if (auto expr = Expression::parse(r, Expression::Options::getDefaultInline())) {
 			auto retData = new Token{t, StringView(tmp, tmp.size() - r.size())};
 			retData->expression = expr;

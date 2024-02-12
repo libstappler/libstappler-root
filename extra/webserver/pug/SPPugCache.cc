@@ -25,6 +25,8 @@
 #include "SPPugTemplate.h"
 #include "SPFilesystem.h"
 
+#include "SPPlatformUnistd.h"
+
 #if LINUX
 #include <sys/inotify.h>
 #endif

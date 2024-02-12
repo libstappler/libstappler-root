@@ -387,7 +387,7 @@ Token * TemplateRender::renderTagAttributes(Token *tok) {
 		return out.str();
 	};
 
-	auto pushAttribute = [&] (const StringView &name, Expression *expression, bool esc) {
+	auto pushAttribute = [&, this] (const StringView &name, Expression *expression, bool esc) {
 		if (!expression) {
 			_buffer << " " << name;
 			return;
@@ -421,7 +421,7 @@ Token * TemplateRender::renderTagAttributes(Token *tok) {
 		}
 	};
 
-	auto processAttrExpr = [&] (Expression *expr) {
+	auto processAttrExpr = [&, this] (Expression *expr) {
 		if (expr) {
 			if (expr->isConst()) {
 				Context::printAttrExpr(*expr, _buffer);
@@ -739,7 +739,7 @@ bool Template::runChunk(const Chunk &chunk, Context &exec, std::ostream &out, Ru
 		bool r = true;
 		bool allowElseIf = (*it)->type == ControlIf;
 
-		auto tryExec = [&] () -> bool {
+		auto tryExec = [&, this] () -> bool {
 			if (auto var = exec.exec(*(*it)->expr, out, true)) {
 				auto &v = var.readValue();
 				auto val = (v.getType() == Value::Type::DICTIONARY || v.getType() == Value::Type::ARRAY) ? !v.empty() : v.asBool();
@@ -803,7 +803,7 @@ bool Template::runChunk(const Chunk &chunk, Context &exec, std::ostream &out, Ru
 		bool runElse = false;
 
 		if (auto var = exec.exec(*(*it)->expr, out)) {
-			auto runWithVar = [&] (const Value &val, bool isConst) -> bool {
+			auto runWithVar = [&, this] (const Value &val, bool isConst) -> bool {
 				if (val.isArray()) {
 					size_t i = 0;
 					if (val.size() > 0) {
@@ -902,7 +902,7 @@ bool Template::runChunk(const Chunk &chunk, Context &exec, std::ostream &out, Ru
 		});
 	};
 
-	auto runWhile = [&] (const Chunk &ch) {
+	auto runWhile = [&, this] (const Chunk &ch) {
 		Context::VarScope scope;
 		while (true) {
 			if (auto var = exec.exec(*ch.expr, out)) {
@@ -925,7 +925,7 @@ bool Template::runChunk(const Chunk &chunk, Context &exec, std::ostream &out, Ru
 		return false;
 	};
 
-	auto runMixinChunk = [&] (const Chunk &ch) -> bool {
+	auto runMixinChunk = [&, this] (const Chunk &ch) -> bool {
 		auto mixin = exec.getMixin(ch.value);
 		if (!mixin) {
 			onError(string::ToStringTraits<memory::PoolInterface>::toString("Mixin with name ", ch.value, " is not found"));
@@ -1168,7 +1168,7 @@ bool Template::runChunk(const Chunk &chunk, Context &exec, std::ostream &out, Ru
 }
 
 bool Template::runCase(const Chunk &chunk, Context &exec, std::ostream &out, RunContext &tagStack) const {
-	auto runWhenChunk = [&] (auto it) -> bool {
+	auto runWhenChunk = [&, this] (auto it) -> bool {
 		if ((*it)->chunks.size() > 0) {
 			return runChunk(**it, exec, out, tagStack);
 		} else {
@@ -1182,7 +1182,7 @@ bool Template::runCase(const Chunk &chunk, Context &exec, std::ostream &out, Run
 		return false;
 	};
 
-	auto perform = [&] () -> bool {
+	auto perform = [&, this] () -> bool {
 		if (auto var = exec.exec(*chunk.expr, out)) {
 			if (auto val = var.readValue()) {
 				const Template::Chunk *def = nullptr;

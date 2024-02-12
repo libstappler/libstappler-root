@@ -26,6 +26,7 @@
 #include "SPWebRequestHandler.h"
 #include "SPWebWebsocketConnection.h"
 
+#include "SPPlatformUnistd.h"
 #include "SPLog.h"
 
 #if LINUX
@@ -194,7 +195,7 @@ db::sql::Driver::Handle Root::dbdAcquire(const Request &req) {
 }
 
 Status Root::runPostReadRequest(Request &r) {
-	return perform([&] {
+	return perform([&, this] {
 		_requestsReceived += 1;
 		//OutputFilter::insert(r);
 
@@ -335,13 +336,13 @@ void Root::initExtensions() {
 }
 
 void Root::addDb(StringView str) {
-	perform([&] {
+	perform([&, this] {
 		emplace_ordered(_dbs, str.pdup(_rootPool));
 	}, _rootPool);
 }
 
 void Root::setDbParams(StringView str) {
-	perform([&] {
+	perform([&, this] {
 		parseParameterList(_dbParams, str);
 	}, _rootPool);
 }
@@ -378,14 +379,14 @@ void Root::handleBroadcast(const Value &res) {
 }
 
 void Root::handleChildInit(pool_t *p) {
-	perform([&] {
+	perform([&, this] {
 		initDatabases();
 
 		initSignals();
 
 		_pending = new Vector<PendingTask>();
 
-		foreachHost([&] (Host &host) {
+		foreachHost([&, this] (Host &host) {
 			host.handleChildInit(_configPool);
 		});
 
@@ -409,7 +410,7 @@ Status Root::runTypeChecker(Request &r) {
 	StringView charset;
 	Vector<StringView> contentEncoding;
 
-	auto onTypeCheckerExtension = [&] (StringView ext) {
+	auto onTypeCheckerExtension = [&, this] (StringView ext) {
 		auto ct = findTypeCheckerContentType(r, ext);
 		if (!ct.empty()) {
 			contentType = ct;
@@ -522,7 +523,7 @@ StringView Root::findTypeCheckerContentEncoding(Request &r, StringView ext) cons
 }
 
 void Root::initDatabases() {
-	perform([&] {
+	perform([&, this] {
 		Map<db::sql::Driver *, Vector<StringView>> databases;
 
 		if (!_dbParams.empty()) {
@@ -556,7 +557,7 @@ void Root::initDatabases() {
 			}
 		}
 
-		foreachHost([&] (Host &host) {
+		foreachHost([&, this] (Host &host) {
 			auto config = host.getController();
 			if (!config->getDbParams().empty()) {
 				StringView driver;

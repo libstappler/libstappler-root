@@ -22,8 +22,7 @@
 
 #include "SPWebHostComponent.h"
 #include "SPValid.h"
-#include "SPDbFieldIntArray.h"
-#include "SPDbFieldPoint.h"
+#include "SPDbFieldExtensions.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -146,7 +145,7 @@ void TestHandler::handleChildInit(const Host &serv) {
 
 	serv.addHandler("/map/", new TestHandlerMap);*/
 
-	addOutputCommand("test", [&] (StringView str, const Callback<void(const Value &)> &cb) -> bool {
+	addOutputCommand("test", [&, this] (StringView str, const Callback<void(const Value &)> &cb) -> bool {
 		if (auto t = db::Transaction::acquireIfExists()) {
 			cb(_test.create(t, Value({
 				Value({

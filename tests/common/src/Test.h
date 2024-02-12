@@ -35,6 +35,7 @@ using namespace stappler::mem_std;
 struct Test {
 	static bool RunAll();
 	static bool Run(StringView);
+	static void List();
 
 	Test(StringView);
 	virtual ~Test();

@@ -167,24 +167,24 @@ AsyncTask *AsyncTask::getCurrent() {
 }
 
 void AsyncTask::addExecuteFn(const ExecuteCallback &cb) {
-	web::perform([&] {
+	web::perform([&, this] {
 		_execute.push_back(cb);
 	}, _pool);
 }
 
 void AsyncTask::addExecuteFn(ExecuteCallback &&cb) {
-	web::perform([&] {
+	web::perform([&, this] {
 		_execute.push_back(std::move(cb));
 	}, _pool);
 }
 
 void AsyncTask::addCompleteFn(const CompleteCallback &cb) {
-	web::perform([&] {
+	web::perform([&, this] {
 		_complete.push_back(cb);
 	}, _pool);
 }
 void AsyncTask::addCompleteFn(CompleteCallback &&cb) {
-	web::perform([&] {
+	web::perform([&, this] {
 		_complete.push_back(std::move(cb));
 	}, _pool);
 }

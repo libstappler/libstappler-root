@@ -30,6 +30,27 @@ THE SOFTWARE.
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
+constexpr auto SqlString1 =
+R"(SELECT "field", "field" AS "alias", "database" AS "alias" FROM table, table WHERE("alias"=value)AND("field"=1234)OR("field"!=false)OR(("time">1234 AND "time"<123400)) ORDER BY "field" DESC LIMIT 12 OFFSET 16;)";
+
+constexpr auto SqlString2 =
+R"(WITH query AS (SELECT * FROM sqtable), query AS (SELECT * FROM sqtable)SELECT "field1", "field2" FROM table WHERE("alias"=value)AND(("field"=value)OR("field"=value));)";
+
+constexpr auto SqlString3 =
+R"(INSERT INTO table("field1", "field2")VALUES(test1,test2),(test3,test4);)";
+
+constexpr auto SqlString4 =
+R"(INSERT INTO table("field1", "field2")VALUES(test1,test2)ON CONFLICT DO NOTHING RETURNING *;)";
+
+constexpr auto SqlString5 =
+R"(INSERT INTO table("field1", "field2", "field3")VALUES(test1,test2,test3)ON CONFLICT("field1") DO UPDATE SET "field2"=EXCLUDED."field2", "field3"=DEFAULT WHERE("field1"=alias) RETURNING *;)";
+
+constexpr auto SqlString6 =
+R"(UPDATE table AS alias SET "field1"=value1, "field1"=value2 WHERE("field3"!=false) RETURNING *;)";
+
+constexpr auto SqlString7 =
+R"(DELETE FROM table AS alias WHERE("field3"!=false) RETURNING *;)";
+
 struct SqlTest : Test {
 	SqlTest() : Test("SqlTest") { }
 
@@ -53,7 +74,7 @@ struct SqlTest : Test {
 				.order(sql::Ordering::Descending, "field")
 				.limit(12, 16)
 				.finalize();
-		stream << query.getStream().str() << "\n";
+		auto test1 = (query.getStream().str() == StringView(SqlString1));
 
 		query = QueryType();
 		query.with("query", [] (QueryType::GenericQuery &q) {
@@ -66,8 +87,7 @@ struct SqlTest : Test {
 				q.where("field", sql::Comparation::Equal, "value")
 						.where(sql::Operator::Or, "field", sql::Comparation::Equal, "value");
 		}).finalize();
-
-		stream << query.getStream().str() << "\n";
+		auto test2 = (query.getStream().str() == StringView(SqlString2));
 
 		QueryType insertQuery;
 		insertQuery.insert("table")
@@ -75,8 +95,7 @@ struct SqlTest : Test {
 				.values().value("test1").value("test2")
 				.values().value("test3").value("test4")
 				.finalize();
-
-		stream << insertQuery.getStream().str() << "\n";
+		auto test3 = (insertQuery.getStream().str() == StringView(SqlString3));
 
 		insertQuery = QueryType();
 		insertQuery.insert("table")
@@ -85,7 +104,7 @@ struct SqlTest : Test {
 				.onConflictDoNothing()
 				.returning().all()
 				.finalize();
-		stream << insertQuery.getStream().str() << "\n";
+		auto test4 = (insertQuery.getStream().str() == StringView(SqlString4));
 
 		insertQuery = QueryType();
 		insertQuery.insert("table")
@@ -95,7 +114,7 @@ struct SqlTest : Test {
 				.where("field1", sql::Comparation::Equal, "alias")
 				.returning().all()
 				.finalize();
-		stream << insertQuery.getStream().str() << "\n";
+		auto test5 = (insertQuery.getStream().str() == StringView(SqlString5));
 
 		QueryType updateQuery;
 		updateQuery.update("table", "alias")
@@ -103,18 +122,18 @@ struct SqlTest : Test {
 				.where("field3", sql::Comparation::NotEqual, Value(false))
 				.returning().all()
 				.finalize();
-		stream << updateQuery.getStream().str() << "\n";
+		auto test6 = (updateQuery.getStream().str() == StringView(SqlString6));
 
 		QueryType deleteQuery;
 		deleteQuery.remove("table", "alias")
 				.where("field3", sql::Comparation::NotEqual, Value(false))
 				.returning().all()
 				.finalize();
-		stream << deleteQuery.getStream().str() << "\n";
+		auto test7 = (deleteQuery.getStream().str() == StringView(SqlString7));
 
 		_desc = stream.str();
 
-		return true;
+		return test1 && test2 && test3 && test4 && test5 && test6 && test7;
 	}
 
 } _SqlTest;

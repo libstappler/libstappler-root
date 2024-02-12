@@ -312,7 +312,6 @@ protected:
 	const Value *getObjectLine(const Value &obj, const StringView &);
 
 	const Field *_field = nullptr;
-	search::Configuration _config;
 };
 
 }

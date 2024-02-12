@@ -36,7 +36,7 @@ public:
 		auto scheme = rctx.host().getScheme("refs");
 		if (scheme) {
 			Value d;
-			rctx.performWithStorage([&] (const db::Transaction &t) {
+			rctx.performWithStorage([&, this] (const db::Transaction &t) {
 				d = scheme->select(_transaction, db::Query::all());
 				return true;
 			});

@@ -82,7 +82,7 @@ void TestAppDelegate::run(Function<void()> &&initCb) {
 	addExtension(Rc<storage::AssetLibrary>(_assetLibrary));
 
 	GuiApplication::CallbackInfo callbacks({
-		.initCallback = [&] (const Application &) {
+		.initCallback = [&, this] (const Application &) {
 			GuiApplication::addView(ViewInfo{
 				.name = _data.applicationName,
 				.bundleId = _data.bundleName,

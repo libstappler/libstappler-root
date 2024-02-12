@@ -28,7 +28,7 @@
 #include "SPData.h"
 #include "SPSqlDriver.h"
 #include "SPDbScheme.h"
-#include "SPDbFieldTextArray.h"
+#include "SPDbFieldExtensions.h"
 #include "SPPqHandle.h"
 
 namespace STAPPLER_VERSIONIZED stappler::db::test::detail {
@@ -407,7 +407,7 @@ bool ServerScheme::runAccessTest(const db::Transaction &t, db::AccessRoleId role
 
 bool ServerScheme::runCompressionTest(const db::Transaction &t) {
 	using namespace db;
-	return t.performAsSystem([&] {
+	return t.performAsSystem([&, this] {
 		auto file = filesystem::currentDir<Interface>("lipsum.txt");
 		if (!filesystem::exists(file)) {
 			return false;
@@ -437,8 +437,8 @@ bool ServerScheme::runCompressionTest(const db::Transaction &t) {
 bool ServerScheme::runDeltaTest(Server &server) {
 	using namespace db;
 
-	auto runTest = [&] (const db::Transaction &t, int64_t id) {
-		t.perform([&] {
+	auto runTest = [&, this] (const db::Transaction &t, int64_t id) {
+		t.perform([&, this] {
 			if (id) {
 				_deltaTest.remove(t, id);
 			}
@@ -453,8 +453,8 @@ bool ServerScheme::runDeltaTest(Server &server) {
 		return id;
 	};
 
-	auto checkTest = [&] (const db::Transaction &t, Time time) {
-		t.perform([&] {
+	auto checkTest = [&, this] (const db::Transaction &t, Time time) {
+		t.perform([&, this] {
 			QueryList list(&server, &_deltaTest);
 			list.setDelta(time);
 			list.setAll();
@@ -492,7 +492,7 @@ bool ServerScheme::runRelationTest(Server &server) {
 	auto fillTest = [&] (const db::Transaction &t, int64_t id) {
 		using namespace db;
 
-		t.performAsSystem([&] () {
+		t.performAsSystem([&, this] () {
 			auto cat = _hierarchy.create(t, Value({
 				pair("name", Value("TestCategory")),
 				pair("id", Value(id)),
@@ -523,7 +523,7 @@ bool ServerScheme::runRelationTest(Server &server) {
 	auto checkTest = [&] (const db::Transaction &t, int64_t id) {
 		using namespace db;
 
-		return t.performAsSystem([&] () {
+		return t.performAsSystem([&, this] () {
 			auto cat = _hierarchy.select(t, Query().select("id", Value(id))).getValue(0);
 			if (!cat) {
 				return false;
@@ -555,7 +555,7 @@ bool ServerScheme::runRelationTest(Server &server) {
 bool ServerScheme::runVirtualTest(const db::Transaction &t) {
 	using namespace db;
 
-	t.performAsSystem([&] {
+	t.performAsSystem([&, this] {
 		auto data = _virtualTest.create(t, Value({
 			pair("name", Value(toString("ValueName.", Time::now().toMicros())))
 		}));
@@ -599,7 +599,7 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 
 	db::Map<StringView, StringView> initParams;
 
-	mem_pool::perform([&] {
+	mem_pool::perform([&, this] {
 		_scheme = cb(_staticPool);
 
 		StringView driver;
@@ -623,7 +623,7 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 		return;
 	}
 
-	mem_pool::perform([&] {
+	mem_pool::perform([&, this] {
 		_handle = _driver->connect(initParams);
 
 		if (!_handle.get()) {
@@ -655,10 +655,10 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 		dr->clearResult(res);
 	}
 
-	mem_pool::perform([&] {
+	mem_pool::perform([&, this] {
 		_driver->init(_handle, db::Vector<db::StringView>());
 
-		_driver->performWithStorage(_handle, [&] (const db::Adapter &adapter) {
+		_driver->performWithStorage(_handle, [&, this] (const db::Adapter &adapter) {
 			db::Map<StringView, const db::Scheme *> predefinedSchemes;
 			_scheme->fillSchemes(predefinedSchemes);
 
@@ -703,7 +703,7 @@ void Server::initTransaction(db::Transaction &t) const {
 }
 
 void Server::update() {
-	mem_pool::perform([&] {
+	mem_pool::perform([&, this] {
 		while (asyncTasks && _driver->isValid(_handle)) {
 			auto tmp = asyncTasks;
 			asyncTasks = nullptr;
@@ -722,7 +722,7 @@ void Server::update() {
 }
 
 void Server::perform(const Callback<bool(const db::Transaction &)> &cb) {
-	mem_pool::perform([&] {
+	mem_pool::perform([&, this] {
 		_driver->performWithStorage(_handle, [&] (const db::Adapter &adapter) {
 			adapter.performWithTransaction([&] (const db::Transaction &t) {
 				return cb(t);
@@ -741,9 +741,9 @@ struct PqTest : MemPoolTest {
 		db::AccessRoleId role = db::AccessRoleId::Admin;
 		String driver = "pgsql";
 		String host = "localhost";
-		String dbname = "dbtest";
-		String user = "admin";
-		String password = "admin";
+		String dbname = "stappler";
+		String user = "stappler";
+		String password = "stappler";
 
 		void loadFromFile(StringView fileName) {
 			if (auto d = data::readFile<memory::PoolInterface>(fileName)) {

@@ -65,7 +65,7 @@ DbConnList::~DbConnList() { }
 db::sql::Driver::Handle DbConnList::connect(bool toClose) {
 	db::sql::Driver::Handle ret(nullptr);
 
-	perform([&] {
+	perform([&, this] {
 		ret = driver->connect(params);
 	}, pool);
 
@@ -89,7 +89,7 @@ void DbConnList::disconnect(db::sql::Driver::Handle h) {
 	}
 
 	if (!config.persistent) {
-		perform([&] {
+		perform([&, this] {
 			driver->finish(h);
 		}, pool);
 	}
@@ -118,7 +118,7 @@ db::sql::Driver::Handle DbConnList::open() {
 		if (driver->isValid(conn)) {
 			break;
 		} else {
-			perform([&] {
+			perform([&, this] {
 				driver->finish(ret);
 			}, pool);
 			ret = db::sql::Driver::Handle(nullptr);
@@ -147,7 +147,7 @@ void DbConnList::close(db::sql::Driver::Handle h) {
 	if (!valid
 			|| count >= config.nmax
 			|| (count >= config.nkeep && (config.exptime == TimeInterval() || (Time::now() - ctime < config.exptime)))) {
-		perform([&] {
+		perform([&, this] {
 			driver->finish(h);
 		}, pool);
 	} else {
@@ -181,7 +181,7 @@ void DbConnList::cleanup(const std::unique_lock<Mutex> &lock) {
 	auto target = &opened;
 	while (target && count > config.nkeep) {
 		if (config.exptime && (now - (*target)->ctime) < config.exptime) {
-			perform([&] {
+			perform([&, this] {
 				driver->finish(opened->handle);
 			}, pool);
 			-- count;
@@ -208,7 +208,7 @@ void DbConnList::finalize() {
 	config.nmin = 0;
 	config.nmax = 0;
 
-	perform([&] {
+	perform([&, this] {
 		while (opened) {
 			auto ret = opened->handle;
 

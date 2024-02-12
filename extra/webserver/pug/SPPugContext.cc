@@ -144,7 +144,7 @@ Var ContextFn::execOperator(const Expression &expr, Expression::Op op) {
 		auto s = list.size();
 		dict.reserve(s / 2);
 		for (size_t i = 0; i < s / 2; ++ i) {
-			if (!extractName(d[i * 2], [&] (const StringView &name) {
+			if (!extractName(d[i * 2], [&, this] (const StringView &name) {
 				if (!extractValue(d[i * 2 + 1], [&] (Value &&val) {
 					dict.emplace(name.str<memory::PoolInterface>(), move(val));
 					return true;
@@ -564,7 +564,7 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 	auto &lV = l.readValue();
 	auto &rV = r.readValue();
 
-	auto numOp = [&] (const Value &l, const Value &r, auto intOp, auto doubleOp) {
+	auto numOp = [&, this] (const Value &l, const Value &r, auto intOp, auto doubleOp) {
 		if (l.isInteger() && r.isInteger()) {
 			return Var(Value(intOp(l.asInteger(), r.asInteger())));
 		} else if (l.isBasicType() && r.isBasicType()) {
@@ -575,7 +575,7 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 		}
 	};
 
-	auto intOp = [&] (const Value &l, const Value &r, auto intOp) {
+	auto intOp = [&, this] (const Value &l, const Value &r, auto intOp) {
 		if (l.isInteger() && r.isInteger()) {
 			return Var(Value(intOp(l.asInteger(), r.asInteger())));
 		} else {
@@ -584,7 +584,7 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 		}
 	};
 
-	auto numberAssignment = [&] (auto intOp, auto doubleOp) -> Var {
+	auto numberAssignment = [&, this] (auto intOp, auto doubleOp) -> Var {
 		if (Variable_assign(l, r, [&] (Value &mut, const Value &r) -> bool {
 			if ((mut.isInteger() || mut.isDouble()) && (r.isInteger() || r.isDouble())) {
 				if (mut.isInteger() && r.isInteger()) {
@@ -603,7 +603,7 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 		}
 	};
 
-	auto intAssignment = [&] (auto intOp) -> Var {
+	auto intAssignment = [&, this] (auto intOp) -> Var {
 		if (Variable_assign(l, r, [&] (Value &mut, const Value &r) -> bool {
 			if (mut.isInteger()  && r.isInteger()) {
 				mut.setInteger(intOp(mut.getInteger(), r.asInteger()));
@@ -765,7 +765,7 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 			return (v) ? v.asInteger() : ((var.getType() == Var::SoftUndefined) ? std::numeric_limits<double>::quiet_NaN() : double(0.0));
 		};
 
-		auto numNullOp = [&] (const Value &lVal, const Value &rVal, auto intOp, auto doubleOp) {
+		auto numNullOp = [&, this] (const Value &lVal, const Value &rVal, auto intOp, auto doubleOp) {
 			if (lVal.isInteger() || rVal.isInteger()) {
 				return Var(Value(intOp(valToInt(lVal, l), valToInt(rVal, r))));
 			} else if (lVal.isBasicType() && rVal.isBasicType()) {

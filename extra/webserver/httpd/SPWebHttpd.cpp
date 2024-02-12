@@ -22,6 +22,8 @@
 
 #include "SPCommon.h"
 
+#define module _module
+
 #include "SPWebHttpdCompress.cc"
 #include "SPWebHttpdModule.cc"
 

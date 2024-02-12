@@ -111,7 +111,7 @@ static void runTest(std::ostream &out, const Vector<Bytes> &bytes, data::EncodeF
 	out << accum1 << ", " << accum2 << ", " << float(uncompressed) / float(compressed) << "\n";
 }
 
-SP_EXTERN_C int _spMain(argc, argv) {
+SP_EXTERN_C int main(int argc, const char *argv[]) {
 	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv,
 			&parseOptionSwitch, &parseOptionString);
 	if (opts.first.getBool("help")) {

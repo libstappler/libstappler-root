@@ -290,9 +290,9 @@ bool NoisePassHandle::prepare(FrameQueue &q, Function<void(bool)> &&cb) {
 }
 
 Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle &handle) {
-	auto buf = _pool->recordBuffer(*_device, [&] (vk::CommandBuffer &buf) {
+	auto buf = _pool->recordBuffer(*_device, [&, this] (vk::CommandBuffer &buf) {
 		auto pass = _data->impl.cast<vk::RenderPass>().get();
-		pass->perform(*this, buf, [&] {
+		pass->perform(*this, buf, [&, this] {
 			auto extent = handle.getFrameConstraints().extent;
 
 			buf.cmdBindDescriptorSets(pass, 0);

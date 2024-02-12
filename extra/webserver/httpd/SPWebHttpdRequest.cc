@@ -249,7 +249,7 @@ void HttpdRequestController::clearErrorHeaders() {
 }
 
 InputFilter * HttpdRequestController::makeInputFilter(InputFilterAccept accept) {
-	return perform([&] {
+	return perform([&, this] {
 		return new (_pool) HttpdInputFilter(Request(this), accept);
 	}, _pool, config::TAG_REQUEST, this);
 }

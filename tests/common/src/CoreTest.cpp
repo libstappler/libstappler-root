@@ -85,6 +85,8 @@ struct CoreTest : Test {
 					&& StringToNumber<unsigned int>(nullptr, nullptr, 16) == 0;
 		});
 
+		// Disabled for LCC - compiler bug
+#ifndef __LCC__
 		runTest(stream, "ValueWrapper", count, passed, [&] {
 			using FloatValueWrapper = ValueWrapper<float, class FloatValueWrapperTag>;
 			using IntValueWrapper = ValueWrapper<uint32_t, class IntValueWrapperTag>;
@@ -118,23 +120,24 @@ struct CoreTest : Test {
 				&& FloatValueWrapper::min().get() == minOf<FloatValueWrapper::Type>()
 				&& FloatValueWrapper::zero().get() == 0.0f
 				&& FloatValueWrapper::epsilon().get() == epsilon<FloatValueWrapper::Type>()
-				&& FloatValueWrapper().get() != nan()
 				&& one == progress(zero, two, 0.5f)
 				&& zero.empty()
-				&& FloatValueWrapper(one) != two
 				&& one < two && one <= two
-				&& two > one && two >= FloatValueWrapper(move(one))
+				&& FloatValueWrapper().get() != nan()
 				&& six == IntValueWrapper(6) && ten.get() == tenInt
+				&& FloatValueWrapper(one) != two
+				&& two > one && two >= FloatValueWrapper(move(one))
+				&& -FloatValueWrapper(1.0f) == FloatValueWrapper(-1.0f)
 				&& (IntValueWrapper(2) | IntValueWrapper(4)) == IntValueWrapper(6)
 				&& (IntValueWrapper(6) & IntValueWrapper(4)) == IntValueWrapper(4)
 				&& (IntValueWrapper(2) ^ IntValueWrapper(4)) == IntValueWrapper(6)
 				&& (IntValueWrapper(4) - IntValueWrapper(2)) == IntValueWrapper(2)
 				&& (IntValueWrapper(4) * IntValueWrapper(2)) == IntValueWrapper(8)
 				&& (IntValueWrapper(4) / IntValueWrapper(2)) == IntValueWrapper(2)
-				&& -FloatValueWrapper(1.0f) == FloatValueWrapper(-1.0f)
 				&& std::hash<IntValueWrapper>()(ten)
 				;
 		});
+#endif
 
 		runTest(stream, "Result", count, passed, [&] {
 			String data("12345");

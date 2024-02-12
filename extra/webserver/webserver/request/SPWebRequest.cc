@@ -292,7 +292,7 @@ void Request::storeObject(void *ptr, const StringView &key, Function<void()> &&c
 
 bool Request::performWithStorage(const Callback<bool(const db::Transaction &)> &cb) const {
 	auto ad = _config->acquireDatabase();
-	return ad.performWithTransaction([&] (const db::Transaction &t) {
+	return ad.performWithTransaction([&, this] (const db::Transaction &t) {
 		t.setRole(_config->_accessRole);
 		return cb(t);
 	});
@@ -442,7 +442,7 @@ bool Request::checkCacheHeaders(Time t, uint32_t idHash) {
 
 Status Request::runPug(const StringView & path, const Function<bool(pug::Context &, const pug::Template &)> &cb) {
 	auto cache = host().getPugCache();
-	if (cache->runTemplate(path, [&] (pug::Context &ctx, const pug::Template &tpl) -> bool {
+	if (cache->runTemplate(path, [&, this] (pug::Context &ctx, const pug::Template &tpl) -> bool {
 		initScriptContext(ctx);
 
 		if (cb(ctx, tpl)) {

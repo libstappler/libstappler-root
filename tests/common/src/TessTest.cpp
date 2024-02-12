@@ -25,8 +25,8 @@
 
 #if MODULE_XENOLITH_RENDERER_BASIC2D
 
-#include "XL2dVectorCanvas.h"
 #include "XLIcons.h"
+#include "XL2dVectorCanvas.h"
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 

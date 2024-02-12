@@ -58,7 +58,7 @@ bool RequestController::init() {
 
 	auto h = getRequestHeader("accept");
 	if (!h.empty()) {
-		string::split(h, ",", [&] (StringView v) {
+		string::split(h, ",", [&, this] (StringView v) {
 			float q = 1.0f;
 			auto val = v.readUntil<StringView::Chars<';'>>();
 			if (v.starts_with(";q=")) {
@@ -103,7 +103,7 @@ db::Adapter RequestController::acquireDatabase() {
 }
 
 InputFilter *RequestController::makeInputFilter(InputFilterAccept accept) {
-	return perform([&] {
+	return perform([&, this] {
 		return new (_pool) InputFilter(Request(this), accept);
 	}, _pool, config::TAG_REQUEST, this);
 }

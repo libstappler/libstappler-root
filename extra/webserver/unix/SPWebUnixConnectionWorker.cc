@@ -333,7 +333,7 @@ Status ConnectionWorker::parseRequestHeader(UnixRequestController *cfg, Client *
 }
 
 Status ConnectionWorker::processRequest(UnixRequestController *req) {
-	return perform([&] {
+	return perform([&, this] {
 		auto ret = _root->processRequest(req);
 		switch (ret) {
 		case DONE:
@@ -1098,7 +1098,7 @@ Status ConnectionWorker::Client::checkForReqeust(BufferChain &chain) {
 
 Status ConnectionWorker::Client::checkForHeader(BufferChain &chain) {
 	bool found = false;
-	auto ret = chain.read([&] (const Buffer *buf, const uint8_t *b, size_t s) {
+	auto ret = chain.read([&, this] (const Buffer *buf, const uint8_t *b, size_t s) {
 		if (found) {
 			return int(DONE);
 		}
@@ -1132,7 +1132,7 @@ void ConnectionWorker::Client::cancelWithResult(Status status) {
 		return;
 	}
 
-	perform([&] {
+	perform([&, this] {
 		Time date = Time::now();
 		Value result {
 			pair("date", Value(date.toMicros())),
@@ -1151,7 +1151,7 @@ void ConnectionWorker::Client::cancelWithResult(Status status) {
 		char dateBuf[30] = { 0 };
 		xt.encodeRfc822(dateBuf);
 
-		auto outFn = [&] (StringView str) {
+		auto outFn = [&, this] (StringView str) {
 			write(output, str);
 		};
 

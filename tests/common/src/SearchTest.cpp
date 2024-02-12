@@ -112,13 +112,13 @@ struct SearchTest : MemPoolTest {
 				return true;
 			});
 
-			search::Configuration::SearchVector vec;
+			search::SearchVector vec;
 
 			auto pushWord = [&] (StringView stem, StringView word, search::ParserToken) {
 
 			};
 
-			count = cfg.makeSearchVector(vec, SearchParserTest, search::SearchData::A, count, pushWord);
+			count = cfg.makeSearchVector(vec, SearchParserTest, search::SearchRank::A, count, pushWord);
 
 			return success;
 		});
@@ -135,13 +135,20 @@ struct SearchTest : MemPoolTest {
 					"Fusce ut velit at elit rhoncus pharetra vitae sit amet elit. ";
 
 			search::Configuration cfg(search::Language::Russian);
-			search::Configuration::SearchVector vec;
+			search::SearchVector vec;
 
 			cfg.makeSearchVector(vec, str);
 
-			auto q = cfg.parseQuery(R"Query("bibendum a sem")Query");
+			//auto q2 = cfg.parseQuery(R"Query(!(!test subtest1) !test (test | !subtest2 | subtest3) !"test1 | test2" "!test3 test4")Query");
+			//q2.describe(std::cout, 1); std::cout << "\n";
 
-			if (cfg.isMatch(vec, q)) {
+			auto q2 = cfg.parseQuery(R"Query(!test1  !(test2 test3) (!test4 test5))Query");
+			q2.describe(std::cout, 1); std::cout << "\n";
+
+			auto q1 = cfg.parseQuery(R"Query("bibendum a sem")Query");
+			q1.describe(std::cout, 1); std::cout << "\n";
+
+			if (q1.isMatch(vec)) {
 				return true;
 			}
 			return false;

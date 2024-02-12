@@ -109,7 +109,7 @@ Status HttpdRoot::handlePostConfig(pool_t *pool, server_rec *s) {
 void HttpdRoot::handleChildInit(pool_t *p, server_rec *s) {
 	_rootServer = s;
 
-	perform([&] {
+	perform([&, this] {
 		_sslIsHttps = APR_RETRIEVE_OPTIONAL_FN(ssl_is_https);
 
 		_dbdOpen = APR_RETRIEVE_OPTIONAL_FN(ap_dbd_open);
@@ -161,7 +161,7 @@ bool HttpdRoot::performTask(const Host &host, AsyncTask *task, bool performFirst
 				return apr_thread_pool_push(_threadPool, &HttpdRoot_performTask, ctx, apr_byte_t(task->getPriority()), nullptr) == APR_SUCCESS;
 			}
 		} else if (_pending) {
-			perform([&] {
+			perform([&, this] {
 				_pending->emplace_back(PendingTask{host, task, performFirst, TimeInterval()});
 			}, _pending->get_allocator());
 		}
@@ -179,7 +179,7 @@ bool HttpdRoot::scheduleTask(const Host &host, AsyncTask *task, TimeInterval int
 			auto ctx = new (task->pool()) TaskContext( task, host );
 			return apr_thread_pool_schedule(_threadPool, &HttpdRoot_performTask, ctx, interval.toMicroseconds(), nullptr) == APR_SUCCESS;
 		} else if (_pending) {
-			perform([&] {
+			perform([&, this] {
 				_pending->emplace_back(PendingTask{host, task, false, interval});
 			}, _pending->get_allocator());
 		}

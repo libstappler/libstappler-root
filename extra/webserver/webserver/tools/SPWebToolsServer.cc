@@ -134,7 +134,7 @@ void ServerGui::onFilterComplete(InputFilter *filter) {
 	auto &name = data.getString("name");
 	auto &passwd = data.getString("passwd");
 	if (!name.empty() && !passwd.empty()) {
-		_transaction.performAsSystem([&] () -> bool {
+		_transaction.performAsSystem([&, this] () -> bool {
 			return db::User::setup(_transaction, name, passwd) != nullptr;
 		});
 	}

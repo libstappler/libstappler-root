@@ -70,7 +70,7 @@ void Resource::resolveOptionForString(StringView str) {
 		return;
 	}
 
-	str.split<StringView::Chars<','>>([&] (const StringView &v) {
+	str.split<StringView::Chars<','>>([&, this] (const StringView &v) {
 		StringView r(v);
 		r.trimChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
 		String token(toString('$', r));
@@ -488,7 +488,7 @@ bool ResourceObject::removeObject() {
 
 	bool ret = (objs.size() == 1);
 	for (auto &it : objs) {
-		_transaction.perform([&] {
+		_transaction.perform([&, this] {
 			if (ret) {
 				ret = Worker(getScheme(), _transaction).remove(it);
 			} else {
@@ -509,7 +509,7 @@ Value ResourceObject::performUpdate(const Vector<int64_t> &objs, Value &data, Ve
 	}
 
 	for (auto &it : objs) {
-		_transaction.perform([&] {
+		_transaction.perform([&, this] {
 			ret.addValue(Worker(getScheme(), _transaction).update(it, data));
 			return true;
 		});
@@ -751,7 +751,7 @@ bool ResourceRefSet::removeObject() {
 		return Value();
 	}
 
-	return _transaction.perform([&] () -> bool {
+	return _transaction.perform([&, this] () -> bool {
 		Vector<int64_t> objs;
 		if (!isEmptyRequest()) {
 			objs = getDatabaseId(_queries);
@@ -855,7 +855,7 @@ Value ResourceRefSet::doAppendObject(const Value &val, bool cleanup) {
 
 Value ResourceRefSet::doAppendObjects(const Value &val, bool cleanup) {
 	Value ret;
-	_transaction.perform([&] { // all or nothing
+	_transaction.perform([&, this] { // all or nothing
 		return doAppendObjectsTransaction(ret, val, cleanup);
 	});
 
@@ -902,7 +902,7 @@ ResourceProperty::ResourceProperty(const Transaction &a, QueryList &&q, const Fi
 
 bool ResourceProperty::removeObject() {
 	// perform one-line remove
-	return _transaction.perform([&] () -> bool {
+	return _transaction.perform([&, this] () -> bool {
 		if (auto id = getObjectId()) {
 			if (Worker(getScheme(), _transaction).update(id, Value({ pair(_field->getName().str<Interface>(), Value()) }))) {
 				return true;
@@ -1115,7 +1115,7 @@ bool ResourceFieldObject::removeObject() {
 		return Value();
 	}
 
-	return _transaction.perform([&] () -> bool {
+	return _transaction.perform([&, this] () -> bool {
 		return doRemoveObject();
 	});
 }
@@ -1123,7 +1123,7 @@ bool ResourceFieldObject::removeObject() {
 Value ResourceFieldObject::updateObject(Value &val, Vector<db::InputFile> &files) {
 	// create or update object
 	Value ret;
-	_transaction.perform([&] () -> bool {
+	_transaction.perform([&, this] () -> bool {
 		if (getObjectId()) {
 			ret = doUpdateObject(val, files);
 		} else {
@@ -1140,7 +1140,7 @@ Value ResourceFieldObject::updateObject(Value &val, Vector<db::InputFile> &files
 Value ResourceFieldObject::createObject(Value &val, Vector<db::InputFile> &files) {
 	// remove then recreate object
 	Value ret;
-	_transaction.perform([&] () -> bool {
+	_transaction.perform([&, this] () -> bool {
 		if (getObjectId()) {
 			if (!doRemoveObject()) {
 				return Value();
@@ -1253,18 +1253,10 @@ ResourceSearch::ResourceSearch(const Transaction &a, QueryList &&q, const Field 
 Value ResourceSearch::getResultObject() {
 	auto slot = _field->getSlot<db::FieldFullTextView>();
 	if (auto &searchData = _queries.getExtraData().getValue("search")) {
-		Vector<db::FullTextData> q = slot->parseQuery(searchData);
-		stappler::search::Language lang = stappler::search::Language::English;
-		for (auto &it : q) {
-			if (it.language != lang) {
-				lang = it.language;
-			}
-			it.language = search::Language::Simple; // prevent to secondary stem
-		}
-		_config.setLanguage(lang);
+		auto q = slot->parseQuery(searchData);
 
 		if (!q.empty()) {
-			_queries.setFullTextQuery(_field, Vector<db::FullTextData>(q));
+			_queries.setFullTextQuery(_field, db::FullTextQuery(q));
 			auto ret = _transaction.performQueryList(_queries);
 			if (!ret.isArray()) {
 				return Value();
@@ -1273,7 +1265,7 @@ Value ResourceSearch::getResultObject() {
 			auto res = processResultList(_queries, ret);
 			if (!res.empty()) {
 				if (auto &headlines = _queries.getExtraData().getValue("headlines")) {
-					auto ql = _config.stemQuery(q);
+					auto ql = slot->searchConfiguration->stemQuery(q);
 					for (auto &it : res.asArray()) {
 						makeHeadlines(it, headlines, ql);
 					}
@@ -1284,23 +1276,6 @@ Value ResourceSearch::getResultObject() {
 	}
 	return Value();
 }
-
-/* Vector<String> ResourceSearch::stemQuery(const Vector<db::FullTextData> &query) {
-	Vector<String> ret; ret.reserve(256 / sizeof(String)); // memory manager hack
-
-	for (auto &it : query) {
-		StringView r(it.buffer);
-		r.split<StringView::CharGroup<CharGroupId::WhiteSpace>>([&] (StringView &iword) {
-			StringViewUtf8 word(iword.data(), iword.size());
-			word.trimUntil<StringViewUtf8::MatchCharGroup<CharGroupId::Cyrillic>, StringViewUtf8::MatchCharGroup<CharGroupId::Alphanumeric>>();
-			if (word.size() > 3) {
-				ret.emplace_back(_stemmer.stemWord(word, it.language).str());
-			}
-		});
-	}
-
-	return ret;
-} */
 
 void ResourceSearch::makeHeadlines(Value &obj, const Value &headlineInfo, const Vector<String> &ql) {
 	auto &h = obj.emplace("__headlines");
@@ -1316,25 +1291,22 @@ void ResourceSearch::makeHeadlines(Value &obj, const Value &headlineInfo, const 
 }
 
 String ResourceSearch::makeHeadline(const StringView &value, const Value &headlineInfo, const Vector<String> &ql) {
+	auto slot = _field->getSlot<db::FieldFullTextView>();
 	stappler::search::Configuration::HeadlineConfig cfg;
 	if (headlineInfo.isString()) {
 		if (headlineInfo.getString() == "plain") {
 			cfg.startToken = StringView("<b>"); cfg.stopToken = StringView("</b>");
-			return _config.makeHeadline(cfg, value, ql);
+			return slot->searchConfiguration->makeHeadline(cfg, value, ql);
 		} else if (headlineInfo.getString() == "html") {
 			cfg.startToken = StringView("<b>"); cfg.stopToken = StringView("</b>");
 			cfg.startFragment = StringView("<p>"); cfg.stopFragment = StringView("</p>");
-			return _config.makeHtmlHeadlines(cfg, value, ql);
+			return slot->searchConfiguration->makeHtmlHeadlines(cfg, value, ql);
 		}
 	} else if (headlineInfo.isDictionary()) {
 		auto type = headlineInfo.getString("type");
 		auto start = headlineInfo.getString("start");
 		auto end = headlineInfo.getString("end");
 
-		auto l = search::parseLanguage(headlineInfo.getString("lang"));
-		if (l != search::Language::Unknown && l != _config.getLanguage()) {
-			_config.setLanguage(l);
-		}
 		if (type == "html") {
 			if (!start.empty() && start.size() < 24 && !end.empty() && end.size() < 24) {
 				cfg.startToken = start; cfg.stopToken = end;
@@ -1362,7 +1334,7 @@ String ResourceSearch::makeHeadline(const StringView &value, const Value &headli
 				frags = f;
 			}
 
-			return _config.makeHtmlHeadlines(cfg, value, ql, frags);
+			return slot->searchConfiguration->makeHtmlHeadlines(cfg, value, ql, frags);
 		} else {
 			if (!start.empty() && start.size() < 24 && !end.empty() && end.size() < 24) {
 				cfg.startToken = start; cfg.stopToken = end;
@@ -1370,7 +1342,7 @@ String ResourceSearch::makeHeadline(const StringView &value, const Value &headli
 				cfg.startToken = StringView("<b>"); cfg.stopToken = StringView("</b>");
 			}
 
-			return _config.makeHeadline(cfg, value, ql);
+			return slot->searchConfiguration->makeHeadline(cfg, value, ql);
 		}
 	}
 	return String();

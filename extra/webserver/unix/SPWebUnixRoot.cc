@@ -38,7 +38,7 @@ UnixRoot::~UnixRoot() { }
 UnixRoot::UnixRoot(pool_t *p) : Root(p) { }
 
 bool UnixRoot::init(Config &&config) {
-	return perform([&] {
+	return perform([&, this] {
 		size_t workers = std::thread::hardware_concurrency();
 		if (config.nworkers >= 2 && config.nworkers <= 256) {
 			workers = size_t(config.nworkers);

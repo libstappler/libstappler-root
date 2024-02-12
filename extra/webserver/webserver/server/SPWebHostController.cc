@@ -294,8 +294,8 @@ void HostController::handleChildInit(const Host &host, pool_t *p) {
 	if (!_loadingFalled) {
 		db::Scheme::initSchemes(_schemes);
 
-		perform_temporary([&] {
-			_dbDriver->performWithStorage(db, [&] (const db::Adapter &storage) {
+		perform_temporary([&, this] {
+			_dbDriver->performWithStorage(db, [&, this] (const db::Adapter &storage) {
 				storage.init(db::BackendInterface::Config{StringView(_hostInfo.hostname), host.getFileScheme()}, _schemes);
 
 				if (_hostSecret != string::Sha512::Buf{0}) {
@@ -327,7 +327,7 @@ void HostController::initTransaction(db::Transaction &t) {
 }
 
 void HostController::setDbParams(StringView str) {
-	perform([&] {
+	perform([&, this] {
 		Root::parseParameterList(_dbParams, str);
 	}, _rootPool);
 }

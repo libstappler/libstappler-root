@@ -219,6 +219,8 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		StringView testName(argv[1]);
 		if (testName == "all") {
 			Test::RunAll();
+		} else if (testName == "list") {
+			Test::List();
 		} else {
 			for (int i = 1; i < argc; ++ i) {
 				Test::Run(StringView(argv[i]));

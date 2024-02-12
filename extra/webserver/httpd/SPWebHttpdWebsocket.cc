@@ -869,7 +869,7 @@ bool HttpdWebsocketConnection::readSocket(const apr_pollfd_t *fd, WebsocketHandl
 					_reader->popFrame();
 				}
 			} else if (_reader->isFrameReady()) {
-				auto ret = web::perform([&] {
+				auto ret = web::perform([&, this] {
 					if (h) {
 						h->sendPendingNotifications(_reader->pool);
 					}
