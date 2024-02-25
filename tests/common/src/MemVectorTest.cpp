@@ -44,7 +44,7 @@ struct MemVectorTest : MemPoolTest {
 				vec.emplace_back(Vector<String>());
 				auto &val = vec.back();
 				val.reserve(1);
-				val.emplace_back("test " + string::ToStringTraits<memory::PoolInterface>::toString(i));
+				val.emplace_back("test " + string::toString<memory::PoolInterface>(i));
 			}
 
 			for (auto &it : vec) {

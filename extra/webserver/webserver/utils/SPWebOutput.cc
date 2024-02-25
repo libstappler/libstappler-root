@@ -463,7 +463,7 @@ bool writeFileHeaders(Request &rctx, const Value &file, const String &convertTyp
 	} else {
 		rctx.setResponseHeader("X-FileSize", toString(file.getInteger("size")));
 		if (info.headerRequest) {
-			rctx.setResponseHeader("Content-Length", toString(info.stat.mtime));
+			rctx.setResponseHeader("Content-Length", toString(info.stat.size));
 		}
 		rctx.setContentType(String(file.getString("type")));
 	}

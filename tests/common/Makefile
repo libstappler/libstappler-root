@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 STAPPLER_ROOT ?= ../..
-STAPPLER_VERSION_PREFIX := sp_test
+# STAPPLER_VERSION_PREFIX := sp_test
 
 # force to rebuild if this makefile changed
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
@@ -44,15 +44,23 @@ LOCAL_MODULES ?= \
 	stappler_backtrace \
 	stappler_crypto_openssl \
 	stappler_crypto_mbedtls \
+	stappler_font
+
+ifndef WIN32
+ifneq ($(STAPPLER_ARCH),e2k)
+ifneq ($(STAPPLER_ARCH),aarch64)
+LOCAL_MODULES += \
+	stappler_crypto_gnutls
+endif
+endif
+LOCAL_MODULES += \
 	stappler_webserver_pug \
 	stappler_webserver_webserver \
 	stappler_webserver_unix \
+	xenolith_font \
 	xenolith_backend_vkgui \
 	xenolith_resources_assets \
 	xenolith_renderer_material2d
-
-ifndef WIN32
-LOCAL_MODULES += stappler_crypto_gnutls
 endif
 
 LOCAL_ROOT = .
@@ -71,5 +79,7 @@ ifdef LINUX
 # For dynamic self-loading
 LOCAL_LDFLAGS := -Wl,--export-dynamic
 endif
+
+#verbose:= 1
 
 include $(STAPPLER_ROOT)/build/make/universal.mk

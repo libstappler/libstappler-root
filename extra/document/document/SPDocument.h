@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2023-2023 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -27,8 +27,66 @@
 #include "SPFilesystem.h"
 #include "SPBytesView.h"
 #include "SPMemory.h"
+#include "SPDocStyle.h"
 
 namespace STAPPLER_VERSIONIZED stappler::document {
+
+using NodeId = uint32_t;
+constexpr NodeId NodeIdNone = maxOf<NodeId>();
+
+class Node;
+class StyleContainer;
+class PageContainer;
+
+struct DocumentImage {
+	enum Type {
+		Embed,
+		Local,
+		Web,
+	};
+
+	Type type = Local;
+
+	uint16_t width = 0;
+	uint16_t height = 0;
+
+	size_t offset = 0;
+	size_t length = 0;
+
+	StringView path;
+	StringView ref;
+	BytesView data;
+
+	DocumentImage(uint16_t w, uint16_t h, size_t size, StringView p, StringView r = StringView())
+	: width(w), height(h), length(size), path(p.pdup()), ref(r.pdup()) { }
+};
+
+struct DocumentContentRecord {
+
+	template <typename Value>
+	using Vector = typename memory::PoolInterface::VectorType<Value>;
+
+	StringView label;
+	StringView href;
+	Vector<DocumentContentRecord> childs;
+};
+
+struct DocumentData : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
+	memory::pool_t *pool = nullptr;
+	Vector<StringView> spine;
+	Vector<StringView> strings;
+	Vector<MediaQuery> queries;
+	Map<StringView, StyleContainer *> styles;
+	Map<StringView, PageContainer *> pages;
+	Map<StringView, DocumentImage> images;
+	Map<StringView, StringView> meta;
+	DocumentContentRecord tableOfContents;
+
+	NodeId maxNodeId = NodeIdNone;
+
+	StringId addString(const StringView &str);
+	MediaQueryId addQuery(MediaQuery &&);
+};
 
 class Document : public RefBase<memory::StandartInterface> {
 public:
@@ -47,8 +105,38 @@ public:
 	virtual bool init();
 	virtual bool init(memory::pool_t *);
 
+	virtual SpanView<StringView> getSpine() const;
+	virtual const DocumentContentRecord & getTableOfContents() const;
+
+	virtual StringView getMeta(StringView) const;
+
+	virtual bool isFileExists(StringView) const;
+	virtual const DocumentImage *getImage(StringView) const;
+	virtual const PageContainer *getContentPage(StringView) const;
+	virtual const StyleContainer *getStyleDocument(StringView) const;
+
+	virtual const PageContainer *getRoot() const;
+
+	virtual const Node *getNodeById(StringView pagePath, StringView id) const;
+	virtual Pair<const PageContainer *, const Node *> getNodeByIdGlobal(StringView id) const;
+
+	NodeId getMaxNodeId() const;
+
+	const DocumentData *getData() const { return _data; }
+
+	// Default style, that can be redefined with css
+	virtual void beginStyle(StyleList &, const Node &, SpanView<const Node *>, const MediaParameters &) const;
+
+	// Default style, that can NOT be redefined with css
+	virtual void endStyle(StyleList &, const Node &, SpanView<const Node *>, const MediaParameters &) const;
+
 protected:
+	virtual DocumentData *allocateData(memory::pool_t *);
+
+	virtual void onStyleAttribute(StyleList &style, StringView tag, StringView name, StringView value, const MediaParameters &) const;
+
 	memory::pool_t *_pool = nullptr;
+	DocumentData *_data = nullptr;
 };
 
 }

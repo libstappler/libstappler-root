@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+# Copyright (c) 2023-2024 Stappler LLC <admin@stappler.dev>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@ MODULE_DOCUMENT_DOCUMENT_SRCS_DIRS := $(DOCUMENT_MODULE_DIR)/document
 MODULE_DOCUMENT_DOCUMENT_SRCS_OBJS :=
 MODULE_DOCUMENT_DOCUMENT_INCLUDES_DIRS := $(DOCUMENT_MODULE_DIR)/document
 MODULE_DOCUMENT_DOCUMENT_INCLUDES_OBJS :=
-MODULE_DOCUMENT_DOCUMENT_DEPENDS_ON := stappler_filesystem stappler_vg
+MODULE_DOCUMENT_DOCUMENT_DEPENDS_ON := stappler_filesystem stappler_vg stappler_font
 
 # module name resolution
 MODULE_stappler_document_document := MODULE_DOCUMENT_DOCUMENT

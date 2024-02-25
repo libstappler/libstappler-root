@@ -28,7 +28,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
-bool MaterialColorPicker::init(Type type, const material2d::ColorHCT &color, Function<void(float)> &&cb) {
+bool MaterialColorPicker::init(Type type, const ColorHCT &color, Function<void(float)> &&cb) {
 	if (!Sprite::init()) {
 		return false;
 	}
@@ -75,11 +75,11 @@ void MaterialColorPicker::onContentSizeDirty() {
 	_indicator->setPosition(Vec2(_contentSize.width * _value, _contentSize.height / 2.0f));
 }
 
-const material2d::ColorHCT &MaterialColorPicker::getTargetColor() const {
+const ColorHCT &MaterialColorPicker::getTargetColor() const {
 	return _targetColor;
 }
 
-void MaterialColorPicker::setTargetColor(const material2d::ColorHCT &color) {
+void MaterialColorPicker::setTargetColor(const ColorHCT &color) {
 	if (_targetColor != color) {
 		_targetColor = color;
 		_vertexesDirty = true;
@@ -129,21 +129,21 @@ void MaterialColorPicker::updateVertexes() {
 	Size2 size(_contentSize.width / QuadsCount, _contentSize.height);
 	Vec2 origin(0, 0);
 	for (size_t i = 0; i < QuadsCount; ++ i) {
-		material2d::ColorHCT color1;
-		material2d::ColorHCT color2;
+		ColorHCT color1;
+		ColorHCT color2;
 
 		switch (_type) {
 		case Type::Hue:
-			color1 = material2d::ColorHCT(i * (float(360) / float(QuadsCount)), _targetColor.data.chroma, _targetColor.data.tone, 1.0f);
-			color2 = material2d::ColorHCT((i + 1) * (float(360) / float(QuadsCount)), _targetColor.data.chroma, _targetColor.data.tone, 1.0f);
+			color1 = ColorHCT(i * (float(360) / float(QuadsCount)), _targetColor.data.chroma, _targetColor.data.tone, 1.0f);
+			color2 = ColorHCT((i + 1) * (float(360) / float(QuadsCount)), _targetColor.data.chroma, _targetColor.data.tone, 1.0f);
 			break;
 		case Type::Chroma:
-			color1 = material2d::ColorHCT(_targetColor.data.hue, i * (float(100) / float(QuadsCount)), _targetColor.data.tone, 1.0f);
-			color2 = material2d::ColorHCT(_targetColor.data.hue, (i + 1) * (float(100) / float(QuadsCount)), _targetColor.data.tone, 1.0f);
+			color1 = ColorHCT(_targetColor.data.hue, i * (float(100) / float(QuadsCount)), _targetColor.data.tone, 1.0f);
+			color2 = ColorHCT(_targetColor.data.hue, (i + 1) * (float(100) / float(QuadsCount)), _targetColor.data.tone, 1.0f);
 			break;
 		case Type::Tone:
-			color1 = material2d::ColorHCT(_targetColor.data.hue, _targetColor.data.chroma, i * (float(100) / float(QuadsCount)), 1.0f);
-			color2 = material2d::ColorHCT(_targetColor.data.hue, _targetColor.data.chroma, (i + 1) * (float(100) / float(QuadsCount)), 1.0f);
+			color1 = ColorHCT(_targetColor.data.hue, _targetColor.data.chroma, i * (float(100) / float(QuadsCount)), 1.0f);
+			color2 = ColorHCT(_targetColor.data.hue, _targetColor.data.chroma, (i + 1) * (float(100) / float(QuadsCount)), 1.0f);
 			break;
 		}
 

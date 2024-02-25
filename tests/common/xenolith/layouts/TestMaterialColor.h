@@ -66,7 +66,7 @@ public:
 protected:
 	using TestMaterial::init;
 
-	void updateColor(material2d::ColorHCT &&);
+	void updateColor(ColorHCT &&);
 
 	material2d::StyleContainer *_style = nullptr;
 	material2d::Surface *_background = nullptr;
@@ -78,7 +78,7 @@ protected:
 	MaterialColorPicker *_tonePicker = nullptr;
 
 	gui2d::LayerRounded *_spriteLayer = nullptr;
-	material2d::ColorHCT _colorHct;
+	ColorHCT _colorHct;
 	material2d::ColorScheme _colorScheme;
 	material2d::ThemeType _themeType = material2d::ThemeType::LightTheme;
 	bool _isContentColor = false;

@@ -31,7 +31,11 @@ LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/extra/document/document-modules.mk
 
 LOCAL_MODULES ?= \
-	stappler_document_document
+	stappler_brotli_lib \
+	stappler_document_mmd \
+	stappler_document_document \
+	stappler_document_mmd_document \
+#	stappler_document_layout
 
 LOCAL_ROOT = .
 

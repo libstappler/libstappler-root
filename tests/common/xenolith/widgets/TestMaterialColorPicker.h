@@ -24,7 +24,6 @@
 #define TESTS_COMMON_XENOLITH_WIDGETS_TESTMATERIALCOLORPICKER_H_
 
 #include "TestLayout.h"
-#include "MaterialColorHCT.h"
 #include "XL2dSprite.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
@@ -40,12 +39,12 @@ public:
 
 	virtual ~MaterialColorPicker() { }
 
-	virtual bool init(Type, const material2d::ColorHCT &, Function<void(float)> &&cb);
+	virtual bool init(Type, const ColorHCT &, Function<void(float)> &&cb);
 
 	virtual void onContentSizeDirty() override;
 
-	const material2d::ColorHCT &getTargetColor() const;
-	void setTargetColor(const material2d::ColorHCT &color);
+	const ColorHCT &getTargetColor() const;
+	void setTargetColor(const ColorHCT &color);
 
 	void setValue(float value);
 	float getValue() const;
@@ -62,7 +61,7 @@ protected:
 
 	Type _type;
 	float _value = 0.0f;
-	material2d::ColorHCT _targetColor;
+	ColorHCT _targetColor;
 	Function<void(float)> _callback;
 	Label *_label = nullptr;
 	Layer *_indicator = nullptr;

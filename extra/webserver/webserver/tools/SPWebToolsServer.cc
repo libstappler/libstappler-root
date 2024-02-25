@@ -46,7 +46,7 @@ static String Tools_getCancelUrl(Request &rctx) {
 
 bool ServerGui::isRequestPermitted(Request &req) {
 	_transaction = req.acquireDbTransaction();
-	return _transaction;
+	return _transaction ? true : false;
 }
 
 void ServerGui::defineBasics(pug::Context &exec, Request &req, db::User *u) {

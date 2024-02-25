@@ -21,11 +21,16 @@
  **/
 
 #include "SPCommon.h"
-#include "SPData.h"
 #include "SPMemory.h"
 #include "SPTime.h"
 
+#if MODULE_STAPPLER_DATA
+#include "SPData.h"
+#endif
+
+#if MODULE_DOCUMENT_DOCUMENT
 #include "SPDocument.h"
+#endif
 
 namespace stappler::app {
 
@@ -37,6 +42,7 @@ Options are one of:
     -v (--verbose)
     -h (--help))HelpString");
 
+#if MODULE_STAPPLER_DATA
 static int parseOptionSwitch(Value &ret, char c, const char *str) {
 	if (c == 'h') {
 		ret.setBool(true, "help");
@@ -54,8 +60,10 @@ static int parseOptionString(Value &ret, const StringView &str, int argc, const 
 	}
 	return 1;
 }
+#endif
 
-SP_EXTERN_C int _spMain(argc, argv) {
+SP_EXTERN_C int main(int argc, const char *argv[]) {
+#if MODULE_STAPPLER_DATA
 	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv,
 			&parseOptionSwitch, &parseOptionString);
 	if (opts.first.getBool("help")) {
@@ -88,6 +96,9 @@ SP_EXTERN_C int _spMain(argc, argv) {
 	memory::pool::pop();
 	memory::pool::destroy(mempool);
 	return ret ? 0 : -1;
+#else
+	return 0;
+#endif
 }
 
 }

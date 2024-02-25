@@ -105,7 +105,7 @@ void UnixRequestController::setFilename(StringView val, bool updateStat, Time mt
 	_info.filename = val;
 	if (updateStat) {
 		filesystem::stat(_info.filename, _info.stat);
-		if (mtime) {
+		if (mtime != nullptr) {
 			_info.stat.mtime = mtime;
 		}
 	}

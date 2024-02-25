@@ -200,11 +200,37 @@ struct CoreTest : Test {
 			wcallback << int64_t(12345);
 			auto ret5 = out == "12345" && wout == u"12345";
 
+			callback << size_t(12345);
+			wcallback << size_t(12345);
+
 			callback << int64_t(-12345);
 			wcallback << int64_t(-12345);
 			auto ret6 = out == "-12345" && wout == u"-12345";
 
+			callback << char32_t('a');
+			wcallback << char32_t('a');
+
+			callback << char16_t('a');
+			wcallback << char16_t('a');
+
+			callback << char('a');
+			wcallback << char('a');
+
 			return ret1 && ret2 && ret3 && ret4 && ret5 && ret6 && retd1;
+		});
+
+		runTest(stream, "toString", count, passed, [&] {
+			auto str1 = string::toString<Interface>(double(12.34));
+			auto str2 = string::toString<Interface>(-1234567890123456);
+			auto str3 = string::toString<Interface>(size_t(1234567890123456));
+			auto str4 = string::toString<Interface>("test string");
+			auto str5 = string::toString<Interface>(StringView("test string1"), ' ', 1234, " & ", 12.34, ' ', String("test string 2"));
+
+			return str1 == "12.34"
+					&& str2 == "-1234567890123456"
+					&& str3 == "1234567890123456"
+					&& str4 == "test string"
+					&& str5 == "test string1 1234 & 12.34 test string 2";
 		});
 
 		runTest(stream, "toupper/tolower", count, passed, [&] {

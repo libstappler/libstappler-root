@@ -172,7 +172,7 @@ public:
 	inline operator T * () const { return get(); }
 	inline T * operator->() const { return get(); }
 
-	inline operator bool () const { return _shared != nullptr; }
+	inline explicit operator bool () const { return _shared != nullptr; }
 
 	pool_t *getPool() const { return _pool; }
 	allocator_t *getAllocator() const { return _allocator; }
@@ -282,7 +282,7 @@ public:
 	}
 
 	inline operator Base * () const { return get(); }
-	inline operator bool () const { return _ptr && _ptr->get() != nullptr; }
+	inline explicit operator bool () const { return _ptr && _ptr->get() != nullptr; }
 
 	inline void swap(Self & v) { auto ptr = _ptr; _ptr = v._ptr; v._ptr = ptr; }
 

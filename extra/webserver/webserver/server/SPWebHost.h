@@ -124,7 +124,7 @@ public:
 
 	db::BackendInterface *acquireDbForRequest(const Request &) const;
 
-	operator bool () const { return _config != nullptr; }
+	explicit operator bool () const { return _config != nullptr; }
 
 	pool_t *getThreadPool() const;
 

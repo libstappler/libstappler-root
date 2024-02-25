@@ -122,7 +122,7 @@ struct WebsocketFrameReader : AllocBase {
 
 	WebsocketFrameReader(Root *r, pool_t *p);
 
-	operator bool() const {  return error == Error::None; }
+	explicit operator bool() const {  return error == Error::None; }
 
 	size_t getRequiredBytes() const;
 	uint8_t * prepare(size_t &len);

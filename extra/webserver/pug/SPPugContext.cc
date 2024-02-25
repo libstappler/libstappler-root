@@ -369,11 +369,11 @@ Var ContextFn::execExpr(const Expression &expr, Expression::Op op, bool assignab
 						return Var(nullptr);
 					}
 				} else {
-					onError(string::ToStringTraits<memory::PoolInterface>::toString("Invalid argument for <dot> operator"));
+					onError(string::toString<memory::PoolInterface>("Invalid argument for <dot> operator"));
 					return Var();
 				}
 			} else {
-				onError(string::ToStringTraits<memory::PoolInterface>::toString("Fail to read <dot>: <undefined>.", expr.right->value.getString()));
+				onError(string::toString<memory::PoolInterface>("Fail to read <dot>: <undefined>.", expr.right->value.getString()));
 				return Var();
 			}
 			break;
@@ -391,7 +391,7 @@ Var ContextFn::execExpr(const Expression &expr, Expression::Op op, bool assignab
 			if (var) {
 				return performUnaryOp(var, expr.op);
 			} else {
-				onError(string::ToStringTraits<memory::PoolInterface>::toString("Invalid call <neg> <undefined>"));
+				onError(string::toString<memory::PoolInterface>("Invalid call <neg> <undefined>"));
 				return Var(Value(true));
 			}
 		} else if (expr.op != Expression::Var) {
@@ -470,7 +470,7 @@ Var ContextFn::performVarExpr(const Expression &expr, Expression::Op op) {
 			auto p_it = currentScope->namedVars.emplace(n, VarStorage());
 			return Var(&p_it.first->second);
 		} else {
-			onError(string::ToStringTraits<memory::PoolInterface>::toString("Variable name conflict for ", n));
+			onError(string::toString<memory::PoolInterface>("Variable name conflict for ", n));
 		}
 	}
 	return Var();
@@ -495,7 +495,7 @@ Var ContextFn::performUnaryOp(Var &v, Expression::Op op) {
 				*mut = Value(i - 1);
 				return Var(Value(i));
 			} else {
-				onError(string::ToStringTraits<memory::PoolInterface>::toString("Fail to write into constant value"));
+				onError(string::toString<memory::PoolInterface>("Fail to write into constant value"));
 				return Var();
 			}
 			break;
@@ -505,7 +505,7 @@ Var ContextFn::performUnaryOp(Var &v, Expression::Op op) {
 				*mut = Value(val.asInteger() + 1);
 				return v;
 			} else {
-				onError(string::ToStringTraits<memory::PoolInterface>::toString("Fail to write into constant value"));
+				onError(string::toString<memory::PoolInterface>("Fail to write into constant value"));
 				return Var();
 			}
 			break;
@@ -515,7 +515,7 @@ Var ContextFn::performUnaryOp(Var &v, Expression::Op op) {
 				*mut = Value(val.asInteger() - 1);
 				return v;
 			} else {
-				onError(string::ToStringTraits<memory::PoolInterface>::toString("Fail to write into constant value"));
+				onError(string::toString<memory::PoolInterface>("Fail to write into constant value"));
 				return Var();
 			}
 			break;
@@ -533,7 +533,7 @@ Var ContextFn::performUnaryOp(Var &v, Expression::Op op) {
 			break;
 
 		default:
-			onError(string::ToStringTraits<memory::PoolInterface>::toString("Invalid unary operator: ", int(toInt(op))));
+			onError(string::toString<memory::PoolInterface>("Invalid unary operator: ", int(toInt(op))));
 			return Var();
 			break;
 		}
@@ -734,12 +734,12 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 		case Expression::AndAssignment:
 		case Expression::XorAssignment:
 		case Expression::OrAssignment:
-			onError(string::ToStringTraits<memory::PoolInterface>::toString("Operator not implemented: ", int(toInt(op))));
+			onError(string::toString<memory::PoolInterface>("Operator not implemented: ", int(toInt(op))));
 			return Var();
 			break;
 
 		case Expression::NoOp:
-			onError(string::ToStringTraits<memory::PoolInterface>::toString("Call of NoOp"));
+			onError(string::toString<memory::PoolInterface>("Call of NoOp"));
 			return Var();
 			break;
 
@@ -750,7 +750,7 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 		case Expression::Minus:
 		case Expression::Neg:
 		case Expression::BitNot:
-			onError(string::ToStringTraits<memory::PoolInterface>::toString("Unary operator called as binary: ", int(toInt(op))));
+			onError(string::toString<memory::PoolInterface>("Unary operator called as binary: ", int(toInt(op))));
 			return Var();
 			break;
 		}
@@ -788,7 +788,7 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 		case Expression::And: return Var(Value(false)); break;
 		case Expression::Or: return Var(Value(ContextFn_asBool(lV) || ContextFn_asBool(rV))); break;
 		default:
-			onError(string::ToStringTraits<memory::PoolInterface>::toString("Invalid operation with undefined"));
+			onError(string::toString<memory::PoolInterface>("Invalid operation with undefined"));
 			return Var();
 			break;
 		}
@@ -818,7 +818,7 @@ Var ContextFn::getVar(const StringView &key) const {
 		ret = getVar(currentScope, key);
 	}
 	if (!ret && !allowUndefined) {
-		onError(string::ToStringTraits<memory::PoolInterface>::toString("Access to undefined variable: ", key));
+		onError(string::toString<memory::PoolInterface>("Access to undefined variable: ", key));
 	}
 
 	if (!ret && allowUndefined) {

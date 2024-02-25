@@ -22,3 +22,6 @@
 DOCUMENT_MODULE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 include $(DOCUMENT_MODULE_DIR)/document/document.mk
+include $(DOCUMENT_MODULE_DIR)/layout/layout.mk
+include $(DOCUMENT_MODULE_DIR)/mmd/mmd.mk
+include $(DOCUMENT_MODULE_DIR)/mmd_document/mmd_document.mk

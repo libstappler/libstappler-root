@@ -90,7 +90,7 @@ public:
 
 		bool eos = false;
 
-		operator bool() const { return front != nullptr; }
+		explicit operator bool() const { return front != nullptr; }
 
 		bool isSingle() const { return front != nullptr && front == back; }
 

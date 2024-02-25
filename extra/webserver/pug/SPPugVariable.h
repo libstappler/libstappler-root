@@ -158,7 +158,7 @@ struct Var {
 	Var& operator=(const Var &);
 	Var& operator=(Var &&);
 
-	operator bool () const;
+	explicit operator bool () const;
 
 	const Value &readValue() const;
 	Value *getMutable() const;

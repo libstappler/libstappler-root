@@ -353,7 +353,7 @@ static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b, crypto::K
 		return false;
 	}
 
-	return key;
+	return key ? true : false;
 }
 
 static bool CryptoTest_load(std::ostream &stream, crypto::Backend b) {

@@ -31,7 +31,6 @@
 #include "SPWebRequest.h"
 #include "SPWebTools.h"
 
-#include "SPGost3411-2012.h"
 #include "SPDbUser.h"
 #include "SPValid.h"
 

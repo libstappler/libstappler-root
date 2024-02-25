@@ -928,7 +928,7 @@ bool Template::runChunk(const Chunk &chunk, Context &exec, std::ostream &out, Ru
 	auto runMixinChunk = [&, this] (const Chunk &ch) -> bool {
 		auto mixin = exec.getMixin(ch.value);
 		if (!mixin) {
-			onError(string::ToStringTraits<memory::PoolInterface>::toString("Mixin with name ", ch.value, " is not found"));
+			onError(string::toString<memory::PoolInterface>("Mixin with name ", ch.value, " is not found"));
 			if (_opts.hasFlag(Options::StopOnError)) {
 				return false;
 			}
@@ -939,7 +939,7 @@ bool Template::runChunk(const Chunk &chunk, Context &exec, std::ostream &out, Ru
 		Template_readMixinArgs(vars, ch.expr);
 
 		if (vars.size() < mixin->required) {
-			onError(string::ToStringTraits<memory::PoolInterface>::toString("Not enough arguments for mixin: ", ch.value));
+			onError(string::toString<memory::PoolInterface>("Not enough arguments for mixin: ", ch.value));
 			if (_opts.hasFlag(Options::StopOnError)) {
 				return false;
 			}
@@ -955,7 +955,7 @@ bool Template::runChunk(const Chunk &chunk, Context &exec, std::ostream &out, Ru
 			} else if (it.second) {
 				n->second.assign(exec.exec(*it.second, out));
 			} else {
-				onError(string::ToStringTraits<memory::PoolInterface>::toString("Invalid argument for ", it.first));
+				onError(string::toString<memory::PoolInterface>("Invalid argument for ", it.first));
 				if (_opts.hasFlag(Options::StopOnError)) {
 					return false;
 				}
@@ -1141,11 +1141,11 @@ bool Template::runChunk(const Chunk &chunk, Context &exec, std::ostream &out, Ru
 			++ it;
 			if (c.expr->op == Expression::Call && c.expr->left->isToken) {
 				if (!exec.setMixin(c.expr->left->value.getString(), &c)) {
-					onError(string::ToStringTraits<memory::PoolInterface>::toString("Invalid mixin declaration: ", c.expr->left->value.getString()));
+					onError(string::toString<memory::PoolInterface>("Invalid mixin declaration: ", c.expr->left->value.getString()));
 				}
 			} else if (c.expr->op == Expression::NoOp && c.expr->isToken) {
 				if (!exec.setMixin(c.expr->value.getString(), &c)) {
-					onError(string::ToStringTraits<memory::PoolInterface>::toString("Invalid mixin declaration: ", c.expr->value.getString()));
+					onError(string::toString<memory::PoolInterface>("Invalid mixin declaration: ", c.expr->value.getString()));
 				}
 			}
 			break;

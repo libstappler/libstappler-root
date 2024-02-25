@@ -88,7 +88,7 @@ bool Session::init(db::User *user, TimeInterval maxAge) {
 	auto &data = newDict("data");
 	data.setString(user ? user->getName() : memory::uuid::generate().str(), SA_SESSION_USER_NAME_KEY);
 	data.setInteger(user ? user->getObjectId() : 0, SA_SESSION_USER_ID_KEY);
-	data.setInteger(maxAge, SA_SESSION_MAX_AGE_KEY);
+	data.setInteger(maxAge.toMicros(), SA_SESSION_MAX_AGE_KEY);
 	data.setBytes(_uuid.bytes(), SA_SESSION_UUID_KEY);
 
 	Bytes salt; salt.resize(32);

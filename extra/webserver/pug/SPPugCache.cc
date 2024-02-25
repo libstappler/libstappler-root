@@ -192,7 +192,7 @@ void Cache::update(int watch, bool regenerate) {
 void Cache::update(memory::pool_t *pool) {
 	memory::pool::context ctx(pool);
 	for (auto &it : _templates) {
-		if (it.second->getMtime()) {
+		if (it.second->getMtime() != nullptr) {
 			filesystem::Stat stat;
 			filesystem::stat(it.first, stat);
 			if (stat.mtime != it.second->getMtime()) {
@@ -244,7 +244,7 @@ bool Cache::addFile(StringView path) {
 			return true;
 		}
 	} else {
-		onError(string::ToStringTraits<memory::PoolInterface>::toString("Already added: '", path, "'"));
+		onError(string::toString<memory::PoolInterface>("Already added: '", path, "'"));
 	}
 	return false;
 }
@@ -257,7 +257,7 @@ bool Cache::addContent(StringView key, String &&data) {
 		_templates.emplace(key.pdup(_templates.get_allocator()), tpl);
 		return true;
 	} else {
-		onError(string::ToStringTraits<memory::PoolInterface>::toString("Already added: '", key, "'"));
+		onError(string::toString<memory::PoolInterface>("Already added: '", key, "'"));
 	}
 	return false;
 }
@@ -277,7 +277,7 @@ bool Cache::addTemplate(StringView key, String &&data, Template::Options opts) {
 		_templates.emplace(key.pdup(_templates.get_allocator()), tpl);
 		return true;
 	} else {
-		onError(string::ToStringTraits<memory::PoolInterface>::toString("Already added: '", key, "'"));
+		onError(string::toString<memory::PoolInterface>("Already added: '", key, "'"));
 	}
 	return false;
 }
@@ -305,7 +305,7 @@ Rc<FileRef> Cache::openTemplate(StringView path, int wId, const Template::Option
 		std::cout << err << "\n";
 	}, _inotify, wId);
 	if (!ret) {
-		onError(string::ToStringTraits<memory::PoolInterface>::toString("File not found: ", path));
+		onError(string::toString<memory::PoolInterface>("File not found: ", path));
 	}  else if (ret->isValid()) {
 		return ret;
 	}
@@ -338,17 +338,17 @@ bool Cache::runTemplate(Rc<FileRef> tpl, StringView ipath, const RunCallback &cb
 
 				return ret;
 			});
-			if (cb) {
+			if (cb != nullptr) {
 				if (!cb(exec, *t)) {
 					return false;
 				}
 			}
 			return t->run(exec, out, opts);
 		} else {
-			onError(string::ToStringTraits<memory::PoolInterface>::toString("File '", ipath, "' is not executable"));
+			onError(string::toString<memory::PoolInterface>("File '", ipath, "' is not executable"));
 		}
 	} else {
-		onError(string::ToStringTraits<memory::PoolInterface>::toString("No template '", ipath, "' found"));
+		onError(string::toString<memory::PoolInterface>("No template '", ipath, "' found"));
 	}
 	return false;
 }
@@ -358,7 +358,7 @@ void Cache::onError(const StringView &str) {
 		std::unique_lock<Mutex> lock(_mutex);
 		_inotifyAvailable = false;
 	}
-	if (_errorCallback) {
+	if (_errorCallback != nullptr) {
 		_errorCallback(str);
 	} else {
 		std::cout << str;

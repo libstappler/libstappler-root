@@ -53,7 +53,7 @@ public:
 	Request & operator =(const Request &);
 
 	RequestController *getController() const { return _config; }
-	operator bool () const { return _config != nullptr; }
+	explicit operator bool () const { return _config != nullptr; }
 
 	const RequestInfo &getInfo() const;
 
