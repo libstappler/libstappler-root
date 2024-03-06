@@ -53,6 +53,8 @@ public:
 
 	bool init(const MediaParameters &, Document *doc);
 
+	void storeFont(font::FontFaceSet *);
+
 	const MediaParameters &getMedia() const;
 	Document *getDocument() const;
 

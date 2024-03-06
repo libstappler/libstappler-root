@@ -28,6 +28,7 @@ LOCAL_EXECUTABLE := dataapp
 
 LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/core/stappler-modules.mk \
+	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk \
 	$(STAPPLER_ROOT)/extra/document/document-modules.mk
 
 LOCAL_MODULES ?= \
@@ -35,14 +36,16 @@ LOCAL_MODULES ?= \
 	stappler_document_mmd \
 	stappler_document_document \
 	stappler_document_mmd_document \
-#	stappler_document_layout
+	stappler_document_layout \
+	stappler_document_richtext \
+	xenolith_backend_vkgui
 
 LOCAL_ROOT = .
 
-LOCAL_SRCS_DIRS :=
+LOCAL_SRCS_DIRS := src
 LOCAL_SRCS_OBJS :=
 
-LOCAL_INCLUDES_DIRS :=
+LOCAL_INCLUDES_DIRS := src
 LOCAL_INCLUDES_OBJS :=
 
 LOCAL_MAIN := main.cpp

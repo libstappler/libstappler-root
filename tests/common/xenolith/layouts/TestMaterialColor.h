@@ -77,7 +77,7 @@ protected:
 	MaterialColorPicker *_chromaPicker = nullptr;
 	MaterialColorPicker *_tonePicker = nullptr;
 
-	gui2d::LayerRounded *_spriteLayer = nullptr;
+	LayerRounded *_spriteLayer = nullptr;
 	ColorHCT _colorHct;
 	material2d::ColorScheme _colorScheme;
 	material2d::ThemeType _themeType = material2d::ThemeType::LightTheme;

@@ -377,12 +377,33 @@ struct OutlineParameters {
 
 class StyleInterface {
 public:
-	virtual ~StyleInterface() { }
+	virtual ~StyleInterface() = default;
+
 	virtual bool resolveMediaQuery(MediaQueryId queryId) const = 0;
 	virtual StringView resolveString(StringId) const = 0;
 
 	virtual float getDensity() const = 0;
 	virtual float getFontScale() const = 0;
+};
+
+class SimpleStyleInterface : public StyleInterface {
+public:
+	virtual ~SimpleStyleInterface() = default;
+
+	SimpleStyleInterface();
+	SimpleStyleInterface(SpanView<bool>, SpanView<StringView>, float density, float fontScale);
+
+	virtual bool resolveMediaQuery(MediaQueryId queryId) const override;
+	virtual StringView resolveString(StringId) const override;
+
+	virtual float getDensity() const override;
+	virtual float getFontScale() const override;
+
+protected:
+	float _density = 1.0f;
+	float _fontScale = 1.0f;
+	SpanView<bool> _media;
+	SpanView<StringView> _strings;
 };
 
 union StyleValue {
@@ -508,12 +529,12 @@ struct MediaQuery : public memory::AllocPool {
 
 struct MediaParameters {
 	template <typename T, typename V>
-	using Map = memory::PoolInterface::MapType<T, V>;
+	using Map = memory::StandartInterface::MapType<T, V>;
 
 	template <typename T>
-	using Vector = memory::PoolInterface::VectorType<T>;
+	using Vector = memory::StandartInterface::VectorType<T>;
 
-	using String = memory::PoolInterface::StringType;
+	using String = memory::StandartInterface::StringType;
 
 	Size2 surfaceSize;
 
@@ -542,7 +563,9 @@ struct MediaParameters {
 	bool hasOption(StringId) const;
 
 	bool resolveQuery(const MediaQuery &) const;
-	Vector<bool> resolveMediaQueries(const SpanView<MediaQuery> &) const;
+
+	template <typename Interface>
+	auto resolveMediaQueries(const SpanView<MediaQuery> &) const -> typename Interface::VectorType<bool>;
 
 	bool shouldRenderImages() const;
 

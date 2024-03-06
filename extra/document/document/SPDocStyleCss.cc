@@ -26,29 +26,29 @@
 namespace STAPPLER_VERSIONIZED stappler::document {
 
 static bool css_readListStyleType(const StringView &value, const StyleCallback &cb) {
-	if (value.compare("none")) {
+	if (value.equals("none")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::None));
-	} else if (value.compare("circle")) {
+	} else if (value.equals("circle")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::Circle));
-	} else if (value.compare("disc")) {
+	} else if (value.equals("disc")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::Disc));
-	} else if (value.compare("square")) {
+	} else if (value.equals("square")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::Square));
-	} else if (value.compare("x-mdash")) {
+	} else if (value.equals("x-mdash")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::XMdash));
-	} else if (value.compare("decimal")) {
+	} else if (value.equals("decimal")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::Decimal));
-	} else if (value.compare("decimal-leading-zero")) {
+	} else if (value.equals("decimal-leading-zero")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::DecimalLeadingZero));
-	} else if (value.compare("lower-alpha") || value.compare("lower-latin")) {
+	} else if (value.equals("lower-alpha") || value.equals("lower-latin")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::LowerAlpha));
-	} else if (value.compare("lower-greek")) {
+	} else if (value.equals("lower-greek")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::LowerGreek));
-	} else if (value.compare("lower-roman")) {
+	} else if (value.equals("lower-roman")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::LowerRoman));
-	} else if (value.compare("upper-alpha") || value.compare("upper-latin")) {
+	} else if (value.equals("upper-alpha") || value.equals("upper-latin")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::UpperAlpha));
-	} else if (value.compare("upper-roman")) {
+	} else if (value.equals("upper-roman")) {
 		return cb(StyleParameter::create<ParameterName::CssListStyleType>(ListStyleType::UpperRoman));
 	}
 	return false;
@@ -56,13 +56,13 @@ static bool css_readListStyleType(const StringView &value, const StyleCallback &
 
 template <ParameterName Name>
 static bool css_readBorderStyle(const StringView &value, const StyleCallback &cb) {
-	if (value.compare("none")) {
+	if (value.equals("none")) {
 		return cb(StyleParameter::create<Name>(BorderStyle::None));
-	} else if (value.compare("solid")) {
+	} else if (value.equals("solid")) {
 		return cb(StyleParameter::create<Name>(BorderStyle::Solid));
-	} else if (value.compare("dotted")) {
+	} else if (value.equals("dotted")) {
 		return cb(StyleParameter::create<Name>(BorderStyle::Dotted));
-	} else if (value.compare("dashed")) {
+	} else if (value.equals("dashed")) {
 		return cb(StyleParameter::create<Name>(BorderStyle::Dashed));
 	}
 	return false;
@@ -70,7 +70,7 @@ static bool css_readBorderStyle(const StringView &value, const StyleCallback &cb
 
 template <ParameterName Name>
 static bool css_readBorderColor(const StringView &value, const StyleCallback &cb) {
-	if (value.compare("transparent")) {
+	if (value.equals("transparent")) {
 		return cb(StyleParameter::create<Name>(Color4B(255, 255, 255, 0)));
 	}
 
@@ -83,11 +83,11 @@ static bool css_readBorderColor(const StringView &value, const StyleCallback &cb
 
 template <ParameterName Name>
 static bool css_readBorderWidth(const StringView &value, const StyleCallback &cb) {
-	if (value.compare("thin")) {
+	if (value.equals("thin")) {
 		return cb(StyleParameter::create<Name>(Metric(2.0f, Metric::Units::Px)));
-	} else if (value.compare("medium")) {
+	} else if (value.equals("medium")) {
 		return cb(StyleParameter::create<Name>(Metric(4.0f, Metric::Units::Px)));
-	} else if (value.compare("thick")) {
+	} else if (value.equals("thick")) {
 		return cb(StyleParameter::create<Name>(Metric(6.0f, Metric::Units::Px)));
 	}
 
@@ -160,9 +160,9 @@ bool css_readAspectRatioValue(StringView str, float &value) {
 
 static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 	pair("font-weight", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("bold")) {
+		if (value.equals("bold")) {
 			return cb(StyleParameter::create<ParameterName::CssFontWeight>(FontWeight::Bold));
-		} else if (value.compare("normal")) {
+		} else if (value.equals("normal")) {
 			return cb(StyleParameter::create<ParameterName::CssFontWeight>(FontWeight::Normal));
 		} else {
 			StringView tmp(value);
@@ -175,23 +175,23 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("font-stretch", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("normal")) {
+		if (value.equals("normal")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStretch>(FontStretch::Normal));
-		} else if (value.compare("ultra-condensed")) {
+		} else if (value.equals("ultra-condensed")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStretch>(FontStretch::UltraCondensed));
-		} else if (value.compare("extra-condensed")) {
+		} else if (value.equals("extra-condensed")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStretch>(FontStretch::ExtraCondensed));
-		} else if (value.compare("condensed")) {
+		} else if (value.equals("condensed")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStretch>(FontStretch::Condensed));
-		} else if (value.compare("semi-condensed")) {
+		} else if (value.equals("semi-condensed")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStretch>(FontStretch::SemiCondensed));
-		} else if (value.compare("semi-expanded")) {
+		} else if (value.equals("semi-expanded")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStretch>(FontStretch::SemiExpanded));
-		} else if (value.compare("expanded")) {
+		} else if (value.equals("expanded")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStretch>(FontStretch::Expanded));
-		} else if (value.compare("extra-expanded")) {
+		} else if (value.equals("extra-expanded")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStretch>(FontStretch::ExtraExpanded));
-		} else if (value.compare("ultra-expanded")) {
+		} else if (value.equals("ultra-expanded")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStretch>(FontStretch::UltraExpanded));
 		} else {
 			StringView tmp(value);
@@ -205,11 +205,11 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("font-style", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("italic")) {
+		if (value.equals("italic")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStyle>(FontStyle::Italic));
-		} else if (value.compare("normal")) {
+		} else if (value.equals("normal")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStyle>(FontStyle::Normal));
-		} else if (value.compare("oblique")) {
+		} else if (value.equals("oblique")) {
 			return cb(StyleParameter::create<ParameterName::CssFontStyle>(FontStyle::Oblique));
 		} else {
 			StringView tmp(value);
@@ -228,27 +228,27 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("font-size", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("xx-small")) {
+		if (value.equals("xx-small")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSize>(FontSize::XXSmall));
-		} else if (value.compare("x-small")) {
+		} else if (value.equals("x-small")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSize>(FontSize::XSmall));
-		} else if (value.compare("small")) {
+		} else if (value.equals("small")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSize>(FontSize::Small));
-		} else if (value.compare("medium")) {
+		} else if (value.equals("medium")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSize>(FontSize::Medium));
-		} else if (value.compare("large")) {
+		} else if (value.equals("large")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSize>(FontSize::Large));
-		} else if (value.compare("x-large")) {
+		} else if (value.equals("x-large")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSize>(FontSize::XLarge));
-		} else if (value.compare("xx-large")) {
+		} else if (value.equals("xx-large")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSize>(FontSize::XXLarge));
-		} else if (value.compare("larger")) {
+		} else if (value.equals("larger")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSizeIncrement>(Metric(1.15f, Metric::Em)));
-		} else if (value.compare("x-larger")) {
+		} else if (value.equals("x-larger")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSizeIncrement>(Metric(1.3f, Metric::Em)));
-		} else if (value.compare("smaller")) {
+		} else if (value.equals("smaller")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSizeIncrement>(Metric(0.85f, Metric::Em)));
-		} else if (value.compare("x-smaller")) {
+		} else if (value.equals("x-smaller")) {
 			return cb(StyleParameter::create<ParameterName::CssFontSizeIncrement>(Metric(0.7f, Metric::Em)));
 		} else {
 			Metric fontSize;
@@ -263,93 +263,93 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("font-variant", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("small-caps")) {
+		if (value.equals("small-caps")) {
 			return cb(StyleParameter::create<ParameterName::CssFontVariant>(FontVariant::SmallCaps));
-		} else if (value.compare("normal")) {
+		} else if (value.equals("normal")) {
 			return cb(StyleParameter::create<ParameterName::CssFontVariant>(FontVariant::Normal));
 		}
 		return false;
 	}),
 	pair("text-decoration", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("underline")) {
+		if (value.equals("underline")) {
 			return cb(StyleParameter::create<ParameterName::CssTextDecoration>(TextDecoration::Underline));
-		} else if (value.compare("line-through")) {
+		} else if (value.equals("line-through")) {
 			return cb(StyleParameter::create<ParameterName::CssTextDecoration>(TextDecoration::LineThrough));
-		} else if (value.compare("overline")) {
+		} else if (value.equals("overline")) {
 			return cb(StyleParameter::create<ParameterName::CssTextDecoration>(TextDecoration::Overline));
-		} else if (value.compare("none")) {
+		} else if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssTextDecoration>(TextDecoration::None));
 		}
 		return false;
 	}),
 	pair("text-transform", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("uppercase")) {
+		if (value.equals("uppercase")) {
 			return cb(StyleParameter::create<ParameterName::CssTextTransform>(TextTransform::Uppercase));
-		} else if (value.compare("lowercase")) {
+		} else if (value.equals("lowercase")) {
 			return cb(StyleParameter::create<ParameterName::CssTextTransform>(TextTransform::Lowercase));
-		} else if (value.compare("none")) {
+		} else if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssTextTransform>(TextTransform::None));
 		}
 		return false;
 	}),
 	pair("text-align", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("left")) {
+		if (value.equals("left")) {
 			return cb(StyleParameter::create<ParameterName::CssTextAlign>(TextAlign::Left));
-		} else if (value.compare("right")) {
+		} else if (value.equals("right")) {
 			return cb(StyleParameter::create<ParameterName::CssTextAlign>(TextAlign::Right));
-		} else if (value.compare("center")) {
+		} else if (value.equals("center")) {
 			return cb(StyleParameter::create<ParameterName::CssTextAlign>(TextAlign::Center));
-		} else if (value.compare("justify")) {
+		} else if (value.equals("justify")) {
 			return cb(StyleParameter::create<ParameterName::CssTextAlign>(TextAlign::Justify));
 		}
 		return false;
 	}),
 	pair("white-space", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("normal")) {
+		if (value.equals("normal")) {
 			return cb(StyleParameter::create<ParameterName::CssWhiteSpace>(WhiteSpace::Normal));
-		} else if (value.compare("nowrap")) {
+		} else if (value.equals("nowrap")) {
 			return cb(StyleParameter::create<ParameterName::CssWhiteSpace>(WhiteSpace::Nowrap));
-		} else if (value.compare("pre")) {
+		} else if (value.equals("pre")) {
 			return cb(StyleParameter::create<ParameterName::CssWhiteSpace>(WhiteSpace::Pre));
-		} else if (value.compare("pre-line")) {
+		} else if (value.equals("pre-line")) {
 			return cb(StyleParameter::create<ParameterName::CssWhiteSpace>(WhiteSpace::PreLine));
-		} else if (value.compare("pre-wrap")) {
+		} else if (value.equals("pre-wrap")) {
 			return cb(StyleParameter::create<ParameterName::CssWhiteSpace>(WhiteSpace::PreWrap));
 		}
 		return false;
 	}),
 	pair("hyphens", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("none")) {
+		if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssHyphens>(Hyphens::None));
-		} else if (value.compare("manual")) {
+		} else if (value.equals("manual")) {
 			return cb(StyleParameter::create<ParameterName::CssHyphens>(Hyphens::Manual));
-		} else if (value.compare("auto")) {
+		} else if (value.equals("auto")) {
 			return cb(StyleParameter::create<ParameterName::CssHyphens>(Hyphens::Auto));
 		}
 		return false;
 	}),
 	pair("-epub-hyphens", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("none")) {
+		if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssHyphens>(Hyphens::None));
-		} else if (value.compare("manual")) {
+		} else if (value.equals("manual")) {
 			return cb(StyleParameter::create<ParameterName::CssHyphens>(Hyphens::Manual));
-		} else if (value.compare("auto")) {
+		} else if (value.equals("auto")) {
 			return cb(StyleParameter::create<ParameterName::CssHyphens>(Hyphens::Auto));
 		}
 		return false;
 	}),
 	pair("display", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("none")) {
+		if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssDisplay>(Display::None));
-		} else if (value.compare("run-in")) {
+		} else if (value.equals("run-in")) {
 			return cb(StyleParameter::create<ParameterName::CssDisplay>(Display::RunIn));
-		} else if (value.compare("list-item")) {
+		} else if (value.equals("list-item")) {
 			return cb(StyleParameter::create<ParameterName::CssDisplay>(Display::ListItem));
-		} else if (value.compare("inline")) {
+		} else if (value.equals("inline")) {
 			return cb(StyleParameter::create<ParameterName::CssDisplay>(Display::Inline));
-		} else if (value.compare("inline-block")) {
+		} else if (value.equals("inline-block")) {
 			return cb(StyleParameter::create<ParameterName::CssDisplay>(Display::InlineBlock));
-		} else if (value.compare("block")) {
+		} else if (value.equals("block")) {
 			return cb(StyleParameter::create<ParameterName::CssDisplay>(Display::Block));
 		}
 		return false;
@@ -358,9 +358,9 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return css_readListStyleType(value, cb);
 	}),
 	pair("list-style-position", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("inside")) {
+		if (value.equals("inside")) {
 			return cb(StyleParameter::create<ParameterName::CssListStylePosition>(ListStylePosition::Inside));
-		} else if (value.compare("outside")) {
+		} else if (value.equals("outside")) {
 			return cb(StyleParameter::create<ParameterName::CssListStylePosition>(ListStylePosition::Outside));
 		}
 		return false;
@@ -369,9 +369,9 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		bool ret = true;
 		value.split<StringView::CharGroup<CharGroupId::WhiteSpace>>([&] (const StringView &r) {
 			if (!css_readListStyleType(r, cb)) {
-				if (r.compare("inside")) {
+				if (r.equals("inside")) {
 					cb(StyleParameter::create<ParameterName::CssListStylePosition>(ListStylePosition::Inside));
-				} else if (r.compare("outside")) {
+				} else if (r.equals("outside")) {
 					cb(StyleParameter::create<ParameterName::CssListStylePosition>(ListStylePosition::Outside));
 				}
 				ret = false;
@@ -387,23 +387,23 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("float", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("none")) {
+		if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssFloat>(Float::None));
-		} else if (value.compare("left")) {
+		} else if (value.equals("left")) {
 			return cb(StyleParameter::create<ParameterName::CssFloat>(Float::Left));
-		} else if (value.compare("right")) {
+		} else if (value.equals("right")) {
 			return cb(StyleParameter::create<ParameterName::CssFloat>(Float::Right));
 		}
 		return false;
 	}),
 	pair("clear", [] (const StringView &value, const StyleCallback &cb, const StringCallback &) {
-		if (value.compare("none")) {
+		if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssClear>(Clear::None));
-		} else if (value.compare("left")) {
+		} else if (value.equals("left")) {
 			return cb(StyleParameter::create<ParameterName::CssClear>(Clear::Left));
-		} else if (value.compare("right")) {
+		} else if (value.equals("right")) {
 			return cb(StyleParameter::create<ParameterName::CssClear>(Clear::Right));
-		} else if (value.compare("both")) {
+		} else if (value.equals("both")) {
 			return cb(StyleParameter::create<ParameterName::CssClear>(Clear::Both));
 		}
 		return false;
@@ -561,7 +561,7 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("font-family", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("default") || value.compare("serif")) {
+		if (value.equals("default") || value.equals("serif")) {
 			return cb(StyleParameter::create<ParameterName::CssFontFamily>(StringIdNone));
 		} else {
 			auto str = StyleContainer::resolveCssString(value);
@@ -572,7 +572,7 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("background-color", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("transparent")) {
+		if (value.equals("transparent")) {
 			return cb(StyleParameter::create<ParameterName::CssBackgroundColor>(Color4B(0, 0, 0, 0)));
 		} else {
 			Color4B color;
@@ -583,7 +583,7 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("background-image", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("none")) {
+		if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssBackgroundImage>(StringIdNone));
 		} else {
 			StringView tmp(value);
@@ -615,39 +615,39 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		if (!first.empty() && !second.empty()) {
 			bool parseError = false;
 			bool firstWasCenter = false;
-			if (first.compare("center")) {
+			if (first.equals("center")) {
 				x.value = 0.5f; x.metric = Metric::Units::Percent; validX = true; firstWasCenter = true;
-			} else if (first.compare("left")) {
+			} else if (first.equals("left")) {
 				x.value = 0.0f; x.metric = Metric::Units::Percent; validX = true;
-			} else if (first.compare("right")) {
+			} else if (first.equals("right")) {
 				x.value = 1.0f; x.metric = Metric::Units::Percent; validX = true;
-			} else if (first.compare("top")) {
+			} else if (first.equals("top")) {
 				x.value = 0.0f; x.metric = Metric::Units::Percent; validX = true; swapValues = true;
-			} else if (first.compare("bottom")) {
+			} else if (first.equals("bottom")) {
 				x.value = 1.0f; x.metric = Metric::Units::Percent; validX = true; swapValues = true;
 			}
 
-			if (second.compare("center")) {
+			if (second.equals("center")) {
 				y.value = 0.5f; y.metric = Metric::Units::Percent; validY = true;
-			} else if (second.compare("left")) {
+			} else if (second.equals("left")) {
 				if (swapValues || firstWasCenter) {
 					y.value = 0.0f; y.metric = Metric::Units::Percent; validY = true; swapValues = true;
 				} else {
 					parseError = true;
 				}
-			} else if (second.compare("right")) {
+			} else if (second.equals("right")) {
 				if (swapValues || firstWasCenter) {
 					y.value = 1.0f; y.metric = Metric::Units::Percent; validY = true; swapValues = true;
 				} else {
 					parseError = true;
 				}
-			} else if (second.compare("top")) {
+			} else if (second.equals("top")) {
 				if (!swapValues) {
 					y.value = 0.0f; y.metric = Metric::Units::Percent; validY = true; swapValues = true;
 				} else {
 					parseError = true;
 				}
-			} else if (second.compare("bottom")) {
+			} else if (second.equals("bottom")) {
 				if (!swapValues) {
 					y.value = 1.0f; y.metric = Metric::Units::Percent; validY = true; swapValues = true;
 				} else {
@@ -667,19 +667,19 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 				}
 			}
 		} else {
-			if (value.compare("center")) {
+			if (value.equals("center")) {
 				x.value = 0.5f; x.metric = Metric::Units::Percent; validX = true;
 				y.value = 0.5f; y.metric = Metric::Units::Percent; validY = true;
-			} else if (value.compare("top")) {
+			} else if (value.equals("top")) {
 				x.value = 0.5f; x.metric = Metric::Units::Percent; validX = true;
 				y.value = 0.0f; y.metric = Metric::Units::Percent; validY = true;
-			} else if (value.compare("right")) {
+			} else if (value.equals("right")) {
 				x.value = 1.0f; x.metric = Metric::Units::Percent; validX = true;
 				y.value = 0.5f; y.metric = Metric::Units::Percent; validY = true;
-			} else if (value.compare("bottom")) {
+			} else if (value.equals("bottom")) {
 				x.value = 0.5f; x.metric = Metric::Units::Percent; validX = true;
 				y.value = 1.0f; y.metric = Metric::Units::Percent; validY = true;
-			} else if (value.compare("left")) {
+			} else if (value.equals("left")) {
 				x.value = 0.0f; x.metric = Metric::Units::Percent; validX = true;
 				y.value = 0.5f; y.metric = Metric::Units::Percent; validY = true;
 			}
@@ -697,13 +697,13 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("background-repeat", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("no-repeat")) {
+		if (value.equals("no-repeat")) {
 			return cb(StyleParameter::create<ParameterName::CssBackgroundRepeat>(BackgroundRepeat::NoRepeat));
-		} else if (value.compare("repeat")) {
+		} else if (value.equals("repeat")) {
 			return cb(StyleParameter::create<ParameterName::CssBackgroundRepeat>(BackgroundRepeat::Repeat));
-		} else if (value.compare("repeat-x")) {
+		} else if (value.equals("repeat-x")) {
 			return cb(StyleParameter::create<ParameterName::CssBackgroundRepeat>(BackgroundRepeat::RepeatX));
-		} else if (value.compare("repeat-y")) {
+		} else if (value.equals("repeat-y")) {
 			return cb(StyleParameter::create<ParameterName::CssBackgroundRepeat>(BackgroundRepeat::RepeatY));
 		}
 		return false;
@@ -721,24 +721,24 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 			}
 		});
 
-		if (value.compare("contain")) {
+		if (value.equals("contain")) {
 			width.metric = Metric::Units::Contain; validWidth = true;
 			height.metric = Metric::Units::Contain; validHeight = true;
-		} else if (value.compare("cover")) {
+		} else if (value.equals("cover")) {
 			width.metric = Metric::Units::Cover; validWidth = true;
 			height.metric = Metric::Units::Cover; validHeight = true;
 		} else if (!first.empty() && !second.empty()) {
-			if (first.compare("contain")) {
+			if (first.equals("contain")) {
 				width.metric = Metric::Units::Contain; validWidth = true;
-			} else if (first.compare("cover")) {
+			} else if (first.equals("cover")) {
 				width.metric = Metric::Units::Cover; validWidth = true;
 			} else if (parser::readStyleMetric(first, width)) {
 				validWidth = true;
 			}
 
-			if (second.compare("contain")) {
+			if (second.equals("contain")) {
 				height.metric = Metric::Units::Contain; validWidth = true;
-			} else if (second.compare("cover")) {
+			} else if (second.equals("cover")) {
 				height.metric = Metric::Units::Cover; validWidth = true;
 			} else if (parser::readStyleMetric(second, height)) {
 				validHeight = true;
@@ -754,17 +754,17 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		return false;
 	}),
 	pair("vertical-align", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("baseline")) {
+		if (value.equals("baseline")) {
 			return cb(StyleParameter::create<ParameterName::CssVerticalAlign>(VerticalAlign::Baseline));
-		} else if (value.compare("sub")) {
+		} else if (value.equals("sub")) {
 			return cb(StyleParameter::create<ParameterName::CssVerticalAlign>(VerticalAlign::Sub));
-		} else if (value.compare("super")) {
+		} else if (value.equals("super")) {
 			return cb(StyleParameter::create<ParameterName::CssVerticalAlign>(VerticalAlign::Super));
-		} else if (value.compare("middle")) {
+		} else if (value.equals("middle")) {
 			return cb(StyleParameter::create<ParameterName::CssVerticalAlign>(VerticalAlign::Middle));
-		} else if (value.compare("top")) {
+		} else if (value.equals("top")) {
 			return cb(StyleParameter::create<ParameterName::CssVerticalAlign>(VerticalAlign::Top));
-		} else if (value.compare("bottom")) {
+		} else if (value.equals("bottom")) {
 			return cb(StyleParameter::create<ParameterName::CssVerticalAlign>(VerticalAlign::Bottom));
 		}
 		return false;
@@ -835,11 +835,11 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		}
 		BorderStyle top, right, bottom, left;
 		css_readQuadValue(value, top, right, bottom, left, [&] (const StringView &v) -> BorderStyle {
-			if (v.compare("solid")) {
+			if (v.equals("solid")) {
 				return BorderStyle::Solid;
-			} else if (v.compare("dotted")) {
+			} else if (v.equals("dotted")) {
 				return BorderStyle::Dotted;
-			} else if (v.compare("dashed")) {
+			} else if (v.equals("dashed")) {
 				return BorderStyle::Dashed;
 			}
 			return BorderStyle::None;
@@ -855,7 +855,7 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		}
 		Color4B top, right, bottom, left;
 		css_readQuadValue(value, top, right, bottom, left, [&] (const StringView &v) -> Color4B {
-			if (v.compare("transparent")) {
+			if (v.equals("transparent")) {
 				return Color4B(0, 0, 0, 0);
 			} else {
 				Color4B color(0, 0, 0, 0);
@@ -874,11 +874,11 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		}
 		Metric top, right, bottom, left;
 		css_readQuadValue(value, top, right, bottom, left, [&] (const StringView &v) -> Metric {
-			if (v.compare("thin")) {
+			if (v.equals("thin")) {
 				return Metric(2.0f, Metric::Units::Px);
-			} else if (v.compare("medium")) {
+			} else if (v.equals("medium")) {
 				return Metric(4.0f, Metric::Units::Px);
-			} else if (v.compare("thick")) {
+			} else if (v.equals("thick")) {
 				return Metric(6.0f, Metric::Units::Px);
 			}
 
@@ -899,21 +899,21 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 		Metric width(0.0f, Metric::Units::Px);
 		Color4B color(0, 0, 0, 0);
 		value.split<StringView::CharGroup<CharGroupId::WhiteSpace>>([&] (const StringView &r) {
-			if (r.compare("solid")) {
+			if (r.equals("solid")) {
 				style = BorderStyle::Solid;
-			} else if (r.compare("dotted")) {
+			} else if (r.equals("dotted")) {
 				style = BorderStyle::Dotted;
-			} else if (r.compare("dashed")) {
+			} else if (r.equals("dashed")) {
 				style = BorderStyle::Dashed;
-			} else if (r.compare("none")) {
+			} else if (r.equals("none")) {
 				style = BorderStyle::None;
-			} else if (r.compare("transparent")) {
+			} else if (r.equals("transparent")) {
 				color = Color4B(0, 0, 0, 0);
-			} else if (r.compare("thin")) {
+			} else if (r.equals("thin")) {
 				width = Metric(2.0f, Metric::Units::Px);
-			} else if (r.compare("medium")) {
+			} else if (r.equals("medium")) {
 				width = Metric(4.0f, Metric::Units::Px);
-			} else if (r.compare("thick")) {
+			} else if (r.equals("thick")) {
 				width = Metric(6.0f, Metric::Units::Px);
 			} else if (!readColor(r, color)) {
 				parser::readStyleMetric(r, width);
@@ -933,101 +933,101 @@ static std::unordered_map<StringView, StyleFunctionPtr> s_cssParameters {
 			&& cb(StyleParameter::create<ParameterName::CssBorderLeftWidth>(width));
 	}),
 	pair("border-collapse", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("collapse")) {
+		if (value.equals("collapse")) {
 			return cb(StyleParameter::create<ParameterName::CssBorderCollapse>(BorderCollapse::Collapse));
-		} else if (value.compare("separate")) {
+		} else if (value.equals("separate")) {
 			return cb(StyleParameter::create<ParameterName::CssBorderCollapse>(BorderCollapse::Separate));
 		}
 		return false;
 	}),
 	pair("caption-side", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("top")) {
+		if (value.equals("top")) {
 			return cb(StyleParameter::create<ParameterName::CssCaptionSide>(CaptionSide::Top));
-		} else if (value.compare("bottom")) {
+		} else if (value.equals("bottom")) {
 			return cb(StyleParameter::create<ParameterName::CssCaptionSide>(CaptionSide::Bottom));
 		}
 		return false;
 	}),
 	pair("page-break-after", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("always")) {
+		if (value.equals("always")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakAfter>(PageBreak::Always));
-		} else if (value.compare("auto")) {
+		} else if (value.equals("auto")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakAfter>(PageBreak::Auto));
-		} else if (value.compare("avoid")) {
+		} else if (value.equals("avoid")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakAfter>(PageBreak::Avoid));
-		} else if (value.compare("left")) {
+		} else if (value.equals("left")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakAfter>(PageBreak::Left));
-		} else if (value.compare("right")) {
+		} else if (value.equals("right")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakAfter>(PageBreak::Right));
 		}
 		return false;
 	}),
 	pair("page-break-before", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("always")) {
+		if (value.equals("always")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakBefore>(PageBreak::Always));
-		} else if (value.compare("auto")) {
+		} else if (value.equals("auto")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakBefore>(PageBreak::Auto));
-		} else if (value.compare("avoid")) {
+		} else if (value.equals("avoid")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakBefore>(PageBreak::Avoid));
-		} else if (value.compare("left")) {
+		} else if (value.equals("left")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakBefore>(PageBreak::Left));
-		} else if (value.compare("right")) {
+		} else if (value.equals("right")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakBefore>(PageBreak::Right));
 		}
 		return false;
 	}),
 	pair("page-break-inside", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("auto")) {
+		if (value.equals("auto")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakInside>(PageBreak::Auto));
-		} else if (value.compare("avoid")) {
+		} else if (value.equals("avoid")) {
 			return cb(StyleParameter::create<ParameterName::CssPageBreakInside>(PageBreak::Avoid));
 		}
 		return false;
 	}),
 	pair("orientation", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("landscape")) {
+		if (value.equals("landscape")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaOrientation>(Orientation::Landscape));
-		} else if (value.compare("portrait")) {
+		} else if (value.equals("portrait")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaOrientation>(Orientation::Portrait));
 		}
 		return false;
 	}),
 	pair("pointer", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("none")) {
+		if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaPointer>(Pointer::None));
-		} else if (value.compare("fine")) {
+		} else if (value.equals("fine")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaPointer>(Pointer::Fine));
-		} else if (value.compare("coarse")) {
+		} else if (value.equals("coarse")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaPointer>(Pointer::Coarse));
 		}
 		return false;
 	}),
 	pair("hover", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("none")) {
+		if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaHover>(Hover::None));
-		} else if (value.compare("hover")) {
+		} else if (value.equals("hover")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaHover>(Hover::Hover));
-		} else if (value.compare("on-demand")) {
+		} else if (value.equals("on-demand")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaHover>(Hover::OnDemand));
 		}
 		return false;
 	}),
 	pair("light-level", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("dim")) {
+		if (value.equals("dim")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaLightLevel>(LightLevel::Dim));
-		} else if (value.compare("normal")) {
+		} else if (value.equals("normal")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaLightLevel>(LightLevel::Normal));
-		} else if (value.compare("washed")) {
+		} else if (value.equals("washed")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaLightLevel>(LightLevel::Washed));
 		}
 		return false;
 	}),
 	pair("scripting", [] (const StringView &value, const StyleCallback &cb, const StringCallback &strCb) {
-		if (value.compare("none")) {
+		if (value.equals("none")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaScripting>(Scripting::None));
-		} else if (value.compare("initial-only")) {
+		} else if (value.equals("initial-only")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaScripting>(Scripting::InitialOnly));
-		} else if (value.compare("enabled")) {
+		} else if (value.equals("enabled")) {
 			return cb(StyleParameter::create<ParameterName::CssMediaScripting>(Scripting::Enabled));
 		}
 		return false;

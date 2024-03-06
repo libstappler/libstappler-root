@@ -33,7 +33,9 @@ static void Layout_NodeInfo_init(LayoutBlock::NodeInfo &nodeInfo, Display parent
 	// actual value may be different for default/run-in
 	// <img> tag is block by default, but inline-block inside <p> or in inline context
 	if (nodeInfo.block.display == Display::Default || nodeInfo.block.display == Display::RunIn) {
-		if (parentContext == Display::Block) {
+		if (nodeInfo.node->getHtmlName() == "__value__") {
+			nodeInfo.block.display = Display::Inline;
+		} else if (parentContext == Display::Block) {
 			nodeInfo.block.display = Display::Block;
 		} else if (parentContext == Display::Inline) {
 			if (nodeInfo.node->getHtmlName() == "img") {

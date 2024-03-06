@@ -38,7 +38,11 @@ class Node;
 class StyleContainer;
 class PageContainer;
 
-struct DocumentImage {
+using StringDocument = ValueWrapper<StringView, class StringDocumentTag>;
+
+class Document;
+
+struct DocumentImage : public memory::AllocPool {
 	enum Type {
 		Embed,
 		Local,
@@ -55,14 +59,16 @@ struct DocumentImage {
 
 	StringView path;
 	StringView ref;
+	StringView ct;
 	BytesView data;
+
+	DocumentImage() = default;
 
 	DocumentImage(uint16_t w, uint16_t h, size_t size, StringView p, StringView r = StringView())
 	: width(w), height(h), length(size), path(p.pdup()), ref(r.pdup()) { }
 };
 
 struct DocumentContentRecord {
-
 	template <typename Value>
 	using Vector = typename memory::PoolInterface::VectorType<Value>;
 
@@ -73,6 +79,7 @@ struct DocumentContentRecord {
 
 struct DocumentData : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
 	memory::pool_t *pool = nullptr;
+	StringView name;
 	Vector<StringView> spine;
 	Vector<StringView> strings;
 	Vector<MediaQuery> queries;
@@ -105,6 +112,7 @@ public:
 	virtual bool init();
 	virtual bool init(memory::pool_t *);
 
+	virtual StringView getName() const;
 	virtual SpanView<StringView> getSpine() const;
 	virtual const DocumentContentRecord & getTableOfContents() const;
 
@@ -119,6 +127,8 @@ public:
 
 	virtual const Node *getNodeById(StringView pagePath, StringView id) const;
 	virtual Pair<const PageContainer *, const Node *> getNodeByIdGlobal(StringView id) const;
+
+	virtual void foreachPage(const Callback<void(StringView, const PageContainer *)> &);
 
 	NodeId getMaxNodeId() const;
 

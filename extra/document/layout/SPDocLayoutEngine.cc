@@ -41,8 +41,8 @@ struct LayoutEngine::Data : public memory::AllocPool, public InterfaceObject<mem
 	Margin margin;
 
 	Rc<LayoutResult> result;
-	//ExternalAssetsMap _externalAssets;
-
+	ExternalAssetsMap externalAssets;
+	Map<StringView, DocumentImage *> images;
 
 	Vector<LayoutBlock *> layoutStack;
 	Vector<FloatContext *> floatStack;
@@ -96,6 +96,28 @@ LayoutEngine::~LayoutEngine() {
 	}
 }
 
+void LayoutEngine::setExternalAssetsMeta(ExternalAssetsMap &&external) {
+	memory::pool::push(_data->pool);
+
+	_data->externalAssets = move(external);
+
+	for (auto &it : _data->externalAssets) {
+		const DocumentAssetMeta &a = it.second;
+		if (a.isImage()) {
+			auto img = new (_data->pool) DocumentImage;
+			img->type = DocumentImage::Web;
+			img->width = a.imageWidth;
+			img->height = a.imageHeight;
+			img->path = it.first;
+			img->ct = a.type;
+
+			_data->images.emplace(it.first, img);
+		}
+	}
+
+	memory::pool::pop();
+}
+
 void LayoutEngine::setHyphens(font::HyphenMap *map) {
 	_data->hyphens = map;
 }
@@ -131,7 +153,11 @@ bool LayoutEngine::isMediaHooked() const {
 }
 
 Rc<font::FontFaceSet> LayoutEngine::getFont(const FontStyleParameters &style) {
-	return _data->fontCallback(style);
+	auto f = _data->fontCallback(style);
+	if (f) {
+		_data->result->storeFont(f);
+	}
+	return f;
 }
 
 Document *LayoutEngine::getDocument() const {
@@ -184,21 +210,19 @@ InlineContext *LayoutEngine::acquireInlineContext(float d) {
 }
 
 bool LayoutEngine::isFileExists(StringView url) const {
-	/*auto it = _data->externalAssets.find(url);
+	auto it = _data->externalAssets.find(url);
 	if (it != _data->externalAssets.end()) {
 		return true;
-	}*/
+	}
 
 	return _data->document->isFileExists(url);
 }
 
 const DocumentImage *LayoutEngine::getImage(StringView url) const {
-	/*auto it = _externalAssets.find(url);
-	if (it != _externalAssets.end()) {
-		if ((it->second.type.empty() || StringView(it->second.type).starts_with("image/")) && it->second.image.width > 0 && it->second.image.height > 0) {
-			return pair(it->second.image.width, it->second.image.height);
-		}
-	}*/
+	auto it = _data->images.find(url);
+	if (it != _data->images.end()) {
+		return it->second;
+	}
 
 	return _data->document->getImage(url);
 }
@@ -230,6 +254,14 @@ StringView LayoutEngine::resolveString(StringId id) const {
 		return _data->document->getData()->strings[id];
 	}
 	return StringView();
+}
+
+float LayoutEngine::getDensity() const {
+	return _data->media.density;
+}
+
+float LayoutEngine::getFontScale() const {
+	return _data->media.fontScale;
 }
 
 Float LayoutEngine::getNodeFloating(const Node &node) const {
@@ -553,7 +585,7 @@ LayoutEngine::Data::Data(memory::pool_t *p, LayoutEngine *e, Document *doc, cons
 		media.mediaType = MediaType::Print;
 	}
 
-	resolvedMedia = media.resolveMediaQueries(document->getData()->queries);
+	resolvedMedia = media.resolveMediaQueries<memory::PoolInterface>(document->getData()->queries);
 }
 
 void LayoutEngine::Data::setPage(const PageContainer *page) {

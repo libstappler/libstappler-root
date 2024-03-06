@@ -188,7 +188,7 @@ bool TestMaterialColor::init() {
 	_tonePicker->setAnchorPoint(Anchor::TopLeft);
 	_tonePicker->setContentSize(Size2(240.0f, 24.0f));
 
-	_spriteLayer = addChild(Rc<gui2d::LayerRounded>::create(_colorHct, 20.0f), ZOrder(-1));
+	_spriteLayer = addChild(Rc<LayerRounded>::create(_colorHct, 20.0f), ZOrder(-1));
 	_spriteLayer->setContentSize(Size2(98, 98));
 	_spriteLayer->setAnchorPoint(Anchor::TopLeft);
 

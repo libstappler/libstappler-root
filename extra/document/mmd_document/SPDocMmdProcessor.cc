@@ -64,6 +64,8 @@ void DocumentProcessor::processHtml(const Content &c, const StringView &str, con
 	init_level = rawLevelForHeader(header_stack.front());
 	level_list[init_level - 1] = &_data->tableOfContents;
 
+	memory::pool::context ctx(_data->pool);
+
 	for (auto &it : header_stack) {
 		entry = it;
 		level = rawLevelForHeader(it);
@@ -80,6 +82,8 @@ void DocumentProcessor::processHtml(const Content &c, const StringView &str, con
 			level_list[level] = &c->childs.back();
 		}
 	}
+
+	_page->finalize();
 }
 
 void DocumentProcessor::processStyle(const StringView &name, document::StyleList &style, const StringView &styleData) {
@@ -107,10 +111,10 @@ document::Node *DocumentProcessor::makeNode(const StringView &name, InitList &&a
 	auto node = new (_data->pool) document::Node(name);
 
 	LayoutProcessor_processAttr(*this, attr, name, node->getStyle(), [&] (StringView key, StringView value) {
-		node->setAttribute(name, value);
+		node->setAttribute(key, value);
 	});
 	LayoutProcessor_processAttr(*this, vec, name, node->getStyle(), [&] (StringView key, StringView value) {
-		node->setAttribute(name, value);
+		node->setAttribute(key, value);
 	});
 
 	if (name == "table" && node->getHtmlId().empty()) {

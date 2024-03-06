@@ -30,8 +30,11 @@
 
 #include "SPDocFormat.cc"
 #include "SPDocParser.cc"
+#include "SPDocAsset.cc"
 
 namespace STAPPLER_VERSIONIZED stappler::document {
+
+static std::atomic<uint64_t> s_docId = 1;
 
 StringId DocumentData::addString(const StringView &str) {
 	strings.emplace_back(str.pdup(pool));
@@ -60,11 +63,11 @@ bool Document::canOpen(memory::pool_t *p, BytesView data, StringView ct) {
 }
 
 Rc<Document> Document::open(FilePath path, StringView ct) {
-	return Document::open(memory::pool::acquire(), path, ct);
+	return Document::open(memory::app_root_pool, path, ct);
 }
 
 Rc<Document> Document::open(BytesView data, StringView ct) {
-	return Document::open(memory::pool::acquire(), data, ct);
+	return Document::open(memory::app_root_pool, data, ct);
 }
 
 Rc<Document> Document::open(memory::pool_t *p, FilePath path, StringView ct) {
@@ -90,6 +93,10 @@ bool Document::init(memory::pool_t *pool) {
 	_pool = memory::pool::create(pool);
 	_data = allocateData(_pool);
 	return true;
+}
+
+StringView Document::getName() const {
+	return _data->name;
 }
 
 SpanView<StringView> Document::getSpine() const {
@@ -174,6 +181,12 @@ Pair<const PageContainer *, const Node *> Document::getNodeByIdGlobal(StringView
 	return Pair<const PageContainer *, const Node *>{nullptr, nullptr};
 }
 
+void Document::foreachPage(const Callback<void(StringView, const PageContainer *)> &cb) {
+	for (auto &it : _data->pages) {
+		cb(it.first, it.second);
+	}
+}
+
 NodeId Document::getMaxNodeId() const {
 	return _data->maxNodeId;
 }
@@ -202,6 +215,7 @@ DocumentData *Document::allocateData(memory::pool_t *pool) {
 
 	auto ret = new (pool) DocumentData;
 	ret->pool = pool;
+	ret->name = StringView(string::toString<memory::StandartInterface>(s_docId.fetch_add(1))).pdup(pool);
 	return ret;
 }
 

@@ -56,6 +56,8 @@ public:
 
 	SpanView<StyleLink> getStyleLinks() const { return _styleLinks; }
 
+	SpanView<String> getAssets() const { return _assets; }
+
 	Node *getNodeById(StringView) const;
 
 protected:

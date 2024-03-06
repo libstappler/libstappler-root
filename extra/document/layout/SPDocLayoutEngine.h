@@ -24,6 +24,7 @@
 #define EXTRA_DOCUMENT_LAYOUT_SPDOCLAYOUTENGINE_H_
 
 #include "SPDocLayoutBlock.h"
+#include "SPDocAsset.h"
 #include "SPFontHyphenMap.h"
 
 namespace STAPPLER_VERSIONIZED stappler::document {
@@ -31,14 +32,14 @@ namespace STAPPLER_VERSIONIZED stappler::document {
 class LayoutResult;
 class LayoutBlock;
 
+using ExternalAssetsMap = memory::StandartInterface::MapType<memory::StandartInterface::StringType, DocumentAssetMeta>;
+
 class LayoutEngine : public StyleInterface, public InterfaceObject<memory::PoolInterface> {
 public:
-	//using ExternalAssetsMap = Map<String, Document::AssetMeta>;
-
 	LayoutEngine(Document *, std::function<Rc<font::FontFaceSet>(const FontStyleParameters &)> &&, const MediaParameters &, SpanView<StringView> spine = SpanView<StringView>());
 	virtual ~LayoutEngine();
 
-	//void setExternalAssetsMeta(ExternalAssetsMap &&);
+	void setExternalAssetsMeta(ExternalAssetsMap &&);
 	void setHyphens(font::HyphenMap *);
 	void setMargin(const Margin &);
 
@@ -72,6 +73,9 @@ public:
 
 	virtual bool resolveMediaQuery(MediaQueryId queryId) const override;
 	virtual StringView resolveString(StringId) const override;
+
+	virtual float getDensity() const override;
+	virtual float getFontScale() const override;
 
 	Float getNodeFloating(const Node &node) const;
 	Display getNodeDisplay(const Node &node) const;

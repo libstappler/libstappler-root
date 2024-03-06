@@ -1196,7 +1196,7 @@ float MediaParameters::getDefaultFontSize() const {
 
 void MediaParameters::addOption(const StringView &str) {
 	auto value = string::hash32(str);
-	_options.insert(pair(value, str.str<memory::PoolInterface>()));
+	_options.insert(pair(value, str.str<memory::StandartInterface>()));
 }
 void MediaParameters::removeOption(const StringView &str) {
 	auto value = string::hash32(str);
@@ -1316,8 +1316,18 @@ bool MediaParameters::resolveQuery(const MediaQuery &q) const {
 	return success;
 }
 
-auto MediaParameters::resolveMediaQueries(const SpanView<MediaQuery> &vec) const -> Vector<bool> {
-	Vector<bool> ret;
+template <>
+auto MediaParameters::resolveMediaQueries<memory::PoolInterface>(const SpanView<MediaQuery> &vec) const -> memory::PoolInterface::VectorType<bool> {
+	memory::PoolInterface::VectorType<bool> ret;
+	for (auto &it : vec) {
+		ret.push_back(resolveQuery(it));
+	}
+	return ret;
+}
+
+template <>
+auto MediaParameters::resolveMediaQueries<memory::StandartInterface>(const SpanView<MediaQuery> &vec) const -> memory::StandartInterface::VectorType<bool> {
+	memory::StandartInterface::VectorType<bool> ret;
 	for (auto &it : vec) {
 		ret.push_back(resolveQuery(it));
 	}
@@ -1352,6 +1362,32 @@ float MediaParameters::computeValueAuto(Metric m, float base, float fontSize) co
 	default: return computeValueStrong(m, base, fontSize); break;
 	}
 	return 0.0f;
+}
+
+SimpleStyleInterface::SimpleStyleInterface() { }
+SimpleStyleInterface::SimpleStyleInterface(SpanView<bool> media, SpanView<StringView> strings, float density, float fontScale)
+: _density(density), _fontScale(fontScale), _media(media), _strings(strings) { }
+
+bool SimpleStyleInterface::resolveMediaQuery(MediaQueryId queryId) const {
+	if (queryId < _media.size()) {
+		return _media[queryId];
+	}
+	return false;
+}
+
+StringView SimpleStyleInterface::resolveString(StringId str) const {
+	if (str < _strings.size()) {
+		return _strings[str];
+	}
+	return StringView();
+}
+
+float SimpleStyleInterface::getDensity() const {
+	return _density;
+}
+
+float SimpleStyleInterface::getFontScale() const {
+	return _fontScale;
 }
 
 StyleValue::StyleValue() {

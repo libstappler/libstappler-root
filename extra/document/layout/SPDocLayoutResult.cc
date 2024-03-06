@@ -37,6 +37,8 @@ struct LayoutResult::Data : public memory::AllocPool, public InterfaceObject<mem
 	Vector<StringView> extraStrings;
 	Map<StringView, Vec2> index;
 
+	Set<Rc<font::FontFaceSet>> faces;
+
 	Color4B background;
 
 	size_t numPages = 1;
@@ -72,6 +74,12 @@ bool LayoutResult::init(const MediaParameters &media, Document *doc) {
 	return true;
 }
 
+void LayoutResult::storeFont(font::FontFaceSet *f) {
+	memory::pool::context ctx(_data->pool);
+
+	_data->faces.emplace(f);
+}
+
 const MediaParameters &LayoutResult::getMedia() const {
 	return _data->media;
 }
@@ -91,7 +99,7 @@ void LayoutResult::finalize() {
 		_data->numPages = size_t(ceilf(_data->size.height / _data->media.surfaceSize.height));
 	}
 
-	auto toc = _data->document->getTableOfContents();
+	auto &toc = _data->document->getTableOfContents();
 
 	_data->bounds.emplace_back(LayoutBoundIndex{0, 0, 0.0f, _data->size.height, 0,
 		StringView(toc.label.empty() ? _data->document->getMeta("title") : StringView(toc.label)),

@@ -103,7 +103,7 @@ struct DbTest : MemPoolTest {
 		db::Scheme dataScheme("data_scheme");
 
 		dataScheme.define({
-			db::Field::Integer("number"),
+			db::Field::Integer("number", db::Flags::Indexed),
 			db::Field::Integer("ctime", db::Flags::AutoCTime),
 			db::Field::Integer("mtime", db::Flags::AutoCTime),
 			db::Field::Text("name", db::Flags::Indexed | db::Flags::PatternIndexed),
@@ -162,7 +162,7 @@ struct DbTest : MemPoolTest {
 				}));
 
 				auto v2 = dataScheme.create(t, mem_pool::Value({
-					pair("number", db::Value(42)),
+					pair("number", db::Value(43)),
 					pair("name", db::Value("testName2")),
 					pair("password", db::Value("Pas$w0rd")),
 					pair("value", db::Value(37.72)),
@@ -179,6 +179,12 @@ struct DbTest : MemPoolTest {
 					return false;
 				}
 
+				auto inQuery = dataScheme.select(t, db::Query().select("number", db::Comparation::In, db::Value({ db::Value(41), db::Value(42) })));
+				if (inQuery.size() != 1) {
+					success = false;
+					return false;
+				}
+
 				auto tsvResult = dataScheme.select(t, db::Query().select("tsv", Value("культурные нормы")));
 
 				auto val = dataScheme.select(t, db::Query().select("textArray", Value("text string 4")));
@@ -190,9 +196,9 @@ struct DbTest : MemPoolTest {
 					h->performSimpleSelect("SELECT * FROM data_scheme, sp_unwrap(data_scheme.textArray) as unwrap "
 							"WHERE unwrap.__unwrap_value = 'text string 4';",
 							[&] (db::sql::Result &res) {
-						for (auto it : res) {
+						/*for (auto it : res) {
 							std::cout << data::EncodeFormat::Pretty << it.encode() << "\n";
-						}
+						}*/
 					});
 				}
 

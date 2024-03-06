@@ -77,9 +77,8 @@ LOCAL_SHADERS_DIR := shaders
 
 ifdef LINUX
 # For dynamic self-loading
-LOCAL_LDFLAGS := -Wl,--export-dynamic
+TOOLKIT_CFLAGS := -DXL_LINK=1
+LOCAL_LDFLAGS := -Wl,--export-dynamic -ldbus-1 -lwayland-client -lxcb -lxcb-randr -lxcb-keysyms -lxcb-xkb -lxkbcommon -lxkbcommon-x11
 endif
-
-#verbose:= 1
 
 include $(STAPPLER_ROOT)/build/make/universal.mk

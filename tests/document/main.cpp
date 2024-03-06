@@ -20,85 +20,48 @@
  THE SOFTWARE.
  **/
 
-#include "SPCommon.h"
-#include "SPMemory.h"
-#include "SPTime.h"
-
-#if MODULE_STAPPLER_DATA
+#include "XLCommon.h"
 #include "SPData.h"
-#endif
+#include "DocumentScene.h"
 
-#if MODULE_DOCUMENT_DOCUMENT
-#include "SPDocument.h"
-#endif
-
-namespace stappler::app {
-
-using namespace mem_std;
+namespace stappler::xenolith::richtext {
 
 static constexpr auto HELP_STRING(
-R"HelpString(dataapp <options>
+R"HelpString(testapp <options>
 Options are one of:
-    -v (--verbose)
-    -h (--help))HelpString");
-
-#if MODULE_STAPPLER_DATA
-static int parseOptionSwitch(Value &ret, char c, const char *str) {
-	if (c == 'h') {
-		ret.setBool(true, "help");
-	} else if (c == 'v') {
-		ret.setBool(true, "verbose");
-	}
-	return 1;
-}
-
-static int parseOptionString(Value &ret, const StringView &str, int argc, const char * argv[]) {
-	if (str == "help") {
-		ret.setBool(true, "help");
-	} else if (str == "verbose") {
-		ret.setBool(true, "verbose");
-	}
-	return 1;
-}
-#endif
+	-v (--verbose)
+	-h (--help))HelpString");
 
 SP_EXTERN_C int main(int argc, const char *argv[]) {
-#if MODULE_STAPPLER_DATA
-	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv,
-			&parseOptionSwitch, &parseOptionString);
-	if (opts.first.getBool("help")) {
+	ViewCommandLineData data;
+	Vector<String> args;
+
+	data::parseCommandLineOptions<Interface, ViewCommandLineData>(data, argc, argv,
+		[&] (ViewCommandLineData &, StringView str) {
+			args.emplace_back(str.str<Interface>());
+		},
+		&parseViewCommandLineSwitch, &parseViewCommandLineString);
+
+	if (data.help) {
 		std::cout << HELP_STRING << "\n";
 		return 0;
 	}
 
-	if (opts.first.getBool("verbose")) {
+	if (data.verbose) {
 		std::cout << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
 		std::cout << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
 		std::cout << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
 		std::cout << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
-		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts.first << "\n";
+		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << data.encode() << "\n";
 		std::cout << " Arguments: \n";
-		for (auto &it : opts.second) {
+		for (auto &it : args) {
 			std::cout << "\t" << it << "\n";
 		}
 	}
 
-	auto mempool = memory::pool::create();
-	memory::pool::push(mempool);
-
-	auto path = filesystem::currentDir<memory::StandartInterface>("html/Basic Blocks.html");
-
-	bool ret = false;
-	if (filesystem::exists(path)) {
-		auto doc = document::Document::open(FilePath(path));
-	}
-
-	memory::pool::pop();
-	memory::pool::destroy(mempool);
-	return ret ? 0 : -1;
-#else
+	auto app = Rc<DocumentApplication>::create(move(data));
+	app->run();
 	return 0;
-#endif
 }
 
 }

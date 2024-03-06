@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 namespace STAPPLER_VERSIONIZED stappler::document {
 
-static Format s_htmlFormat([] (memory::pool_t *, FilePath str, StringView ct) -> bool {
+static Format s_mmdFormat([] (memory::pool_t *, FilePath str, StringView ct) -> bool {
 	return DocumentMmd::isMmd(str);
 }, [] (memory::pool_t *p, FilePath str, StringView ct) -> Rc<Document> {
 	return Rc<DocumentMmd>::create(p, str, ct);
@@ -97,6 +97,8 @@ bool DocumentMmd::init(memory::pool_t *pool, FilePath path, StringView ct) {
 		return false;
 	}
 
+	memory::pool::context ctx(_data->pool);
+
 	auto data = filesystem::readIntoMemory<memory::PoolInterface>(path.get());
 	return read(data, ct);
 }
@@ -106,6 +108,7 @@ bool DocumentMmd::init(memory::pool_t *pool, BytesView data, StringView ct) {
 		return false;
 	}
 
+	memory::pool::context ctx(_data->pool);
 	return read(data, ct);
 }
 

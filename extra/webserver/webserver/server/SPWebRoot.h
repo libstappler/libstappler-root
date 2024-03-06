@@ -129,8 +129,6 @@ protected:
 		bool performFirst;
 	};
 
-	void initExtensions();
-
 	StringView findTypeCheckerContentType(Request &r, StringView ext) const;
 	StringView findTypeCheckerCharset(Request &r, StringView ext) const;
 	StringView findTypeCheckerContentLanguage(Request &r, StringView ext) const;
@@ -160,7 +158,6 @@ protected:
 
 	Vector<PendingTask> *_pending = nullptr;
 
-	Map<StringView, StringView> _extensionTypes;
 	Map<StringView, StringView> _dbParams;
 	Map<StringView, db::sql::Driver *> _dbDrivers;
 	Vector<StringView> _dbs;

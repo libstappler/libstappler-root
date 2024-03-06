@@ -148,8 +148,6 @@ Root::Root(pool_t *p) : _rootPool(p) {
 
 	_serverNameLine = StringView(
 			toString("Stappler/", getStapplerVersionString(), " ", "Webserver/", config::getWebserverVersionString())).pdup(_rootPool);
-
-	initExtensions();
 }
 
 Root::Stat Root::getStat() const {
@@ -314,27 +312,6 @@ void Root::handleFilterComplete(InputFilter *f) {
 	}
 }
 
-void Root::initExtensions() {
-	StringView r(config::MIME_TYPES);
-	while (!r.empty()) {
-		auto str = r.readUntil<StringView::Chars<'\n', '\r'>>();
-		r.skipChars<StringView::Chars<'\n', '\r'>>();
-		if (!str.empty()) {
-			auto type = str.readUntil<StringView::CharGroup<CharGroupId::WhiteSpace>>();
-			str.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
-			if (!str.empty()) {
-				while (!str.empty()) {
-					auto value = str.readUntil<StringView::CharGroup<CharGroupId::WhiteSpace>>();
-					if (!value.empty()) {
-						_extensionTypes.emplace(value, type);
-					}
-					str.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
-				}
-			}
-		}
-	}
-}
-
 void Root::addDb(StringView str) {
 	perform([&, this] {
 		emplace_ordered(_dbs, str.pdup(_rootPool));
@@ -410,10 +387,15 @@ Status Root::runTypeChecker(Request &r) {
 	StringView charset;
 	Vector<StringView> contentEncoding;
 
-	auto onTypeCheckerExtension = [&, this] (StringView ext) {
-		auto ct = findTypeCheckerContentType(r, ext);
+	auto onTypeCheckerExtension = [&, this] (StringView fileName, StringView ext) {
+		auto ct = filesystem::detectMimeType(fileName);
 		if (!ct.empty()) {
 			contentType = ct;
+		} else {
+			ct = findTypeCheckerContentType(r,  ext);
+			if (!ct.empty()) {
+				contentType = ct;
+			}
 		}
 
 		auto cs = findTypeCheckerCharset(r, ext);
@@ -443,7 +425,7 @@ Status Root::runTypeChecker(Request &r) {
 			if (!ext.empty()) {
 				auto tmpStr = ext.str<Interface>();
 				string::apply_tolower_c(tmpStr);
-				onTypeCheckerExtension(tmpStr);
+				onTypeCheckerExtension(fileName, tmpStr);
 			}
 		} else {
 			tmp.skipUntil<StringView::Chars<'.'>>();
@@ -503,10 +485,6 @@ Status Root::runTypeChecker(Request &r) {
 }
 
 StringView Root::findTypeCheckerContentType(Request &r, StringView ext) const {
-	auto it = _extensionTypes.find(ext);
-	if (it != _extensionTypes.end()) {
-		return it->second;
-	}
 	return StringView();
 }
 
