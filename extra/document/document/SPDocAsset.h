@@ -85,6 +85,7 @@ public:
 	using Bytes = memory::StandartInterface::BytesType;
 
 	using StringDocument = document::StringDocument;
+	using Document = document::Document;
 
 	virtual Rc<Document> openDocument(const DocumentAssetLock *) { return nullptr; }
 

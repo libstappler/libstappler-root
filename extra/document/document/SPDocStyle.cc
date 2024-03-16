@@ -349,7 +349,7 @@ void StyleList::merge(const StyleList &style, bool inherit) {
 void StyleList::merge(const StyleList &style, const SpanView<bool> &media, bool inherit) {
 	for (auto &it : style.data) {
 		if ((!inherit || StyleList::isInheritable(it.name))
-				&& (it.mediaQuery == MediaQueryIdNone || media.at(it.mediaQuery))) {
+				&& (it.mediaQuery == MediaQueryIdNone || media.at(it.mediaQuery.get()))) {
 			set(StyleParameter(it, MediaQueryIdNone, it.rule), true);
 		}
 	}
@@ -1147,7 +1147,7 @@ auto StyleList::css(const StyleInterface *iface) const -> String {
 			break;
 		}
 		if (it.mediaQuery != MediaQueryIdNone) {
-			stream << " media(" << it.mediaQuery;
+			stream << " media(" << it.mediaQuery.get();
 			if (iface && iface->resolveMediaQuery(it.mediaQuery)) {
 				stream << ":passed";
 			}
@@ -1369,8 +1369,8 @@ SimpleStyleInterface::SimpleStyleInterface(SpanView<bool> media, SpanView<String
 : _density(density), _fontScale(fontScale), _media(media), _strings(strings) { }
 
 bool SimpleStyleInterface::resolveMediaQuery(MediaQueryId queryId) const {
-	if (queryId < _media.size()) {
-		return _media[queryId];
+	if (queryId.get() < _media.size()) {
+		return _media[queryId.get()];
 	}
 	return false;
 }

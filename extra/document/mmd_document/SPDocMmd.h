@@ -41,10 +41,10 @@ public:
 	virtual bool init(memory::pool_t *, BytesView, StringView ct = StringView());
 
 	// Default style, that can be redefined with css
-	virtual void beginStyle(StyleList &, const Node &, SpanView<const Node *>, const MediaParameters &) const;
+	virtual void beginStyle(StyleList &, const Node &, SpanView<const Node *>, const MediaParameters &) const override;
 
 	// Default style, that can NOT be redefined with css
-	virtual void endStyle(StyleList &, const Node &, SpanView<const Node *>, const MediaParameters &) const;
+	virtual void endStyle(StyleList &, const Node &, SpanView<const Node *>, const MediaParameters &) const override;
 
 	PageContainer *acquireRootPage();
 

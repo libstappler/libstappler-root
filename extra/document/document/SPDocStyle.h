@@ -42,8 +42,8 @@ enum class StyleRule : EnumSize {
 	Important
 };
 
-using MediaQueryId = uint16_t;
-constexpr MediaQueryId MediaQueryIdNone = maxOf<MediaQueryId>();
+using MediaQueryId = ValueWrapper<uint16_t, class MediaQueryIdType>;
+constexpr MediaQueryId MediaQueryIdNone = MediaQueryId(maxOf<uint16_t>());
 
 using StringId = uint32_t;
 constexpr StringId StringIdNone = maxOf<StringId>();
@@ -515,10 +515,10 @@ struct MediaQuery : public memory::AllocPool {
 		bool setMediaType(StringView);
 	};
 
-	static constexpr MediaQueryId IsScreenLayout = 0;
-	static constexpr MediaQueryId IsPrintLayout = 1;
-	static constexpr MediaQueryId NoTooltipOption = 2;
-	static constexpr MediaQueryId IsTooltipOption = 3;
+	static constexpr MediaQueryId IsScreenLayout = MediaQueryId(0);
+	static constexpr MediaQueryId IsPrintLayout = MediaQueryId(1);
+	static constexpr MediaQueryId NoTooltipOption = MediaQueryId(2);
+	static constexpr MediaQueryId IsTooltipOption = MediaQueryId(3);
 
 	Vector<Query> list;
 
@@ -569,8 +569,8 @@ struct MediaParameters {
 
 	bool shouldRenderImages() const;
 
-	float computeValueStrong(Metric, float base, float fontSize = 1.0f) const;
-	float computeValueAuto(Metric, float base, float fontSize = 1.0f) const;
+	float computeValueStrong(Metric, float base, float fontSize = nan()) const;
+	float computeValueAuto(Metric, float base, float fontSize = nan()) const;
 };
 
 struct FontFace {

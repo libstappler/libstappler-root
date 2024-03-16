@@ -73,18 +73,20 @@ public:
 	SpanView<Link *> getRefs() const;
 	SpanView<LayoutBoundIndex> getBounds() const;
 
+	const Vec2 *getIndexPoint(StringView) const;
+
 	size_t getNumPages() const;
 
 	LayoutPageData getPageData(size_t idx, float offset) const;
 
 	LayoutBoundIndex getBoundsForPosition(float) const;
 
-	Background *emplaceBackground(const LayoutBlock &, const Rect &, const BackgroundParameters &);
-	PathObject *emplaceOutline(const LayoutBlock &, const Rect &, const Color4B &, float = 0.0f, BorderStyle = BorderStyle::None);
-	void emplaceBorder(LayoutBlock &, const Rect &, const OutlineParameters &, float width);
-	PathObject *emplacePath(const LayoutBlock &);
-	Label *emplaceLabel(const LayoutBlock &, bool isBullet = false);
-	Link *emplaceLink(const LayoutBlock &, const Rect &, StringView, StringView);
+	Background *emplaceBackground(const LayoutBlock &, const Rect &, const BackgroundParameters &, uint32_t zIndex);
+	PathObject *emplaceOutline(const LayoutBlock &, const Rect &, const Color4B &, uint32_t zIndex, float = 0.0f, BorderStyle = BorderStyle::None);
+	void emplaceBorder(LayoutBlock &, const Rect &, const OutlineParameters &, float width, uint32_t zIndex);
+	PathObject *emplacePath(const LayoutBlock &, uint32_t zIndex);
+	Label *emplaceLabel(const LayoutBlock &, uint32_t zIndex, bool isBullet = false);
+	Link *emplaceLink(const LayoutBlock &, const Rect &, StringView, StringView, WideStringView);
 
 	const Object *getObject(size_t size) const;
 	const Label *getLabelByHash(StringView, size_t idx) const;

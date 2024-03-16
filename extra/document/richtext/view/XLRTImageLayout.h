@@ -20,35 +20,41 @@
  THE SOFTWARE.
  **/
 
-#ifndef TESTS_DOCUMENT_SRC_DOCUMENTLAYOUT_H_
-#define TESTS_DOCUMENT_SRC_DOCUMENTLAYOUT_H_
+#ifndef EXTRA_DOCUMENT_RICHTEXT_VIEW_XLRTIMAGEVIEW_H_
+#define EXTRA_DOCUMENT_RICHTEXT_VIEW_XLRTIMAGEVIEW_H_
 
-#include "MaterialFlexibleLayout.h"
-#include "MaterialAppBar.h"
-#include "XL2dScrollView.h"
-#include "XL2dScrollController.h"
-#include "XLRTView.h"
+#include "XLRTCommonSource.h"
+#include "XL2dSceneLayout.h"
+#include "XL2dImageLayer.h"
+#include "XLRTTooltip.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
-class DocumentLayout : public material2d::FlexibleLayout {
+class ImageLayout : public material2d::SceneLayout2d {
 public:
-	virtual ~DocumentLayout() = default;
+	virtual ~ImageLayout();
 
-	virtual bool init();
+	virtual bool init(RendererResult *, const StringView &id, const StringView &src, const StringView &alt = StringView());
 
-	virtual void onEnter(Scene *);
+	virtual void onContentSizeDirty() override;
+	virtual void onEnter(Scene *) override;
+
+	virtual void close();
 
 protected:
-	material2d::AppBar *_appBar = nullptr;
+	virtual Rc<Tooltip> constructTooltip(RendererResult *res, const Vector<String> &) const;
 
-	basic2d::ScrollController *_scrollController = nullptr;
-	View *_view = nullptr;
-	bool _decorationVisible = true;
+	virtual void onExpand();
 
-	Rc<CommonSource> _source;
+	String _src;
+	Tooltip *_tooltip = nullptr;
+	material2d::MenuSourceButton *_expandButton = nullptr;
+	bool _expanded = true;
+
+	material2d::ImageLayer *_sprite = nullptr;
+	Rc<RendererResult> _result;
 };
 
 }
 
-#endif /* TESTS_DOCUMENT_SRC_DOCUMENTLAYOUT_H_ */
+#endif /* EXTRA_DOCUMENT_RICHTEXT_VIEW_XLRTIMAGEVIEW_H_ */

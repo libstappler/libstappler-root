@@ -50,6 +50,8 @@ protected:
 	virtual void updateColor() override;
 	virtual void updateVertexesColor() override;
 
+	virtual void pushCommands(FrameInfo &, NodeFlags flags) override;
+
 	Rc<RendererResult> _result;
 	document::Object *_object = nullptr;
 };
@@ -74,10 +76,13 @@ bool CommonObject::init(RendererResult *res, document::Object *obj) {
 		return initAsBackground((document::Background *)_object);
 		break;
 	case document::Object::Type::Path:
+		std::cout << "Path\n";
 		break;
 	case document::Object::Type::Ref:
+		std::cout << "Ref\n";
 		break;
 	case document::Object::Type::Empty:
+		std::cout << "Empty\n";
 		break;
 	}
 
@@ -90,6 +95,7 @@ bool CommonObject::initAsLabel(document::Label *label) {
 	setNormalized(true);
 	setColorMode(core::ColorMode::AlphaChannel);
 	setRenderingLevel(RenderingLevel::Surface);
+	setSamplerIndex(0);
 
 	auto el = Rc<EventListener>::create();
 	el->onEventWithObject(font::FontController::onFontSourceUpdated, source, [this] (const Event &) {
@@ -111,7 +117,10 @@ bool CommonObject::initAsBackground(document::Background *bg) {
 	if (!bg->background.backgroundImage.empty()) {
 		if (auto tex = _result->resource->resource->acquireTexture(bg->background.backgroundImage)) {
 			setTexture(move(tex));
+			setSamplerIndex(1);
 		}
+	} else {
+		setColor(Color4F(bg->background.backgroundColor), true);
 	}
 	return true;
 }
@@ -156,9 +165,11 @@ void CommonObject::updateColor() {
 
 void CommonObject::updateVertexesColor() { }
 
-CommonView::~CommonView() {
-	_renderer->setRenderingCallback(nullptr);
+void CommonObject::pushCommands(FrameInfo &frame, NodeFlags flags) {
+	Sprite::pushCommands(frame, flags);
 }
+
+CommonView::~CommonView() { }
 
 bool CommonView::init(Layout l, CommonSource *source, const Vector<String> &ids) {
 	if (!ScrollView::init(l)) {
@@ -397,11 +408,15 @@ void CommonView::emplaceResultData(RendererResult *res, float contentOffset) {
 		}
 
 		for (auto &obj : res->result->getObjects()) {
-			//std::cout << "Obj: " << int(toInt(obj->type)) << " " << obj->bbox << " " << obj->zIndex << "\n";
+			// std::cout << "Obj: " << int(toInt(obj->type)) << " " << obj->bbox << " " << obj->zIndex << "\n";
 			_controller->addItem([obj, res = Rc<RendererResult>(res)] (const basic2d::ScrollController::Item &item) {
 				return Rc<CommonObject>::create(res, obj);
 			}, obj->bbox.size, obj->bbox.origin + Vec2(0.0f, contentOffset), ZOrder(obj->zIndex));
 		}
+
+		_controller->addItem([color = res->result->getBackgroundColor()] (const basic2d::ScrollController::Item &item) {
+			return Rc<basic2d::Layer>::create(Color4F(color));
+		}, Size2(res->result->getContentSize()) + Size2(_scrollSpacePadding * 2.0f, 0.0f), Vec2(-_scrollSpacePadding, contentOffset), ZOrder(-1));
 
 		_objectsOffset = contentOffset;
 	}

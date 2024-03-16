@@ -240,8 +240,8 @@ const StyleList *LayoutEngine::getStyle(const Node &node) const {
 }
 
 bool LayoutEngine::resolveMediaQuery(MediaQueryId queryId) const {
-	if (queryId < _data->resolvedMedia.size()) {
-		return _data->resolvedMedia[queryId];
+	if (queryId.get() < _data->resolvedMedia.size()) {
+		return _data->resolvedMedia[queryId.get()];
 	}
 	return false;
 }
@@ -982,7 +982,7 @@ const StyleList * LayoutEngine::Data::compileStyle(const Node &node) {
 	engine->beginStyle(it->second, node, nodeStack, media);
 
 	for (auto &ref_it : currentPage->getStyleLinks()) {
-		if (ref_it.media == MediaQueryIdNone || resolvedMedia[ref_it.media]) {
+		if (ref_it.media == MediaQueryIdNone || resolvedMedia[ref_it.media.get()]) {
 			if (auto page = document->getStyleDocument(ref_it.href)) {
 				page->resolveNodeStyle(it->second, node, nodeStack, media, resolvedMedia);
 			}

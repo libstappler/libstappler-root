@@ -75,6 +75,7 @@ struct Object : memory::AllocPool {
 struct Link : Object {
 	StringView target;
 	StringView mode;
+	WideStringView text;
 };
 
 struct BorderParams {
@@ -90,7 +91,7 @@ struct BorderParams {
 struct PathObject : Object {
 	vg::PathData<memory::PoolInterface> path;
 
-	static void makeBorder(LayoutResult *, LayoutBlock &, const Rect &, const OutlineParameters &, float w, const MediaParameters &);
+	static void makeBorder(LayoutResult *, LayoutBlock &, const Rect &, const OutlineParameters &, float w, uint32_t zOrder, const MediaParameters &);
 
 	void drawOutline(const Rect &, const Color4B &, float = 0.0f, BorderStyle = BorderStyle::None);
 	void drawRect(const Rect &, const Color4B &);

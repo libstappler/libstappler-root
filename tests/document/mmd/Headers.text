@@ -13,6 +13,23 @@ latex config:	article
 
 5
 
+# citet #
+
+[#foo1;]
+
+[#foo1;][]
+
+[p. 123][#foo1;]
+
+[][#foo1;]
+
+[foo\]\[bar][#foo1;]
+
+[#foo1;][#foo2;]
+
+
+[Not Cited][#foo3]
+
 #foo#
 
 #foo #
@@ -35,6 +52,41 @@ latex config:	article
 
 ####### foo #######
 
-15
+# citep #
 
-![Alt text](images/icon.png)
+[#foo1]
+
+[#foo1][]
+
+[p. 123][#foo1]
+
+[][#foo1]
+
+[foo\]\[bar][#foo1]
+
+[#foo1][#foo2]
+
+
+foo.[^bar]
+
+foo.[^bar2]
+
+foo.[^bar3]
+
+foo.[^bar3]
+
+[^bar]: *foo*
+[^bar2]: *foo
+bar*
+[^bar3]: foo
+
+	*bar*
+
+	* bat
+
+
+[#foo1]: John Doe. *A Totally Fake Book 1*.  Vanity Press, 2006.
+
+[#foo2]: John Doe. *A Totally Fake Book 2*.  Vanity Press, 2006.
+
+[#foo3]: John Doe. *A Totally Fake Book 3*.  Vanity Press, 2006.

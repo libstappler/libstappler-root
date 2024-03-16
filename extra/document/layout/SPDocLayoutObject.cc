@@ -79,7 +79,7 @@ bool BorderParams::isVisible() const {
 	return style != BorderStyle::None && width >= 0.5f && color.a > 0;
 }
 
-void PathObject::makeBorder(LayoutResult *res, LayoutBlock &l, const Rect &bb, const OutlineParameters &style, float w, const MediaParameters &media) {
+void PathObject::makeBorder(LayoutResult *res, LayoutBlock &l, const Rect &bb, const OutlineParameters &style, float w, uint32_t zIndex, const MediaParameters &media) {
 	BorderParams left, top, right, bottom;
 	if (style.top.style != BorderStyle::None) {
 		top = BorderParams{style.top.style, media.computeValueAuto(style.top.width, w), style.top.color};
@@ -98,31 +98,31 @@ void PathObject::makeBorder(LayoutResult *res, LayoutBlock &l, const Rect &bb, c
 		l.objects.emplace_back(res->emplaceOutline(l, Rect(
 				bb.origin.x + left.width / 2.0f, bb.origin.y + left.width / 2.0f,
 				bb.size.width - left.width, bb.size.height - left.width
-			), left.color, left.width, left.style));
+			), left.color, zIndex, left.width, left.style));
 	} else {
 		if (left.isVisible()) {
-			auto p = res->emplacePath(l);
+			auto p = res->emplacePath(l, zIndex);
 			p->drawVerticalLineSegment(bb.origin, bb.size.height,
 				left.color, left.width, left.style,
 				0.0f, 0.0f, top.width, bottom.width, 0.0f, 0.0f);
 			l.objects.emplace_back(p);
 		}
 		if (top.isVisible()) {
-			auto p = res->emplacePath(l);
+			auto p = res->emplacePath(l, zIndex);
 			p->drawHorizontalLineSegment(bb.origin, bb.size.width,
 				top.color, top.width, top.style,
 				left.width, 0.0f, 0.0f, 0.0f, 0.0f, right.width);
 			l.objects.emplace_back(p);
 		}
 		if (right.isVisible()) {
-			auto p = res->emplacePath(l);
+			auto p = res->emplacePath(l, zIndex);
 			p->drawVerticalLineSegment(Vec2(bb.origin.x + bb.size.width, bb.origin.y), bb.size.height,
 				right.color, right.width, right.style,
 				top.width, 0.0f, 0.0f, 0.0f, 0.0f, bottom.width);
 			l.objects.emplace_back(p);
 		}
 		if (bottom.isVisible()) {
-			auto p = res->emplacePath(l);
+			auto p = res->emplacePath(l, zIndex);
 			p->drawHorizontalLineSegment(Vec2(bb.origin.x, bb.origin.y + bb.size.height), bb.size.width,
 				bottom.color, bottom.width, bottom.style,
 				0.0f, 0.0f, left.width, right.width, 0.0f, 0.0f);

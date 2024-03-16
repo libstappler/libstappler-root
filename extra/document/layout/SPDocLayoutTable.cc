@@ -1175,7 +1175,7 @@ void LayoutTable::Borders::make(LayoutTable &table, LayoutResult *res) {
 
 		auto &border = horizontal[i];
 		if (horizontal[i].isVisible()) {
-			auto path = res->emplacePath(*table.layout);
+			auto path = res->emplacePath(*table.layout, table.layout->node.node->getNodeId());
 			path->depth = table.layout->depth + 5;
 			path->drawHorizontalLineSegment(origin, table.cols[col].width, border.color, border.width, border.style,
 				Border_getLeftBottomVert(*this, row, col), Border_getLeftHorz(*this, row, col), Border_getLeftTopVert(*this, row, col),
@@ -1195,7 +1195,7 @@ void LayoutTable::Borders::make(LayoutTable &table, LayoutResult *res) {
 
 		auto &border = vertical[i];
 		if (vertical[i].isVisible()) {
-			auto path = res->emplacePath(*table.layout);
+			auto path = res->emplacePath(*table.layout, table.layout->node.node->getNodeId());
 			path->depth = table.layout->depth + 5;
 			path->drawVerticalLineSegment(origin, table.rows[row].height, border.color, border.width, border.style,
 				Border_getTopLeftHorz(*this, row, col), Border_getTopVert(*this, row, col), Border_getTopRightHorz(*this, row, col),
@@ -1221,7 +1221,7 @@ BorderParams LayoutTable::Borders::getVert(size_t row, size_t col) const {
 void LayoutTable::processTableBackground() {
 	auto flushRect = [this] (LayoutBlock &l, const Rect &rect, const Color4B &color) {
 		if (rect.size.width > 0.0f && rect.size.height > 0.0f) {
-			auto path = layout->engine->getResult()->emplacePath(*layout);
+			auto path = layout->engine->getResult()->emplacePath(*layout, layout->node.node->getNodeId());
 			path->depth = layout->depth + 2;
 			path->drawRect(rect, color);
 			l.objects.emplace_back(path);
@@ -1330,7 +1330,7 @@ void LayoutTable::processTableBackground() {
 				Rect(-layout->pos.padding.left, -layout->pos.padding.top,
 					layout->pos.size.width + layout->pos.padding.left + layout->pos.padding.right,
 					layout->pos.size.height + layout->pos.padding.top + layout->pos.padding.bottom),
-					href, target));
+					href, target, WideStringView()));
 		}
 
 		layout->processRef();

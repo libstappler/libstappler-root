@@ -41,7 +41,7 @@ Node *Node::pushNode(Node *node) {
 
 void Node::setAttribute(StringView name, StringView value) {
 	if (isStringCaseEqual(name, "id")) {
-		_htmlId = name.str<Interface>();
+		_htmlId = value.str<Interface>();
 	} else if (isStringCaseEqual(name, "style")) {
 		// do nothing
 		return;
@@ -136,6 +136,16 @@ size_t Node::getChildIndex(const Node &node) const {
 		++ idx;
 	}
 	return 0;
+}
+
+auto Node::getValueRecursive() const -> WideString {
+	WideString ret;
+	foreach([&] (const Node &n, size_t level) {
+		if (n.hasValue()) {
+			ret += n.getValue().str<Interface>();
+		}
+	});
+	return ret;
 }
 
 void Node::propagateValue() {

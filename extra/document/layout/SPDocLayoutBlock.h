@@ -59,6 +59,7 @@ struct LayoutBlock : public memory::AllocPool, public InterfaceObject<memory::Po
 
 		float minHeight = stappler::nan();
 		float maxHeight = stappler::nan();
+		float maxExtent = stappler::nan();
 
 		float collapsableMarginTop = 0.0f;
 		float collapsableMarginBottom = 0.0f;

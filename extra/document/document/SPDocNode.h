@@ -94,6 +94,8 @@ public:
 
 	size_t getChildIndex(const Node &) const;
 
+	WideString getValueRecursive() const;
+
 protected:
 	void propagateValue();
 	void foreach(const ForeachIter &, size_t level);

@@ -58,6 +58,7 @@ void DocumentProcessor::processHtml(const Content &c, const StringView &str, con
 
 	auto &header_stack = content->getHeaders();
 	if (header_stack.empty()) {
+		_page->finalize();
 		return;
 	}
 

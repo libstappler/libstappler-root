@@ -43,7 +43,7 @@ StringId DocumentData::addString(const StringView &str) {
 
 MediaQueryId DocumentData::addQuery(MediaQuery &&query) {
 	queries.emplace_back(move(query));
-	return queries.size() - 1;
+	return MediaQueryId(queries.size() - 1);
 }
 
 bool Document::canOpen(FilePath path, StringView ct) {

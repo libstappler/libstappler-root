@@ -26,3 +26,8 @@
 #include "XLRTCommonSource.cc"
 #include "XLRTRenderer.cc"
 #include "XLRTCommonView.cc"
+#include "XLRTListenerView.cc"
+#include "XLRTView.cc"
+
+#include "XLRTImageLayout.cc"
+#include "XLRTTooltip.cc"

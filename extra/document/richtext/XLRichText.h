@@ -50,13 +50,11 @@ using Asset = storage::Asset;
 using AssetLock = storage::AssetLock;
 
 class CommonSource;
-class Source;
 class CommonView;
 class ListenerView;
 class View;
 class Tooltip;
-class Source;
-class ImageView;
+class ImageLayout;
 
 namespace config {
 

@@ -139,7 +139,7 @@ void InlineContext::finalize(LayoutBlock &l) {
 
 	for (auto &it : backgroundPos) {
 		targetLabel->layout.getLabelRects([&] (geom::Rect rect) {
-			l.objects.emplace_back(res->emplaceBackground(l, rect, it.background));
+			l.objects.emplace_back(res->emplaceBackground(l, rect, it.background, l.node.node->getNodeId()));
 		}, it.firstCharId, it.lastCharId, density, origin, it.padding);
 	}
 
@@ -147,18 +147,22 @@ void InlineContext::finalize(LayoutBlock &l) {
 		targetLabel->layout.getLabelRects([&] (geom::Rect rect) {
 			if (it.style.left.style != BorderStyle::None || it.style.top.style != BorderStyle::None
 				|| it.style.right.style != BorderStyle::None || it.style.bottom.style != BorderStyle::None) {
-				res->emplaceBorder(l, rect, it.style, 1.0f);
+				res->emplaceBorder(l, rect, it.style, 1.0f, l.node.node->getNodeId());
 			}
 			if (it.style.outline.style != BorderStyle::None) {
 				l.objects.emplace_back( res->emplaceOutline(l, rect,
-						it.style.outline.color, l.engine->getMedia().computeValueAuto(it.style.outline.width, 1.0f), it.style.outline.style) );
+						it.style.outline.color, l.node.node->getNodeId(), l.engine->getMedia().computeValueAuto(it.style.outline.width, 1.0f), it.style.outline.style) );
 			}
 		},it.firstCharId, it.lastCharId, density, origin);
 	}
 
 	for (auto &it : refPos) {
+		WideString text;
+		targetLabel->layout.str([&] (char16_t ch) {
+			text.push_back(ch);
+		}, it.firstCharId, it.lastCharId);
 		targetLabel->layout.getLabelRects([&] (geom::Rect rect) {
-			l.objects.emplace_back( res->emplaceLink(l, rect, it.target, it.mode) );
+			l.objects.emplace_back( res->emplaceLink(l, rect, it.target, it.mode, text) );
 		}, it.firstCharId, it.lastCharId, density, origin);
 	}
 

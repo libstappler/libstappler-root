@@ -39,7 +39,7 @@ bool DocumentLayout::init() {
 	_appBar = setFlexibleNode(Rc<material2d::AppBar>::create(material2d::AppBarLayout::Small, material2d::SurfaceStyle(
 			material2d::NodeStyle::Filled, material2d::ColorRole::PrimaryContainer)));
 	_appBar->setTitle("Test App Bar");
-	_appBar->setNavButtonIcon(IconName::Navigation_east_solid);
+	_appBar->setNavButtonIcon(IconName::Navigation_close_solid);
 
 	auto actionMenu = Rc<material2d::MenuSource>::create();
 	actionMenu->addButton("", IconName::Editor_format_align_center_solid, [this] (material2d::Button *, material2d::MenuSourceButton *) {
@@ -55,7 +55,8 @@ bool DocumentLayout::init() {
 	});
 	_appBar->setActionMenuSource(move(actionMenu));
 
-	_view = setBaseNode(Rc<CommonView>::create());
+	_view = setBaseNode(Rc<View>::create());
+	_view->setUseSelection(true);
 
 	setFlexibleMinHeight(0.0f);
 	setFlexibleMaxHeight(56.0f);
@@ -68,7 +69,7 @@ void DocumentLayout::onEnter(Scene *scene) {
 
 	auto lib = scene->getDirector()->getApplication()->getExtension<AssetLibrary>();
 
-	auto docAsset = Rc<SourceFileAsset>::create(filesystem::currentDir<Interface>("mmd/Headers.text"), "application/markdown");
+	auto docAsset = Rc<SourceFileAsset>::create(filesystem::currentDir<Interface>("mmd/Image.text"), "application/markdown");
 
 	_source = Rc<CommonSource>::create(lib, docAsset);
 

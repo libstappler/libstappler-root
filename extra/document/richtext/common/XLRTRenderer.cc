@@ -369,7 +369,7 @@ void Renderer::onResult(RendererResult * result) {
 		_result = result;
 	}
 
-	if (!_renderingInProgress && _renderingCallback) {
+	if (_owner && !_renderingInProgress && _renderingCallback) {
 		_renderingCallback(_result, false);
 	}
 }

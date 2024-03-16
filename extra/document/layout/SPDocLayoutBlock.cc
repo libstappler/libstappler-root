@@ -493,7 +493,7 @@ InlineContext &LayoutBlock::makeInlineContext(float parentPosY, const Node &n) {
 	context = engine->acquireInlineContext(density);
 
 	if (request == ContentRequest::Normal) {
-		context->setTargetLabel(engine->getResult()->emplaceLabel(*this));
+		context->setTargetLabel(engine->getResult()->emplaceLabel(*this, node.node->getNodeId()));
 	}
 
 	pos.origin = Vec2(roundf(pos.position.x * density), roundf(parentPosY * density));
@@ -559,8 +559,10 @@ float LayoutBlock::finalizeInlineContext() {
 
 	context->reader.finalize();
 
+	pos.maxExtent = context->reader.getMaxLineX() / density;
+
 	if (node.block.floating != Float::None && (node.block.width.value == 0 || std::isnan(node.block.width.value))) {
-		pos.size.width = context->reader.getMaxLineX() / density;
+		pos.size.width = pos.maxExtent;
 	}
 
 	float offset = (node.block.floating == Float::None) ? fixLabelPagination(*context->targetLabel) : 0;
@@ -637,7 +639,8 @@ void LayoutBlock::processBackground(float parentPosY) {
 		if (style.backgroundColor.a != 0 && !isnan(pos.size.height)) {
 			if (node.node->getHtmlName() != "hr") {
 				objects.emplace_back(engine->getResult()->emplaceBackground(*this,
-					Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()), style));
+					Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()),
+					style, node.node->getNodeId()));
 			} else {
 				float density = engine->getMedia().density;
 
@@ -650,7 +653,8 @@ void LayoutBlock::processBackground(float parentPosY) {
 					Rect(-pos.padding.left + posPair.offset / density,
 						-pos.padding.top,
 						posPair.width / density + pos.padding.left + pos.padding.right,
-						pos.size.height + pos.padding.top + pos.padding.bottom), style));
+						pos.size.height + pos.padding.top + pos.padding.bottom),
+						style, node.node->getNodeId()));
 			}
 		}
 	} else if (pos.size.width > 0 && pos.size.height == 0 && engine->getMedia().shouldRenderImages()) {
@@ -666,7 +670,7 @@ void LayoutBlock::processBackground(float parentPosY) {
 			h = img->height;
 		}
 
-		float ratio = (float)w / (float)h;
+		float ratio = float(w) / float(h);
 		if (height == 0) {
 			height = width / ratio;
 		}
@@ -681,10 +685,12 @@ void LayoutBlock::processBackground(float parentPosY) {
 
 		pos.size.height = height - pos.padding.vertical();
 		objects.emplace_back(engine->getResult()->emplaceBackground(*this,
-			Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()), style));
+			Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()),
+			style, node.node->getNodeId()));
 	} else {
 		objects.emplace_back(engine->getResult()->emplaceBackground(*this,
-			Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()), style));
+			Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()),
+			style, node.node->getNodeId()));
 	}
 }
 
@@ -696,7 +702,7 @@ void LayoutBlock::processOutline(bool withBorder) {
 
 			engine->getResult()->emplaceBorder(*this, Rect(-pos.padding.left, -pos.padding.top,
 				pos.size.width + pos.padding.left + pos.padding.right, pos.size.height + pos.padding.top + pos.padding.bottom),
-				style, pos.size.width);
+				style, pos.size.width, node.node->getNodeId());
 		}
 	}
 
@@ -707,7 +713,7 @@ void LayoutBlock::processOutline(bool withBorder) {
 				Rect(-pos.padding.left, -pos.padding.top,
 					pos.size.width + pos.padding.left + pos.padding.right,
 					pos.size.height + pos.padding.top + pos.padding.bottom),
-				style.outline.color, width, style.outline.style
+				style.outline.color, node.node->getNodeId(), width, style.outline.style
 			));
 		}
 	}
@@ -721,11 +727,13 @@ void LayoutBlock::processRef() {
 			targetPtr = node.node->getAttribute("type");
 		}
 
+		auto extent = isnan(pos.maxExtent) ? pos.size.width : pos.maxExtent;
+
 		auto res = engine->getResult();
 		objects.emplace_back(res->emplaceLink(*this,
 			Rect(-pos.padding.left, -pos.padding.top,
-				pos.size.width + pos.padding.left + pos.padding.right, pos.size.height + pos.padding.top + pos.padding.bottom),
-			hrefPtr, targetPtr));
+					extent + pos.padding.left + pos.padding.right, pos.size.height + pos.padding.top + pos.padding.bottom),
+			hrefPtr, targetPtr, node.node->getValueRecursive()));
 	}
 }
 
