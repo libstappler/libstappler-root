@@ -89,6 +89,7 @@ struct Engine::Internal : memory::PoolInterface {
 
 	TokenPairEngine * pairs = nullptr;
 
+	bool _shouldDestroyPool = false;
 	bool isDebug = false;
 	StringStreamType debug;
 };
@@ -403,27 +404,24 @@ void Engine::Internal::process(const ProcessCallback &cb) {
 		return;
 	}
 
-	auto p = memory::pool::create(pool);
-	memory::pool::push(p);
+	memory::pool::push(pool);
 
 	cb(content, source, engine.root);
 
 	memory::pool::pop();
 
 	if (isDebug) {
-		debug << "Allocated on processing: " << memory::pool::get_allocated_bytes(p) << "\n";
+		debug << "Allocated on processing: " << memory::pool::get_allocated_bytes(pool) << "\n";
 	}
-	memory::pool::destroy(p);
 }
 
 Engine::~Engine() {
 	clear();
 }
 
-bool Engine::init(memory::pool_t *p, StringView source, const Extensions & ext) {
+bool Engine::init(memory::pool_t *pool, StringView source, const Extensions & ext) {
 	clear();
 
-	auto pool = memory::pool::create(p);
 	memory::pool::push(pool);
 	_internal = new (pool) Internal(pool, source, ext);
 	memory::pool::pop();
@@ -436,16 +434,20 @@ bool Engine::init(StringView source, const Extensions & ext) {
 	auto pool = memory::pool::create(tl_pool.getPool());
 	memory::pool::push(pool);
 	_internal = new (pool) Internal(pool, source, ext);
+	_internal->_shouldDestroyPool = true;
 	memory::pool::pop();
 	return true;
 }
 
 void Engine::clear() {
 	if (_internal) {
+		auto shouldDestroy = _internal->_shouldDestroyPool;
 		auto pool = _internal->pool;
 		_internal->~Internal();
 		_internal = nullptr;
-		memory::pool::destroy(pool);
+		if (shouldDestroy) {
+			memory::pool::destroy(pool);
+		}
 	}
 }
 

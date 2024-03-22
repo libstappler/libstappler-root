@@ -69,7 +69,7 @@ void DocumentLayout::onEnter(Scene *scene) {
 
 	auto lib = scene->getDirector()->getApplication()->getExtension<AssetLibrary>();
 
-	auto docAsset = Rc<SourceFileAsset>::create(filesystem::currentDir<Interface>("mmd/Image.text"), "application/markdown");
+	auto docAsset = Rc<SourceFileAsset>::create(filesystem::currentDir<Interface>("mmd/Test.text"), "application/markdown");
 
 	_source = Rc<CommonSource>::create(lib, docAsset);
 

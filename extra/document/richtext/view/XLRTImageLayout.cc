@@ -30,43 +30,25 @@ namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 ImageLayout::~ImageLayout() { }
 
 bool ImageLayout::init(RendererResult *res, const StringView &id, const StringView &src, const StringView &alt) {
-	if (!SceneLayout2d::init() || !res) {
+	if (!DecoratedLayout::init() || !res || !res->resource) {
 		return false;
 	}
 
 	_result = res;
 	_src = src.str<Interface>();
 
-	auto tooltip = constructTooltip(_result, id.empty()?Vector<String>():Vector<String>{id.str<Interface>()});
-
-	if (auto r = tooltip->getRenderer()) {
-		r->addOption("image-view");
-	}
-
-	_tooltip = addChild(move(tooltip), ZOrder(2));
-
-	auto actions = _tooltip->getActions();
-	actions->clear();
-	if (!id.empty()) {
-		_expandButton = actions->addButton("Expand", IconName::Navigation_expand_less_solid, std::bind(&ImageLayout::onExpand, this));
-	} else {
-		_expanded = false;
-	}
-
-	auto toolbar = _tooltip->getToolbar();
-	toolbar->setTitle(alt);
-	toolbar->setNavButtonIcon(IconName::Dynamic_Nav, 1.0f);
-	toolbar->setNavCallback(std::bind(&ImageLayout::close, this));
-	toolbar->setSwallowTouches(true);
+	_toolbar = addChild(Rc<material2d::AppBar>::create(material2d::AppBarLayout::Minified), ZOrder(1));
+	_toolbar->setNodeStyle(material2d::NodeStyle::Filled);
+	_toolbar->setNavButtonIcon(IconName::Dynamic_Nav, 1.0f);
+	_toolbar->setNavCallback([this] {
+		close();
+	});
+	_toolbar->setAnchorPoint(Anchor::TopLeft);
 
 	_sprite = addChild(Rc<material2d::ImageLayer>::create(), ZOrder(1));
 	_sprite->setPosition(Vec2(0, 0));
 	_sprite->setAnchorPoint(Vec2(0, 0));
-	_sprite->setActionCallback([this] {
-		if (!_expanded) {
-			_tooltip->onFadeOut();
-		}
-	});
+	_sprite->setActionCallback([this] { });
 
 	if (auto tex = _result->resource->resource->acquireTexture(_src)) {
 		_sprite->setTexture(move(tex));
@@ -76,70 +58,23 @@ bool ImageLayout::init(RendererResult *res, const StringView &id, const StringVi
 }
 
 void ImageLayout::onContentSizeDirty() {
-	SceneLayout2d::onContentSizeDirty();
+	DecoratedLayout::onContentSizeDirty();
 
-	if (_contentSize != Size2::ZERO) {
-		auto incr = 48.0f;
-		auto size = _contentSize;
-		auto pos = Vec2(incr / 4.0f, incr / 2.0f);
+	_toolbar->setPosition(Vec2(_decorationPadding.left, _contentSize.height - _decorationPadding.top));
+	_toolbar->setContentSize(Size2(_contentSize.width - _decorationPadding.horizontal(), 32.0f));
 
-		Size2 maxSize;
-		maxSize.width = _contentSize.width - incr;
-		maxSize.height = _contentSize.height - incr * 2.0f;
-
-		if (maxSize.width > incr * 9) {
-			maxSize.width = incr * 9;
-		}
-
-		if (maxSize.height > incr * 9) {
-			maxSize.height = incr * 9;
-		}
-
-		size.width -= incr;
-
-		_tooltip->setOriginPosition(Vec2(0, incr / 2.0f), size, _parent->convertToWorldSpace(pos));
-		_tooltip->setMaxContentSize(maxSize);
-		_tooltip->setPosition(pos);
-
-		if (_tooltip->getRenderer()) {
-			_tooltip->setMaxContentSize(maxSize);
-		} else {
-			//_tooltip->setContentSize(Size(maxSize.width, _tooltip->getToolbar()->getContentSize().height));
-			_tooltip->setContentSize(Size2(maxSize.width, 28.0f));
-		}
-	}
-
-	_sprite->setContentSize(_contentSize);
+	_sprite->setContentSize(Size2(_contentSize.width - _decorationPadding.horizontal(), _contentSize.height - 32.0f - _decorationPadding.vertical()));
+	_sprite->setPosition(Vec2(_decorationPadding.left, _decorationPadding.bottom));
 }
 
 void ImageLayout::onEnter(Scene *scene) {
-	SceneLayout2d::onEnter(scene);
+	DecoratedLayout::onEnter(scene);
 }
 
 void ImageLayout::close() {
 	auto contentLayer = dynamic_cast<material2d::SceneContent2d *>(_parent);
 	if (contentLayer) {
 		contentLayer->popLayout(this);
-	}
-}
-
-Rc<Tooltip> ImageLayout::constructTooltip(RendererResult *res, const Vector<String> &ids) const {
-	return Rc<Tooltip>::create(res, ids, WideStringView());
-}
-
-void ImageLayout::onExpand() {
-	if (_expanded) {
-		_tooltip->setExpanded(false);
-		if (_expandButton) {
-			_expandButton->setNameIcon(IconName::Navigation_expand_more_solid);
-		}
-		_expanded = false;
-	} else {
-		_tooltip->setExpanded(true);
-		if (_expandButton) {
-			_expandButton->setNameIcon(IconName::Navigation_expand_less_solid);
-		}
-		_expanded = true;
 	}
 }
 

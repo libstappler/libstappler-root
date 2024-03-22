@@ -62,7 +62,7 @@ public:
 
 	virtual Rc<Document> openDocument(const SourceAssetLock *) override;
 
-	virtual int64_t getMTime(const SourceAssetLock *) const;
+	virtual int64_t getMTime(const SourceAssetLock *) const override;
 
 	virtual StringView getContentType(const SourceAssetLock *) const override { return _type; }
 
@@ -110,7 +110,7 @@ public:
 	virtual Value getExtraData() const override;
 
 protected:
-	virtual Rc<Ref> doLockAsset(int64_t mtime);
+	virtual Rc<Ref> doLockAsset(int64_t mtime) override;
 
 	virtual void onAsset(Asset *);
 

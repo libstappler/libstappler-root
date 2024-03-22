@@ -145,6 +145,8 @@ struct LayoutBlock : public memory::AllocPool, public InterfaceObject<memory::Po
 	ContentRequest request = ContentRequest::Normal;
 
 	uint16_t depth = 0;
+	Background *background = nullptr;
+	Link *link = nullptr;
 };
 
 }

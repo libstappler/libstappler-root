@@ -36,6 +36,7 @@ struct RendererResource : public Ref {
 };
 
 struct RendererResult : public Ref {
+	Rc<Application> app;
 	Rc<font::FontController> fc;
 	Rc<Document> document;
 	Rc<CommonSource> source;
@@ -46,6 +47,11 @@ struct RendererResult : public Ref {
 	MediaParameters media;
 	Vector<String> ids;
 	Map<String, DocumentAssetMeta> assets;
+	Time ctime;
+
+	RendererResult() = default;
+	RendererResult(const RendererResult &);
+	RendererResult& operator=(const RendererResult &);
 };
 
 class Renderer : public Component {
@@ -69,7 +75,6 @@ public:
 	RendererResult *getResult() const;
 	MediaParameters getMedia() const;
 
-public: /* media type resolver */
 	void setSurfaceSize(const Size2 &size);
 
 	// size of rendering surface (size for media-queries)
@@ -80,6 +85,8 @@ public: /* media type resolver */
 	void setDpi(int dpi);
 	void setDensity(float density);
 	void setDefaultBackground(const Color4B &);
+
+	void setFontScale(float);
 
 	void setMediaType(document::MediaType value);
 	void setOrientationValue(document::Orientation value);
@@ -104,7 +111,7 @@ public: /* media type resolver */
 	virtual void onResult(RendererResult *result);
 
 protected:
-	virtual Rc<core::Resource> prepareResource(StringView name, const Map<String, DocumentAssetMeta> &);
+	virtual Rc<core::Resource> prepareResource(StringView name, Time ctime, const Map<String, DocumentAssetMeta> &);
 	virtual bool requestRendering();
 	virtual void onSource();
 	virtual void pushVersionOptions();

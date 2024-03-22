@@ -68,12 +68,11 @@ public:
 		virtual void setDirty();
 	protected:
 		virtual void emplaceRect(const Rect &, size_t idx, size_t count);
-		virtual void updateRects();
+		virtual void updateVertexes() override;
 
 		View *_view = nullptr;
 		Vector<Pair<SelectionPosition, SelectionPosition>> _selectionBounds;
 
-		bool _dirty = false;
 		bool _enabled = false;
 	};
 

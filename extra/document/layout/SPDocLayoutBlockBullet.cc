@@ -171,7 +171,7 @@ void LayoutBlock::processListItemBullet(float parentPosY) {
 
 		auto baseFont = engine->getFont(fStyle);
 
-		Label *label = engine->getResult()->emplaceLabel(*this, true);
+		Label *label = engine->getResult()->emplaceLabel(*this, ZOrderLabel, true);
 		font::Formatter reader([e = engine] (const FontStyleParameters &f) {
 			return e->getFont(f);
 		}, &label->layout);

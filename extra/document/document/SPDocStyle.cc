@@ -335,6 +335,8 @@ void getStyleForTag(StyleList &style, const StringView &tag, const StringView &p
 		style.data.push_back(StyleParameter::create<ParameterName::CssPaddingBottom>(Metric(0.3f, Metric::Units::Rem)));
 		style.data.push_back(StyleParameter::create<ParameterName::CssPaddingLeft>(Metric(0.3f, Metric::Units::Rem)));
 		style.data.push_back(StyleParameter::create<ParameterName::CssPaddingRight>(Metric(0.3f, Metric::Units::Rem)));
+	} else if (tag == "__value__") {
+		style.data.push_back(StyleParameter::create<ParameterName::CssDisplay>(Display::Inline));
 	}
 }
 

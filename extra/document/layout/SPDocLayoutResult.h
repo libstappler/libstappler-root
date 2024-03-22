@@ -81,11 +81,11 @@ public:
 
 	LayoutBoundIndex getBoundsForPosition(float) const;
 
-	Background *emplaceBackground(const LayoutBlock &, const Rect &, const BackgroundParameters &, uint32_t zIndex);
-	PathObject *emplaceOutline(const LayoutBlock &, const Rect &, const Color4B &, uint32_t zIndex, float = 0.0f, BorderStyle = BorderStyle::None);
-	void emplaceBorder(LayoutBlock &, const Rect &, const OutlineParameters &, float width, uint32_t zIndex);
-	PathObject *emplacePath(const LayoutBlock &, uint32_t zIndex);
-	Label *emplaceLabel(const LayoutBlock &, uint32_t zIndex, bool isBullet = false);
+	Background *emplaceBackground(const LayoutBlock &, const Rect &, const BackgroundParameters &, ZOrder zIndex);
+	PathObject *emplaceOutline(const LayoutBlock &, const Rect &, const Color4B &, ZOrder zIndex, float = 0.0f, BorderStyle = BorderStyle::None);
+	void emplaceBorder(LayoutBlock &, const Rect &, const OutlineParameters &, float width, ZOrder zIndex);
+	PathObject *emplacePath(const LayoutBlock &, ZOrder zIndex);
+	Label *emplaceLabel(const LayoutBlock &, ZOrder zIndex, bool isBullet = false);
 	Link *emplaceLink(const LayoutBlock &, const Rect &, StringView, StringView, WideStringView);
 
 	const Object *getObject(size_t size) const;

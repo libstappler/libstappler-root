@@ -41,8 +41,6 @@ public:
 
 protected:
 	material2d::AppBar *_appBar = nullptr;
-
-	basic2d::ScrollController *_scrollController = nullptr;
 	View *_view = nullptr;
 	bool _decorationVisible = true;
 

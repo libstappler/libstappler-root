@@ -23,14 +23,15 @@
 #ifndef EXTRA_DOCUMENT_RICHTEXT_VIEW_XLRTIMAGEVIEW_H_
 #define EXTRA_DOCUMENT_RICHTEXT_VIEW_XLRTIMAGEVIEW_H_
 
+#include "MaterialFlexibleLayout.h"
+#include "MaterialAppBar.h"
 #include "XLRTCommonSource.h"
-#include "XL2dSceneLayout.h"
 #include "XL2dImageLayer.h"
 #include "XLRTTooltip.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
-class ImageLayout : public material2d::SceneLayout2d {
+class ImageLayout : public material2d::DecoratedLayout {
 public:
 	virtual ~ImageLayout();
 
@@ -42,13 +43,8 @@ public:
 	virtual void close();
 
 protected:
-	virtual Rc<Tooltip> constructTooltip(RendererResult *res, const Vector<String> &) const;
-
-	virtual void onExpand();
-
 	String _src;
-	Tooltip *_tooltip = nullptr;
-	material2d::MenuSourceButton *_expandButton = nullptr;
+	material2d::AppBar *_toolbar = nullptr;
 	bool _expanded = true;
 
 	material2d::ImageLayer *_sprite = nullptr;

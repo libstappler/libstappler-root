@@ -135,10 +135,7 @@ void PageContainer::addLink(const StringView &data) {
 }
 
 void PageContainer::addAsset(const StringView &str) {
-	StringView r(str);
-	auto url = r.readUntil<StringView::Chars<'?'>>();
-
-	_assets.emplace_back(url.str<Interface>());
+	_assets.emplace_back(str.str<Interface>());
 }
 
 StringView PageContainer::getMeta(StringView key) const {

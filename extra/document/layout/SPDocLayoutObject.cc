@@ -79,7 +79,7 @@ bool BorderParams::isVisible() const {
 	return style != BorderStyle::None && width >= 0.5f && color.a > 0;
 }
 
-void PathObject::makeBorder(LayoutResult *res, LayoutBlock &l, const Rect &bb, const OutlineParameters &style, float w, uint32_t zIndex, const MediaParameters &media) {
+void PathObject::makeBorder(LayoutResult *res, LayoutBlock &l, const Rect &bb, const OutlineParameters &style, float w, ZOrder zIndex, const MediaParameters &media) {
 	BorderParams left, top, right, bottom;
 	if (style.top.style != BorderStyle::None) {
 		top = BorderParams{style.top.style, media.computeValueAuto(style.top.width, w), style.top.color};

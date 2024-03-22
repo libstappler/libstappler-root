@@ -1175,7 +1175,7 @@ void LayoutTable::Borders::make(LayoutTable &table, LayoutResult *res) {
 
 		auto &border = horizontal[i];
 		if (horizontal[i].isVisible()) {
-			auto path = res->emplacePath(*table.layout, table.layout->node.node->getNodeId());
+			auto path = res->emplacePath(*table.layout, ZOrderBorder);
 			path->depth = table.layout->depth + 5;
 			path->drawHorizontalLineSegment(origin, table.cols[col].width, border.color, border.width, border.style,
 				Border_getLeftBottomVert(*this, row, col), Border_getLeftHorz(*this, row, col), Border_getLeftTopVert(*this, row, col),
@@ -1195,7 +1195,7 @@ void LayoutTable::Borders::make(LayoutTable &table, LayoutResult *res) {
 
 		auto &border = vertical[i];
 		if (vertical[i].isVisible()) {
-			auto path = res->emplacePath(*table.layout, table.layout->node.node->getNodeId());
+			auto path = res->emplacePath(*table.layout, ZOrderBorder);
 			path->depth = table.layout->depth + 5;
 			path->drawVerticalLineSegment(origin, table.rows[row].height, border.color, border.width, border.style,
 				Border_getTopLeftHorz(*this, row, col), Border_getTopVert(*this, row, col), Border_getTopRightHorz(*this, row, col),
@@ -1221,7 +1221,7 @@ BorderParams LayoutTable::Borders::getVert(size_t row, size_t col) const {
 void LayoutTable::processTableBackground() {
 	auto flushRect = [this] (LayoutBlock &l, const Rect &rect, const Color4B &color) {
 		if (rect.size.width > 0.0f && rect.size.height > 0.0f) {
-			auto path = layout->engine->getResult()->emplacePath(*layout, layout->node.node->getNodeId());
+			auto path = layout->engine->getResult()->emplacePath(*layout, ZOrderBackground);
 			path->depth = layout->depth + 2;
 			path->drawRect(rect, color);
 			l.objects.emplace_back(path);
@@ -1309,14 +1309,22 @@ void LayoutTable::processTableBackground() {
 	if (widthScale < 1.0f) {
 		String caption;
 		if (captionLayout) {
-			for (auto &it : captionLayout->objects) {
-				if (it->type == Object::Type::Label) {
-					WideString str; str.reserve(it->asLabel()->layout.chars.size());
-					it->asLabel()->layout.str([&] (char16_t ch) {
-						str.emplace_back(ch);
-					});
-					caption = string::toUtf8<Interface>(str);
+			if (!captionLayout->objects.empty()) {
+				for (auto &it : captionLayout->objects) {
+					if (it->type == Object::Type::Label) {
+						WideString str; str.reserve(it->asLabel()->layout.chars.size());
+						it->asLabel()->layout.str([&] (char16_t ch) {
+							str.emplace_back(ch);
+						});
+						caption = string::toUtf8<Interface>(str);
+					}
 				}
+			} else {
+				captionLayout->node.node->foreach([&] (const Node &node, size_t level) {
+					if (node.hasValue()) {
+						caption += string::toUtf8<Interface>(node.getValue());
+					}
+				});
 			}
 		}
 

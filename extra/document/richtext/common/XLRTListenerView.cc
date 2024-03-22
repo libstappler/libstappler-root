@@ -629,10 +629,10 @@ void ListenerView::onLink(const StringView &ref, const StringView &target, const
 	if (ref.starts_with("http://") || ref.starts_with( "https://")) {
 		_director->getApplication()->openUrl(ref);
 		onExternalLink(this, ref);
-	} else if (ref.starts_with("mailto:") == 0) {
+	} else if (ref.starts_with("mailto:")) {
 		_director->getApplication()->openUrl(ref);
 		onExternalLink(this, ref);
-	} else if (ref.starts_with("tel:") == 0) {
+	} else if (ref.starts_with("tel:")) {
 		_director->getApplication()->openUrl(ref);
 		onExternalLink(this, ref);
 	}

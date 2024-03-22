@@ -142,8 +142,9 @@ void Tooltip::onEnter(Scene *scene) {
 
 void Tooltip::onResult(RendererResult *r) {
 	Size2 cs = r->result->getContentSize();
+	cs.width = _contentSize.width;
 
-	cs.height += getFlexibleMaxHeight() + 16.0f;
+	cs.height += getFlexibleMaxHeight() + _view->getPadding().vertical();
 	if (cs.height > _maxContentSize.height) {
 		cs.height = _maxContentSize.height;
 	}
@@ -184,7 +185,7 @@ void Tooltip::setExpanded(bool value) {
 
 		if (_expanded) {
 			stopAllActions();
-			runAction(Rc<Sequence>::create(Rc<ResizeTo>::create(0.25, _defaultSize), [this] {
+			runAction(Rc<Sequence>::create(Rc<ResizeTo>::create(0.15f, _defaultSize), [this] {
 				_view->setVisible(true);
 				_view->setOpacity(0);
 				_view->runAction(Rc<FadeTo>::create(0.15f, 1.0f));
@@ -196,7 +197,7 @@ void Tooltip::setExpanded(bool value) {
 			auto newSize = Size2(_defaultSize.width, _toolbar->getBasicHeight());
 			if (newSize != _defaultSize) {
 				stopAllActions();
-				runAction(Rc<Sequence>::create(Rc<ResizeTo>::create(0.25, newSize), [this] {
+				runAction(Rc<Sequence>::create(Rc<ResizeTo>::create(0.15f, newSize), [this] {
 					onDelayedFadeOut();
 				}));
 			} else {
@@ -218,17 +219,20 @@ void Tooltip::close() {
 		_closeCallback();
 	}
 
-	setVisible(false);
+	if (_view) {
+		_view->getRenderer()->setEnabled(false);
+	}
+	//setVisible(false);
 	stopAllActions();
 	//setShadowZIndexAnimated(0.0f, 0.25f);
-	runAction(Rc<Sequence>::create(Rc<ResizeTo>::create(0.25f, Size2(0, 0)), [this] {
+	runAction(Rc<Sequence>::create(Rc<ResizeTo>::create(0.15f, Size2(_contentSize.width, 0)), [this] {
 		_sceneContent->popOverlay(this);
 	}));
 }
 
 void Tooltip::onDelayedFadeOut() {
 	stopActionByTag(2);
-	runAction(Rc<Sequence>::create(3.0f, Rc<FadeTo>::create(0.25f, 0.25f)), 2);
+	runAction(Rc<Sequence>::create(3.0f, Rc<FadeTo>::create(0.15f, 0.25f)), 2);
 }
 
 void Tooltip::onFadeIn() {

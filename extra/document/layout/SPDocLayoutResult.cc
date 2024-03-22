@@ -179,13 +179,13 @@ LayoutBoundIndex LayoutResult::getBoundsForPosition(float pos) const {
 	return LayoutBoundIndex{maxOf<size_t>(), 0, 0.0f, 0.0f, maxOf<int64_t>()};
 }
 
-Label *LayoutResult::emplaceLabel(const LayoutBlock &l, uint32_t zIndex, bool isBullet) {
+Label *LayoutResult::emplaceLabel(const LayoutBlock &l, ZOrder zIndex, bool isBullet) {
 	memory::pool::context ctx(_data->pool);
 
 	auto ret = new (_data->pool) Label;
 	ret->type = Object::Type::Label;
 	ret->depth = l.depth;
-	ret->zIndex = zIndex;
+	ret->zIndex = zIndex.get();
 	ret->index = _data->objects.size();
 
 	if (!isBullet) {
@@ -207,14 +207,14 @@ Label *LayoutResult::emplaceLabel(const LayoutBlock &l, uint32_t zIndex, bool is
 	return ret;
 }
 
-Background *LayoutResult::emplaceBackground(const LayoutBlock &l, const Rect &rect, const BackgroundParameters &style, uint32_t zIndex) {
+Background *LayoutResult::emplaceBackground(const LayoutBlock &l, const Rect &rect, const BackgroundParameters &style, ZOrder zIndex) {
 	memory::pool::context ctx(_data->pool);
 
 	auto ret = new (_data->pool) Background;
 	ret->type = Object::Type::Background;
 	ret->depth = l.depth;
 	ret->bbox = rect;
-	ret->zIndex = zIndex;
+	ret->zIndex = zIndex.get();
 	ret->background = style;
 	ret->background.backgroundImage = _data->addString(ret->background.backgroundImage);
 	ret->index = _data->objects.size();
@@ -239,33 +239,33 @@ Link *LayoutResult::emplaceLink(const LayoutBlock &l, const Rect &rect, StringVi
 	return ret;
 }
 
-PathObject *LayoutResult::emplaceOutline(const LayoutBlock &l, const Rect &rect, const Color4B &color, uint32_t zIndex, float width, BorderStyle style) {
+PathObject *LayoutResult::emplaceOutline(const LayoutBlock &l, const Rect &rect, const Color4B &color, ZOrder zIndex, float width, BorderStyle style) {
 	memory::pool::context ctx(_data->pool);
 
 	auto ret = new (_data->pool) PathObject;
 	ret->type = Object::Type::Path;
 	ret->depth = l.depth;
 	ret->bbox = rect;
-	ret->zIndex = zIndex;
+	ret->zIndex = zIndex.get();
 	ret->drawOutline(rect, color, width, style);
 	ret->index = _data->objects.size();
 	_data->objects.push_back(ret);
 	return ret;
 }
 
-void LayoutResult::emplaceBorder(LayoutBlock &l, const Rect &rect, const OutlineParameters &style, float width, uint32_t zIndex) {
+void LayoutResult::emplaceBorder(LayoutBlock &l, const Rect &rect, const OutlineParameters &style, float width, ZOrder zIndex) {
 	memory::pool::context ctx(_data->pool);
 
 	PathObject::makeBorder(this, l, rect, style, width, zIndex, _data->media);
 }
 
-PathObject *LayoutResult::emplacePath(const LayoutBlock &l, uint32_t zIndex) {
+PathObject *LayoutResult::emplacePath(const LayoutBlock &l, ZOrder zIndex) {
 	memory::pool::context ctx(_data->pool);
 
 	auto ret = new (_data->pool) PathObject;
 	ret->type = Object::Type::Path;
 	ret->depth = l.depth;
-	ret->zIndex = zIndex;
+	ret->zIndex = zIndex.get();
 	ret->index = _data->objects.size();
 	_data->objects.push_back(ret);
 	return ret;

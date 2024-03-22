@@ -38,6 +38,14 @@ struct LayoutBlock;
 
 class LayoutResult;
 
+using ZOrder = ValueWrapper<uint32_t, class LayoutZOrderFlag>;
+
+static constexpr ZOrder ZOrderBackground = ZOrder(0);
+static constexpr ZOrder ZOrderLabel = ZOrder(64);
+static constexpr ZOrder ZOrderBorder = ZOrder(128);
+static constexpr ZOrder ZOrderOutline = ZOrder(192);
+static constexpr ZOrder ZOrderForeground = ZOrder(256);
+
 struct Object : memory::AllocPool {
 	enum class Type : uint8_t {
 		Empty,
@@ -76,6 +84,7 @@ struct Link : Object {
 	StringView target;
 	StringView mode;
 	WideStringView text;
+	Background *source = nullptr;
 };
 
 struct BorderParams {
@@ -91,7 +100,7 @@ struct BorderParams {
 struct PathObject : Object {
 	vg::PathData<memory::PoolInterface> path;
 
-	static void makeBorder(LayoutResult *, LayoutBlock &, const Rect &, const OutlineParameters &, float w, uint32_t zOrder, const MediaParameters &);
+	static void makeBorder(LayoutResult *, LayoutBlock &, const Rect &, const OutlineParameters &, float w, ZOrder zOrder, const MediaParameters &);
 
 	void drawOutline(const Rect &, const Color4B &, float = 0.0f, BorderStyle = BorderStyle::None);
 	void drawRect(const Rect &, const Color4B &);
@@ -112,6 +121,7 @@ struct Label : Object {
 
 struct Background : Object {
 	BackgroundParameters background;
+	Link *link = nullptr;
 };
 
 }

@@ -98,6 +98,8 @@ InlineContext::InlineContext(font::Formatter::FontCallback &&cb, float d) {
 	reader.setFontCallback(move(cb));
 	reader.reset(&targetLabel->layout);
 	density = d;
+
+	idPos.clear();
 }
 
 void InlineContext::setTargetLabel(Label *label) {
@@ -139,7 +141,7 @@ void InlineContext::finalize(LayoutBlock &l) {
 
 	for (auto &it : backgroundPos) {
 		targetLabel->layout.getLabelRects([&] (geom::Rect rect) {
-			l.objects.emplace_back(res->emplaceBackground(l, rect, it.background, l.node.node->getNodeId()));
+			l.objects.emplace_back(res->emplaceBackground(l, rect, it.background, ZOrderBackground));
 		}, it.firstCharId, it.lastCharId, density, origin, it.padding);
 	}
 
@@ -147,11 +149,11 @@ void InlineContext::finalize(LayoutBlock &l) {
 		targetLabel->layout.getLabelRects([&] (geom::Rect rect) {
 			if (it.style.left.style != BorderStyle::None || it.style.top.style != BorderStyle::None
 				|| it.style.right.style != BorderStyle::None || it.style.bottom.style != BorderStyle::None) {
-				res->emplaceBorder(l, rect, it.style, 1.0f, l.node.node->getNodeId());
+				res->emplaceBorder(l, rect, it.style, 1.0f, ZOrderBorder);
 			}
 			if (it.style.outline.style != BorderStyle::None) {
 				l.objects.emplace_back( res->emplaceOutline(l, rect,
-						it.style.outline.color, l.node.node->getNodeId(), l.engine->getMedia().computeValueAuto(it.style.outline.width, 1.0f), it.style.outline.style) );
+						it.style.outline.color, ZOrderBorder, l.engine->getMedia().computeValueAuto(it.style.outline.width, 1.0f), it.style.outline.style) );
 			}
 		},it.firstCharId, it.lastCharId, density, origin);
 	}
@@ -196,6 +198,7 @@ void InlineContext::finalize() {
 		nodes.clear();
 	}
 	refPos.clear();
+	idPos.clear();
 	outlinePos.clear();
 	backgroundPos.clear();
 	phantomLabel.layout.clear();

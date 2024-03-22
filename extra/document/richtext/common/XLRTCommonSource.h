@@ -69,7 +69,7 @@ public:
 	SourceAsset *getAsset() const;
 	Asset *getNetworkAsset() const;
 
-	Map<String, DocumentAssetMeta> getExternalAssetMeta() const;
+	virtual Map<String, DocumentAssetMeta> getExternalAssetMeta() const;
 	const Map<String, NetworkAssetData> &getNetworkAssets() const;
 
 	bool isDirty() const { return _dirty; }
@@ -102,7 +102,7 @@ protected:
 	virtual bool onDocumentAssets(Document *doc, const Set<String> &); // true if no asset requests is performed
 	virtual void onExternalAssetUpdated(NetworkAssetData *, Subscription::Flags);
 
-	virtual bool readExternalAsset(SourceAssetLock *, DocumentAssetMeta &); // true if asset meta was updated
+	virtual bool readExternalAsset(SourceAssetLock *, DocumentAssetMeta &) const; // true if asset meta was updated
 
 	virtual void tryLoadDocument(SourceAssetLock *lock);
 	virtual void updateDocument();

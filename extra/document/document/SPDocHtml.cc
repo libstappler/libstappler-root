@@ -48,6 +48,9 @@ struct HtmlTag : html::Tag<StringView> {
 	Type type = Block;
 	Node *node = nullptr;
 
+	HtmlTag(StringView name)
+	: Tag(name) { }
+
 	explicit operator bool() const { return !name.empty(); }
 
 	static Type getType(const StringView &tagName);

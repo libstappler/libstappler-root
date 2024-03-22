@@ -363,6 +363,9 @@ struct OutlineParameters {
 		BorderStyle style = BorderStyle::None;
 		Metric width;
 		Color4B color;
+
+		inline bool operator == (const Params &other) const = default;
+		inline bool operator != (const Params &other) const = default;
 	};
 
 	Params left;
@@ -565,7 +568,7 @@ struct MediaParameters {
 	bool resolveQuery(const MediaQuery &) const;
 
 	template <typename Interface>
-	auto resolveMediaQueries(const SpanView<MediaQuery> &) const -> typename Interface::VectorType<bool>;
+	auto resolveMediaQueries(const SpanView<MediaQuery> &) const -> typename Interface::template VectorType<bool>;
 
 	bool shouldRenderImages() const;
 

@@ -427,6 +427,8 @@ void DocumentMmd::onTag(StyleList &style, StringView tag, StringView parent, con
 			style.set(StyleParameter::create<ParameterName::CssMarginBottom>(Metric(0.5f, Metric::Units::Em)), true);
 			style.set(StyleParameter::create<ParameterName::CssTextAlign>(TextAlign::Center), true);
 		}
+	} else if (tag == "__value__") {
+		style.data.push_back(StyleParameter::create<ParameterName::CssDisplay>(Display::Inline));
 	}
 }
 

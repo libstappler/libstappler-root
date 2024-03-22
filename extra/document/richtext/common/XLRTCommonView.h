@@ -32,6 +32,33 @@ namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
 class Renderer;
 
+class CommonObject : public basic2d::Sprite {
+public:
+	virtual ~CommonObject() = default;
+
+	virtual bool init(RendererResult *, document::Object *obj);
+	virtual void onContentSizeDirty() override;
+
+protected:
+	virtual bool initAsLabel(document::Label *);
+	virtual bool initAsBackground(document::Background *);
+	virtual bool initAsPath(document::PathObject *);
+
+	virtual void updateLabel(document::Label *);
+	virtual void updateVertexes() override;
+
+	virtual void updateColor() override;
+	virtual void updateVertexesColor() override;
+
+	virtual void pushCommands(FrameInfo &, NodeFlags flags) override;
+
+	Rc<RendererResult> _result;
+	document::Object *_object = nullptr;
+
+	Rc<basic2d::VectorSprite> _pathSprite;
+	Rc<basic2d::VectorSprite> _overlay;
+};
+
 class CommonView : public basic2d::ScrollView {
 public:
 	using ResultCallback = Function<void(RendererResult *)>;

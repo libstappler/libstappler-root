@@ -52,6 +52,37 @@ RendererResource::~RendererResource() {
 	}
 }
 
+RendererResult::RendererResult(const RendererResult &other) {
+	app = other.app;
+	fc = other.fc;
+	document = other.document;
+	source = other.source;
+	result = other.result;
+	hyphen = other.hyphen;
+	resource = other.resource;
+	locks = other.locks;
+	media = other.media;
+	ids = other.ids;
+	assets = other.assets;
+	ctime = other.ctime;
+}
+
+RendererResult& RendererResult::operator=(const RendererResult &other) {
+	app = other.app;
+	fc = other.fc;
+	document = other.document;
+	source = other.source;
+	result = other.result;
+	hyphen = other.hyphen;
+	resource = other.resource;
+	locks = other.locks;
+	media = other.media;
+	ids = other.ids;
+	assets = other.assets;
+	ctime = other.ctime;
+	return *this;
+}
+
 Renderer::~Renderer() { }
 
 bool Renderer::init(const Vector<String> &ids) {
@@ -181,6 +212,13 @@ void Renderer::setDefaultBackground(const Color4B &c) {
 	}
 }
 
+void Renderer::setFontScale(float val) {
+	if (_fontScale != val) {
+		_fontScale = val;
+		_renderingDirty = true;
+	}
+}
+
 void Renderer::setMediaType(document::MediaType value) {
 	if (_media.mediaType != value) {
 		_media.mediaType = value;
@@ -262,8 +300,8 @@ void Renderer::onSource() {
 	}
 }
 
-Rc<core::Resource> Renderer::prepareResource(StringView name, const Map<String, DocumentAssetMeta> &assets) {
-	core::Resource::Builder builder(name);
+Rc<core::Resource> Renderer::prepareResource(StringView name, Time ctime, const Map<String, DocumentAssetMeta> &assets) {
+	core::Resource::Builder builder(toString(name, ctime.toMicros()));
 
 	bool empty = true;
 	for (const Pair<const String, DocumentAssetMeta> &it : assets) {
@@ -300,6 +338,8 @@ bool Renderer::requestRendering() {
 		auto app = _owner->getDirector()->getApplication();
 
 		auto req = Rc<RendererResult>::alloc();
+		req->ctime = Time::now();
+		req->app = app;
 		req->fc = app->getExtension<font::FontController>();
 		req->document = document;
 		req->source = s;
@@ -320,7 +360,7 @@ bool Renderer::requestRendering() {
 			// reuse resource if possible
 			req->resource = _result->resource;
 		} else {
-			if (auto resource = prepareResource(document->getName(), req->assets)) {
+			if (auto resource = prepareResource(document->getName(), req->ctime, req->assets)) {
 				auto res = Rc<RendererResource>::alloc();
 				res->cache = _owner->getDirector()->getResourceCache();
 				res->resource = res->cache->addTemporaryResource(move(resource), TimeInterval::seconds(720), TemporaryResourceFlags::CompileWhenAdded);

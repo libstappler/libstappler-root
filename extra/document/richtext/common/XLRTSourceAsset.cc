@@ -240,7 +240,7 @@ Rc<Ref> SourceNetworkAsset::doLockAsset(int64_t mtime) {
 }
 
 void SourceNetworkAsset::onAsset(Asset *a) {
-	setForwardedSubscription(a);
+	a->setForwardedSubscription(this);
 	_asset = a;
 	if (_asset) {
 		setDirty(Subscription::Flags(Asset::CacheDataUpdated), true);

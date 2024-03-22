@@ -493,7 +493,7 @@ InlineContext &LayoutBlock::makeInlineContext(float parentPosY, const Node &n) {
 	context = engine->acquireInlineContext(density);
 
 	if (request == ContentRequest::Normal) {
-		context->setTargetLabel(engine->getResult()->emplaceLabel(*this, node.node->getNodeId()));
+		context->setTargetLabel(engine->getResult()->emplaceLabel(*this, ZOrderLabel));
 	}
 
 	pos.origin = Vec2(roundf(pos.position.x * density), roundf(parentPosY * density));
@@ -638,9 +638,10 @@ void LayoutBlock::processBackground(float parentPosY) {
 	if (src.empty()) {
 		if (style.backgroundColor.a != 0 && !isnan(pos.size.height)) {
 			if (node.node->getHtmlName() != "hr") {
-				objects.emplace_back(engine->getResult()->emplaceBackground(*this,
-					Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()),
-					style, node.node->getNodeId()));
+				background = engine->getResult()->emplaceBackground(*this,
+						Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()),
+						style, ZOrderLabel);
+				objects.emplace_back(background);
 			} else {
 				float density = engine->getMedia().density;
 
@@ -649,12 +650,13 @@ void LayoutBlock::processBackground(float parentPosY) {
 
 				auto posPair = engine->getTextBounds(this, linePos, height, density, parentPosY);
 
-				objects.emplace_back(engine->getResult()->emplaceBackground(*this,
-					Rect(-pos.padding.left + posPair.offset / density,
-						-pos.padding.top,
-						posPair.width / density + pos.padding.left + pos.padding.right,
-						pos.size.height + pos.padding.top + pos.padding.bottom),
-						style, node.node->getNodeId()));
+				background = engine->getResult()->emplaceBackground(*this,
+						Rect(-pos.padding.left + posPair.offset / density,
+							-pos.padding.top,
+							posPair.width / density + pos.padding.left + pos.padding.right,
+							pos.size.height + pos.padding.top + pos.padding.bottom),
+							style, ZOrderBackground);
+				objects.emplace_back(background);
 			}
 		}
 	} else if (pos.size.width > 0 && pos.size.height == 0 && engine->getMedia().shouldRenderImages()) {
@@ -684,13 +686,15 @@ void LayoutBlock::processBackground(float parentPosY) {
 		}
 
 		pos.size.height = height - pos.padding.vertical();
-		objects.emplace_back(engine->getResult()->emplaceBackground(*this,
-			Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()),
-			style, node.node->getNodeId()));
+		background = engine->getResult()->emplaceBackground(*this,
+				Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()),
+				style, ZOrderBackground);
+		objects.emplace_back(background);
 	} else {
-		objects.emplace_back(engine->getResult()->emplaceBackground(*this,
-			Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()),
-			style, node.node->getNodeId()));
+		background = engine->getResult()->emplaceBackground(*this,
+				Rect(-pos.padding.left, -pos.padding.top, pos.size.width + pos.padding.horizontal(), pos.size.height + pos.padding.vertical()),
+				style, ZOrderBackground);
+		objects.emplace_back(background);
 	}
 }
 
@@ -702,7 +706,7 @@ void LayoutBlock::processOutline(bool withBorder) {
 
 			engine->getResult()->emplaceBorder(*this, Rect(-pos.padding.left, -pos.padding.top,
 				pos.size.width + pos.padding.left + pos.padding.right, pos.size.height + pos.padding.top + pos.padding.bottom),
-				style, pos.size.width, node.node->getNodeId());
+				style, pos.size.width, ZOrderBorder);
 		}
 	}
 
@@ -713,7 +717,7 @@ void LayoutBlock::processOutline(bool withBorder) {
 				Rect(-pos.padding.left, -pos.padding.top,
 					pos.size.width + pos.padding.left + pos.padding.right,
 					pos.size.height + pos.padding.top + pos.padding.bottom),
-				style.outline.color, node.node->getNodeId(), width, style.outline.style
+				style.outline.color, ZOrderOutline, width, style.outline.style
 			));
 		}
 	}
@@ -730,10 +734,16 @@ void LayoutBlock::processRef() {
 		auto extent = isnan(pos.maxExtent) ? pos.size.width : pos.maxExtent;
 
 		auto res = engine->getResult();
-		objects.emplace_back(res->emplaceLink(*this,
-			Rect(-pos.padding.left, -pos.padding.top,
-					extent + pos.padding.left + pos.padding.right, pos.size.height + pos.padding.top + pos.padding.bottom),
-			hrefPtr, targetPtr, node.node->getValueRecursive()));
+		link = res->emplaceLink(*this,
+				Rect(-pos.padding.left, -pos.padding.top,
+						extent + pos.padding.left + pos.padding.right, pos.size.height + pos.padding.top + pos.padding.bottom),
+				hrefPtr, targetPtr, node.node->getValueRecursive());
+		objects.emplace_back(link);
+
+		if (background) {
+			background->link = link;
+			link->source = background;
+		}
 	}
 }
 

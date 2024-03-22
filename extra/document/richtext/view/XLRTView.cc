@@ -276,6 +276,7 @@ void View::onId(const StringView &ref, const StringView &target, const WideStrin
 			_tooltip = nullptr;
 		});
 		tooltip->pushToForeground(_scene);
+		tooltip->retainFocus();
 		_tooltip = tooltip;
 	}
 }
@@ -705,10 +706,6 @@ bool View::Highlight::visitDraw(FrameInfo &frame, NodeFlags parentFlags) {
 		return false;
 	}
 
-	if (_dirty) {
-		updateRects();
-	}
-
 	return Sprite::visitDraw(frame, parentFlags);
 }
 
@@ -722,7 +719,7 @@ void View::Highlight::addSelection(const Pair<SelectionPosition, SelectionPositi
 }
 
 void View::Highlight::setDirty() {
-	_dirty = true;
+	_vertexesDirty = true;
 	_vertexes.clear();
 }
 
@@ -745,9 +742,9 @@ void View::Highlight::emplaceRect(const Rect &rect, size_t idx, size_t count) {
 
 	auto quad = _vertexes.addQuad();
 	quad.setGeometry(Vec4(origin, 0, 1), rect.size);
-
 }
-void View::Highlight::updateRects() {
+
+void View::Highlight::updateVertexes() {
 	auto res = _view->getResult();
 	if (res) {
 		_vertexes.clear();
@@ -797,8 +794,8 @@ void View::Highlight::updateRects() {
 			emplaceRect(it, rectIdx, rects.size());
 			++ rectIdx;
 		}
-		updateColor();
 	}
+	_vertexColorDirty = true;
 }
 
 }

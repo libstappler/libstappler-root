@@ -324,7 +324,7 @@ void CommonSource::onExternalAssetUpdated(NetworkAssetData *a, Subscription::Fla
 	}
 }
 
-bool CommonSource::readExternalAsset(SourceAssetLock *asset, DocumentAssetMeta &meta) {
+bool CommonSource::readExternalAsset(SourceAssetLock *asset, DocumentAssetMeta &meta) const {
 	auto mtime = asset->getMTime();
 	meta.type = asset->getContentType().str<Interface>();
 	if (StringView(meta.type).starts_with("image/") || meta.type.empty()) {

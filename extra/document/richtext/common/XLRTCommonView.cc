@@ -30,31 +30,30 @@
 #include "XLRTCommonView.h"
 #include "XLRTRenderer.h"
 #include "XL2dLabel.h"
+#include "XL2dVectorSprite.h"
 #include "XLTemporaryResource.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
-class CommonObject : public basic2d::Sprite {
-public:
-	virtual ~CommonObject() = default;
+constexpr uint16_t ImageFillerWidth = 312;
+constexpr uint16_t ImageFillerHeight = 272;
 
-	virtual bool init(RendererResult *, document::Object *obj);
+constexpr auto ImageFillerData = R"ImageFillerSvg(<svg xmlns="http://www.w3.org/2000/svg" height="272" width="312" version="1.1">
+	<rect x="0" y="0" width="312" height="272" opacity="0.25"/>
+	<g transform="translate(0 -780.4)">
+		<path d="m104 948.4h104l-32-56-24 32-16-12zm-32-96v128h168v-128h-168zm16 16h136v96h-136v-96zm38 20a10 10 0 0 1 -10 10 10 10 0 0 1 -10 -10 10 10 0 0 1 10 -10 10 10 0 0 1 10 10z" fill-rule="evenodd" fill="#ccc"/>
+	</g>
+</svg>)ImageFillerSvg";
 
-protected:
-	virtual bool initAsLabel(document::Label *);
-	virtual bool initAsBackground(document::Background *);
+constexpr uint16_t ImageVideoWidth = 128;
+constexpr uint16_t ImageVideoHeight = 128;
 
-	virtual void updateLabel(document::Label *);
-	virtual void updateVertexes() override;
+constexpr auto ImageVideoData = R"ImageVideoData(<svg xmlns="http://www.w3.org/2000/svg" height="128" width="128" version="1.1">
+	<circle cx="64" cy="64" r="64"/>
+	<path fill="#fff" d="m96.76 64-51.96 30v-60z"/>
+</svg>)ImageVideoData";
 
-	virtual void updateColor() override;
-	virtual void updateVertexesColor() override;
-
-	virtual void pushCommands(FrameInfo &, NodeFlags flags) override;
-
-	Rc<RendererResult> _result;
-	document::Object *_object = nullptr;
-};
+constexpr float ImageVideoSize = 72.0f;
 
 bool CommonObject::init(RendererResult *res, document::Object *obj) {
 	if (!basic2d::Sprite::init()) {
@@ -76,7 +75,7 @@ bool CommonObject::init(RendererResult *res, document::Object *obj) {
 		return initAsBackground((document::Background *)_object);
 		break;
 	case document::Object::Type::Path:
-		std::cout << "Path\n";
+		return initAsPath((document::PathObject *)_object);
 		break;
 	case document::Object::Type::Ref:
 		std::cout << "Ref\n";
@@ -87,6 +86,21 @@ bool CommonObject::init(RendererResult *res, document::Object *obj) {
 	}
 
 	return true;
+}
+
+void CommonObject::onContentSizeDirty() {
+	Sprite::onContentSizeDirty();
+
+	if (_pathSprite) {
+		_pathSprite->setPosition(Vec2::ZERO);
+		_pathSprite->setContentSize(_contentSize);
+	}
+
+	if (_overlay) {
+		auto size = Size2(std::min(_contentSize.width, ImageVideoSize), std::min(_contentSize.height, ImageVideoSize));
+		_overlay->setContentSize(size);
+		_overlay->setPosition(_contentSize / 2.0f);
+	}
 }
 
 bool CommonObject::initAsLabel(document::Label *label) {
@@ -115,13 +129,40 @@ bool CommonObject::initAsLabel(document::Label *label) {
 
 bool CommonObject::initAsBackground(document::Background *bg) {
 	if (!bg->background.backgroundImage.empty()) {
-		if (auto tex = _result->resource->resource->acquireTexture(bg->background.backgroundImage)) {
-			setTexture(move(tex));
-			setSamplerIndex(1);
+		if (_result->resource) {
+			if (auto tex = _result->resource->resource->acquireTexture(bg->background.backgroundImage)) {
+				setTexture(move(tex));
+				setSamplerIndex(1);
+			} else {
+				// replace with filler
+				_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(StringView(ImageFillerData)));
+				_pathSprite->setAutofit(Sprite::Autofit::Contain);
+			}
+		} else {
+			// replace with filler
+			_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(StringView(ImageFillerData)));
+			_pathSprite->setAutofit(Sprite::Autofit::Contain);
 		}
 	} else {
 		setColor(Color4F(bg->background.backgroundColor), true);
 	}
+	if (bg->link && bg->link->mode == "video") {
+		_overlay = addChild(Rc<basic2d::VectorSprite>::create(StringView(ImageVideoData)), ZOrder(1));
+		_overlay->setAutofit(Sprite::Autofit::Contain);
+		_overlay->setAnchorPoint(Anchor::Middle);
+		_overlay->setRenderingLevel(RenderingLevel::Transparent);
+	}
+	return true;
+}
+
+bool CommonObject::initAsPath(document::PathObject *path) {
+	vg::VectorPath vpath;
+	vpath.init(path->path);
+
+	_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(path->bbox.size, move(vpath)));
+	_pathSprite->setAutofit(Sprite::Autofit::Contain);
+	_pathSprite->setRenderingLevel(RenderingLevel::Solid);
+
 	return true;
 }
 
@@ -187,6 +228,8 @@ bool CommonView::init(Layout l, CommonSource *source, const Vector<String> &ids)
 	_background->setPosition(Vec2(0, 0));
 
 	_pageMargin = Padding(8.0f, 8.0f);
+	_scrollSpaceLimit = 720.0f;
+	_scrollSpacePadding = 8.0f;
 
 	if (source) {
 		setSource(source);
