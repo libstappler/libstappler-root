@@ -89,9 +89,12 @@ struct XenolithCoreTest : Test {
 		for (size_t i = 0; i < toInt(VkFormat::VK_FORMAT_ASTC_12x12_SRGB_BLOCK) + 1; ++ i) {
 			out << xenolith::vk::getVkFormatName(VkFormat(i)) << ":" << xenolith::vk::getFormatBlockSize(VkFormat(i));
 		}
+
+#ifdef VK_VERSION_1_3
 		for (size_t i = toInt(VkFormat::VK_FORMAT_G8B8G8R8_422_UNORM); i < toInt(VkFormat::VK_FORMAT_A8_UNORM_KHR) + 1; ++ i) {
 			out << xenolith::vk::getVkFormatName(VkFormat(i)) << ":" << xenolith::vk::getFormatBlockSize(VkFormat(i));;
 		}
+#endif
 
 		out << getColorSpaceName(ColorSpace(0));
 		for (size_t i = toInt(VkColorSpaceKHR::VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT); i < toInt(VkColorSpaceKHR::VK_COLOR_SPACE_DISPLAY_NATIVE_AMD) + 1; ++ i) {
