@@ -30,6 +30,7 @@
 #include "SPWebRoot.h"
 #include "SPWebRequest.h"
 #include "SPWebTools.h"
+#include "SPWebDbd.h"
 
 #include "SPDbUser.h"
 #include "SPValid.h"
@@ -83,7 +84,6 @@ Host & Host::operator =(const Host &other) {
 
 void Host::handleChildInit(pool_t *rootPool) {
 	perform([&, this] {
-		_config->init(*this);
 		_config->handleChildInit(*this, rootPool);
 
 		filesystem::mkdir(filepath::merge<Interface>(_config->_hostInfo.documentRoot, ".reports"));
@@ -265,7 +265,14 @@ void Host::addSourceRoot(StringView file) {
 }
 
 void Host::addComponentByParams(StringView str) {
+	HostComponentType type = HostComponentType::Dso;
+
 	StringView r(str);
+	if (r.starts_with("wasm:") || r.starts_with("WASM:")) {
+		log::error("webserver::Host", "Wasm component defined as regular");
+		return;
+	}
+
 	r.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
 
 	StringView handlerParams;
@@ -293,10 +300,13 @@ void Host::addComponentByParams(StringView str) {
 
 	if (idx == 1) {
 		HostComponentInfo h;
-		h.symbol = args[0];
+		h.type = type;
+		h.symbol = args[0].pdup(_config->_rootPool);
+		h.name = h.symbol;
 		_config->_componentsToLoad.emplace_back(std::move(h));
 	} else if (idx >= 2) {
 		HostComponentInfo h;
+		h.type = type;
 		h.symbol = args[idx - 1].pdup(_config->_rootPool);
 		h.file = args[idx - 2].pdup(_config->_rootPool);
 
@@ -334,6 +344,35 @@ void Host::addComponentByParams(StringView str) {
 
 		_config->_componentsToLoad.emplace_back(std::move(h));
 	}
+}
+
+void Host::addWasmComponentByParams(StringView path, StringView command) {
+	HostComponentInfo h;
+	h.type = HostComponentType::Wasm;
+	h.file = path.pdup();
+
+	auto name = command.readUntil<StringView::Chars<'#'>>();
+	if (command.is('#')) {
+		++ command;
+	} else {
+		log::error("webserver::Host", "Wasm component function name is missed: ", path);
+		return;
+	}
+
+	auto c = command.readUntil<StringView::Chars<'?'>>();
+	if (command.is('?')) {
+		++ command;
+		if (command.is('(')) {
+			h.data = data::read<Interface>(command);
+		} else {
+			h.data = data::readUrlencoded<Interface>(command, 256);
+		}
+	}
+
+	h.name = name.pdup();
+	h.symbol = c.pdup();
+
+	_config->_componentsToLoad.emplace_back(std::move(h));
 }
 
 void Host::addAllow(StringView ips) {
@@ -1080,7 +1119,7 @@ void Host::runErrorReportTask(const Request &req, const Vector<Value> &errors) {
 		for (auto &it : errors) {
 			d.addValue(it);
 		}
-		task.addExecuteFn([err, driver = _config->_dbDriver] (const AsyncTask &task) -> bool {
+		task.addExecuteFn([err] (const AsyncTask &task) -> bool {
 			Host_ErrorReporterFlags *obj = pool::get<Host_ErrorReporterFlags>("Host_ErrorReporterFlags");
 			if (obj) {
 				obj->isProtected = true;

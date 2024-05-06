@@ -20,6 +20,8 @@
  THE SOFTWARE.
  **/
 
+#include "XLCommon.h"
+
 #if MODULE_XENOLITH_SCENE
 
 #include "TestAppDelegate.h"
@@ -87,15 +89,29 @@ void TestAppDelegate::run(Function<void()> &&initCb) {
 				.name = _data.applicationName,
 				.bundleId = _data.bundleName,
 				.rect = URect(UVec2{0, 0}, _data.screenSize),
+				.decoration = Padding(2),
 				.density = _data.density,
 				.selectConfig = [this] (View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
 					return selectConfig(info);
 				},
 				.onCreated = [this] (View &view, const core::FrameContraints &constraints) {
 					auto scene = Rc<TestAppScene>::create(static_cast<Application *>(this), constraints);
+
+					scene->runAction(Rc<Sequence>::create(0.3f, [this] {
+						setTripleBuffering(true);
+					}));
+
 					view.getDirector()->runScene(move(scene));
+
+					std::unique_lock<Mutex> lock(_configMutex);
+					_rootView = &view;
+					view.retainView();
 				},
 				.onClosed = [this] (View &view) {
+					view.releaseView(0);
+					std::unique_lock<Mutex> lock(_configMutex);
+					_rootView = nullptr;
+					lock.unlock();
 					end();
 				}
 			});
@@ -116,14 +132,29 @@ void TestAppDelegate::run(Function<void()> &&initCb) {
 
 void TestAppDelegate::setPreferredPresentMode(core::PresentMode mode) {
 	std::unique_lock<Mutex> lock(_configMutex);
-	_preferredPresentMode = mode;
+	if (_preferredPresentMode != mode) {
+		_preferredPresentMode = mode;
+		if (_rootView) {
+			_rootView->deprecateSwapchain(false);
+		}
+	}
+}
+
+void TestAppDelegate::setTripleBuffering(bool value) {
+	std::unique_lock<Mutex> lock(_configMutex);
+	if (_tripleBuffering != value) {
+		_tripleBuffering = value;
+		if (_rootView) {
+			_rootView->deprecateSwapchain(false);
+		}
+	}
 }
 
 core::SwapchainConfig TestAppDelegate::selectConfig(const core::SurfaceInfo &info) {
 	std::unique_lock<Mutex> lock(_configMutex);
 	core::SwapchainConfig ret;
 	ret.extent = info.currentExtent;
-	ret.imageCount = std::max(uint32_t(2), info.minImageCount);
+	ret.imageCount = std::max(uint32_t(_tripleBuffering ? 3 : 2), info.minImageCount);
 
 	ret.presentMode = info.presentModes.front();
 	if (_preferredPresentMode != core::PresentMode::Unsupported) {

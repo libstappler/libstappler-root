@@ -41,11 +41,11 @@ void Token::addChild(Token *tok) {
 }
 
 /// Forward declaration
-static void stl_print_token(std::ostream &stream, const Token * t, uint16_t depth);
-static void stl_print_token_tree(std::ostream &stream, const Token * t, uint16_t depth);
+static void stl_print_token(const Lexer::OutStream &stream, const Token * t, uint16_t depth);
+static void stl_print_token_tree(const Lexer::OutStream &stream, const Token * t, uint16_t depth);
 
 /// Print contents of the token based on specified string
-static void stl_print_token(std::ostream &stream, const Token * t, uint16_t depth) {
+static void stl_print_token(const Lexer::OutStream &stream, const Token * t, uint16_t depth) {
 	if (t) {
 		for (int i = 0; i < depth; ++i) {
 			stream << "  ";
@@ -126,14 +126,14 @@ static void stl_print_token(std::ostream &stream, const Token * t, uint16_t dept
 }
 
 /// Print contents of the token tree based on specified string
-static void stl_print_token_tree(std::ostream &stream, const Token * t, uint16_t depth) {
+static void stl_print_token_tree(const Lexer::OutStream &stream, const Token * t, uint16_t depth) {
 	while (t != NULL) {
 		stl_print_token(stream, t, depth);
 		t = t->next;
 	}
 }
 
-void Token::describe(std::ostream &stream) const {
+void Token::describe(const OutStream &stream) const {
 	stl_print_token(stream, this, 0);
 }
 

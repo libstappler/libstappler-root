@@ -27,6 +27,8 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
+class WebsocketConnection;
+
 class WebsocketManager : public AllocBase {
 public:
 	static String makeAcceptKey(StringView key);

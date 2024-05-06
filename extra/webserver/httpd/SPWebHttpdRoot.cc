@@ -162,7 +162,7 @@ bool HttpdRoot::performTask(const Host &host, AsyncTask *task, bool performFirst
 			}
 		} else if (_pending) {
 			perform([&, this] {
-				_pending->emplace_back(PendingTask{host, task, performFirst, TimeInterval()});
+				_pending->emplace_back(PendingTask{host, task, TimeInterval(), performFirst});
 			}, _pending->get_allocator());
 		}
 	}
@@ -180,7 +180,7 @@ bool HttpdRoot::scheduleTask(const Host &host, AsyncTask *task, TimeInterval int
 			return apr_thread_pool_schedule(_threadPool, &HttpdRoot_performTask, ctx, interval.toMicroseconds(), nullptr) == APR_SUCCESS;
 		} else if (_pending) {
 			perform([&, this] {
-				_pending->emplace_back(PendingTask{host, task, false, interval});
+				_pending->emplace_back(PendingTask{host, task, interval, false});
 			}, _pending->get_allocator());
 		}
 	}

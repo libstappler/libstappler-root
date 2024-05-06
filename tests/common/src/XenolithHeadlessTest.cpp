@@ -37,6 +37,11 @@
 #include "XLCoreFrameQueue.h"
 #include "XLCoreFrameRequest.h"
 
+#include "XLSnnGenTest.h"
+#include "XLSnnInputTest.h"
+#include "XLSnnModelTest.h"
+#include "XLSnnModelProcessor.h"
+
 namespace STAPPLER_VERSIONIZED stappler::xenolith::test::detail {
 
 #include "noise.comp.h"
@@ -56,8 +61,6 @@ struct NoiseDataInput : core::AttachmentInputData {
 
 class NoiseQueue : public core::Queue {
 public:
-	static void runTest();
-
 	virtual ~NoiseQueue();
 
 	bool init();
@@ -104,50 +107,6 @@ protected:
 	const vk::ImageAttachmentHandle *_image = nullptr;
 };
 
-void NoiseQueue::runTest() {
-	Application::CommonInfo commonInfo({
-		.bundleName = String("org.stappler.xenolith.cli"),
-		.applicationName = String("xenolith-cli"),
-		.applicationVersion = String("0.1.0")
-	});
-
-	auto instance = vk::platform::createInstance([&] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
-		data.applicationName = commonInfo.applicationName;
-		data.applicationVersion = commonInfo.applicationVersion;
-		return true;
-	});
-
-	// create main looper
-	auto app = Rc<Application>::create(move(commonInfo), move(instance));
-
-	// define device selector/initializer
-	auto data = Rc<vk::LoopData>::alloc();
-	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
-		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
-	};
-
-	Application::CallbackInfo callbackInfo({
-		.updateCallback = [] (const Application &app, const UpdateTime &time) {
-			if (time.app == 0) {
-				auto queue = Rc<NoiseQueue>::create();
-
-				// then compile it on graphics device
-				app.getGlLoop()->compileQueue(queue, [app = &app, queue] (bool success) {
-					Application::getInstance()->performOnMainThread([app, queue] {
-						queue->run(const_cast<Application *>(app));
-					}, nullptr);
-				});
-			}
-		}
-	});
-
-	core::LoopInfo info;
-	info.platformData = data;
-
-	// run main loop with 2 additional threads and 0.5sec update interval
-	app->run(callbackInfo, move(info), 2, TimeInterval::microseconds(500000));
-}
-
 NoiseQueue::~NoiseQueue() { }
 
 bool NoiseQueue::init() {
@@ -189,7 +148,7 @@ bool NoiseQueue::init() {
 	auto imageAttachment = builder.addAttachemnt("NoiseImageAttachment", [&] (AttachmentBuilder &attachmentBuilder) -> Rc<Attachment> {
 		attachmentBuilder.defineAsOutput();
 		return Rc<vk::ImageAttachment>::create(attachmentBuilder,
-			ImageInfo(Extent2(1024, 768), ImageUsage::Storage | ImageUsage::TransferSrc, ImageTiling::Optimal, ImageFormat::R8G8B8A8_UNORM),
+			ImageInfo(Extent2(64, 64), ImageUsage::Storage | ImageUsage::TransferSrc, ImageTiling::Optimal, ImageFormat::R8G8B8A8_UNORM),
 			ImageAttachment::AttachmentInfo{
 				.initialLayout = AttachmentLayout::General,
 				.finalLayout = AttachmentLayout::General,
@@ -210,8 +169,77 @@ bool NoiseQueue::init() {
 	return false;
 }
 
+static void runBitmapTestsPool(bitmap::BitmapTemplate<memory::PoolInterface> &bmp) {
+	auto path = filesystem::currentDir<Interface>(toString(Time::now().toMicros()));
+
+	bmp.save(bitmap::FileFormat::Png, path);
+	filesystem::remove(path);
+
+	bmp.save(bitmap::FileFormat::WebpLossless, path);
+	filesystem::remove(path);
+
+	bmp.save(bitmap::FileFormat::WebpLossy, path);
+	filesystem::remove(path);
+
+	bmp.truncate(bitmap::PixelFormat::RGB888);
+	bmp.save(bitmap::FileFormat::Jpeg, path);
+	filesystem::remove(path);
+}
+
+static void readBitmap(BytesView data) {
+	mem_pool::perform_temporary([&] {
+		bitmap::BitmapTemplate<memory::PoolInterface> d(data);
+		runBitmapTestsPool(d);
+	});
+}
+
+static void runBitmapTests(Bitmap &bmp) {
+	auto path = filesystem::currentDir<Interface>(toString(Time::now().toMicros()));
+	bmp.save(bitmap::FileFormat::Png, path);
+	filesystem::remove(path);
+
+	bmp.save(bitmap::FileFormat::WebpLossless, path);
+	filesystem::remove(path);
+
+	bmp.save(bitmap::FileFormat::WebpLossy, path);
+	filesystem::remove(path);
+
+	auto upscale = bmp.resample(96, 96);
+	auto downscale = bmp.resample(48, 48);
+
+	readBitmap(upscale.write(bitmap::FileFormat::Png));
+	readBitmap(downscale.write(bitmap::FileFormat::WebpLossless));
+	readBitmap(downscale.write(bitmap::FileFormat::WebpLossy));
+
+	bmp.truncate(bitmap::PixelFormat::RGB888);
+	bmp.save(bitmap::FileFormat::Jpeg, path);
+	filesystem::remove(path);
+
+	upscale.truncate(bitmap::PixelFormat::RGB888);
+	readBitmap(upscale.write(bitmap::FileFormat::Jpeg));
+
+	mem_pool::perform_temporary([&] {
+		bitmap::BitmapTemplate<memory::PoolInterface> d(upscale.write(bitmap::FileFormat::Png));
+
+		for (int i = 0; i <= toInt(bitmap::ResampleFilter::QuadMix); ++ i) {
+			auto path = filesystem::currentDir<Interface>(toString(Time::now().toMicros()));
+			auto tmp = d.resample(bitmap::ResampleFilter(i), 96, 96);
+			tmp.save(bitmap::FileFormat::Png, path);
+			filesystem::remove(path);
+		}
+
+		for (int i = 0; i <= toInt(bitmap::ResampleFilter::QuadMix); ++ i) {
+			auto path = filesystem::currentDir<Interface>(toString(Time::now().toMicros()));
+			auto tmp = d.resample(bitmap::ResampleFilter(i), 48, 48);
+			tmp.save(bitmap::FileFormat::Png, path);
+			filesystem::remove(path);
+		}
+	});
+
+}
+
 void NoiseQueue::run(Application *app) {
-	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this), core::FrameContraints{Extent2(1024, 768)});
+	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this), core::FrameContraints{Extent2(64, 64)});
 
 	auto inputData = Rc<NoiseDataInput>::alloc();
 	inputData->data = NoiseData{0, 0, 0.0f, 0.0f};
@@ -230,13 +258,11 @@ void NoiseQueue::run(Application *app) {
 				default: break;
 				}
 				if (pixelFormat != bitmap::PixelFormat::Auto) {
-					auto path = toString(Time::now().toMicros(), ".png");
 					Bitmap bmp(view.data(), info.extent.width, info.extent.height, pixelFormat);
-					bmp.save(path);
-					filesystem::remove(path);
+					runBitmapTests(bmp);
 				}
 			}
-			app->end();
+			//app->end();
 		}, data.image->getImage(), core::AttachmentLayout::General);
 		return true;
 	});
@@ -308,6 +334,63 @@ Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle
 	return Vector<const vk::CommandBuffer *>{buf};
 }
 
+static void runTests() {
+	Application::CommonInfo commonInfo({
+		.bundleName = String("org.stappler.xenolith.cli"),
+		.applicationName = String("xenolith-cli"),
+		.applicationVersion = String("0.1.0")
+	});
+
+	auto instance = vk::platform::createInstance([&] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
+		data.applicationName = commonInfo.applicationName;
+		data.applicationVersion = commonInfo.applicationVersion;
+		return true;
+	});
+
+	// create main looper
+	auto app = Rc<Application>::create(move(commonInfo), move(instance));
+
+	// define device selector/initializer
+	auto data = Rc<vk::LoopData>::alloc();
+	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
+		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
+	};
+
+	Application::CallbackInfo callbackInfo({
+		.updateCallback = [] (const Application &app, const UpdateTime &time) {
+			if (time.app == 0) {
+				auto noiseQueue = Rc<NoiseQueue>::create();
+
+				// then compile it on graphics device
+				app.getGlLoop()->compileQueue(noiseQueue, [app = &app, noiseQueue] (bool success) {
+					Application::getInstance()->performOnMainThread([app, noiseQueue] {
+						noiseQueue->run(const_cast<Application *>(app));
+					}, nullptr);
+				});
+
+				auto modelPath = filesystem::currentDir<Interface>("resources/mnist.json");
+				auto inputPath = toString("mnist:", filesystem::currentDir<Interface>("resources/mnist"));
+
+				auto modelQueue = Rc<shadernn::ModelQueue>::create(modelPath, shadernn::ModelFlags::None, inputPath);
+				if (modelQueue) {
+					modelQueue->retain();
+					app.getGlLoop()->compileQueue(modelQueue, [app = &app, modelQueue] (bool success) {
+						Application::getInstance()->performOnMainThread([app, modelQueue] {
+							modelQueue->run(const_cast<Application *>(app));
+						}, nullptr);
+					});
+				}
+			}
+		}
+	});
+
+	core::LoopInfo info;
+	info.platformData = data;
+
+	// run main loop with 2 additional threads and 0.5sec update interval
+	app->run(callbackInfo, move(info), 2, TimeInterval::microseconds(500000));
+}
+
 }
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
@@ -321,7 +404,7 @@ struct XenolithHeadlessTest : Test {
 		auto mempool = memory::pool::create();
 		memory::pool::push(mempool);
 
-		NoiseQueue::runTest();
+		runTests();
 
 		memory::pool::pop();
 

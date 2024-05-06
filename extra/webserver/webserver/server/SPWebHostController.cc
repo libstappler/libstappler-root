@@ -22,6 +22,7 @@
 
 #include "SPWebHostController.h"
 #include "SPWebHostComponent.h"
+#include "SPWebWasmComponent.h"
 #include "SPWebHost.h"
 #include "SPWebRoot.h"
 #include "SPWebDbd.h"
@@ -118,27 +119,14 @@ db::Scheme HostController::makeErrorScheme() const {
 }
 
 bool HostController::loadComponent(const Host &serv, const HostComponentInfo &info) {
-	if (info.file.empty()) {
-		auto h = Dso(StringView(), DsoFlags::Self);
-		if (h) {
-			auto sym = h.sym<HostComponent::Symbol>(info.symbol);
-			if (sym) {
-				auto comp = sym(serv, info);
-				if (comp) {
-					_components.emplace(comp->getName().str<Interface>(), comp);
-					_typedComponents.emplace(std::type_index(typeid(*comp)), comp);
-					return true;
-				} else {
-					log::error("web::HostController", "Symbol ", info.symbol ," not found in DSO '", info.file, "'");
-				}
-			} else {
-				log::error("web::HostController", "DSO: ", h.getError());
-			}
-		} else {
-			log::error("web::HostController", "DSO: ", h.getError());
-		}
+	switch (info.type) {
+	case HostComponentType::Dso:
+		return loadDsoComponent(serv, info);
+		break;
+	case HostComponentType::Wasm:
+		return loadWasmComponent(serv, info);
+		break;
 	}
-
 	return false;
 }
 
@@ -363,6 +351,96 @@ void HostController::closeConnection(db::sql::Driver::Handle h) const {
 db::sql::Driver *HostController::openInternalDriver(db::sql::Driver::Handle) {
 	log::error("web::HostController", "VirtualServerConfig::openInternalDriver is not implemented");
 	return nullptr;
+}
+
+bool HostController::loadDsoComponent(const Host &serv, const HostComponentInfo &info) {
+	Dso h;
+	if (info.file.empty()) {
+		h = Dso(StringView(), DsoFlags::Self);
+	} else {
+		auto path = resolvePath(info.file);
+		if (path.empty()) {
+			return false;
+		}
+
+		h = Dso(StringView(path));
+	}
+
+	if (h) {
+		auto sym = h.sym<HostComponent::Symbol>(info.symbol);
+		if (sym) {
+			auto comp = sym(serv, info);
+			if (comp) {
+				_components.emplace(comp->getName(), comp);
+				_typedComponents.emplace(std::type_index(typeid(*comp)), comp);
+				return true;
+			} else {
+				log::error("web::HostController", "Symbol ", info.symbol ," not found in DSO '", info.file, "'");
+			}
+		} else {
+			log::error("web::HostController", "DSO: ", h.getError());
+		}
+	} else {
+		log::error("web::HostController", "DSO: ", h.getError());
+	}
+	return false;
+}
+
+bool HostController::loadWasmComponent(const Host &serv, const HostComponentInfo &info) {
+	auto module = loadWasmModule(info.name, info.file);
+	if (!module) {
+		return false;
+	}
+
+	auto comp = WasmComponent::load(serv, info, module);
+	if (comp) {
+		_components.emplace(comp->getName().str<Interface>(), comp);
+		return true;
+	} else {
+		log::error("web::HostController", "Wasm: fail to load component: ", info.name, " from ", info.file);
+	}
+	return false;
+}
+
+wasm::Module *HostController::loadWasmModule(StringView name, StringView str) {
+	auto path = resolvePath(str);
+	if (path.empty()) {
+		return nullptr;
+	}
+
+	auto it = _wasmModules.find(path);
+	if (it != _wasmModules.end()) {
+		return it->second;
+	}
+
+	auto mod = Rc<wasm::Module>::create(name, FilePath(path));
+	if (mod) {
+		_wasmModules.emplace(StringView(path).pdup(_wasmModules.get_allocator()), mod);
+		return mod;
+	}
+	return nullptr;
+}
+
+String HostController::resolvePath(StringView path) const {
+	for (auto &it : _sourceRoot) {
+		auto str = filepath::merge<Interface>(it, path);
+		if (str.front() == '/') {
+			if (filesystem::exists(str)) {
+				return str;
+			}
+		} else {
+			str = filesystem::currentDir<Interface>(str);
+			if (filesystem::exists(str)) {
+				return str;
+			}
+		}
+	}
+
+	auto str = filepath::merge<Interface>(_hostInfo.documentRoot, path);
+	if (filesystem::exists(str)) {
+		return str;
+	}
+	return String();
 }
 
 void HostController::handleTemplateError(const StringView &str) {

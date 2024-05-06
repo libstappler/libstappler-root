@@ -25,10 +25,19 @@
 #include "SPWebUnixConnectionQueue.h"
 #include "SPWebUnixRequest.h"
 #include "SPWebRequestFilter.h"
+#include "SPWebInputFilter.h"
 
 #include <sys/signalfd.h>
+#include <sys/eventfd.h>
 #include <sys/ioctl.h>
 #include <sys/sendfile.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -228,6 +237,10 @@ bool ConnectionWorker::poll(int epollFd) {
 			if (!client->system && !client->valid) {
 				client->shutdownAll();
 			}
+
+			if (client->shutdownReadSend && client->shutdownWriteSend) {
+				removeClient(*client);
+			}
 		}
 	}
 
@@ -261,11 +274,12 @@ UnixRequestController *ConnectionWorker::readRequest(Client *client, BufferChain
 	} else {
 		tmpPool = pool::create(client->pool);
 
-		auto data = chain.extract(tmpPool, 0, chain.getBytesRead());
-		str = StringView(data.readString(chain.getBytesRead()));
+		auto data = chain.extract(tmpPool, 0, std::min(chain.getBytesRead(), config::UNIX_MAX_REQUEST_LINE));
+		str = data.toStringView();
 	}
 
-	if (!RequestFilter::readRequestLine(str, info)) {
+	auto requestLineSize = RequestFilter::readRequestLine(str, info);
+	if (requestLineSize == 0) {
 		if (tmpPool) {
 			pool::destroy(tmpPool);
 		}
@@ -293,26 +307,26 @@ Status ConnectionWorker::parseRequestHeader(UnixRequestController *cfg, Client *
 	StringView name;
 	StringView value;
 
-	StringView str;
+	BytesView str;
 	pool_t *tmpPool = nullptr;
 	size_t headerLen = chain.getBytesRead() - client->bytesRead;
 
 	if (chain.isSingle()) {
-		str = StringView((const char *)chain.front->buf + (client->bytesRead - chain.front->absolute), headerLen);
+		str = BytesView(chain.front->buf + (client->bytesRead - chain.front->absolute), headerLen);
 	} else {
 		tmpPool = pool::create(client->pool);
 
-		auto data = chain.extract(tmpPool, 0, headerLen);
-		str = StringView(data.readString(headerLen));
+		str = chain.extract(tmpPool, client->bytesRead, std::min(headerLen, config::UNIX_MAX_HEADER_LINE));
 	}
 
-	if (str.size() == 2 && str == "\r\n") {
+	if (str.size() == 2 && str.equals((const uint8_t *)"\r\n", 2)) {
 		client->bytesRead += headerLen;
 		chain.releaseEmpty();
 		return DONE;
 	}
 
-	if (!RequestFilter::readRequestHeader(str, name, value)) {
+	auto headerLineLength = RequestFilter::readRequestHeader(str, name, value);
+	if (headerLineLength == 0) {
 		if (tmpPool) {
 			pool::destroy(tmpPool);
 		}
@@ -337,7 +351,6 @@ Status ConnectionWorker::processRequest(UnixRequestController *req) {
 		auto ret = _root->processRequest(req);
 		switch (ret) {
 		case DONE:
-			req->submitResponse(ret);
 			break;
 		case DECLINED:
 			break;
@@ -701,8 +714,8 @@ Status ConnectionWorker::BufferChain::writeToFd(int fd, size_t &bytesWritten) {
 }
 
 size_t ConnectionWorker::BufferChain::getBytesRead() const {
-	if (back) {
-		return back->absolute + back->offset;
+	if (front) {
+		return front->absolute + front->offset;
 	}
 	return 0;
 }
@@ -744,8 +757,43 @@ BytesView ConnectionWorker::BufferChain::extract(pool_t *pool, size_t initOffset
 	return BytesView(block, targetSize);
 }
 
+/*void ConnectionWorker::BufferChain::release(size_t offset) {
+	while (front && offset > 0) {
+		if (front->size < front->offset + offset) {
+			offset -= (front->size - front->offset);
+
+			auto f = front;
+			front = front->next;
+			if (&f->next ==tail) {
+				tail = nullptr;
+			}
+			if (f == back) {
+				back = nullptr;
+			}
+			f->release();
+		} else {
+			front->offset += offset;
+			offset = 0;
+		}
+	}
+}*/
+
 void ConnectionWorker::BufferChain::releaseEmpty() {
 	while (front && front->availableForRead() == 0) {
+		auto f = front;
+		front = front->next;
+		if (&f->next ==tail) {
+			tail = nullptr;
+		}
+		if (f == back) {
+			back = nullptr;
+		}
+		f->release();
+	}
+}
+
+void ConnectionWorker::BufferChain::clear() {
+	while (front) {
 		auto f = front;
 		front = front->next;
 		if (&f->next ==tail) {
@@ -802,6 +850,13 @@ void ConnectionWorker::Client::shutdownAll() {
 }
 
 void ConnectionWorker::Client::release() {
+	if (request) {
+		auto p = request->getPool();
+		request->finalize();
+		pool::destroy(p);
+		request = nullptr;
+	}
+
 	close(event.data.fd);
 	if (gen) {
 		gen->releaseClient(this);
@@ -823,12 +878,26 @@ bool ConnectionWorker::Client::performRead() {
 		auto ret = runInputFilter(input);
 		switch (ret) {
 		case OK:
-		case DONE:
-		case DECLINED:
 		case SUSPENDED:
 			break;
+		case DECLINED:
+			shutdownRead();
+			break;
+		case DONE:
+			perform([&] {
+				request->submitResponse(ret);
+			}, request->getPool(), config::TAG_REQUEST, request);
+			shutdownRead();
+			break;
 		default:
-			cancelWithResult(ret);
+			if (request) {
+				perform([&] {
+					request->submitResponse(ret);
+				}, request->getPool(), config::TAG_REQUEST, request);
+			} else {
+				cancelWithResult(ret);
+			}
+			shutdownRead();
 			return false;
 		}
 	}
@@ -919,7 +988,7 @@ bool ConnectionWorker::Client::write(BufferChain &chain, const uint8_t *buf, siz
 	if (size > 0) {
 		return chain.write(pool, buf, size, flags);
 	} else if (size == 0 && flags != Buffer::None) {
-		if ((flags & Buffer::Eos) != Buffer::None) {
+		if (&chain == &output && (flags & Buffer::Eos) != Buffer::None) {
 			shutdownWrite();
 			return true;
 		} else {
@@ -974,6 +1043,9 @@ bool ConnectionWorker::Client::writeFile(BufferChain &chain, StringView filename
 }
 
 Status ConnectionWorker::Client::runInputFilter(BufferChain &chain) {
+	if (shutdownReadSend) {
+		return DECLINED;
+	}
 	while (!chain.empty()) {
 		switch (requestState) {
 		case RequestLine: {
@@ -1031,33 +1103,48 @@ Status ConnectionWorker::Client::runInputFilter(BufferChain &chain) {
 			auto ret = request->processInput(chain);
 			switch (ret) {
 			case DECLINED:
+				requestState = ReqeustInvalid;
+				chain.clear();
 				return HTTP_BAD_REQUEST;
 				break;
 			case OK:
 			case SUSPENDED:
 				break;
 			case DONE:
-				write(response, nullptr, 0, Buffer::Flags::Eos);
-				requestState = ReqeustClosed;
+				if (!response.empty()) {
+					write(response, nullptr, 0, Buffer::Flags::Eos);
+				}
+				requestState = ReqeustInvalid;
 				return DONE;
 				break;
 			default:
+				requestState = ReqeustInvalid;
+				chain.clear();
 				return ret;
 				break;
 			}
 			break;
 		}
-		case ReqeustClosed: {
+		case ReqeustClosed:
+			requestState = ReqeustInvalid;
 			return DONE;
 			break;
-		}
+		case ReqeustInvalid:
+			return DECLINED;
+			break;
 		}
 		if (requestState == RequestProcess) {
 			auto ret = gen->worker->processRequest(request);
 			switch (ret) {
 			case OK:
+			case SUSPENDED:
 				if (request->getInputFilter() && request->getInfo().contentLength > 0) {
-					requestState = RequestInput;
+					perform([&] {
+						ret = request->getInputFilter()->init();
+					}, request->getInputFilter()->getPool());
+					if (ret == OK) {
+						requestState = RequestInput;
+					}
 				}
 				break;
 			default:
@@ -1167,7 +1254,7 @@ void ConnectionWorker::Client::cancelWithResult(Status status) {
 
 		write(output, data, Buffer::Flags::Eos);
 	}, pool);
-
+	shutdownWrite();
 }
 
 ConnectionWorker::Generation::Generation(ConnectionWorker *w, pool_t *p)

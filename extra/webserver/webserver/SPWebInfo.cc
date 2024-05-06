@@ -201,6 +201,7 @@ StringView getStatusLine(Status status) {
 	case HTTP_CONTINUE: return StringView("100 Continue"); break;
 	case HTTP_SWITCHING_PROTOCOLS: return StringView("101 Switching Protocols"); break;
 	case HTTP_PROCESSING: return StringView("102 Processing"); break;
+	case DONE: return StringView("200 OK"); break;
 	case HTTP_OK: return StringView("200 OK"); break;
 	case HTTP_CREATED: return StringView("201 Created"); break;
 	case HTTP_ACCEPTED: return StringView("202 Accepted"); break;

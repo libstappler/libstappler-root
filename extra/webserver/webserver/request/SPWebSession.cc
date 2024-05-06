@@ -158,7 +158,7 @@ bool Session::init(bool silent) {
 
 	buf = makeCookieToken(_request, sessionUuid, userName, salt);
 
-	if (memcmp(buf.data(), cookieToken.data(), 64) != 0) {
+	if (memcmp(buf.data(), cookieToken.data(), sizeof(Token)) != 0) {
 		if (!silent) {
 			_request.addError("Session", "Cookie token is invalid", Value{
 				std::make_pair("token", Value(cookieToken)),

@@ -37,7 +37,7 @@ bool ImageLayout::init(RendererResult *res, const StringView &id, const StringVi
 	_result = res;
 	_src = src.str<Interface>();
 
-	_toolbar = addChild(Rc<material2d::AppBar>::create(material2d::AppBarLayout::Minified), ZOrder(1));
+	_toolbar = addChild(Rc<material2d::AppBar>::create(material2d::AppBarLayout::Minified), ZOrder(2));
 	_toolbar->setNodeStyle(material2d::NodeStyle::Filled);
 	_toolbar->setNavButtonIcon(IconName::Dynamic_Nav, 1.0f);
 	_toolbar->setNavCallback([this] {

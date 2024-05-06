@@ -22,6 +22,7 @@
 
 #include "SPWebUnixRequest.h"
 #include "SPWebInputFilter.h"
+#include "SPWebHostController.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -31,6 +32,13 @@ UnixRequestController::UnixRequestController(pool_t *pool, RequestInfo &&info, C
 
 	_info.useragentIp = client->addr;
 	_info.useragentPort = client->port;
+}
+
+UnixRequestController::UnixRequestController(pool_t *pool, RequestInfo &&info, UnixWebsocketSim *sock)
+: RequestController(pool, move(info)) {
+	_websocket = sock;
+	_info.useragentIp = StringView("127.0.0.1");
+	_info.useragentPort = 80;
 }
 
 void UnixRequestController::startResponseTransmission() {
@@ -83,6 +91,14 @@ void UnixRequestController::setStatus(Status status, StringView val) {
 }
 
 StringView UnixRequestController::getCookie(StringView name, bool removeFromHeadersTable) {
+	auto it = _inputCookies.find(name);
+	if (it != _inputCookies.end()) {
+		auto ret = it->second;
+		if (removeFromHeadersTable) {
+			_inputCookies.erase(ret);
+		}
+		return ret;
+	}
 	return StringView();
 }
 
@@ -149,6 +165,11 @@ void UnixRequestController::setRequestHeader(StringView key, StringView val) {
 		}
 	} else if (it->first == "content-length") {
 		_info.contentLength = StringView(it->second).readInteger(10).get(0);
+	} else if (it->first == "cookie") {
+		auto d = data::readUrlencoded<Interface>(it->second, maxOf<size_t>());
+		for (auto &iit : d.asDict()) {
+			_inputCookies.emplace(StringView(iit.first).pdup(_pool), StringView(iit.second.asString()).pdup(_pool));
+		}
 	}
 }
 
@@ -225,19 +246,35 @@ Status UnixRequestController::processInput(ConnectionWorker::BufferChain &chain)
 
 	auto ret = chain.read([&, this] (const ConnectionWorker::Buffer *, const uint8_t *data, size_t len) {
 		auto size = std::min(len, size_t(_info.contentLength));
-		StringView r((const char *)data, size);
+		BytesView r(data, size);
 
 		_info.contentLength -= size;
 
-		_filter->step(r);
+		bool success = true;
+		perform([&] {
+			if (!_filter->step(r)) {
+				success = false;
+			}
+		}, _filter->getPool(), config::TAG_REQUEST, this);
+
+		if (!success) {
+			return int(DECLINED);
+		}
 
 		if (_info.contentLength > 0) {
 			return int(size);
 		}
 
-		_filter->finalize();
+		perform([&] {
+			_filter->finalize();
+		}, _filter->getPool(), config::TAG_REQUEST, this);
 		return int(DONE);
 	}, true);
+
+	if (ret == DECLINED) {
+		_filter = nullptr;
+		return DECLINED;
+	}
 
 	return _info.contentLength > 0 ? SUSPENDED : ret;
 }
@@ -264,18 +301,18 @@ void UnixRequestController::submitResponse(Status status) {
 		}
 	}
 
-	if (!_info.filename.empty()) {
+	if (!_info.filename.empty() && !_info.stat.isDir) {
 		_client->writeFile(_client->response, _info.filename, 0, _info.stat.size, ConnectionWorker::Buffer::Eos);
 	}
 
-	if (_client->response.empty()) {
+	if (_client->response.empty() && !_info.headerRequest) {
 		// create default response
 		auto result = getDefaultResult();
 		bool allowCbor = isAcceptable("application/cbor") > 0.0f;
 
 		auto data = data::write<Interface>(result, allowCbor ? data::EncodeFormat::Cbor : data::EncodeFormat::Json);
 
-		_info.contentType = (allowCbor ? StringView("application/json; charset=utf-8") : StringView("application/cbor"));
+		_info.contentType = (allowCbor ? StringView("application/cbor") : StringView("application/json; charset=utf-8"));
 
 		_client->response.write(_client->pool, data.data(), data.size(), ConnectionWorker::Buffer::Eos);
 	} else {
@@ -301,25 +338,56 @@ void UnixRequestController::submitResponse(Status status) {
 
 	auto out = Callback<void(StringView)>(outFn);
 
+	auto writeCookies = [&] (CookieFlags flags) {
+		for (auto &it : _cookies) {
+			if ((it.second.flags & flags) ==flags) {
+				out << "set-cookie: " << it.first << "=" << it.second.data;
+				if (it.second.maxAge) {
+					out << ";Max-Age=" << it.second.maxAge.toSeconds();
+				}
+				if ((it.second.flags & CookieFlags::HttpOnly) == CookieFlags::HttpOnly) {
+					out << ";HttpOnly";
+				}
+				auto sameSite = (it.second.flags & CookieFlags::SameSiteStrict);
+				switch (sameSite) {
+				case CookieFlags::SameSiteStrict: out << ";SameSite=Strict"; break;
+				case CookieFlags::SameSiteLux: out << ";SameSite=Lux"; break;
+				default: out << ";SameSite=None"; break;
+				}
+				out << ";Path=/;Version=1" << crlf;
+			}
+		}
+	};
+
 	out << StringView("HTTP/1.1 ") << statusLine << crlf;
 	if (_info.status >= HTTP_BAD_REQUEST) {
 		setErrorHeader("Date", dateBuf);
 		setErrorHeader("Connection", "close");
 		setErrorHeader("Server", _host->getRoot()->getServerNameLine());
-		setErrorHeader("Content-Type", _info.contentType);
-		setErrorHeader("Content-Encoding", _info.contentEncoding);
-		setErrorHeader("Content-Length", toString(contentLength));
+		if (contentLength) {
+			setErrorHeader("Content-Type", _info.contentType);
+			setErrorHeader("Content-Length", toString(contentLength));
+		}
+		if (!_info.contentEncoding.empty()) {
+			setErrorHeader("Content-Encoding", _info.contentEncoding);
+		}
 
 		for (auto &it : _errorHeaders) {
 			out << it.first << StringView(": ") << it.second << crlf;
 		}
+
+		writeCookies(CookieFlags::SetOnError);
 	} else {
 		setResponseHeader("Date", dateBuf);
 		setResponseHeader("Connection", "close");
 		setResponseHeader("Server", _host->getRoot()->getServerNameLine());
-		setResponseHeader("Content-Type", _info.contentType);
-		setResponseHeader("Content-Encoding", _info.contentEncoding);
-		setResponseHeader("Content-Length", toString(contentLength));
+		if (contentLength) {
+			setErrorHeader("Content-Type", _info.contentType);
+			setErrorHeader("Content-Length", toString(contentLength));
+		}
+		if (!_info.contentEncoding.empty()) {
+			setErrorHeader("Content-Encoding", _info.contentEncoding);
+		}
 
 		for (auto &it : _errorHeaders) {
 			auto iit = _responseHeaders.find(it.first);
@@ -331,11 +399,28 @@ void UnixRequestController::submitResponse(Status status) {
 		for (auto &it : _responseHeaders) {
 			out << it.first << StringView(": ") << it.second << crlf;
 		}
+
+		writeCookies(CookieFlags::SetOnSuccess);
 	}
 
-	out << crlf;
+	if (!_client->response.empty()) {
+		out << crlf;
+		_client->write(_client->output, _client->response);
+	} else {
+		_client->write(_client->output, (const uint8_t *)crlf.data(), crlf.size(), ConnectionWorker::Buffer::Eos);
+	}
+}
 
-	_client->write(_client->output, _client->response);
+WebsocketConnection *UnixRequestController::convertToWebsocket(WebsocketHandler *handler, allocator_t *a, pool_t *p) {
+	WebsocketConnection *ret = nullptr;
+	if (_websocket) {
+		perform([&] {
+			auto r = new (p) UnixWebsocketConnectionSim(a, p, _host, _websocket);
+			_websocket->attachSocket(r);
+			ret = r;
+		}, p);
+	}
+	return ret;
 }
 
 }

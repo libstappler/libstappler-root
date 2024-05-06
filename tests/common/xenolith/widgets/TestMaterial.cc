@@ -33,7 +33,7 @@ bool TestMaterial::init(LayoutName layout, StringView text) {
 
 	_layout = layout;
 
-	setViewDecorationTracked(true);
+	setViewDecorationFlags(material2d::ViewDecorationFlags::Visible);
 
 	_infoLabel = addChild(Rc<Label>::create(), ZOrderMax);
 	_infoLabel->setString(text);

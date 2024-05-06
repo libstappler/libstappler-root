@@ -28,27 +28,27 @@
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct Lexer {
-	using ErrCb = Callback<void(const StringView &)>;
+	using OutStream = Callback<void(StringView)>;
 
-	Lexer(const StringView &, const ErrCb & = nullptr);
+	Lexer(const StringView &, const OutStream & = nullptr);
 
-	bool perform(const ErrCb &);
-	bool parseToken(const ErrCb &, Token &);
+	bool perform(const OutStream &);
+	bool parseToken(const OutStream &, Token &);
 
-	bool readAttributes(const ErrCb &, Token *, StringView &) const;
+	bool readAttributes(const OutStream &, Token *, StringView &) const;
 	bool readOutputExpression(Token *, StringView &) const;
-	bool readTagInfo(const ErrCb &, Token *, StringView &, bool interpolated = false) const;
+	bool readTagInfo(const OutStream &, Token *, StringView &, bool interpolated = false) const;
 	bool readCode(Token *, StringView &) const;
 	bool readCodeBlock(Token *, StringView &) const;
 
-	bool readPlainTextInterpolation(const ErrCb &errCb, Token *, StringView &, bool interpolated = false) const;
+	bool readPlainTextInterpolation(const OutStream &errCb, Token *, StringView &, bool interpolated = false) const;
 
-	Token *readLine(const ErrCb &errCb, const StringView &line, StringView &, Token *rootLine);
-	Token *readPlainLine(const ErrCb &errCb, const StringView &line, StringView &);
-	Token *readCommonLine(const ErrCb &errCb, const StringView &line, StringView &);
-	Token *readKeywordLine(const ErrCb &errCb, const StringView &line, StringView &);
+	Token *readLine(const OutStream &errCb, const StringView &line, StringView &, Token *rootLine);
+	Token *readPlainLine(const OutStream &errCb, const StringView &line, StringView &);
+	Token *readCommonLine(const OutStream &errCb, const StringView &line, StringView &);
+	Token *readKeywordLine(const OutStream &errCb, const StringView &line, StringView &);
 
-	bool onError(const ErrCb &, const StringView &r, const StringView &) const;
+	bool onError(const OutStream &, const StringView &r, const StringView &) const;
 
 	operator bool () const { return success; }
 

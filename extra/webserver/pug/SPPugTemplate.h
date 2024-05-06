@@ -29,6 +29,8 @@ namespace STAPPLER_VERSIONIZED stappler::pug {
 
 class Template : public memory::AllocPool {
 public:
+	using OutStream = Callback<void(StringView)>;
+
 	enum ChunkType {
 		Block,
 		HtmlTag,
@@ -90,33 +92,35 @@ public:
 		std::bitset<toInt(Flags::LineFeeds) + 1> flags;
 	};
 
-	static Template *read(const StringView &, const Options & = Options::getDefault(),
-			const Callback<void(const StringView &)> &err = nullptr);
-
-	static Template *read(memory::pool_t *, const StringView &, const Options & = Options::getDefault(),
-			const Callback<void(const StringView &)> &err = nullptr);
-
-	Options getOptions() const { return _opts; }
-
-	bool run(Context &, std::ostream &) const;
-	bool run(Context &, std::ostream &, const Options &opts) const;
-
-	void describe(std::ostream &stream, bool tokens = false) const;
-
-protected:
 	struct RunContext {
+		Vector<const Template *> templateStack;
 		Vector<Template::Chunk *> tagStack;
 		bool withinHead = false;
 		bool withinBody = false;
 		Options opts;
 	};
 
-	Template(memory::pool_t *, const StringView &, const Options &opts, const Callback<void(const StringView &)> &err);
+	static Template *read(const StringView &, const Options & = Options::getDefault(),
+			const Callback<void(StringView)> &err = nullptr);
 
-	bool runChunk(const Chunk &chunk, Context &, std::ostream &, RunContext &) const;
-	bool runCase(const Chunk &chunk, Context &, std::ostream &, RunContext &) const;
+	static Template *read(memory::pool_t *, const StringView &, const Options & = Options::getDefault(),
+			const Callback<void(StringView)> &err = nullptr);
 
-	void pushWithPrettyFilter(memory::ostringstream &, size_t indent, std::ostream &) const;
+	Options getOptions() const { return _opts; }
+
+	bool run(Context &, const OutStream &) const;
+	bool run(Context &, const OutStream &, const Options &opts) const;
+	bool run(Context &, const OutStream &, RunContext &opts) const;
+
+	void describe(const OutStream &stream, bool tokens = false) const;
+
+protected:
+	Template(memory::pool_t *, const StringView &, const Options &opts, const OutStream &err);
+
+	bool runChunk(const Chunk &chunk, Context &, const OutStream &, RunContext &) const;
+	bool runCase(const Chunk &chunk, Context &, const OutStream &, RunContext &) const;
+
+	void pushWithPrettyFilter(StringView, size_t indent, const OutStream &) const;
 
 	memory::pool_t *_pool;
 	Lexer _lexer;

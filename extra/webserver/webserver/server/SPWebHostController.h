@@ -27,6 +27,7 @@
 #include "SPCrypto.h"
 #include "SPPugCache.h"
 #include "SPSqlDriver.h"
+#include "SPWasm.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -81,6 +82,7 @@ public:
 	const HostInfo &getHostInfo() const { return _hostInfo; }
 
 	Root *getRoot() const { return _root; }
+	pool_t *getRootPool() const { return _rootPool; }
 
 	const Map<StringView, StringView> &getDbParams() const { return _dbParams; }
 
@@ -89,6 +91,13 @@ public:
 
 protected:
 	virtual db::sql::Driver * openInternalDriver(db::sql::Driver::Handle);
+
+	virtual bool loadDsoComponent(const Host &serv, const HostComponentInfo &);
+	virtual bool loadWasmComponent(const Host &serv, const HostComponentInfo &);
+
+	virtual wasm::Module *loadWasmModule(StringView name, StringView path);
+
+	virtual String resolvePath(StringView path) const;
 
 	void handleTemplateError(const StringView &str);
 
@@ -136,6 +145,8 @@ protected:
 	Map<StringView, StringView> _dbParams;
 	DbdModule *_customDbd = nullptr;
 	db::sql::Driver *_dbDriver = nullptr;
+
+	Map<StringView, Rc<wasm::Module>> _wasmModules;
 };
 
 

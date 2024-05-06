@@ -140,6 +140,14 @@ static const char *mod_stappler_web_httpd_add_component(cmd_parms *parms, void *
 	return NULL;
 }
 
+static const char *mod_stappler_web_httpd_add_wasm_component(cmd_parms *parms, void *mconfig, const char *w1, const char *w2) {
+	auto host = Host(HttpdHostController::get(parms->server));
+	perform([&] {
+		host.addWasmComponentByParams(StringView(w1), StringView(w2));
+	}, reinterpret_cast<pool_t *>(parms->pool), config::TAG_HOST, host.getController());
+	return NULL;
+}
+
 static const char *mod_stappler_web_httpd_add_allow(cmd_parms *parms, void *mconfig, const char *w) {
 	auto host = Host(HttpdHostController::get(parms->server));
 	perform([&] {
@@ -250,6 +258,9 @@ static const command_rec mod_stappler_web_httpd_directives[] = {
 
 	AP_INIT_RAW_ARGS("StapplerComponent", (cmd_func)mod_stappler_web_httpd_add_component, NULL, RSRC_CONF,
 		"Host component definition in format (Name:File:Func Args)"),
+
+	AP_INIT_TAKE2("StapplerWasmComponent", (cmd_func)mod_stappler_web_httpd_add_wasm_component, NULL, RSRC_CONF,
+		"Host WebAssembly component definition in format \"path\" \"world:rootmod/module#function\""),
 
 	AP_INIT_RAW_ARGS("StapplerSession", (cmd_func)mod_stappler_web_httpd_set_session_params, NULL, RSRC_CONF,
 		"Session params (name, key, host, maxage, secure)"),

@@ -65,11 +65,18 @@ bool WebsocketFrameReader::isControlFrameType(WebsocketFrameType t) {
 	return false;
 }
 
-void WebsocketFrameWriter::makeHeader(StackBuffer<32> &buf, size_t dataSize, WebsocketFrameType t) {
+size_t WebsocketFrameWriter::getFrameSize(size_t dataSize, bool masked) {
 	size_t sizeSize = (dataSize <= 125) ? 0 : ((dataSize > (size_t)maxOf<uint16_t>())? 8 : 2);
 	size_t frameSize = 2 + sizeSize;
+	if (masked) {
+		frameSize += 4;
+	}
+	return frameSize + dataSize;
+}
 
-	buf.prepare(frameSize);
+size_t WebsocketFrameWriter::makeHeader(uint8_t *buf, size_t dataSize, WebsocketFrameType t, bool masked, uint32_t mask) {
+	size_t sizeSize = (dataSize <= 125) ? 0 : ((dataSize > (size_t)maxOf<uint16_t>())? 8 : 2);
+	size_t frameSize = 2 + sizeSize;
 
 	buf[0] = ((uint8_t)0b10000000 | getOpcodeFromType(t));
 	if (sizeSize == 0) {
@@ -77,13 +84,30 @@ void WebsocketFrameWriter::makeHeader(StackBuffer<32> &buf, size_t dataSize, Web
 	} else if (sizeSize == 2) {
 		buf[1] = ((uint8_t)126);
 		uint16_t size = byteorder::HostToNetwork((uint16_t)dataSize);
-		memcpy(buf.data() + 2, &size, sizeof(uint16_t));
+		memcpy(buf + 2, &size, sizeof(uint16_t));
 	} else if (sizeSize == 8) {
 		buf[1] = ((uint8_t)127);
 		uint64_t size = byteorder::HostToNetwork((uint64_t)dataSize);
-		memcpy(buf.data() + 2, &size, sizeof(uint64_t));
+		memcpy(buf + 2, &size, sizeof(uint64_t));
+	}
+	if (masked) {
+		mask = byteorder::HostToNetwork((uint64_t)mask);
+		memcpy(buf + frameSize, &mask, sizeof(uint32_t));
+		buf[1] |= uint8_t(0b10000000);
+		frameSize += 4;
 	}
 
+	return frameSize;
+}
+
+void WebsocketFrameWriter::makeHeader(StackBuffer<32> &buf, size_t dataSize, WebsocketFrameType t, bool masked, uint32_t mask) {
+	size_t sizeSize = (dataSize <= 125) ? 0 : ((dataSize > (size_t)maxOf<uint16_t>())? 8 : 2);
+	size_t frameSize = 2 + sizeSize;
+	if (masked) {
+		frameSize += 4;
+	}
+
+	makeHeader(buf.prepare(frameSize), dataSize, t);
 	buf.save(nullptr, frameSize);
 }
 

@@ -31,7 +31,15 @@
 #include <sys/inotify.h>
 #endif
 
+#ifndef SP_TERMINATED_DATA
+#define SP_TERMINATED_DATA(view) (view.terminated()?view.data():view.str<memory::PoolInterface>().data())
+#endif
+
 namespace STAPPLER_VERSIONIZED stappler::pug {
+
+#if LINUX
+static int s_FileNotifyMask = IN_CLOSE_WRITE;
+#endif
 
 Rc<FileRef> FileRef::read(memory::pool_t *p, FilePath path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId) {
 	auto fpath = path.get();
@@ -66,7 +74,7 @@ FileRef::FileRef(memory::pool_t *pool, const FilePath &path, Template::Options o
 	if (_content.size() > 0) {
 		if (wId < 0 && watch >= 0) {
 #if LINUX
-			_watch = inotify_add_watch(watch, SP_TERMINATED_DATA(fpath), IN_CLOSE_WRITE);
+			_watch = inotify_add_watch(watch, SP_TERMINATED_DATA(fpath), s_FileNotifyMask);
 			if (_watch == -1 && errno == ENOSPC) {
 				cb("inotify limit is reached: fall back to timed watcher");
 			}
@@ -131,7 +139,7 @@ int FileRef::regenerate(int notify, StringView fpath) {
 	if (_watch >= 0) {
 #if LINUX
 		inotify_rm_watch(notify, _watch);
-		_watch = inotify_add_watch(notify, SP_TERMINATED_DATA(fpath), IN_CLOSE_WRITE);
+		_watch = inotify_add_watch(notify, SP_TERMINATED_DATA(fpath), s_FileNotifyMask);
 		return _watch;
 #endif
 	}
@@ -189,13 +197,13 @@ void Cache::update(int watch, bool regenerate) {
 	}
 }
 
-void Cache::update(memory::pool_t *pool) {
+void Cache::update(memory::pool_t *pool, bool force) {
 	memory::pool::context ctx(pool);
 	for (auto &it : _templates) {
-		if (it.second->getMtime() != nullptr) {
+		if (it.second->getMtime() != Time()) {
 			filesystem::Stat stat;
 			filesystem::stat(it.first, stat);
-			if (stat.mtime != it.second->getMtime()) {
+			if (stat.mtime != it.second->getMtime() || force) {
 				if (auto tpl = openTemplate(it.first, -1, it.second->getOpts())) {
 					it.second = tpl;
 				}
@@ -213,7 +221,25 @@ bool Cache::isNotifyAvailable() {
 	return _inotifyAvailable;
 }
 
-bool Cache::runTemplate(const StringView &ipath, const RunCallback &cb, std::ostream &out) {
+void Cache::regenerate(StringView key) {
+	if (_inotifyAvailable) {
+		auto it = _templates.find(key);
+		if (it != _templates.end()) {
+			_watches.erase(it->second->getWatch());
+			auto watch = it->second->regenerate(_inotify, key);
+			_watches.emplace(watch, it->first);
+		}
+	}
+}
+
+void Cache::drop(StringView key) {
+	auto it = _templates.find(key);
+	if (it != _templates.end()) {
+		_templates.erase(it);
+	}
+}
+
+bool Cache::runTemplate(const StringView &ipath, const RunCallback &cb, const OutStream &out) {
 	Rc<FileRef> tpl = acquireTemplate(ipath, true, _opts);
 	if (!tpl) {
 		tpl = acquireTemplate(filesystem::writablePath<memory::PoolInterface>(ipath), false, _opts);
@@ -222,7 +248,7 @@ bool Cache::runTemplate(const StringView &ipath, const RunCallback &cb, std::ost
 	return runTemplate(tpl, ipath, cb, out, tpl->getTemplate()->getOptions());
 }
 
-bool Cache::runTemplate(const StringView &ipath, const RunCallback &cb, std::ostream &out, Template::Options opts) {
+bool Cache::runTemplate(const StringView &ipath, const RunCallback &cb, const OutStream &out, Template::Options opts) {
 	Rc<FileRef> tpl = acquireTemplate(ipath, true, opts);
 	if (!tpl) {
 		tpl = acquireTemplate(filesystem::writablePath<memory::PoolInterface>(ipath), false, opts);
@@ -270,7 +296,7 @@ bool Cache::addTemplate(StringView key, String &&data, Template::Options opts) {
 	std::unique_lock<Mutex> lock(_mutex);
 	auto it = _templates.find(key);
 	if (it == _templates.end()) {
-		auto tpl = FileRef::read(_pool, move(data), true, opts, [&] (const StringView &err) {
+		auto tpl = FileRef::read(_pool, move(data), true, opts, [&] (const StringView &err) SP_COVERAGE_TRIVIAL {
 			std::cout << key << ":\n";
 			std::cout << err << "\n";
 		});
@@ -280,6 +306,14 @@ bool Cache::addTemplate(StringView key, String &&data, Template::Options opts) {
 		onError(string::toString<memory::PoolInterface>("Already added: '", key, "'"));
 	}
 	return false;
+}
+
+Rc<FileRef> Cache::get(StringView key) const {
+	auto it = _templates.find(key);
+	if (it != _templates.end()) {
+		return it->second;
+	}
+	return nullptr;
 }
 
 Rc<FileRef> Cache::acquireTemplate(StringView path, bool readOnly, const Template::Options &opts) {
@@ -300,7 +334,7 @@ Rc<FileRef> Cache::acquireTemplate(StringView path, bool readOnly, const Templat
 }
 
 Rc<FileRef> Cache::openTemplate(StringView path, int wId, const Template::Options &opts) {
-	auto ret = FileRef::read(_pool, FilePath(path), opts, [&] (const StringView &err) {
+	auto ret = FileRef::read(_pool, FilePath(path), opts, [&] (const StringView &err) SP_COVERAGE_TRIVIAL {
 		std::cout << path << ":\n";
 		std::cout << err << "\n";
 	}, _inotify, wId);
@@ -312,13 +346,13 @@ Rc<FileRef> Cache::openTemplate(StringView path, int wId, const Template::Option
 	return nullptr;
 }
 
-bool Cache::runTemplate(Rc<FileRef> tpl, StringView ipath, const RunCallback &cb, std::ostream &out, Template::Options opts) {
+bool Cache::runTemplate(Rc<FileRef> tpl, StringView ipath, const RunCallback &cb, const OutStream &out, Template::Options opts) {
 	if (tpl) {
 		if (auto t = tpl->getTemplate()) {
 			auto iopts = tpl->getOpts();
 			Context exec;
 			exec.loadDefaults();
-			exec.setIncludeCallback([this, iopts] (const StringView &path, Context &exec, std::ostream &out, const Template *) -> bool {
+			exec.setIncludeCallback([this, iopts] (const StringView &path, Context &exec, const OutStream &out, Template::RunContext &rctx) -> bool {
 				Rc<FileRef> tpl = acquireTemplate(path, true, iopts);
 				if (!tpl) {
 					tpl = acquireTemplate(filesystem::writablePath<memory::PoolInterface>(path), false, iopts);
@@ -330,7 +364,7 @@ bool Cache::runTemplate(Rc<FileRef> tpl, StringView ipath, const RunCallback &cb
 
 				bool ret = false;
 				if (const Template *t = tpl->getTemplate()) {
-					ret = t->run(exec, out);
+					ret = t->run(exec, out, rctx);
 				} else {
 					out << tpl->getContent();
 					ret = true;

@@ -36,6 +36,10 @@ enum class LayoutName {
 	None,
 	GeneralUpdateTest,
 	MaterialColorPickerTest,
+	MaterialNodeTest,
+	MaterialScrollTest,
+	MaterialInputTest,
+	MaterialMenuTest
 };
 
 StringView getLayoutNameId(LayoutName);

@@ -29,25 +29,20 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web::tools {
 
+static Status makeUnavailablePage(Request &req) {
+	req.runPug("virtual://html/errors_unauthorized.pug", [&] (pug::Context &exec, const pug::Template &) -> bool {
+		exec.set("version", Value(config::getWebserverVersionString()));
+		return true;
+	});
+	return HTTP_UNAUTHORIZED;
+}
+
 Status ErrorsGui::onTranslateName(Request &req) {
 	req.setResponseHeader("WWW-Authenticate", req.host().getHostInfo().hostname);
 
 	auto t = req.acquireDbTransaction();
 	if (!t) {
 		return HTTP_INTERNAL_SERVER_ERROR;
-	}
-
-	if (_subPath == "/fixTags") {
-		auto errorScheme = req.host().getErrorScheme();
-		auto tags = errorScheme->getField("tags");
-		auto errors = errorScheme->select(t, db::Query().include("data"));
-		for (auto &it : errors.asArray()) {
-			auto objTags = tags->getDefault(it);
-			errorScheme->update(t, it, Value({
-				pair("tags", Value(objTags))
-			}), db::UpdateFlags::NoReturn);
-		}
-		return HTTP_OK;
 	}
 
 	auto u = req.getAuthorizedUser();
@@ -115,7 +110,14 @@ Status ErrorsGui::onTranslateName(Request &req) {
 
 			if (auto iface = dynamic_cast<db::sql::SqlHandle *>(t.getAdapter().getBackendInterface())) {
 				Value ret;
-				auto query = toString("SELECT tag, COUNT(*) FROM (SELECT __oid, unnest(tags) as tag FROM ", errorScheme->getName(), ") s GROUP BY tag;");
+
+				auto driver = iface->getDriver();
+
+				auto tagUnwrapQuery = (driver->getDriverName() == "sqlite")
+						? toString("SELECT __oid, __unwrap_value as tag FROM ", errorScheme->getName(), ", sp_unwrap(tags) as unwrap")
+						: toString("SELECT __oid, unnest(tags) as tag FROM ", errorScheme->getName());
+
+				auto query = toString("SELECT tag, COUNT(*) FROM (", tagUnwrapQuery, ") s GROUP BY tag;;");
 				iface->performSimpleSelect(query, [&] (db::Result &res) {
 					for (auto it : res) {
 						ret.addValue(Value({
@@ -125,6 +127,7 @@ Status ErrorsGui::onTranslateName(Request &req) {
 						}));
 					}
 				});
+
 				exec.set("tags", move(ret));
 			}
 
@@ -132,10 +135,12 @@ Status ErrorsGui::onTranslateName(Request &req) {
 				exec.set("errors", true, &errorsData);
 			}
 
+			auto current = token.encode();
+
 			Value cursor({
 				pair("start", Value(token.getStart())),
 				pair("end", Value(token.getEnd())),
-				pair("current", Value(d.getString("c"))),
+				pair("current", Value(current)),
 				pair("total", Value(token.getTotal())),
 			});
 
@@ -152,11 +157,7 @@ Status ErrorsGui::onTranslateName(Request &req) {
 		});
 		return DONE;
 	} else {
-		req.runPug("virtual://html/errors_unauthorized.pug", [&] (pug::Context &exec, const pug::Template &) -> bool {
-			exec.set("version", Value(config::getWebserverVersionString()));
-			return true;
-		});
-		return HTTP_UNAUTHORIZED;
+		return makeUnavailablePage(req);
 	}
 }
 
@@ -242,11 +243,7 @@ Status HandlersGui::onTranslateName(Request &req) {
 		});
 		return DONE;
 	} else {
-		req.runPug("virtual://html/errors_unauthorized.pug", [&] (pug::Context &exec, const pug::Template &) -> bool {
-			exec.set("version", Value(config::getWebserverVersionString()));
-			return true;
-		});
-		return HTTP_UNAUTHORIZED;
+		return makeUnavailablePage(req);
 	}
 }
 
@@ -255,7 +252,7 @@ Status ReportsGui::onTranslateName(Request &req) {
 
 	auto u = req.getAuthorizedUser();
 	if (u && u->isAdmin()) {
-		auto reportsAddress = req.host().getDocumentRootPath(".db");
+		auto reportsAddress = req.host().getDocumentRootPath(".reports");
 
 		auto readTime = [&] (StringView name) {
 			if (name.starts_with("crash.")) {
@@ -292,8 +289,7 @@ Status ReportsGui::onTranslateName(Request &req) {
 		} else if (_subPathVec.size() == 1) {
 			auto name = _subPathVec.front();
 
-
-			auto reportsAddress = filesystem::writablePath<Interface>(filepath::merge<Interface>(".serenity", name));
+			auto reportsAddress = filepath::merge<Interface>(req.host().getDocumentRootPath(".reports"), name);
 
 			filesystem::Stat stat;
 			auto exists = filesystem::stat(reportsAddress, stat);
@@ -327,11 +323,7 @@ Status ReportsGui::onTranslateName(Request &req) {
 
 		return DONE;
 	} else {
-		req.runPug("virtual://html/errors_unauthorized.pug", [&] (pug::Context &exec, const pug::Template &) -> bool {
-			exec.set("version", Value(config::getWebserverVersionString()));
-			return true;
-		});
-		return HTTP_UNAUTHORIZED;
+		return makeUnavailablePage(req);
 	}
 }
 

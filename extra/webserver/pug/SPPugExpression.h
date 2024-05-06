@@ -28,6 +28,8 @@
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct Expression : memory::AllocPool {
+	using OutStream = Callback<void(StringView)>;
+
 	enum Op : uint8_t {
 		NoOp,
 
@@ -113,7 +115,7 @@ struct Expression : memory::AllocPool {
 	struct Options {
 		static Options getDefaultInline();
 		static Options getDefaultScript();
-		static Options getWithhNewlineToken(const StringView &);
+		static Options getWithNewlineToken(const StringView &);
 
 		Options &enableAllOperators();
 		Options &disableAllOperators();
@@ -149,7 +151,7 @@ struct Expression : memory::AllocPool {
 	bool empty() const;
 	bool isConst() const;
 
-	void describe(std::ostream &stream, size_t depth = 0);
+	void describe(const OutStream &stream, size_t depth = 0);
 
 	Op op;
 	Expression *left = nullptr;

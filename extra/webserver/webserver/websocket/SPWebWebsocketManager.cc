@@ -21,6 +21,7 @@
  **/
 
 #include "SPWebWebsocketManager.h"
+#include "SPWebWebsocketConnection.h"
 #include "SPWebRequestController.h"
 #include "SPWebRoot.h"
 
@@ -40,6 +41,7 @@ WebsocketManager::~WebsocketManager() { }
 WebsocketHandler * WebsocketManager::onAccept(const Request &req, pool_t *) {
 	return nullptr;
 }
+
 bool WebsocketManager::onBroadcast(const Value & val) {
 	return false;
 }
@@ -73,11 +75,6 @@ static void *WebsocketManager_thread(WebsocketHandler *h) {
 	return NULL;
 }
 
-/*static int WebsocketManager_abortfn(int retcode) {
-	log::error("web::WebsocketManager", "Websocket Handle allocation failed with code: ", retcode);
-	return retcode;
-}*/
-
 Status WebsocketManager::accept(Request &req) {
 	auto version = req.getRequestHeader("sec-websocket-version");
 	auto key = req.getRequestHeader("sec-websocket-key");
@@ -90,7 +87,7 @@ Status WebsocketManager::accept(Request &req) {
 	allocator_t *alloc = nullptr;
 	pool_t *pool = nullptr;
 
-	auto FailCleanup = [&] (Status code) -> Status {
+	auto FailCleanup = [&] (Status code) SP_COVERAGE_TRIVIAL -> Status {
 		if (pool) {
 			pool::destroy(pool);
 		}
@@ -108,7 +105,6 @@ Status WebsocketManager::accept(Request &req) {
 	allocator::max_free_set(alloc, 20_MiB);
 
 	auto handler = onAccept(req, pool);
-
 	if (handler) {
 		req.clearResponseHeaders();
 		req.setResponseHeader("Upgrade", "websocket");

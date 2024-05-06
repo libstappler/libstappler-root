@@ -26,6 +26,9 @@ LOCAL_DIR := $(dir $(LOCAL_MAKEFILE))
 
 LOCAL_OUTDIR := stappler-build
 LOCAL_LIBRARY := stappler_web_module
+
+LOCAL_WASM_MODULE := module.wasm
+
 LOCAL_BUILD_STATIC := 0
 LOCAL_BUILD_SHARED := 2
 
@@ -44,6 +47,8 @@ LOCAL_SRCS_OBJS :=
 
 LOCAL_INCLUDES_DIRS :=
 LOCAL_INCLUDES_OBJS :=
+
+LOCAL_WASM_DIRS := wasm
 
 LOCAL_LDFLAGS :=
 

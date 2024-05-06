@@ -22,6 +22,8 @@
 
 #include "SPWebRequestHandler.h"
 #include "SPWebInputFilter.h"
+#include "SPWebHost.h"
+#include "SPWebRoot.h"
 #include "SPDbFile.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
@@ -35,7 +37,7 @@ Status RequestHandler::onRequestRecieved(Request & rctx, StringView originPath, 
 	return OK;
 }
 
-Status RequestHandler::onPostReadRequest(Request &) { return DECLINED; }
+Status RequestHandler::onPostReadRequest(Request &) { return OK; }
 Status RequestHandler::onTranslateName(Request &) { return DECLINED; }
 Status RequestHandler::onQuickHandler(Request &, int v) { return DECLINED; }
 void RequestHandler::onInsertFilter(Request &) { }
@@ -227,7 +229,13 @@ void RequestHandlerMap::Handler::onInsertFilter(Request &rctx) {
 	case RequestMethod::Put:
 	case RequestMethod::Patch: {
 		auto cfg = _info->getInputConfig();
-		cfg.required = db::InputConfig::Require::Data | db::InputConfig::Require::Files;
+		if ((cfg.required & db::InputConfig::Require::Data) == db::InputConfig::Require::None) {
+			cfg.required |= db::InputConfig::Require::Data;
+		}
+		if ((cfg.required & db::InputConfig::Require::Files) == db::InputConfig::Require::None
+				&& (cfg.required & db::InputConfig::Require::FilesAsData) == db::InputConfig::Require::None) {
+			cfg.required |= db::InputConfig::Require::Files;
+		}
 		rctx.setInputConfig(cfg);
 
 		auto ex = InputFilter::insert(rctx);
@@ -321,10 +329,15 @@ bool RequestHandlerMap::Handler::processInputFields(InputFilter *filter) {
 
 	_info->getInputScheme().transform(_inputFields, db::Scheme::TransformAction::ProtectedCreate);
 
+	auto &cfg = _request.getInputConfig();
 	for (auto &it : filter->getFiles()) {
 		if (auto f = _info->getInputScheme().getField(it.name)) {
-			if (db::File::validateFileField(_request.host().getRoot(), *f, it)) {
-				_inputFields.setInteger(it.negativeId(), it.name);
+			if ((cfg.required & db::InputConfig::Require::FilesAsData) != db::InputConfig::Require::None && db::InputConfig::isFileAsDataSupportedForType(it.type)) {
+				// do nothing
+			} else {
+				if (db::File::validateFileField(_request.host().getRoot(), *f, it)) {
+					_inputFields.setInteger(it.negativeId(), it.name);
+				}
 			}
 		}
 	}

@@ -69,12 +69,6 @@ public:
 	void setUser(User *);
 	void setFilterData(const Value &);
 
-	void setResolveOptions(const Value & opts);
-	void setResolveDepth(size_t size);
-
-	void setPageFrom(size_t);
-	void setPageCount(size_t);
-
 	void applyQuery(const Value &);
 
 	void prepare(QueryList::Flags = QueryList::None);
@@ -93,10 +87,10 @@ public: // common interface
 	virtual Value getResultObject();
 	virtual void resolve(const Scheme &, Value &); // called to apply resolve rules to object
 
-public:
-	size_t getMaxRequestSize() const;
-	size_t getMaxVarSize() const;
-	size_t getMaxFileSize() const;
+	virtual db::InputConfig::Require getInputFlags() const;
+	virtual size_t getMaxRequestSize() const;
+	virtual size_t getMaxVarSize() const;
+	virtual size_t getMaxFileSize() const;
 
 protected:
 	void encodeFiles(Value &, Vector<db::InputFile> &);
@@ -140,7 +134,6 @@ public:
 
 protected:
 	uint64_t getObjectId();
-	Value getObject(bool forUpdate);
 
 	const Field *_field = nullptr;
 };
@@ -148,6 +141,8 @@ protected:
 class ResourceFile : public ResourceProperty {
 public:
 	ResourceFile(const Transaction &h, QueryList &&q, const Field *prop);
+
+	virtual db::InputConfig::Require getInputFlags() const override;
 
 	virtual bool prepareUpdate() override;
 	virtual bool prepareCreate() override;
@@ -167,13 +162,14 @@ public:
 
 	virtual bool prepareUpdate() override;
 	virtual bool prepareCreate() override;
+	virtual bool prepareAppend() override;
 	virtual Value updateObject(Value &data, Vector<db::InputFile> &) override;
 	virtual Value createObject(Value &data, Vector<db::InputFile> &) override;
+	virtual Value appendObject(Value &data) override;
 	virtual Value getResultObject() override;
 
 protected:
 	Value getDatabaseObject();
-	Value getArrayForObject(Value &object);
 };
 
 class ResourceObject : public Resource {
@@ -206,6 +202,7 @@ public:
 	virtual Value createObject(Value &, Vector<db::InputFile> &) override;
 
 protected:
+	Value doCreateObject(Value &data, Vector<db::InputFile> &files, const Value &extra);
 	Value performCreateObject(Value &data, Vector<db::InputFile> &files, const Value &extra);
 };
 
@@ -232,7 +229,6 @@ public:
 
 protected:
 	int64_t getObjectId();
-	Value getObjectValue();
 
 	Vector<int64_t> prepareAppendList(int64_t id, const Value &, bool cleanup);
 
@@ -265,9 +261,6 @@ public:
 protected:
 	int64_t getRootId();
 	int64_t getObjectId();
-
-	Value getRootObject(bool forUpdate);
-	Value getTargetObject(bool forUpdate);
 
 	bool doRemoveObject();
 	Value doUpdateObject(Value &, Vector<db::InputFile> &);

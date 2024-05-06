@@ -25,8 +25,10 @@
 #include "SPWebRequestController.h"
 #include "SPWebHostComponent.h"
 #include "SPWebInputFilter.h"
+#include "SPWebWebsocket.h"
 #include "SPWebResource.h"
 #include "SPWebOutput.h"
+#include "SPWebRoot.h"
 #include "SPSqlHandle.h"
 #include "SPDbAdapter.h"
 #include "SPValid.h"
@@ -75,42 +77,12 @@ protected:
 
 struct SocketCommand : AllocBase {
 	SocketCommand(const String &str) : name(str) { }
-	virtual ~SocketCommand() { }
+
 	virtual bool run(ShellSocketHandler &h, StringView &r) = 0;
 	virtual StringView desc() const = 0;
 	virtual StringView help() const = 0;
 
 	String name;
-};
-
-struct ModeCmd : SocketCommand {
-	ModeCmd() : SocketCommand("mode") { }
-
-	virtual bool run(ShellSocketHandler &h, StringView &r) override {
-		if (!r.empty()) {
-			if (r.is("plain")) {
-				h.setShellMode(ShellSocketHandler::ShellMode::Plain);
-				h.send("You are now in plain text mode");
-			} else if (r.is("html")) {
-				h.setShellMode(ShellSocketHandler::ShellMode::Html);
-				h.send("You are now in <font color=\"#3f51b5\">HTML</font> mode");
-			}
-		} else {
-			if (h.getShellMode() == ShellSocketHandler::ShellMode::Plain) {
-				h.send("Plain text mode");
-			} else {
-				h.send("<font color=\"#3f51b5\">HTML</font> mode");
-			}
-		}
-		return true;
-	}
-
-	virtual StringView desc() const {
-		return "plain|html - Switch socket output mode";
-	}
-	virtual StringView help() const {
-		return "plain|html - Switch socket output mode";
-	}
 };
 
 struct DebugCmd : SocketCommand {
@@ -135,10 +107,10 @@ struct DebugCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "on|off - Switch server debug mode";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "on|off - Switch server debug mode";
 	}
 };
@@ -180,10 +152,10 @@ struct ListCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "all|<name> - Get information about data scheme";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "all|<name> - Get information about data scheme";
 	}
 };
@@ -212,8 +184,6 @@ struct ResourceCmd : SocketCommand {
 					if (!resolve.empty()) {
 						if (resolve.front() == '(') {
 							ret->applyQuery(data::read<Interface>(resolve));
-						} else {
-							ret->setResolveOptions(Value(resolve));
 						}
 					}
 					if (!val.empty()) {
@@ -258,10 +228,10 @@ struct GetCmd : ResourceCmd {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<scheme> <path> <resolve> - Get data from scheme";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<scheme> <path> <resolve> - Get data from scheme";
 	}
 };
@@ -309,14 +279,13 @@ struct HistoryCmd : ResourceCmd {
 			});
 		}
 
-		h.sendError(toString("Scheme is not defined"));
 		return ret;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<scheme> <time> - Changelog for scheme or view";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "\thistory <scheme|view> <time> - Changelog for scheme or view\n\n"
 				"Scheme can be defined by it's name\n"
 				"View can be defined as <scheme>::<field>::<tag>\n";
@@ -363,14 +332,13 @@ struct DeltaCmd : ResourceCmd {
 			});
 		}
 
-		h.sendError(toString("Scheme is not defined"));
 		return ret;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<scheme> <time> [<field> <tag>] - Delta for scheme";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "\tdelta <scheme|view> <time> - Changelog for scheme or view\n\n"
 				"Scheme can be defined by it's name\n"
 				"View can be defined as <scheme>::<field>::<tag>\n";
@@ -407,10 +375,10 @@ struct MultiCmd : ResourceCmd {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<request> - perform multi-request";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<request> - perform multi-request";
 	}
 };
@@ -453,10 +421,10 @@ struct CreateCmd : ResourceCmd {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<scheme> <path> <data> - Create object for scheme";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<scheme> <path> <data> - Create object for scheme";
 	}
 };
@@ -499,10 +467,10 @@ struct UpdateCmd : ResourceCmd {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<scheme> <path> <data> - Update object for scheme";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<scheme> <path> <data>  - Update object for scheme";
 	}
 };
@@ -558,10 +526,10 @@ struct UploadCmd : ResourceCmd {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<scheme> <path> - Upload file for scheme resource";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<scheme> <path> - Update file for scheme resource";
 	}
 };
@@ -603,10 +571,10 @@ struct AppendCmd : ResourceCmd {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<scheme> <path> <data> - Append object for scheme";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<scheme> <path> <data> - Append object for scheme";
 	}
 };
@@ -644,10 +612,10 @@ struct DeleteCmd : ResourceCmd {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<scheme> <path> - Delete object for scheme";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<scheme> <path> - Delete object for scheme";
 	}
 };
@@ -685,15 +653,13 @@ struct SearchCmd : ResourceCmd {
 			}
 		});
 
-		h.sendError("Fail run search");
-
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<scheme> <path> <text> - Run full-text search";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<scheme> <path> <text> - Run full-text search";
 	}
 };
@@ -726,10 +692,10 @@ struct HandlersCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return " - Information about registered handlers";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return " - Information about registered handlers";
 	}
 };
@@ -742,10 +708,10 @@ struct CloseCmd : SocketCommand {
 		return false;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return " - close current connection";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return " - close current connection";
 	}
 };
@@ -758,10 +724,10 @@ struct EchoCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<message> - display message in current terminal";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<message> - display message in current terminal";
 	}
 };
@@ -775,10 +741,10 @@ struct ParseCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<message> - parse message as object changeset";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<message> - parse message as object changeset";
 	}
 };
@@ -795,10 +761,10 @@ struct MsgCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<message> - display message in all opened terminals";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<message> - display message in all opened terminals";
 	}
 };
@@ -813,10 +779,10 @@ struct CountCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return " - display number of opened terminals";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return " - display number of opened terminals";
 	}
 };
@@ -877,10 +843,10 @@ struct HelpCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return "<>|<cmd> - display command list or information about command";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return "<>|<cmd> - display command list or information about command";
 	}
 };
@@ -894,29 +860,13 @@ struct GenPasswordCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return " - generate password with <length>";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return " - generate password with <length>";
 	}
 };
-
-/*struct KillCmd : SocketCommand {
-	KillCmd() : SocketCommand("kill") { }
-
-	virtual bool run(ShellSocketHandler &h, StringView &r) override {
-		::raise(SIGSEGV);
-		return true;
-	}
-
-	virtual StringView desc() const {
-		return " - kill current process";
-	}
-	virtual StringView help() const {
-		return " - kill current process";
-	}
-};*/
 
 struct TimeCmd : SocketCommand {
 	TimeCmd() : SocketCommand("time") { }
@@ -946,55 +896,16 @@ struct TimeCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const {
+	virtual StringView desc() const override {
 		return " - convert integer timestamp to human-readable format";
 	}
-	virtual StringView help() const {
+	virtual StringView help() const override {
 		return " - convert integer timestamp to human-readable format.\n"
 				"    <int>s | <int>sec - as seconds\n"
 				"    <int>ms | <int>msec - as milliseconds\n"
 				"    <int>mcs | <int>mcsec | <int> (no suffix) - as microseconds";
 	}
 };
-
-/*struct StatCmd : SocketCommand {
-	StatCmd() : SocketCommand("stat") { }
-
-	virtual bool run(ShellSocketHandler &h, StringView &r) override {
-		r.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
-
-		StringStream ret;
-
-		auto root = Root::getCurrent();
-		auto stat = root->getStat();
-
-		if (r.starts_with("0x")) {
-			ret << root->getAllocatorMemoryMap(r.readInteger().get()) << "\n";
-		} else {
-			ret << "Resource stat:\n";
-			ret << "\tRequests recieved: " << stat.requestsRecieved << "\n";
-			ret << "\tFilters init: " << stat.filtersInit << "\n";
-			ret << "\tTasks runned: " << stat.tasksRunned << "\n";
-			ret << "\tHeartbeat counter: " << stat.heartbeatCounter << "\n";
-			ret << "\tDB queries performed: " << stat.dbQueriesPerformed << " (" << stat.dbQueriesReleased << " " << stat.dbQueriesPerformed - stat.dbQueriesReleased << ")\n";
-			ret << "\n";
-
-			ret << root->getMemoryMap(r == "full");
-		}
-
-		h.send(ret.str());
-		return true;
-	}
-
-	virtual StringView desc() const {
-		return " - show server instance statistics (current instance only)";
-	}
-	virtual StringView help() const {
-		return " - server instance statistics (current instance only)\n"
-				"    full - view all allocators with slots\n"
-				"    <allocator-name> - allocator statistics with memory owners and backtraces";
-	}
-};*/
 
 ShellSocketHandler::ShellSocketHandler(WebsocketManager *m, pool_t *pool, StringView url, int64_t userId)
 : WebsocketHandler(m, pool, url, 600_sec), _userId(userId) {
@@ -1010,7 +921,6 @@ ShellSocketHandler::ShellSocketHandler(WebsocketManager *m, pool_t *pool, String
 	_cmds.push_back(new UploadCmd());
 	_cmds.push_back(new DeleteCmd());
 	_cmds.push_back(new SearchCmd());
-	//_cmds.push_back(new ModeCmd());
 	_cmds.push_back(new DebugCmd());
 	_cmds.push_back(new CloseCmd());
 	_cmds.push_back(new EchoCmd());
@@ -1019,15 +929,13 @@ ShellSocketHandler::ShellSocketHandler(WebsocketManager *m, pool_t *pool, String
 	_cmds.push_back(new CountCmd());
 	_cmds.push_back(new HelpCmd());
 	_cmds.push_back(new GenPasswordCmd());
-	//_cmds.push_back(new KillCmd());
 	_cmds.push_back(new TimeCmd());
-	//_cmds.push_back(new StatCmd());
 
 	auto serv = m->host();
 	_external.reserve(serv.getComponents().size());
 	for (auto &it : serv.getComponents()) {
 		if (!it.second->getCommands().empty()) {
-			_external.emplace_back(StringView(it.first), &it.second->getCommands());
+			_external.emplace_back(StringView(it.first).pdup(pool), &it.second->getCommands());
 		}
 	}
 }
@@ -1138,14 +1046,23 @@ void ShellSocketHandler::sendError(const String &str) {
 }
 
 void ShellSocketHandler::sendData(const Value & data) {
-	StringStream stream;
+	String stream;
 	switch(_mode) {
-	case ShellMode::Plain: data::write(stream, data, data::EncodeFormat::Json); break;
-	case ShellMode::Html: stream << "<p>"; output::formatJsonAsHtml(stream, data); stream << "</p>"; break;
+	case ShellMode::Plain:
+		data::write([&] (StringView str) {
+			stream.append(str.data(), str.size());
+		}, data, data::EncodeFormat::Json);
+		break;
+	case ShellMode::Html:
+		stream.append("<p>");
+		output::formatJsonAsHtml([&] (StringView str) {
+			stream.append(str.data(), str.size());
+		}, data);
+		stream.append("</p>");
+		break;
 	};
-	send(stream.weak());
+	send(stream);
 }
-
 
 WebsocketHandler * ShellSocket::onAccept(const Request &req, pool_t *pool) {
 	WebsocketHandler *ret = nullptr;
@@ -1208,7 +1125,7 @@ Status ShellGui::onPostReadRequest(Request &rctx) {
 			}
 
 			rctx.setContentType("text/html;charset=UTF-8");
-			rctx.runPug("virtual://html/shell.pug", [&] (pug::Context &exec, const pug::Template &) -> bool {
+			rctx.runPug("virtual://html/server.pug", [&] (pug::Context &exec, const pug::Template &) -> bool {
 				exec.set("count", Value(count));
 				exec.set("setup", Value(count != 0));
 				exec.set("hasDb", Value(hasDb));
@@ -1239,17 +1156,13 @@ Status ShellGui::onPostReadRequest(Request &rctx) {
 
 					auto scheme = rctx.host().getScheme(data.getString("scheme"));
 					auto path = data.getString("path");
-					auto resolve = data.getString("resolve");
 					auto user = db::User::get(t, data.getInteger("user"));
 					if (scheme && !path.empty() && user) {
 						if (Resource *r = Resource::resolve(t, *scheme, path)) {
 							r->setUser(user);
-							if (!resolve.empty()) {
-								r->setResolveOptions(Value(resolve));
-							}
 							if (r->prepareCreate()) {
 								_resource = r;
-								status = DECLINED;
+								status = OK;
 							}
 						}
 					}

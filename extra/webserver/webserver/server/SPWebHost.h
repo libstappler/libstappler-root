@@ -66,6 +66,7 @@ public:
 
 	void addSourceRoot(StringView file);
 	void addComponentByParams(StringView w);
+	void addWasmComponentByParams(StringView path, StringView command);
 	void addAllow(StringView);
 	void setSessionParams(StringView w);
 	void setHostSecret(StringView w);

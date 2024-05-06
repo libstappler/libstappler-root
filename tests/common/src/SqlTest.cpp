@@ -31,7 +31,7 @@ THE SOFTWARE.
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 constexpr auto SqlString1 =
-R"(SELECT "field", "field" AS "alias", "database" AS "alias" FROM table, table WHERE("alias"=value)AND("field"=1234)OR("field"!=false)OR(("time">1234 AND "time"<123400)) ORDER BY "field" DESC LIMIT 12 OFFSET 16;)";
+R"(SELECT "field", "field" AS "alias", database."field" AS "alias" FROM table, table WHERE("alias"=value)AND("field"=1234)OR("field"!=false)OR(("time">1234 AND "time"<123400)) ORDER BY "field" DESC LIMIT 12 OFFSET 16;)";
 
 constexpr auto SqlString2 =
 R"(WITH query AS (SELECT * FROM sqtable), query AS (SELECT * FROM sqtable)SELECT "field1", "field2" FROM table WHERE("alias"=value)AND(("field"=value)OR("field"=value));)";
@@ -75,6 +75,10 @@ struct SqlTest : Test {
 				.limit(12, 16)
 				.finalize();
 		auto test1 = (query.getStream().str() == StringView(SqlString1));
+		if (!test1) {
+			std::cout << "1: " << query.getStream().str() << "\n";
+			std::cout << "2: " << SqlString1 << "\n";
+		}
 
 		query = QueryType();
 		query.with("query", [] (QueryType::GenericQuery &q) {

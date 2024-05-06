@@ -27,6 +27,7 @@
 #include "SPWebAsyncTask.cc"
 #include "SPWebHost.cc"
 #include "SPWebHostComponent.cc"
+#include "SPWebWasmComponent.cc"
 #include "SPWebHostController.cc"
 #include "SPWebRoot.cc"
 #include "SPWebRequestFilter.cc"
@@ -53,6 +54,8 @@
 #include "SPWebToolsErrors.cc"
 #include "SPWebToolsShell.cc"
 #include "SPWebToolsServer.cc"
+
+#include "SPWebWasm.cc"
 
 namespace STAPPLER_VERSIONIZED stappler::web::config {
 

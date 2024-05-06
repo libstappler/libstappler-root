@@ -30,9 +30,11 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 class InputParser : public AllocBase {
 public:
 	InputParser(const db::InputConfig &, size_t);
+
+	SP_COVERAGE_TRIVIAL
 	virtual ~InputParser() { }
 
-	virtual void run(StringView) = 0;
+	virtual bool run(BytesView) = 0;
 	virtual void finalize() = 0;
 	virtual void cleanup();
 
@@ -47,10 +49,6 @@ public:
 	const db::InputConfig &getConfig() const;
 
 protected:
-	//using VarState = UrlencodeParser::VarState;
-
-	//Value *flushString(StringView &r, Value *, VarState state);
-
 	db::InputConfig config;
 	size_t length;
 	Value root;
@@ -69,6 +67,8 @@ public:
 		Unrecognized,
 	};
 
+	static Status getStatusForException(Exception);
+
 	static Exception insert(const Request &);
 
 	/* file index can be coded as ordered index or negative id
@@ -79,7 +79,9 @@ public:
 
 	InputFilter(const Request &, Accept a);
 
-	void step(StringView);
+	Status init();
+
+	bool step(BytesView);
 	void finalize();
 
 	StringView getContentType() const;
@@ -110,10 +112,9 @@ public:
 	const db::InputConfig & getConfig() const;
 
 	Request getRequest() const;
+	memory::pool_t *getPool() const;
 
 protected:
-	Status init();
-
 	Accept _accept = Accept::None;
 
 	Time _time;

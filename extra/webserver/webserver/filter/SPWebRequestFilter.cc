@@ -24,12 +24,13 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-bool RequestFilter::readRequestLine(StringView &r, RequestInfo &req) {
+size_t RequestFilter::readRequestLine(StringView &r, RequestInfo &req) {
+	auto source = r;
 	r.skipChars<StringView::WhiteSpace>();
 	auto methodName = r.readChars<StringView::LatinUppercase>();
 	auto method = getRequestMethod(methodName);
 	if (method == RequestMethod::Invalid) {
-		return false;
+		return 0;
 	}
 
 	r.skipChars<StringView::WhiteSpace>();
@@ -37,7 +38,7 @@ bool RequestFilter::readRequestLine(StringView &r, RequestInfo &req) {
 	auto unparsedUrl = r;
 
 	if (!req.url.parse(r)) {
-		return false;
+		return 0;
 	}
 
 	unparsedUrl = StringView(unparsedUrl.data(), unparsedUrl.size() - r.size());
@@ -52,13 +53,13 @@ bool RequestFilter::readRequestLine(StringView &r, RequestInfo &req) {
 	}
 
 	if (protocolName != "HTTP") {
-		return false;
+		return 0;
 	}
 
 	protocolName = StringView(protocolName.data(), r.data() - protocolName.data());
 
 	if (!r.is('\r')) {
-		return false;
+		return 0;
 	}
 
 	++ r;
@@ -77,31 +78,35 @@ bool RequestFilter::readRequestLine(StringView &r, RequestInfo &req) {
 	req.protocolVersion = getProtocolVersionNumber(protocolVersion);
 	req.unparserUri = unparsedUrl;
 
-	return true;
+	return r.data() - source.data();
 }
 
-bool RequestFilter::readRequestHeader(StringView &source, StringView &key, StringView &value) {
-	key = source.readUntil<StringView::Chars<':'>>();
-	if (!source.is(':')) {
-		return false;
+size_t RequestFilter::readRequestHeader(BytesView &source, StringView &key, StringView &value) {
+	auto tmp = source;
+	auto keyData = source.readUntil<uint8_t(':')>();
+	key = keyData.toStringView();
+	if (!source.is(':') || key.size() != keyData.size()) {
+		return 0;
 	}
 
 	++ source;
 
-	value = source.readUntil<StringView::Chars<'\n'>>();
-	if (!source.is('\n')) {
-		return false;
+	auto valueData = source.readUntil<uint8_t('\n')>();
+	value = valueData.toStringView();
+	if (!source.is('\n') || value.size() != valueData.size()) {
+		return 0;
 	}
 
 	key.trimChars<StringView::WhiteSpace>();
 	value.trimChars<StringView::WhiteSpace>();
-	return true;
+	return source.data() - tmp.data();
 }
 
+/*
 RequestFilter::RequestFilter() { }
 
 bool RequestFilter::readRequestLine(StringView &r) {
-	/*while (!r.empty()) {
+	while (!r.empty()) {
 		if (_isWhiteSpace) {
 			auto tmp = r.readChars<Reader::CharGroup<CharGroupId::WhiteSpace>>();
 			_buffer << tmp;
@@ -147,12 +152,12 @@ bool RequestFilter::readRequestLine(StringView &r) {
 			_isWhiteSpace = true;
 			return true;
 		}
-	}*/
+	}
 	return false;
 }
 
 bool RequestFilter::readHeaders(StringView &r) {
-	/*while (!r.empty()) {
+	while (!r.empty()) {
 		if (_subState == State::HeaderName) {
 			_nameBuffer << r.readUntil<Reader::Chars<':', '\n'>>();
 			if (r.is('\n')) {
@@ -180,8 +185,8 @@ bool RequestFilter::readHeaders(StringView &r) {
 				_isWhiteSpace = true;
 			}
 		}
-	}*/
+	}
 	return false;
-}
+}*/
 
 }

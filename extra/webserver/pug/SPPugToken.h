@@ -28,6 +28,8 @@
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct Token : memory::AllocPool {
+	using OutStream = Callback<void(StringView)>;
+
 	enum Type : uint16_t {
 		Root,
 		Line,
@@ -91,7 +93,7 @@ struct Token : memory::AllocPool {
 	Token(Type t, const StringView &d, Expression *);
 
 	void addChild(Token *);
-	void describe(std::ostream &stream) const;
+	void describe(const OutStream &stream) const;
 
 	Type type = Root;
 	StringView data;

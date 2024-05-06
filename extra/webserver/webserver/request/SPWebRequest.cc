@@ -26,6 +26,7 @@
 #include "SPWebRequestController.h"
 #include "SPWebOutput.h"
 #include "SPWebSession.h"
+#include "SPWebRoot.h"
 #include "SPDbUser.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
@@ -324,13 +325,13 @@ const Vector<Value> & Request::getErrorMessages() const {
 
 void Request::addErrorMessage(Value &&val) const {
 	if (_config) {
-		_config->_errors.emplace_back(std::move(val));
+		_config->_host->getRoot()->pushErrorMessage(std::move(val));
 	}
 }
 
 void Request::addDebugMessage(Value &&val) const {
 	if (_config) {
-		_config->_debug.emplace_back(std::move(val));
+		_config->_host->getRoot()->pushDebugMessage(std::move(val));
 	}
 }
 
@@ -457,7 +458,7 @@ Status Request::runPug(const StringView & path, const Function<bool(pug::Context
 			return true;
 		}
 		return false;
-	}, *this)) {
+	}, [&] (StringView str) { *this << str; })) {
 		return DONE;
 	}
 	return HTTP_INTERNAL_SERVER_ERROR;

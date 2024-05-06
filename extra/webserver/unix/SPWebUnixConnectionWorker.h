@@ -115,6 +115,7 @@ public:
 		BytesView extract(pool_t *, size_t initOffset, size_t blockSize) const;
 
 		void releaseEmpty();
+		void clear();
 	};
 
 	struct Client : AllocBase {
@@ -124,6 +125,7 @@ public:
 			RequestProcess,
 			RequestInput,
 			ReqeustClosed,
+			ReqeustInvalid,
 		};
 
 		Client *next = nullptr;
@@ -207,7 +209,7 @@ public:
 
 	Root *getRoot() const { return _root; }
 
-	std::thread &thread() { return _thread; }
+	std::thread & thread() { return _thread; }
 
 	void runTask(AsyncTask *);
 

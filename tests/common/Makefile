@@ -65,15 +65,23 @@ endif
 
 LOCAL_ROOT = .
 
-LOCAL_SRCS_DIRS :=  src xenolith web
+SHADERNN_DIR := $(STAPPLER_ROOT)/xenolith/utils/shadernn
+
+LOCAL_SRCS_DIRS :=  src xenolith web $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests
 LOCAL_SRCS_OBJS :=
 
-LOCAL_INCLUDES_DIRS := src xenolith
+LOCAL_INCLUDES_DIRS := src xenolith $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests
 LOCAL_INCLUDES_OBJS :=
 
 LOCAL_MAIN := main.cpp
 
-LOCAL_SHADERS_DIR := shaders
+SHADER_WORK_GROUP_X = 4
+SHADER_WORK_GROUP_Y = 8
+SHADER_WORK_GROUP_Z = 4
+
+LOCAL_SHADERS_RULES := -DWG_X=${SHADER_WORK_GROUP_X} -DWG_Y=${SHADER_WORK_GROUP_Y} -DWG_Z=${SHADER_WORK_GROUP_Z}
+LOCAL_SHADERS_DIR := shaders \
+	$(SHADERNN_DIR)/shaders/f16 $(SHADERNN_DIR)/shaders/f32 $(SHADERNN_DIR)/shaders/nme $(SHADERNN_DIR)/shaders/stat
 
 ifdef LINUX
 # For dynamic self-loading

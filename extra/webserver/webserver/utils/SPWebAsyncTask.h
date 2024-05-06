@@ -23,7 +23,7 @@
 #ifndef EXTRA_WEBSERVER_WEBSERVER_UTILS_SPWEBASYNCTASK_H_
 #define EXTRA_WEBSERVER_WEBSERVER_UTILS_SPWEBASYNCTASK_H_
 
-#include "SPWeb.h"
+#include "SPWebHost.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -241,12 +241,22 @@ public:
 	}
 
 	static inline Self alloc() {
-		return Self(new Type(), true);
+		return Self(Type::create(), true);
 	}
 
 	template <class... Args>
 	static inline Self alloc(Args && ... args) {
-		return Self(new Type(std::forward<Args>(args)...), true);
+		return Self(Type::create(std::forward<Args>(args)...), true);
+	}
+
+	template <class... Args>
+	static inline Self alloc(pool_t *pool, Args && ... args) {
+		return Self(Type::create(pool, std::forward<Args>(args)...), true);
+	}
+
+	template <class... Args>
+	static inline Self alloc(SharedMode mode, Args && ... args) {
+		return Self(Type::create(mode, std::forward<Args>(args)...), true);
 	}
 
 	inline SharedRc() : _ptr(nullptr) { }
@@ -421,13 +431,18 @@ Shared<T>::~Shared() {
 		}, _pool);
 		_shared = nullptr;
 	}
-	if (_pool) {
-		pool::destroy(_pool);
-		_pool = nullptr;
+
+	auto pool = _pool;
+	auto allocator = _allocator;
+
+	_pool = nullptr;
+	_allocator = nullptr;
+
+	if (pool) {
+		pool::destroy(pool);
 	}
-	if (_allocator) {
-		allocator::destroy(_allocator);
-		_allocator = nullptr;
+	if (allocator) {
+		allocator::destroy(allocator);
 	}
 }
 

@@ -1,0 +1,87 @@
+// Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
+/* @import */ interface webserver {
+	use data.{value};
+
+	record callback {
+		callback: u32,
+		userdata: u32,
+	}
+
+	record host-component-data {
+		on-child-init: u32,
+		on-storage-init: u32,
+		on-heartbeat: u32,
+		userdata: u32,
+	}
+
+	resource request {
+	
+	}
+
+	resource host-component-info {
+		get-name: func() -> string;
+		get-version: func() -> string;
+		get-file: func() -> string;
+		get-symbol: func() -> string;
+		get-data: func() -> borrow<value>;
+	}
+
+	resource host-component {
+		constructor(host: borrow<host>, info: borrow<host-component-info>, data: host-component-data);
+		
+		get-name: func() -> string;
+	}
+
+	resource host {
+		add-protected-location: func(location: string);
+
+		get-component: func(name: string) -> borrow<host-component>;
+		add-component: func(comp: host-component);
+
+		add-pre-request: func(callback: callback);
+
+		add-handler: func(path: string, callback: callback);
+		add-handler-with-value: func(path: string, callback: callback, value: borrow<value>);
+
+		next: func() -> borrow<host>;
+
+		get-hostname: func() -> string;
+		get-document-root: func() -> string;
+		get-scheme: func() -> string;
+		get-admin: func() -> string;
+		get-timeout: func() -> u64;
+		get-keep-alive: func() -> u64;
+		get-max-keep-alives: func() -> u32;
+		get-port: func() -> u16;
+		is-using-keep-alive: func() -> bool;
+		is-virtual: func() -> bool;
+
+		get-session-name: func() -> string;
+		get-session-key: func() -> string;
+		get-session-max-age: func() -> u64;
+		is-session-secure: func() -> bool;
+
+		get-host-secret: func() -> list<u8>;
+		is-secure-auth-allowed: func() -> bool;
+	}
+}
+ 

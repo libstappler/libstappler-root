@@ -44,6 +44,7 @@ public:
 	virtual void bind(HostController *);
 
 	virtual bool init();
+	virtual void finalize();
 
 	pool_t *getPool() const { return _pool; }
 
@@ -95,6 +96,9 @@ public:
 	virtual Value getDefaultResult();
 
 	virtual WebsocketConnection *convertToWebsocket(WebsocketHandler *, allocator_t *, pool_t *) { return nullptr; }
+
+	virtual void pushErrorMessage(Value &&);
+	virtual void pushDebugMessage(Value &&);
 
 protected:
 	friend class Request;

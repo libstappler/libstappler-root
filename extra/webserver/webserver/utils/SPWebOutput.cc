@@ -21,6 +21,8 @@
  **/
 
 #include "SPWebOutput.h"
+#include "SPWebRequestController.h"
+#include "SPWebRoot.h"
 #include "SPDbFile.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web::output {
@@ -44,7 +46,7 @@ R"Html(<body onload="init();">
 </body></html>)Html";
 
 struct HtmlJsonEncoder {
-	HtmlJsonEncoder(std::basic_ostream<char> &s, bool trackActions = false)
+	HtmlJsonEncoder(const Callback<void(StringView)> &s, bool trackActions = false)
 	: stream(&s), trackActions(trackActions) { }
 
 	~HtmlJsonEncoder() { }
@@ -69,12 +71,7 @@ struct HtmlJsonEncoder {
 			} else if (i == ' ') {
 				(*stream) << ' ';
 			} else if (i >= 0 && i <= 0x20) {
-				(*stream) << "\\u";
-				(*stream).fill('0');
-				(*stream).width(4);
-				(*stream) << std::hex << (int)i << std::dec;
-				(*stream).width(1);
-				(*stream).fill(' ');
+				(*stream) << "\\u00" << base16::charToHex(i, true);
 			} else {
 				(*stream) << i;
 			}
@@ -261,7 +258,7 @@ struct HtmlJsonEncoder {
 	bool popComplex = false;
 	bool offsetted = false;
 	Vector<bool> bstack;
-	std::basic_ostream<char> *stream;
+	const Callback<void(StringView)> *stream;
 	bool trackActions = false;
 	enum {
 		None,
@@ -274,12 +271,12 @@ struct HtmlJsonEncoder {
 	} action = Delete;
 };
 
-void formatJsonAsHtml(OutputStream &stream, const Value &data, bool actionHandling) {
+void formatJsonAsHtml(const Callback<void(StringView)> &stream, const Value &data, bool actionHandling) {
 	HtmlJsonEncoder enc(stream, actionHandling);
 	data.encode(enc);
 }
 
-static void writeToRequest(Request &rctx, std::basic_ostream<char> &stream, const Value &data, bool trackActions) {
+static void writeToRequest(Request &rctx, const Callback<void(StringView)> &stream, const Value &data, bool trackActions) {
 	stream << HTML_LOAD_BEGIN;
 	data::write(stream, data, data::EncodeFormat::Json);
 	stream << HTML_LOAD_END;
@@ -309,12 +306,14 @@ static void writeToRequest(Request &rctx, std::basic_ostream<char> &stream, cons
 
 void writeData(Request &rctx, const Value &data, bool allowJsonP) {
 	Request r = rctx;
-	writeData(rctx, rctx, [&] (const String &ct) {
+	writeData(rctx, [&] (StringView str) {
+		rctx << str;
+	}, [&] (const String &ct) {
 		r.setContentType(String(ct));
 	}, data, allowJsonP);
 }
 
-void writeData(Request &rctx, std::basic_ostream<char> &stream, const Function<void(const String &)> &ct,
+void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Function<void(const String &)> &ct,
 		const Value &data, bool allowJsonP) {
 
 	auto &info = rctx.getInfo();
@@ -323,8 +322,7 @@ void writeData(Request &rctx, std::basic_ostream<char> &stream, const Function<v
 
 	if (allowCbor) {
 		ct("application/cbor"_weak);
-		stream << data::EncodeFormat::Cbor << data;
-		stream.flush();
+		data::write(stream, data, data::EncodeFormat::Cbor);
 		return;
 	}
 
@@ -338,8 +336,9 @@ void writeData(Request &rctx, std::basic_ostream<char> &stream, const Function<v
 			}
 			if (!obj.empty()) {
 				ct("application/javascript;charset=UTF-8");
-				stream << obj <<  "(" << (pretty?data::EncodeFormat::Pretty:data::EncodeFormat::Json) << data << ");\r\n";
-				stream.flush();
+				stream << obj <<  "(";;
+				data::write(stream, data, (pretty?data::EncodeFormat::Pretty:data::EncodeFormat::Json));
+				stream << ");\r\n";
 				return;
 			}
 		}
@@ -351,13 +350,14 @@ void writeData(Request &rctx, std::basic_ostream<char> &stream, const Function<v
 	} else {
 		if (pretty.isString() && pretty.getString() == "time") {
 			ct("application/json;charset=UTF-8");
-			stream << data::EncodeFormat::PrettyTime << data << "\r\n";
+			data::write(stream, data, data::EncodeFormat::PrettyTime);
+			stream << "\r\n";
 		} else {
 			ct("application/json;charset=UTF-8");
-			stream << (pretty.asBool()?data::EncodeFormat::Pretty:data::EncodeFormat::Json) << data << "\r\n";
+			data::write(stream, data, (pretty.asBool()?data::EncodeFormat::Pretty:data::EncodeFormat::Json));
+			stream << "\r\n";
 		}
 	}
-	stream.flush();
 }
 
 Status writeResourceFileData(Request &rctx, Value &&result) {

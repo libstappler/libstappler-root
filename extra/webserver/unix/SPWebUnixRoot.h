@@ -25,11 +25,13 @@
 
 #include "SPWebRoot.h"
 #include "SPWebAsyncTask.h"
+#include "SPWebWebsocket.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
 class ConnectionQueue;
 class UnixHostController;
+class UnixWebsocketSim;
 
 struct UnixHostConfig {
 	StringView hastname;
@@ -66,6 +68,8 @@ public:
 	virtual void foreachHost(const Callback<void(Host &)> &) override;
 
 	Status processRequest(RequestController *);
+
+	bool simulateWebsocket(UnixWebsocketSim *sim, StringView hostname, StringView url);
 
 protected:
 	Status runDefaultProcessing(Request &);

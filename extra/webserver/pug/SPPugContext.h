@@ -33,8 +33,9 @@ class Context : public memory::AllocPool {
 public:
 	static constexpr size_t StackSize = 256;
 
+	using OutStream = stappler::Callback<void(StringView)>;
 	using Callback = VarClass::Callback;
-	using IncludeCallback = Function<bool(const StringView &, Context &, std::ostream &, const Template *)>;
+	using IncludeCallback = Function<bool(const StringView &, Context &, const OutStream &, Template::RunContext &)>;
 
 	struct Mixin {
 		const Template::Chunk *chunk;
@@ -62,23 +63,24 @@ public:
 	};
 
 	static bool isConstExpression(const Expression &);
-	static bool printConstExpr(const Expression &, std::ostream &, bool escapeOutput = false);
-	static bool printAttrVar(const StringView &, const Expression &, std::ostream &, bool escapeOutput = false);
-	static bool printAttrExpr(const Expression &, std::ostream &);
+	static bool printConstExpr(const Expression &, const OutStream &, bool escapeOutput = false);
+	static bool printAttrVar(const StringView &, const Expression &, const OutStream &, bool escapeOutput = false);
+	static bool printAttrExpr(const Expression &, const OutStream &);
 
 	Context();
 
-	void setErrorStream(std::ostream &);
+	void setErrorStream(const OutStream &);
 
-	bool print(const Expression &, std::ostream &, bool escapeOutput = false);
-	bool printAttr(const StringView &name, const Expression &, std::ostream &, bool escapeOutput = false);
-	bool printAttrExprList(const Expression &, std::ostream &);
-	Var exec(const Expression &, std::ostream &, bool allowUndefined = false);
+	bool print(const Expression &, const OutStream &, bool escapeOutput = false);
+	bool printAttr(const StringView &name, const Expression &, const OutStream &, bool escapeOutput = false);
+	bool printAttrExprList(const Expression &, const OutStream &);
+	Var exec(const Expression &, const OutStream &, bool allowUndefined = false);
 
 	void set(const StringView &name, const Value &, VarClass * = nullptr);
 	void set(const StringView &name, Value &&, VarClass * = nullptr);
 	void set(const StringView &name, bool isConst, const Value *, VarClass * = nullptr);
 
+	void set(const StringView &name, VarClass *);
 	void set(const StringView &name, Callback &&);
 
 	bool setMixin(const StringView &name, const Template::Chunk *);
@@ -88,7 +90,7 @@ public:
 
 	VarClass * set(const StringView &name, VarClass &&);
 
-	bool runInclude(const StringView &, std::ostream &, const Template *);
+	bool runInclude(const StringView &, const OutStream &, Template::RunContext &rctx);
 
 	void setIncludeCallback(IncludeCallback &&);
 

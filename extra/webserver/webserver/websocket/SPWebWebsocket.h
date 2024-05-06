@@ -139,7 +139,9 @@ struct WebsocketFrameReader : AllocBase {
 struct WebsocketFrameWriter : AllocBase {
 	static uint8_t getOpcodeFromType(WebsocketFrameType opcode);
 
-	static void makeHeader(StackBuffer<32> &buf, size_t dataSize, WebsocketFrameType t);
+	static size_t getFrameSize(size_t dataSize, bool masked = false);
+	static size_t makeHeader(uint8_t *buf, size_t dataSize, WebsocketFrameType t, bool masked = false, uint32_t mask = 0);
+	static void makeHeader(StackBuffer<32> &buf, size_t dataSize, WebsocketFrameType t, bool masked = false, uint32_t mask = 0);
 
 	struct Slice {
 		uint8_t *data;

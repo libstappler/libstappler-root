@@ -43,23 +43,10 @@ public:
 		HeaderValue,
 	};
 
-	static bool readRequestLine(StringView &source, RequestInfo &);
-	static bool readRequestHeader(StringView &source, StringView &key, StringView &value);
-
-	RequestFilter();
-
-	bool readRequestLine(StringView &r);
-	bool readHeaders(StringView & r);
+	static size_t readRequestLine(StringView &source, RequestInfo &);
+	static size_t readRequestHeader(BytesView &source, StringView &key, StringView &value);
 
 protected:
-	RequestState _state = RequestState::FirstLine;
-	RequestState _subState = RequestState::Protocol;
-
-	StringStream _nameBuffer;
-	StringStream _buffer;
-	StringStream _headersBuffer;
-	String _responseLine;
-	String _statusText;
 };
 
 }

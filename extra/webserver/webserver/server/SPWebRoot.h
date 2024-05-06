@@ -56,7 +56,7 @@ public:
 
 	static void setErrorNotification(pool_t *, Function<void(Value &&)> errorCb, Function<void(Value &&)> debugCb = nullptr);
 
-	static void dumpCurrentState(StringView filepath);
+	static void dumpCurrentState(StringView filepath = StringView());
 
 	virtual ~Root();
 
@@ -106,7 +106,7 @@ public:
 	virtual db::Adapter getAdapterFromContext() const override;
 	virtual void scheduleAyncDbTask(const Callback<Function<void(const db::Transaction &)>(pool_t *)> &setupCb) const override;
 
-	virtual StringView getDocuemntRoot() const override;
+	virtual StringView getDocumentRoot() const override;
 
 	virtual const db::Scheme *getFileScheme() const override;
 	virtual const db::Scheme *getUserScheme() const override;

@@ -34,11 +34,11 @@ MultipartParser::MultipartParser(const db::InputConfig &c, size_t s, const Strin
 	match = 2;
 }
 
-Value * MultipartParser::flushVarName(Reader &r) {
+Value * MultipartParser::flushVarName(StringView &r) {
 	VarState cstate = VarState::Key;
 	Value *current = nullptr;
 	while (!r.empty()) {
-		Reader str = r.readUntil<chars::Chars<char, '[', ']'>>();
+		StringView str = r.readUntil<chars::Chars<char, '[', ']'>>();
 		current = flushString(str, current, cstate);
 		if (!current) {
 			break;
@@ -73,7 +73,7 @@ Value * MultipartParser::flushVarName(Reader &r) {
 	return current;
 }
 
-void MultipartParser::flushLiteral(Reader &r, bool quoted) {
+void MultipartParser::flushLiteral(StringView &r, bool quoted) {
 	auto tmp = r;
 	if (!quoted) {
 		tmp.trimChars<StringView::WhiteSpace>();
@@ -99,7 +99,7 @@ void MultipartParser::flushLiteral(Reader &r, bool quoted) {
 	}
 }
 
-void MultipartParser::flushData(Reader &r) {
+void MultipartParser::flushData(const BytesView &r) {
 	switch (data) {
 	case Data::File:
 		if (r.size() + files.back().writeSize >= getConfig().maxFileSize) {
@@ -107,7 +107,7 @@ void MultipartParser::flushData(Reader &r) {
 			files.pop_back();
 			data = Data::Skip;
 		} else {
-			files.back().write(r.data(), r.size());
+			files.back().write((const char *)r.data(), r.size());
 		}
 		break;
 	case Data::FileAsData:
@@ -116,7 +116,7 @@ void MultipartParser::flushData(Reader &r) {
 			files.pop_back();
 			data = Data::Skip;
 		} else {
-			streamBuf.write(r.data(), r.size());
+			streamBuf.write((const char *)r.data(), r.size());
 		}
 		break;
 	case Data::Var:
@@ -132,33 +132,40 @@ void MultipartParser::flushData(Reader &r) {
 	}
 }
 
-void MultipartParser::readBegin(Reader &r) {
+bool MultipartParser::readBegin(BytesView &r) {
+	StringView tmp = r.toStringView();
+
 	if (match == 0) {
-		r.skipUntil<Reader::Chars<'-'>>();
+		tmp.skipUntil<StringView::Chars<'-'>>();
 	}
-	while (match < boundary.length() && r.is(boundary.at(match))) {
-		++ match; ++ r;
+	while (match < boundary.length() && tmp.is(boundary.at(match))) {
+		++ match; ++ tmp;
 	}
-	if (r.empty()) {
-		return;
+	if (tmp.empty()) {
+		r = BytesView((const uint8_t *)tmp.data(), r.size() - (tmp.data() - (const char *)r.data()));
+		return true;
 	} else if (match == boundary.length()) {
 		state = State::BeginBlock;
+		target = &root;
 		match = 0;
 	} else {
 		match = 0;
+		return false;
 	}
 	buf.clear();
+
+	r = BytesView((const uint8_t *)tmp.data(), r.size() - (tmp.data() - (const char *)r.data()));
+	return true;
 }
 
-void MultipartParser::readBlock(Reader &r) {
+void MultipartParser::readBlock(BytesView &r) {
 	while (!r.empty()) {
 		if (buf.size() == 0 && r.is('-')) {
-			buf.putc(r[0]);
+			buf.putc(char(r[0]));
 		} else if (buf.size() == 1 && buf.get().is('-') && r.is('-')) {
 			state = State::End;
 			return;
 		} else {
-			r.skipUntil<Reader::Chars<'\n'>>();
 			if (r.is('\n')) {
 				state = State::HeaderLine;
 				header = Header::Begin;
@@ -168,17 +175,19 @@ void MultipartParser::readBlock(Reader &r) {
 				file.clear();
 				size = 0;
 				buf.clear();
-				++r;
+				++ r;
 				return;
+			} else {
+				++ r;
 			}
 		}
 	}
 }
 
-void MultipartParser::readHeaderBegin(Reader &r) {
-	Reader str = r.readUntil<Reader::Chars<'\n', ':'>>();
+void MultipartParser::readHeaderBegin(StringView &r) {
+	StringView str = r.readUntil<StringView::Chars<'\n', ':'>>();
 	if (r.is(':')) {
-		Reader tmp;
+		StringView tmp;
 		if (buf.empty()) {
 			tmp = str;
 		} else {
@@ -186,7 +195,7 @@ void MultipartParser::readHeaderBegin(Reader &r) {
 			tmp = buf.get();
 		}
 
-		tmp.skipChars<Reader::CharGroup<CharGroupId::WhiteSpace>>();
+		tmp.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
 		if (strncasecmp(tmp.data(), "Content-Disposition", "Content-Disposition"_len) == 0) {
 			header = Header::ContentDisposition;
 		} else if (strncasecmp(tmp.data(), "Content-Type", "Content-Type"_len) == 0) {
@@ -203,15 +212,14 @@ void MultipartParser::readHeaderBegin(Reader &r) {
 		buf.put(str.data(), str.size());
 	} else if (r.is('\n')) {
 		auto tmp = buf.get();
-		str.skipChars<Reader::CharGroup<CharGroupId::WhiteSpace>>();
-		tmp.skipChars<Reader::CharGroup<CharGroupId::WhiteSpace>>();
+		str.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
+		tmp.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
 		if ((tmp.empty() || tmp.is('\r')) && (str.empty() || str.is('\r'))) {
 			state = State::Data;
 			if (!file.empty() || !type.empty()) {
 				if ((config.required & db::InputConfig::Require::FilesAsData) != db::InputConfig::Require::None
 						&& (size == 0 || size < getConfig().maxFileSize)
-						&& ((type.compare(0, "application/cbor"_len, "application/cbor") == 0)
-								|| (type.compare(0, "application/json"_len, "application/json") == 0))) {
+						&& db::InputConfig::isFileAsDataSupportedForType(type)) {
 					streamBuf.clear();
 					data = Data::FileAsData;
 				} else if ((config.required & db::InputConfig::Require::Files) != 0
@@ -242,10 +250,10 @@ void MultipartParser::readHeaderBegin(Reader &r) {
 	}
 }
 
-void MultipartParser::readHeaderContentDisposition(Reader &r) {
-	Reader str = r.readUntil<Reader::Chars<'\n', ';'>>();
+void MultipartParser::readHeaderContentDisposition(StringView &r) {
+	StringView str = r.readUntil<StringView::Chars<'\n', ';'>>();
 	if (r.is(';')) {
-		Reader tmp;
+		StringView tmp;
 		if (buf.empty()) {
 			tmp = str;
 		} else {
@@ -253,7 +261,7 @@ void MultipartParser::readHeaderContentDisposition(Reader &r) {
 			tmp = buf.get();
 		}
 
-		tmp.skipChars<Reader::CharGroup<CharGroupId::WhiteSpace>>();
+		tmp.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
 		if (strncasecmp(tmp.data(), "form-data", "form-data"_len) == 0) {
 			header = Header::ContentDispositionParams;
 		} else {
@@ -271,13 +279,13 @@ void MultipartParser::readHeaderContentDisposition(Reader &r) {
 	}
 }
 
-void MultipartParser::readHeaderContentDispositionParam(Reader &r) {
+void MultipartParser::readHeaderContentDispositionParam(StringView &r) {
 	if (buf.empty()) {
-		r.skipChars<Reader::Chars<';', ' '>>();
+		r.skipChars<StringView::Chars<';', ' '>>();
 	}
-	Reader str = r.readUntil<Reader::Chars<'\n', '='>>();
+	StringView str = r.readUntil<StringView::Chars<'\n', '='>>();
 	if (r.is('=')) {
-		Reader tmp;
+		StringView tmp;
 		if (buf.empty()) {
 			tmp = str;
 		} else {
@@ -309,9 +317,9 @@ void MultipartParser::readHeaderContentDispositionParam(Reader &r) {
 	}
 }
 
-void MultipartParser::readHeaderValue(Reader &r) {
+void MultipartParser::readHeaderValue(StringView &r) {
 	auto &max = getConfig().maxVarSize;
-	Reader str = r.readUntil<Reader::Chars<'\n'>>();
+	StringView str = r.readUntil<StringView::Chars<'\n'>>();
 	if (r.empty()) {
 		if (buf.size() + str.size() < max) {
 			buf.put(str.data(), str.size());
@@ -319,7 +327,7 @@ void MultipartParser::readHeaderValue(Reader &r) {
 			header = Header::Unknown; // skip processing
 		}
 	} else if (r.is('\n')) {
-		Reader tmp;
+		StringView tmp;
 		if (buf.empty()) {
 			if (str.size() < max) {
 				tmp = str;
@@ -342,8 +350,8 @@ void MultipartParser::readHeaderValue(Reader &r) {
 	}
 }
 
-void MultipartParser::readHeaderDummy(Reader &r) {
-	r.skipUntil<Reader::Chars<'\n'>>();
+void MultipartParser::readHeaderDummy(StringView &r) {
+	r.skipUntil<StringView::Chars<'\n'>>();
 	if (r.is('\n')) {
 		header = Header::Begin; // next header
 		literal = Literal::None;
@@ -352,11 +360,11 @@ void MultipartParser::readHeaderDummy(Reader &r) {
 	}
 }
 
-void MultipartParser::readPlainLiteral(Reader &r) {
+void MultipartParser::readPlainLiteral(StringView &r) {
 	auto &max = getConfig().maxVarSize;
-	Reader str = r.readUntil<Reader::Chars<'\n', ';'>>();
+	StringView str = r.readUntil<StringView::Chars<'\n', ';'>>();
 	if (r.is(';') || r.is('\n')) {
-		Reader tmp;
+		StringView tmp;
 		if (buf.empty()) {
 			if (str.size() < max) {
 				tmp = str;
@@ -389,11 +397,11 @@ void MultipartParser::readPlainLiteral(Reader &r) {
 	}
 }
 
-void MultipartParser::readQuotedLiteral(Reader &r) {
+void MultipartParser::readQuotedLiteral(StringView &r) {
 	auto &max = getConfig().maxVarSize;
-	Reader str = r.readUntil<Reader::Chars<'\n', '"'>>();
+	StringView str = r.readUntil<StringView::Chars<'\n', '"'>>();
 	if (r.is('"')) {
-		Reader tmp;
+		StringView tmp;
 		if (buf.empty()) {
 			if (str.size() < max) {
 				tmp = str;
@@ -428,7 +436,7 @@ void MultipartParser::readQuotedLiteral(Reader &r) {
 	}
 }
 
-void MultipartParser::readHeaderContentDispositionValue(Reader &r) {
+void MultipartParser::readHeaderContentDispositionValue(StringView &r) {
 	switch (literal) {
 	case Literal::None:
 		if (r.is('"')) {
@@ -438,8 +446,10 @@ void MultipartParser::readHeaderContentDispositionValue(Reader &r) {
 			header = Header::Begin; // next header
 			buf.clear();
 			r ++;
-		} else if (r.is<Reader::CharGroup<CharGroupId::WhiteSpace>>()) {
+		} else if (!r.is<StringView::CharGroup<CharGroupId::WhiteSpace>>()) {
 			literal = Literal::Plain;
+		} else {
+			header = Header::ContentDispositionParams;
 		}
 		break;
 	case Literal::Plain:
@@ -451,8 +461,8 @@ void MultipartParser::readHeaderContentDispositionValue(Reader &r) {
 	}
 }
 
-void MultipartParser::readHeaderContentDispositionDummy(Reader &r) {
-	r.skipUntil<Reader::Chars<'\n', ';'>>();
+void MultipartParser::readHeaderContentDispositionDummy(StringView &r) {
+	r.skipUntil<StringView::Chars<'\n', ';'>>();
 	if (r.is(';')) {
 		header = Header::ContentDispositionParams;
 		literal = Literal::None;
@@ -466,39 +476,42 @@ void MultipartParser::readHeaderContentDispositionDummy(Reader &r) {
 	}
 }
 
-void MultipartParser::readHeader(Reader &r) {
+void MultipartParser::readHeader(BytesView &r) {
+	StringView tmp = r.toStringView();
+
 	switch (header) {
 	case Header::Begin:
-		readHeaderBegin(r);
+		readHeaderBegin(tmp);
 		break;
 	case Header::ContentDisposition:
-		readHeaderContentDisposition(r);
+		readHeaderContentDisposition(tmp);
 		break;
 	case Header::ContentDispositionParams:
-		readHeaderContentDispositionParam(r);
+		readHeaderContentDispositionParam(tmp);
 		break;
 	case Header::ContentDispositionName:
 	case Header::ContentDispositionFileName:
 	case Header::ContentDispositionSize:
-		readHeaderContentDispositionValue(r);
+		readHeaderContentDispositionValue(tmp);
 		break;
 	case Header::ContentDispositionUnknown:
-		readHeaderContentDispositionDummy(r);
+		readHeaderContentDispositionDummy(tmp);
 		break;
 	case Header::ContentType:
 	case Header::ContentEncoding:
-		readHeaderValue(r);
+		readHeaderValue(tmp);
 		break;
 	case Header::Unknown:
-		readHeaderDummy(r);
+		readHeaderDummy(tmp);
 		break;
 	}
+
+	r = BytesView((const uint8_t *)tmp.data(), r.size() - (tmp.data() - (const char *)r.data()));
 }
 
-void MultipartParser::readData(Reader &r) {
+void MultipartParser::readData(BytesView &r) {
 	if (match == 0) {
-		auto str = r.readUntil<Reader::Chars<'\r'>>();
-		flushData(str);
+		flushData(r.readUntil<uint8_t('\r')>());
 		if (r.empty()) {
 			return;
 		} else {
@@ -513,8 +526,9 @@ void MultipartParser::readData(Reader &r) {
 
 		if (match == boundary.length()) {
 			state = State::BeginBlock;
+			target = &root;
 			if (data == Data::Var) {
-				Reader tmp(name);
+				StringView tmp(name);
 				auto current = flushVarName(tmp);
 				if (current) {
 					current->setString(buf.str());
@@ -526,18 +540,20 @@ void MultipartParser::readData(Reader &r) {
 			}
 			match = 0;
 		} else if (!r.empty() && r[0] != boundary[match]) {
-			Reader tmp(boundary.data(), match);
+			BytesView tmp((const uint8_t *)boundary.data(), match);
 			flushData(tmp);
 			match = 0;
 		}
 	}
 }
 
-void MultipartParser::run(StringView r) {
+bool MultipartParser::run(BytesView r) {
 	while (!r.empty()) {
 		switch (state) {
 		case State::Begin: // skip preambula
-			readBegin(r);
+			if (!readBegin(r)) {
+				return false;
+			}
 			break;
 		case State::BeginBlock: // wait for CRLF then headers or "--" then EOF
 			readBlock(r);
@@ -548,11 +564,12 @@ void MultipartParser::run(StringView r) {
 		case State::Data:
 			readData(r);
 			break;
-		default:
-			return;
+		case State::End:
+			return true;
 			break;
 		}
 	}
+	return true;
 }
 
 void MultipartParser::finalize() {
@@ -564,13 +581,13 @@ auto MultipartParser::flushString(StringView &r, Value *cur, VarState varState) 
 
 	switch (varState) {
 	case VarState::Key:
-		/*if (!str.empty()) {
+		if (!str.empty()) {
 			if (target->hasValue(str)) {
 				cur = &target->getValue(str);
 			} else {
 				cur = &target->setValue(Value(true), str);
 			}
-		}*/
+		}
 		break;
 	case VarState::SubKey:
 		if (cur) {

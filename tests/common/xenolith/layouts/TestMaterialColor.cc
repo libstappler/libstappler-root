@@ -271,6 +271,7 @@ void TestMaterialColor::updateColor(ColorHCT &&color) {
 
 	switch (_themeType) {
 	case material2d::ThemeType::LightTheme:
+	case material2d::ThemeType::Custom:
 		_huePicker->setLabelColor(Color::Black);
 		_chromaPicker->setLabelColor(Color::Black);
 		_tonePicker->setLabelColor(Color::Black);

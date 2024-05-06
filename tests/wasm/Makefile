@@ -25,6 +25,7 @@ LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 
 LOCAL_OUTDIR := stappler-build
 LOCAL_EXECUTABLE := stappler-wasm
+LOCAL_WASM_MODULE := app.wasm
 
 LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/core/stappler-modules.mk
@@ -35,13 +36,14 @@ LOCAL_MODULES ?= \
 LOCAL_ROOT = .
 
 LOCAL_SRCS_DIRS :=
-LOCAL_SRCS_OBJS :=
+LOCAL_SRCS_OBJS := app.wit
 
 LOCAL_INCLUDES_DIRS :=
 LOCAL_INCLUDES_OBJS :=
 
 LOCAL_MAIN := main.cpp
 
+LOCAL_WASM_DIRS := wasm
 
 # Android config
 LOCAL_ANDROID_MK := proj.android/app/Android.mk # path to root Android.mk
@@ -49,5 +51,8 @@ LOCAL_APPLICATION_MK := proj.android/app/Application.mk # path to Application.mk
 LOCAL_ANDROID_TARGET := application # target to build
 LOCAL_ANDROID_PLATFORM := android-24 # android platform version
 
+# to enable debug wasm support
+# You should define WASM_DEBUG env var to actually bind lldb to application
+# GLOBAL_WASM_DEBUG := 1
 
 include $(STAPPLER_ROOT)/build/make/universal.mk

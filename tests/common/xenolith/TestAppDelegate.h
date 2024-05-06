@@ -51,6 +51,7 @@ public:
 	const core::SwapchainConfig &getSwapchainConfig() const { return _swapchainConfig; }
 
 	void setPreferredPresentMode(core::PresentMode);
+	void setTripleBuffering(bool);
 
 protected:
 	core::SwapchainConfig selectConfig(const core::SurfaceInfo &info);
@@ -63,10 +64,12 @@ protected:
 	ViewCommandLineData _data;
 
 	Mutex _configMutex;
+	bool _tripleBuffering = false;
 	core::PresentMode _preferredPresentMode = core::PresentMode::Unsupported;
 
 	core::SurfaceInfo _surfaceInfo;
 	core::SwapchainConfig _swapchainConfig;
+	View *_rootView = nullptr;
 };
 
 }

@@ -24,10 +24,13 @@
 #include "SPWebInputFilter.h"
 #include "SPWebRequest.h"
 #include "SPWebRequestHandler.h"
+#include "SPWebRequestController.h"
 #include "SPWebWebsocketConnection.h"
+#include "SPWebHostController.h"
 
 #include "SPPlatformUnistd.h"
 #include "SPLog.h"
+#include "SPDbUser.h"
 
 #if LINUX
 #include <signal.h>
@@ -104,6 +107,20 @@ void Root::setErrorNotification(pool_t *p, Function<void(Value &&)> errorCb, Fun
 }
 
 void Root::dumpCurrentState(StringView filepath) {
+	String tmpPath;
+	if (filepath.empty()) {
+		if (auto host = Host::getCurrent()) {
+			auto &hostInfo = host.getHostInfo();
+			auto root = hostInfo.documentRoot;
+			tmpPath = toString(root, "/.reports/crash.", Time::now().toMicros(), ".txt");
+			filepath = tmpPath;
+		}
+	}
+
+	if (filepath.empty()) {
+		return;
+	}
+
 	if (auto f = ::fopen(filepath.data(), "w+")) {
 		if (auto host = Host::getCurrent()) {
 			auto &hostInfo = host.getHostInfo();
@@ -173,7 +190,7 @@ db::sql::Driver * Root::getDbDriver(StringView driver) {
 		return it->second;
 	} else {
 		auto d = createDbDriver(driver);
-		_dbDrivers.emplace(driver, d).first;
+		_dbDrivers.emplace(driver, d);
 		return d;
 	}
 }
@@ -234,6 +251,8 @@ Status Root::runTranslateName(Request &r) {
 					&& request.getInfo().method != RequestMethod::Patch
 					&& request.getInfo().method != RequestMethod::Options) {
 				request.setRequestHandler(nullptr);
+			} else if (res == DECLINED) {
+				res = OK;
 			}
 			return res;
 		}
@@ -681,7 +700,7 @@ void Root::pushErrorMessage(Value &&val) const {
 #endif
 
 	if (auto req = Request::getCurrent()) {
-		req.addErrorMessage(move(val));
+		req.getController()->pushErrorMessage(move(val));
 		return;
 	}
 
@@ -716,7 +735,7 @@ void Root::pushDebugMessage(Value &&val) const {
 #endif
 
 	if (auto req = Request::getCurrent()) {
-		req.addDebugMessage(move(val));
+		req.getController()->pushDebugMessage(move(val));
 		return;
 	}
 
@@ -763,7 +782,7 @@ void Root::scheduleAyncDbTask(const Callback<Function<void(const db::Transaction
 	}
 }
 
-StringView Root::getDocuemntRoot() const {
+StringView Root::getDocumentRoot() const {
 	if (auto req = Request::getCurrent()) {
 		return req.getInfo().documentRoot;
 	}

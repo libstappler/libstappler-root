@@ -30,7 +30,6 @@
 #include "XLVkAttachment.h"
 #include "XLVkRenderPass.h"
 #include "XLVkPipeline.h"
-#include "XLVkBuffer.h"
 #include "XLCoreFrameQueue.h"
 #include "XLCoreFrameRequest.h"
 
@@ -139,24 +138,12 @@ bool NoiseQueue::init() {
 				auto buf = devFrame->getMemPool(devFrame)->spawn(vk::AllocationUsage::DeviceLocalHostVisible, a->getInfo());
 
 				NoiseData *data = nullptr;
-				vk::DeviceBuffer::MappedRegion mapped;
-				if (devFrame->isPersistentMapping()) {
-					mapped = buf->map();
-					data = reinterpret_cast<NoiseData *>(mapped.ptr);
-				} else {
-					data = new NoiseData;
-				}
 
-				memcpy(data, &d->data, sizeof(NoiseData));
+				buf->map([&] (uint8_t *data, VkDeviceSize) {
+					memcpy(data, &d->data, sizeof(NoiseData));
+				});
 
-				if (devFrame->isPersistentMapping()) {
-					buf->unmap(mapped, true);
-				} else {
-					buf->setData(BytesView(reinterpret_cast<const uint8_t *>(data), sizeof(NoiseData)));
-					delete data;
-				}
-
-				b->setDefaultBuffer(move(buf));
+				b->addBufferView(buf);
 
 				cb(true);
 			});

@@ -34,7 +34,7 @@ public:
 
 	UnixHostController(Root *, pool_t *, UnixHostConfig &);
 
-protected:
+	bool simulateWebsocket(UnixWebsocketSim *sim, StringView url);
 };
 
 }

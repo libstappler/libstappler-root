@@ -23,7 +23,8 @@
 #ifndef TESTS_COMMON_XENOLITH_TESTAPPSCENE_H_
 #define TESTS_COMMON_XENOLITH_TESTAPPSCENE_H_
 
-#include "XL2dScene.h"
+#include "MaterialScene.h"
+#include "MaterialSceneContent.h"
 #include "XL2dSprite.h"
 #include "XL2dLayer.h"
 
@@ -31,9 +32,9 @@
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
-class TestAppScene : public basic2d::Scene2d {
+class TestAppScene : public material2d::Scene {
 public:
-	virtual ~TestAppScene() { }
+	virtual ~TestAppScene();
 
 	virtual bool init(Application *, const core::FrameContraints &constraints);
 
@@ -41,7 +42,7 @@ public:
 	virtual void onFinished(Director *) override;
 
 	virtual void update(const UpdateTime &) override;
-	virtual void onEnter(Scene *) override;
+	virtual void onEnter(xenolith::Scene *) override;
 	virtual void onExit() override;
 
 	virtual void render(FrameInfo &info) override;

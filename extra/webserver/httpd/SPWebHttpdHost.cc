@@ -107,6 +107,19 @@ HttpdHostController * HttpdHostController::merge(HttpdHostController *base, Http
 
 HttpdHostController::HttpdHostController(Root *root, pool_t *pool, server_rec *server)
 : HostController(root, pool), _server(server) {
+	_hostInfo.hostname = StringView(_server->server_hostname);
+	core_server_config *sconf = (core_server_config *)ap_get_core_module_config(_server->module_config);
+	_hostInfo.documentRoot = StringView(sconf->ap_document_root);
+	_hostInfo.admin = StringView(_server->server_admin);
+	_hostInfo.scheme = StringView(_server->server_scheme);
+
+	_hostInfo.timeout = TimeInterval::microseconds(_server->timeout);
+	_hostInfo.keepAlive = TimeInterval::microseconds(_server->keep_alive_timeout);
+	_hostInfo.maxKeepAlives = _server->keep_alive_max;
+	_hostInfo.useKeepAlive = _server->keep_alive;
+	_hostInfo.port = _server->port;
+	_hostInfo.isVirtual = _server->is_virtual;
+
 	ap_set_module_config(server->module_config, &stappler_web_module, this);
 }
 
@@ -125,34 +138,6 @@ void HttpdHostController::handleChildInit(const Host &host, pool_t *p) {
 	_hostInfo.isVirtual = _server->is_virtual;
 
 	HostController::handleChildInit(host, p);
-}
-
-bool HttpdHostController::loadComponent(const Host &serv, const HostComponentInfo &info) {
-	Dso h;
-	if (info.file.empty()) {
-		h = Dso(StringView(), DsoFlags::Self);
-	} else {
-		h = Dso(StringView(info.file));
-	}
-
-	if (h) {
-		auto sym = h.sym<HostComponent::Symbol>(info.symbol);
-		if (sym) {
-			auto comp = sym(serv, info);
-			if (comp) {
-				_components.emplace(comp->getName().str<Interface>(), comp);
-				_typedComponents.emplace(std::type_index(typeid(*comp)), comp);
-				return true;
-			} else {
-				log::error("web::HostController", "Symbol ", info.symbol ," not found in DSO '", info.file, "'");
-			}
-		} else {
-			log::error("web::HostController", "DSO: ", h.getError());
-		}
-	} else {
-		log::error("web::HostController", "DSO: ", h.getError());
-	}
-	return false;
 }
 
 db::sql::Driver * HttpdHostController::openInternalDriver(db::sql::Driver::Handle db) {

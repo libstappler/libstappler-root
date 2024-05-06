@@ -29,11 +29,9 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 
 class MultipartParser : public InputParser {
 public:
-	using Reader = StringView;
-
 	MultipartParser(const db::InputConfig &, size_t, const StringView &);
 
-	virtual void run(StringView data) override;
+	virtual bool run(BytesView) override;
 	virtual void finalize() override;
 
 protected:
@@ -79,24 +77,24 @@ protected:
 		End,
 	};
 
-	Value * flushVarName(Reader &r);
-	void flushLiteral(Reader &r, bool quoted);
-	void flushData(Reader &r);
+	Value * flushVarName(StringView &r);
+	void flushLiteral(StringView &r, bool quoted);
+	void flushData(const BytesView &r);
 
-	void readBegin(Reader &r);
-	void readBlock(Reader &r);
-	void readHeaderBegin(Reader &r);
-	void readHeaderContentDisposition(Reader &r);
-	void readHeaderContentDispositionParam(Reader &r);
-	void readHeaderValue(Reader &r);
-	void readHeaderDummy(Reader &r);
+	bool readBegin(BytesView &r);
+	void readBlock(BytesView &r);
+	void readHeaderBegin(StringView &r);
+	void readHeaderContentDisposition(StringView &r);
+	void readHeaderContentDispositionParam(StringView &r);
+	void readHeaderValue(StringView &r);
+	void readHeaderDummy(StringView &r);
 
-	void readPlainLiteral(Reader &r);
-	void readQuotedLiteral(Reader &r);
-	void readHeaderContentDispositionValue(Reader &r);
-	void readHeaderContentDispositionDummy(Reader &r);
-	void readHeader(Reader &r);
-	void readData(Reader &r);
+	void readPlainLiteral(StringView &r);
+	void readQuotedLiteral(StringView &r);
+	void readHeaderContentDispositionValue(StringView &r);
+	void readHeaderContentDispositionDummy(StringView &r);
+	void readHeader(BytesView &r);
+	void readData(BytesView &r);
 
 	auto flushString(StringView &r, Value *cur, VarState varState) -> Value *;
 

@@ -22,20 +22,22 @@
 
 #include "SPWebTools.h"
 #include "SPWebRequestHandler.h"
+#include "SPWebVirtualFile.h"
+#include "SPWebOutput.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web::tools {
 
 void registerTools(StringView prefix, Host &host) {
-	host.addHandler(prefix, RequestHandler::Handler<tools::ServerGui>());
-	host.addHandler(toString(prefix, config::TOOLS_SHELL), RequestHandler::Handler<tools::ShellGui>());
-	host.addHandler(toString(prefix, config::TOOLS_ERRORS), RequestHandler::Handler<tools::ErrorsGui>());
+	host.addHandler(prefix, RequestHandler::Make<tools::ServerGui>());
+	host.addHandler(toString(prefix, config::TOOLS_SHELL), RequestHandler::Make<tools::ShellGui>());
+	host.addHandler(toString(prefix, config::TOOLS_ERRORS), RequestHandler::Make<tools::ErrorsGui>());
 	//host.addHandler(toString(prefix, config::TOOLS_DOCS), RequestHandler::Handler<tools::VirtualGui>());
-	host.addHandler(toString(prefix, config::TOOLS_HANDLERS), RequestHandler::Handler<tools::HandlersGui>());
-	host.addHandler(toString(prefix, config::TOOLS_REPORTS), RequestHandler::Handler<tools::ReportsGui>());
+	host.addHandler(toString(prefix, config::TOOLS_HANDLERS), RequestHandler::Make<tools::HandlersGui>());
+	host.addHandler(toString(prefix, config::TOOLS_REPORTS), RequestHandler::Make<tools::ReportsGui>());
 	host.addWebsocket(toString(prefix, config::TOOLS_SHELL_SOCKET), new tools::ShellSocket(host));
 
-	host.addHandler(toString(prefix, config::TOOLS_AUTH), RequestHandler::Handler<tools::AuthHandler>());
-	host.addHandler(toString(prefix, config::TOOLS_VIRTUALFS), RequestHandler::Handler<tools::VirtualFilesystem>());
+	host.addHandler(toString(prefix, config::TOOLS_AUTH), RequestHandler::Make<tools::AuthHandler>());
+	host.addHandler(toString(prefix, config::TOOLS_VIRTUALFS), RequestHandler::Make<tools::VirtualFilesystem>());
 }
 
 Status VirtualFilesystem::onTranslateName(Request &rctx) {

@@ -64,11 +64,15 @@ bool UnixRoot::init(Config &&config) {
 			_running = true;
 
 			for (auto &it : _hosts) {
-				it.second->init(Host(it.second));
+				perform([&] {
+					it.second->init(Host(it.second));
+				}, _rootPool, config::TAG_HOST, it.second);
 			}
 
 			for (auto &it : _hosts) {
-				it.second->handleChildInit(Host(it.second), _rootPool);
+				perform([&] {
+					Host(it.second).handleChildInit(_rootPool);
+				}, _rootPool, config::TAG_HOST, it.second);
 			}
 
 			return true;
@@ -194,6 +198,9 @@ Status UnixRoot::processRequest(RequestController *req) {
 	ret = runHandler(rctx);
 	switch (ret) {
 	case OK:
+		if (rctx.getInputFilter()) {
+			return SUSPENDED;
+		}
 		return DONE;
 		break;
 	case DECLINED:
@@ -210,6 +217,15 @@ Status UnixRoot::processRequest(RequestController *req) {
 	return ret;
 }
 
+bool UnixRoot::simulateWebsocket(UnixWebsocketSim *sim, StringView hostname, StringView url) {
+	auto it = _hosts.find(hostname);
+	if (it == _hosts.end()) {
+		return false;
+	}
+
+	return it->second->simulateWebsocket(sim, url);
+}
+
 Status UnixRoot::runDefaultProcessing(Request &rctx) {
 	auto &info = rctx.getInfo();
 	auto filename = info.filename;
@@ -217,7 +233,7 @@ Status UnixRoot::runDefaultProcessing(Request &rctx) {
 		rctx.setFilename(filepath::merge<Interface>(info.documentRoot, info.url.path), true);
 	}
 
-	if (info.filename.empty()) {
+	if (info.filename.empty() || info.stat.isDir) {
 		return HTTP_NOT_FOUND;
 	} else {
 		if (info.contentType.empty()) {

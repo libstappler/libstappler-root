@@ -26,6 +26,7 @@
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct ContextFn {
+	using OutStream = Callback<void(StringView)>;
 	using VarScope = Context::VarScope;
 
 	template <typename Callback>
@@ -44,7 +45,7 @@ struct ContextFn {
 	Var performBinaryOp(Var &l, Var &r, Expression::Op op);
 
 	Var execExpr(const Expression &expr, Expression::Op op, bool assignable);
-	bool printExpr(const Expression &expr, Expression::Op op, std::ostream &out);
+	bool printExpr(const Expression &expr, Expression::Op op, const OutStream &out);
 
 	Value *getMutableValue(Var &val) const;
 	void onError(const StringView &) const;
@@ -55,7 +56,7 @@ struct ContextFn {
 	const VarStorage *getVarStorage(VarScope *, const StringView &key) const;
 
 	VarScope *currentScope = nullptr;
-	std::ostream *outStream = nullptr;
+	const Callback<void(StringView)> *outStream = nullptr;
 	bool escapeOutput = false;
 	bool allowUndefined = false;
 };
@@ -105,6 +106,7 @@ template <typename Callback>
 bool ContextFn::extractName(Var &var, const Callback &cb) {
 	switch (var.type) {
 	case Var::Temporary:
+	case Var::Variable:
 		switch (var.temporaryStorage.type) {
 		case VarStorage::ValueReference:
 			return cb(var.temporaryStorage.readValue().asString());
@@ -116,16 +118,6 @@ bool ContextFn::extractName(Var &var, const Callback &cb) {
 		break;
 	case Var::Static:
 		return cb(var.staticStorage.readValue().asString());
-		break;
-	case Var::Variable:
-		switch (var.variableStorage->type) {
-		case VarStorage::ValueReference:
-			return cb(var.variableStorage->readValue().asString());
-			break;
-		default:
-			onError("Dereference of non-value type is forbidden");
-			break;
-		}
 		break;
 	default:
 		onError("Dereference of undefined is forbidden");
@@ -406,7 +398,7 @@ Var ContextFn::execExpr(const Expression &expr, Expression::Op op, bool assignab
 	return Var();
 }
 
-static void ContextFn_printEscapedString(const StringView &str, std::ostream &out, bool escapeOutput) {
+static void ContextFn_printEscapedString(const StringView &str, const ContextFn::OutStream &out, bool escapeOutput) {
 	if (escapeOutput) {
 		StringView r(str);
 		while (!r.empty()) {
@@ -425,7 +417,7 @@ static void ContextFn_printEscapedString(const StringView &str, std::ostream &ou
 	}
 }
 
-static void ContextFn_printVar(const Var &var, std::ostream &out, bool escapeOutput) {
+static void ContextFn_printVar(const Var &var, const ContextFn::OutStream &out, bool escapeOutput) {
 	auto &val = var.readValue();
 	switch (val.getType()) {
 	case Value::Type::CHARSTRING:
@@ -435,11 +427,11 @@ static void ContextFn_printVar(const Var &var, std::ostream &out, bool escapeOut
 	case Value::Type::DOUBLE: out << val.asString(); break; // use internal converter
 	case Value::Type::BOOLEAN: out << (val.asBool() ? "true" : "false"); break;
 	case Value::Type::EMPTY: out << "null"; break;
-	default: out << data::EncodeFormat::Json << val; break;
+	default: data::json::write(out, val, false, false); break;
 	}
 }
 
-bool ContextFn::printExpr(const Expression &expr, Expression::Op op, std::ostream &out) {
+bool ContextFn::printExpr(const Expression &expr, Expression::Op op, const OutStream &out) {
 	 // optimize Comma operator to output results sequentially
 	if (expr.op != Expression::Comma || (expr.block != Expression::None && expr.block != Expression::Parentesis)) {
 		if (auto var = execExpr(expr, op, false)) {
@@ -768,7 +760,7 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 		auto numNullOp = [&, this] (const Value &lVal, const Value &rVal, auto intOp, auto doubleOp) {
 			if (lVal.isInteger() || rVal.isInteger()) {
 				return Var(Value(intOp(valToInt(lVal, l), valToInt(rVal, r))));
-			} else if (lVal.isBasicType() && rVal.isBasicType()) {
+			} else if (lVal.isBasicType() || rVal.isBasicType()) {
 				return Var(Value(doubleOp(valToDouble(lVal, l), valToDouble(rVal, r))));
 			} else {
 				onError("Invalid type for numeric operation");
@@ -879,14 +871,14 @@ bool Context::isConstExpression(const Expression &expr) {
 	return expr.isConst();
 }
 
-bool Context::printConstExpr(const Expression &expr, std::ostream &out, bool escapeOutput) {
+bool Context::printConstExpr(const Expression &expr, const OutStream &out, bool escapeOutput) {
 	ContextFn fn;
 	fn.outStream = &out;
 	fn.escapeOutput = escapeOutput;
 	return fn.printExpr(expr, expr.op, out);
 }
 
-static void Context_printAttrVar(const StringView &name, const Var &var, std::ostream &out, bool escapeOutput) {
+static void Context_printAttrVar(const StringView &name, const Var &var, const Context::OutStream &out, bool escapeOutput) {
 	auto &val = var.readValue();
 	if (val.isBool()) {
 		if (val.getBool()) {
@@ -917,14 +909,14 @@ static void Context_printAttrVar(const StringView &name, const Var &var, std::os
 	}
 }
 
-static void Context_printAttrList(const Var &var, std::ostream &out) {
+static void Context_printAttrList(const Var &var, const Context::OutStream &out) {
 	auto &val = var.readValue();
 	for (auto &it : val.asDict()) {
 		out << " " << it.first << "=\"" << it.second.asString() << "\"";
 	}
 }
 
-bool Context::printAttrVar(const StringView &name, const Expression &expr, std::ostream &out, bool escapeOutput) {
+bool Context::printAttrVar(const StringView &name, const Expression &expr, const OutStream &out, bool escapeOutput) {
 	ContextFn fn;
 	fn.outStream = &out;
 	fn.escapeOutput = escapeOutput;
@@ -935,7 +927,7 @@ bool Context::printAttrVar(const StringView &name, const Expression &expr, std::
 	return false;
 }
 
-bool Context::printAttrExpr(const Expression &expr, std::ostream &out) {
+bool Context::printAttrExpr(const Expression &expr, const OutStream &out) {
 	ContextFn fn;
 	fn.outStream = &out;
 	fn.escapeOutput = false;
@@ -948,14 +940,14 @@ bool Context::printAttrExpr(const Expression &expr, std::ostream &out) {
 
 Context::Context() : currentScope(&globalScope) { }
 
-bool Context::print(const Expression &expr, std::ostream &out, bool escapeOutput) {
+bool Context::print(const Expression &expr, const OutStream &out, bool escapeOutput) {
 	ContextFn fn{currentScope};
 	fn.outStream = &out;
 	fn.escapeOutput = escapeOutput;
 	return fn.printExpr(expr, expr.op, out);
 }
 
-bool Context::printAttr(const StringView &name, const Expression &expr, std::ostream &out, bool escapeOutput) {
+bool Context::printAttr(const StringView &name, const Expression &expr, const OutStream &out, bool escapeOutput) {
 	ContextFn fn{currentScope};
 	fn.outStream = &out;
 	fn.escapeOutput = escapeOutput;
@@ -966,7 +958,7 @@ bool Context::printAttr(const StringView &name, const Expression &expr, std::ost
 	return false;
 }
 
-bool Context::printAttrExprList(const Expression &expr, std::ostream &out) {
+bool Context::printAttrExprList(const Expression &expr, const OutStream &out) {
 	ContextFn fn{currentScope};
 	fn.outStream = &out;
 	fn.escapeOutput = false;
@@ -977,7 +969,7 @@ bool Context::printAttrExprList(const Expression &expr, std::ostream &out) {
 	return false;
 }
 
-Var Context::exec(const Expression &expr, std::ostream &out, bool allowUndefined) {
+Var Context::exec(const Expression &expr, const OutStream &out, bool allowUndefined) {
 	ContextFn fn{currentScope};
 	fn.outStream = &out;
 	fn.allowUndefined = allowUndefined;
@@ -997,6 +989,11 @@ void Context::set(const StringView &name, Value &&val, VarClass *cl) {
 void Context::set(const StringView &name, bool isConst, const Value *val, VarClass *cl) {
 	auto it = currentScope->namedVars.emplace(name.str<memory::PoolInterface>()).first;
 	it->second.set(isConst, val, cl);
+}
+
+void Context::set(const StringView &name, VarClass *cl) {
+	auto it = currentScope->namedVars.emplace(name.str<memory::PoolInterface>()).first;
+	it->second.set(cl);
 }
 
 void Context::set(const StringView &name, Callback &&cb) {
@@ -1080,10 +1077,10 @@ const VarStorage *Context::getVar(const StringView &name) const {
 	return fn.getVarStorage(currentScope, name);
 }
 
-bool Context::runInclude(const StringView &name, std::ostream &out, const Template *tpl) {
+bool Context::runInclude(const StringView &name, const OutStream &out, Template::RunContext &rctx) {
 	bool ret = false;
 	if (_includeCallback) {
-		ret = _includeCallback(name, *this, out, tpl);
+		ret = _includeCallback(name, *this, out, rctx);
 	}
 	if (!ret) {
 		out << "<!-- fail to include " << name << " -->";

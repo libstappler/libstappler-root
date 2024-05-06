@@ -42,8 +42,6 @@ public:
 
 	virtual void handleChildInit(const Host &serv, pool_t *p) override;
 
-	virtual bool loadComponent(const Host &serv, const HostComponentInfo &) override;
-
 	server_rec *getServer() const { return _server; }
 
 protected:

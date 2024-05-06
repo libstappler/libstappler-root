@@ -34,7 +34,7 @@ public:
 	using HandlerCallback = Function<RequestHandler *()>;
 
 	template <typename T, typename ... Args>
-	static HandlerCallback Handler(Args && ... args) {
+	static HandlerCallback Make(Args && ... args) {
 		return HandlerCallback([=] {
 			return new T(std::forward<Args>(args)...);
 		});
@@ -166,10 +166,18 @@ protected:
 
 class RequestHandlerMap : public AllocBase {
 public:
-	struct HandlerInfo;
+	class HandlerInfo;
+	class Handler;
 
 	class Handler : public RequestHandler {
 	public: // simplified interface
+		template <typename T, typename ... Args>
+		static Function<Handler *()> Make(Args && ... args) {
+			return Function<Handler *()>([=] {
+				return new T(std::forward<Args>(args)...);
+			});
+		}
+
 		virtual bool isPermitted();
 		virtual Status onRequest();
 		virtual Value onData();
@@ -184,7 +192,7 @@ public:
 		virtual void onInsertFilter(Request &) override;
 		virtual Status onHandler(Request &) override;
 
-		virtual void onFilterComplete(InputFilter *f);
+		virtual void onFilterComplete(InputFilter *f) override;
 
 		const Request &getRequest() const { return _request; }
 		const Value &getParams() const { return _params; }

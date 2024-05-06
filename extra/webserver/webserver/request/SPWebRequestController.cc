@@ -21,8 +21,11 @@
  **/
 
 #include "SPWebRequestController.h"
+#include "SPWebHostController.h"
 #include "SPWebRequest.h"
+#include "SPWebInputFilter.h"
 #include "SPWebHost.h"
+#include "SPWebRoot.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -77,6 +80,8 @@ bool RequestController::init() {
 	return true;
 }
 
+void RequestController::finalize() { }
+
 float RequestController::isAcceptable(StringView name) const {
 	for (auto &it : _acceptList) {
 		if (it.first == name) {
@@ -129,6 +134,14 @@ Value RequestController::getDefaultResult() {
 	}
 
 	return ret;
+}
+
+void RequestController::pushErrorMessage(Value &&val) {
+	_errors.emplace_back(std::move(val));
+}
+
+void RequestController::pushDebugMessage(Value &&val) {
+	_debug.emplace_back(std::move(val));
 }
 
 }

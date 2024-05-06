@@ -81,7 +81,7 @@ public:
 
 	virtual void scheduleAyncDbTask(const db::Callback<db::Function<void(const db::Transaction &)>(db::pool_t *)> &setupCb) const override;
 
-	virtual StringView getDocuemntRoot() const override;
+	virtual StringView getDocumentRoot() const override;
 	virtual const db::Scheme *getFileScheme() const override;
 	virtual const db::Scheme *getUserScheme() const override;
 
@@ -678,7 +678,7 @@ void Server::scheduleAyncDbTask(const db::Callback<db::Function<void(const db::T
 	asyncTasks->emplace_back(setupCb(_contextPool));
 }
 
-StringView Server::getDocuemntRoot() const {
+StringView Server::getDocumentRoot() const {
 	return _documentRoot;
 }
 

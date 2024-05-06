@@ -1,0 +1,22 @@
+include include1.pug
+include include2.pug
+
+// just some paragraphs
+//- will not output within markup
+//-
+	Comments for your template writers.
+	Use as much text as you want.
+//
+	Comments for your HTML readers.
+	Use as much text as you want.
+
+doctype html
+head
+	title Test 1
+	link(rel="stylesheet",href="test.css")
+	style
+		include include.css
+.body
+	#main
+		+include1("string1")
+		+include2("string2","value2")

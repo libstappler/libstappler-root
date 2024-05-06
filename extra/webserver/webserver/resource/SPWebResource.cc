@@ -21,6 +21,8 @@
  **/
 
 #include "SPWebResource.h"
+#include "SPWebRoot.h"
+#include "SPWebHost.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -31,6 +33,7 @@ Resource::Resource(ResourceType t, const Transaction &a, QueryList &&list)
 	}
 }
 
+SP_COVERAGE_TRIVIAL
 Resource::~Resource() { }
 
 ResourceType Resource::getType() const {
@@ -38,6 +41,7 @@ ResourceType Resource::getType() const {
 }
 
 const db::Scheme &Resource::getScheme() const { return *_queries.getScheme(); }
+
 Status Resource::getStatus() const { return _status; }
 
 bool Resource::isDeltaApplicable() const {
@@ -45,7 +49,7 @@ bool Resource::isDeltaApplicable() const {
 }
 
 bool Resource::hasDelta() const {
-	if (_queries.isDeltaApplicable()) {
+	if (isDeltaApplicable()) {
 		if (_queries.isView()) {
 			return static_cast<const db::FieldView *>(_queries.getItems().front().field->getSlot())->delta;
 		} else {
@@ -65,20 +69,6 @@ Time Resource::getQueryDelta() const {
 
 Time Resource::getSourceDelta() const { return _delta; }
 
-void Resource::resolveOptionForString(StringView str) {
-	if (str.empty()) {
-		return;
-	}
-
-	str.split<StringView::Chars<','>>([&, this] (const StringView &v) {
-		StringView r(v);
-		r.trimChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
-		String token(toString('$', r));
-		_resolve |= Query::decodeResolve(token);
-		emplace_ordered(_extraResolves, StringView(token).pdup());
-	});
-}
-
 void Resource::addExtraResolveField(StringView str) {
 	if (emplace_ordered(_extraResolves, str.pdup())) {
 		_isResolvesUpdated = true;
@@ -91,32 +81,6 @@ void Resource::setUser(User *u) {
 
 void Resource::setFilterData(const Value &val) {
 	_filterData = val;
-}
-
-void Resource::setResolveOptions(const Value & opts) {
-	if (opts.isArray()) {
-		for (auto &it : opts.asArray()) {
-			if (it.isString()) {
-				resolveOptionForString(it.getString());
-			}
-		}
-	} else if (opts.isString()) {
-		resolveOptionForString(opts.getString());
-	}
-}
-void Resource::setResolveDepth(size_t size) {
-	_queries.setResolveDepth(std::min(uint16_t(size), db::config::RESOURCE_RESOLVE_MAX_DEPTH));
-}
-
-void Resource::setPageFrom(size_t value) {
-	if (value > 0) {
-		_queries.offset(_queries.getScheme(), value);
-	}
-}
-void Resource::setPageCount(size_t value) {
-	if (value > 0 && value != maxOf<size_t>()) {
-		_queries.limit(_queries.getScheme(), value);
-	}
 }
 
 void Resource::applyQuery(const Value &query) {
@@ -135,15 +99,36 @@ const db::QueryList &Resource::getQueries() const {
 	return _queries;
 }
 
+SP_COVERAGE_TRIVIAL
 bool Resource::prepareUpdate() { return false; }
+
+SP_COVERAGE_TRIVIAL
 bool Resource::prepareCreate() { return false; }
+
+SP_COVERAGE_TRIVIAL
 bool Resource::prepareAppend() { return false; }
+
+SP_COVERAGE_TRIVIAL
 bool Resource::removeObject() { return false; }
+
+SP_COVERAGE_TRIVIAL
 Value Resource::updateObject(Value &, Vector<db::InputFile> &) { return Value(); }
+
+SP_COVERAGE_TRIVIAL
 Value Resource::createObject(Value &, Vector<db::InputFile> &) { return Value(); }
+
+SP_COVERAGE_TRIVIAL
 Value Resource::appendObject(Value &) { return Value(); }
+
+SP_COVERAGE_TRIVIAL
 Value Resource::getResultObject() { return Value(); }
+
+SP_COVERAGE_TRIVIAL
 void Resource::resolve(const Scheme &, Value &) { }
+
+db::InputConfig::Require Resource::getInputFlags() const {
+	return db::InputConfig::Require::Data | db::InputConfig::Require::Files;
+}
 
 size_t Resource::getMaxRequestSize() const {
 	return getRequestScheme().getMaxRequestSize();
@@ -470,11 +455,13 @@ bool ResourceObject::prepareUpdate() {
 	return true;
 }
 
+SP_COVERAGE_TRIVIAL
 bool ResourceObject::prepareCreate() {
 	_status = HTTP_NOT_IMPLEMENTED;
 	return false;
 }
 
+SP_COVERAGE_TRIVIAL
 bool ResourceObject::prepareAppend() {
 	_status = HTTP_NOT_IMPLEMENTED;
 	return false;
@@ -610,29 +597,36 @@ bool ResourceReslist::prepareCreate() {
 	return true;
 }
 
+Value ResourceReslist::doCreateObject(Value &data, Vector<db::InputFile> &files, const Value &extra) {
+	if (extra.isDictionary()) {
+		for (auto & it : extra.asDict()) {
+			data.setValue(it.second, it.first);
+		}
+	}
+
+	if (!files.empty()) {
+		encodeFiles(data, files);
+	}
+
+	for (auto &it : data.asDict()) {
+		addExtraResolveField(it.first);
+	}
+
+	return Worker(getScheme(), _transaction).create(data);
+}
+
 Value ResourceReslist::performCreateObject(Value &data, Vector<db::InputFile> &files, const Value &extra) {
 	// single object
 	if (data.isDictionary() || data.empty()) {
-		if (extra.isDictionary()) {
-			for (auto & it : extra.asDict()) {
-				data.setValue(it.second, it.first);
-			}
-		}
-
-		encodeFiles(data, files);
-
-		for (auto &it : data.asDict()) {
-			addExtraResolveField(it.first);
-		}
-
-		Value ret = Worker(getScheme(), _transaction).create(data);
+		Value ret = doCreateObject(data, files, extra);
 		if (processResultObject(_queries, ret)) {
 			return ret;
 		}
 	} else if (data.isArray()) {
+		Vector<db::InputFile> empty;
 		Value ret;
 		for (auto &obj : data.asArray()) {
-			Value n(Worker(getScheme(), _transaction).create(obj));
+			Value n = doCreateObject(obj, empty, extra);
 			if (n) {
 				ret.addValue(std::move(n));
 			}
@@ -712,14 +706,27 @@ Value ResourceSet::appendObject(Value &data) {
 		val = std::move(data);
 	}
 	Vector<int64_t> ids;
+	Vector<db::InputFile> empty;
 	if (val.isArray()) {
 		for (auto &it : val.asArray()) {
+			if (it.isDictionary()) {
+				it = doCreateObject(it, empty, extra);
+				if (it.isInteger("__oid")) {
+					it = Value(it.getInteger("__oid"));
+				}
+			}
 			auto i = it.asInteger();
 			if (i) {
 				ids.push_back(i);
 			}
 		}
 	} else {
+		if (val.isDictionary()) {
+			val = doCreateObject(val, empty, extra);
+			if (val.isInteger("__oid")) {
+				val = Value(val.getInteger("__oid"));
+			}
+		}
 		auto i = val.asInteger();
 		if (i) {
 			ids.push_back(i);
@@ -748,7 +755,7 @@ bool ResourceRefSet::prepareAppend() {
 bool ResourceRefSet::removeObject() {
 	auto id = getObjectId();
 	if (id == 0) {
-		return Value();
+		return false;
 	}
 
 	return _transaction.perform([&, this] () -> bool {
@@ -797,13 +804,6 @@ int64_t ResourceRefSet::getObjectId() {
 		}
 	}
 	return _objectId;
-}
-
-Value ResourceRefSet::getObjectValue() {
-	if (!_objectValue) {
-		_objectValue = Worker(*_sourceScheme, _transaction).get(getObjectId(), db::UpdateFlags::None);
-	}
-	return _objectValue;
 }
 
 bool ResourceRefSet::isEmptyRequest() {
@@ -918,18 +918,13 @@ uint64_t ResourceProperty::getObjectId() {
 	return ids.empty() ? 0 : ids.front();
 }
 
-Value ResourceProperty::getObject(bool forUpdate) {
-	Value ret = _transaction.performQueryList(_queries, _queries.size(), forUpdate);
-	if (ret.isArray() && ret.size() > 0) {
-		ret = move(ret.getValue(0));
-	}
-	return ret;
-}
-
-
 ResourceFile::ResourceFile(const Transaction &a, QueryList &&q, const Field *prop)
 : ResourceProperty(a, move(q), prop) {
 	_type = ResourceType::File;
+}
+
+db::InputConfig::Require ResourceFile::getInputFlags() const {
+	return db::InputConfig::Require::Files;
 }
 
 bool ResourceFile::prepareUpdate() {
@@ -1022,18 +1017,22 @@ bool ResourceArray::prepareUpdate() {
 bool ResourceArray::prepareCreate() {
 	return true;
 }
-Value ResourceArray::updateObject(Value &data, Vector<db::InputFile> &) {
+bool ResourceArray::prepareAppend() {
+	return true;
+}
+
+static Value ResourceArray_extract(Value &data, StringView fieldName) {
 	Value arr;
-	if (data.isDictionary()) {
-		auto &newArr = data.getValue(_field->getName());
-		if (newArr.isArray()) {
-			arr = std::move(newArr);
-		} else if (!newArr.isNull()) {
-			arr.addValue(newArr);
-		}
-	} else if (data.isArray()) {
+	if (data.isArray()) {
 		arr = std::move(data);
+	} else {
+		arr.addValue(move(data));
 	}
+	return arr;
+}
+
+Value ResourceArray::updateObject(Value &data, Vector<db::InputFile> &) {
+	Value arr = ResourceArray_extract(data, _field->getName());
 
 	if (!arr.isArray()) {
 		_status = HTTP_BAD_REQUEST;
@@ -1047,19 +1046,7 @@ Value ResourceArray::updateObject(Value &data, Vector<db::InputFile> &) {
 	return Value();
 }
 Value ResourceArray::createObject(Value &data, Vector<db::InputFile> &) {
-	Value arr;
-	if (data.isDictionary()) {
-		auto &newArr = data.getValue(_field->getName());
-		if (newArr.isArray()) {
-			arr = std::move(newArr);
-		} else if (!newArr.isNull()) {
-			arr.addValue(newArr);
-		}
-	} else if (data.isArray()) {
-		arr = std::move(data);
-	} else if (data.isBasicType()) {
-		arr.addValue(std::move(data));
-	}
+	Value arr = ResourceArray_extract(data, _field->getName());
 
 	if (!arr.isArray()) {
 		_status = HTTP_BAD_REQUEST;
@@ -1073,6 +1060,11 @@ Value ResourceArray::createObject(Value &data, Vector<db::InputFile> &) {
 	return Value();
 }
 
+Value ResourceArray::appendObject(Value &data) {
+	Vector<db::InputFile> empty;
+	return createObject(data, empty);
+}
+
 Value ResourceArray::getResultObject() {
 	if (_field->hasFlag(db::Flags::Protected)) {
 		_status = HTTP_NOT_FOUND;
@@ -1083,13 +1075,6 @@ Value ResourceArray::getResultObject() {
 
 Value ResourceArray::getDatabaseObject() {
 	return _transaction.performQueryListField(_queries, *_field);
-}
-
-Value ResourceArray::getArrayForObject(Value &object) {
-	if (object.isDictionary()) {
-		return Worker(getScheme(), _transaction).getField(object, *_field);
-	}
-	return Value();
 }
 
 ResourceFieldObject::ResourceFieldObject(const Transaction &a, QueryList &&q)
@@ -1105,6 +1090,7 @@ bool ResourceFieldObject::prepareCreate() {
 	return true;
 }
 
+SP_COVERAGE_TRIVIAL
 bool ResourceFieldObject::prepareAppend() {
 	return false;
 }
@@ -1112,7 +1098,7 @@ bool ResourceFieldObject::prepareAppend() {
 bool ResourceFieldObject::removeObject() {
 	auto id = getObjectId();
 	if (id == 0) {
-		return Value();
+		return false;
 	}
 
 	return _transaction.perform([&, this] () -> bool {
@@ -1143,7 +1129,7 @@ Value ResourceFieldObject::createObject(Value &val, Vector<db::InputFile> &files
 	_transaction.perform([&, this] () -> bool {
 		if (getObjectId()) {
 			if (!doRemoveObject()) {
-				return Value();
+				return false;
 			}
 		}
 		ret = doCreateObject(val, files);
@@ -1155,6 +1141,7 @@ Value ResourceFieldObject::createObject(Value &val, Vector<db::InputFile> &files
 	return ret;
 }
 
+SP_COVERAGE_TRIVIAL
 Value ResourceFieldObject::appendObject(Value &) {
 	return Value();
 }
@@ -1172,28 +1159,12 @@ int64_t ResourceFieldObject::getRootId() {
 int64_t ResourceFieldObject::getObjectId() {
 	if (!_objectId) {
 		if (auto id = getRootId()) {
-			if (auto obj = Worker(getScheme(), _transaction).get(id, {_field->getName()})) {
+			if (auto obj = Worker(*_field->getSlot()->owner, _transaction).get(id, {_field->getName()})) {
 				_objectId = obj.getInteger(_field->getName());
 			}
 		}
 	}
 	return _objectId;
-}
-
-Value ResourceFieldObject::getRootObject(bool forUpdate) {
-	if (auto id = getRootId()) {
-		return Worker(*_sourceScheme, _transaction).get(id, {_field->getName()},
-				forUpdate ? db::UpdateFlags::GetForUpdate : db::UpdateFlags::None);
-	}
-	return Value();
-}
-
-Value ResourceFieldObject::getTargetObject(bool forUpdate) {
-	if (auto id = getObjectId()) {
-		return Worker(getScheme(), _transaction).get(id, { StringView() },
-				forUpdate ? db::UpdateFlags::GetForUpdate : db::UpdateFlags::None);
-	}
-	return Value();
 }
 
 bool ResourceFieldObject::doRemoveObject() {
@@ -1209,9 +1180,10 @@ Value ResourceFieldObject::doCreateObject(Value &val, Vector<db::InputFile> &fil
 	encodeFiles(val, files);
 	if (auto ret = Worker(getScheme(), _transaction).create(val)) {
 		if (auto id = ret.getInteger("__oid")) {
-			if (Worker(*_sourceScheme, _transaction).update(getRootId(), Value({
+			auto updObj = Worker(*_sourceScheme, _transaction).update(getRootId(), Value({
 				pair(_field->getName().str<Interface>(), Value(id))
-			}))) {
+			}));
+			if (updObj) {
 				return ret;
 			}
 		}
@@ -1228,12 +1200,22 @@ ResourceView::ResourceView(const Transaction &h, QueryList &&q)
 	}
 }
 
+SP_COVERAGE_TRIVIAL
 bool ResourceView::prepareUpdate() { return false; }
+
+SP_COVERAGE_TRIVIAL
 bool ResourceView::prepareCreate() { return false; }
+
+SP_COVERAGE_TRIVIAL
 bool ResourceView::prepareAppend() { return false; }
+
+SP_COVERAGE_TRIVIAL
 bool ResourceView::removeObject() { return false; }
 
+SP_COVERAGE_TRIVIAL
 Value ResourceView::updateObject(Value &data, Vector<db::InputFile> &) { return Value(); }
+
+SP_COVERAGE_TRIVIAL
 Value ResourceView::createObject(Value &data, Vector<db::InputFile> &) { return Value(); }
 
 Value ResourceView::getResultObject() {

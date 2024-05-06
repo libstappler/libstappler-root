@@ -24,6 +24,10 @@
 #include "TestAppScene.h"
 #include "TestGeneralUpdate.h"
 #include "TestMaterialColor.h"
+#include "TestMaterialNodes.h"
+#include "TestMaterialScroll.h"
+#include "TestMaterialInput.h"
+#include "TestMaterialMenu.h"
 
 #include "XL2dVectorSprite.h"
 #include "XLIcons.h"
@@ -49,6 +53,22 @@ static Vector<MenuData> s_layouts {
 	MenuData{LayoutName::MaterialColorPickerTest, "org.stappler.xenolith.test.MaterialColorPickerTest", "MaterialColorPickerTest",
 		[] (LayoutName name) {
 			return Rc<TestMaterialColor>::create();
+	}},
+	MenuData{LayoutName::MaterialNodeTest, "org.stappler.xenolith.test.MaterialNodeTest", "MaterialNodeTest",
+		[] (LayoutName name) {
+			return Rc<TestMaterialNodes>::create();
+	}},
+	MenuData{LayoutName::MaterialScrollTest, "org.stappler.xenolith.test.MaterialScrollTest", "MaterialScrollTest",
+		[] (LayoutName name) {
+			return Rc<TestMaterialScroll>::create();
+	}},
+	MenuData{LayoutName::MaterialInputTest, "org.stappler.xenolith.test.MaterialInputTest", "MaterialInputTest",
+		[] (LayoutName name) {
+			return Rc<TestMaterialInput>::create();
+	}},
+	MenuData{LayoutName::MaterialMenuTest, "org.stappler.xenolith.test.MaterialMenuTest", "MaterialMenuTest",
+		[] (LayoutName name) {
+			return Rc<TestMaterialMenu>::create();
 	}},
 };
 

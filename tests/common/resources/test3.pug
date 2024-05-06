@@ -1,0 +1,90 @@
+p= encodeURI("<te/st_+$dsf>")
+p= encodeURIComponent("<te-_st>")
+p= value
+p= value["double"]
+p= value["key"] + " " + value["double"]
+p= array[0]
+- var i = 10
+p= i++ + i++ || ++i + ++i
+p= i-- + i-- || --i + --i
+- i -= 1
+- i += 1
+- i *= 1
+- i /= 1
+- i <<= 1
+- i >>= 1
+- i %= 100
+- i &= 127
+- i |= 128
+- i ^= 128
+- var j = 128 * 0.5 + 128 / 0.3
+- var k = 128 % 100
+- ++ k
+- -- k
+- var n = -k
+- var l = false
+- k += 0.5
+- var u1 = {a: 'A',b:'B'}
+- var u2 = {c: 'C',d:'D'}
+- var a1 = ["Uno", "Dos", "Tres"]
+- var a2 = ["Cuatro", "Cinco", "Seis"]
+p= i + j + k
+p= l + true
+p= u1 + u2
+p= a1 + a2
+
+- l = i < k
+- l = i <= k
+- l = i >= k
+- l = i > k
+- l = i == k
+- l = i != k
+- l = j < k
+- l = j <= k
+- l = j >= k
+- l = j > k
+- l = j + k
+- l = i + k
+- l = j - k
+- l = i - k
+- l = i && k
+- l = i || k
+- l = 1 << 10
+- l = 128 >> 3
+- l = 4 & 12
+- l = 4 | 8
+- l = 12 ^ 8
+- l = 12.5
+- l += 12.5
+
+- var Class2 = Class
+- user["anon"] = true
+p= Class2.static(1+1, 2+2, i = 20)
+p= object.static(1+1, 2+2, i = 20)
+p= object.fn(1+1, 2+2, i = 20)
+
+- var keystring = "keystring123"
+- var user = {"desc"+"ription": 'foo bar baz',"name"+i:'Username',intVal:i,object.fn():j + 0.5,keystring:Class2.static()}
+p= user
+
+- var noop
+if i == noop
+	p Test1
+if i != noop
+	p Test2
+if i < noop
+	p Test3
+if i <= noop
+	p Test4
+if i >= noop
+	p Test5
+if i > noop
+	p Test6
+if j < noop
+	p Test7
+if j <= noop
+	p Test8
+if j >= noop
+	p Test9
+if j > noop
+	p Test10

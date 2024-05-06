@@ -63,33 +63,37 @@ protected:
 
 class Cache : public memory::AllocPool {
 public:
+	using OutStream = Callback<void(StringView)>;
 	using RunCallback = Callback<bool(Context &, const Template &)>;
 	using Options = Template::Options;
 
 	Cache(Template::Options opts = Template::Options::getDefault(), const Function<void(const StringView &)> &err = nullptr);
 	~Cache();
 
-	bool runTemplate(const StringView &, const RunCallback &, std::ostream &);
-	bool runTemplate(const StringView &, const RunCallback &, std::ostream &, Template::Options opts);
+	bool runTemplate(const StringView &, const RunCallback &, const OutStream &);
+	bool runTemplate(const StringView &, const RunCallback &, const OutStream &, Template::Options opts);
 
 	bool addFile(StringView);
 	bool addContent(StringView, String &&);
 	bool addTemplate(StringView, String &&);
 	bool addTemplate(StringView, String &&, Template::Options opts);
 
-	Rc<FileRef> get(const StringView &key) const;
+	Rc<FileRef> get(StringView key) const;
 
 	void update(int watch, bool regenerate);
-	void update(memory::pool_t *);
+	void update(memory::pool_t *, bool force = false);
 
 	int getNotify() const;
 	bool isNotifyAvailable();
+
+	void regenerate(StringView);
+	void drop(StringView);
 
 protected:
 	Rc<FileRef> acquireTemplate(StringView, bool readOnly, const Template::Options &);
 	Rc<FileRef> openTemplate(StringView, int wId, const Template::Options &);
 
-	bool runTemplate(Rc<FileRef>, StringView ipath, const RunCallback &cb, std::ostream &out, Template::Options opts);
+	bool runTemplate(Rc<FileRef>, StringView ipath, const RunCallback &cb, const OutStream &out, Template::Options opts);
 	void onError(const StringView &);
 
 	int _inotify = -1;

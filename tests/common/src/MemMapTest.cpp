@@ -61,8 +61,9 @@ struct MemMapTest : MemPoolTest {
 			values.emplace(1);
 			values.emplace(3);
 
-			auto it = values.lower_bound(4);
-			return  *(it) == 3;
+			auto it1 = values.lower_bound(3);
+			auto it2 = values.lower_bound(4);
+			return  *(it1) == 3 && it2 == values.end();
 		});
 
 		runTest(stream, "persistent test", count, passed, [&] {

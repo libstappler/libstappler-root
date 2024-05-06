@@ -1,0 +1,75 @@
+{
+    "numLayers": {
+        "count": 2
+    },
+    "trainable": true,
+    "Layer_0": {
+        "name": "input_samples",
+        "type": "InputBufferLayer",
+        "Input Height": 28,
+        "Input Width": 28,
+        "Input Batch": 100,
+    },
+    "Layer_1": {
+        "name": "input_labels",
+        "type": "InputBufferLayer",
+        "Input Height": 1,
+        "Input Width": 10,
+        "Input Batch": 100,
+    },
+    "Layer_2": {
+        "name": "fc1",
+        "type": "MatrixMulLayer",
+        "kernel_size": 1024,
+        "activation": "relu",
+        "inbounds": [
+            "input"
+        ],
+        "numInputs": 1,
+        "inputId": [
+            0
+        ],
+    },
+    "Layer_3": {
+        "name": "fc2",
+        "type": "MatrixMulLayer",
+        "kernel_size": 512,
+        "activation": "relu",
+        "inbounds": [
+            "fc1"
+        ],
+        "numInputs": 1,
+        "inputId": [
+            2
+        ],
+    },
+    "Layer_4": {
+        "name": "fc3",
+        "type": "MatrixMulLayer",
+        "kernel_size": 10,
+        "activation": "LINEAR",
+        "inbounds": [
+            "fc2"
+        ],
+        "numInputs": 1,
+        "inputId": [
+            3
+        ],
+    },
+    "Layer_5": {
+        "name": "loss",
+        "type": "CrossEntropyLossLayer",
+        "labels": "input_labels",
+        "batch_size": 100,
+        "classes_count": 10,
+        "inbounds": [
+            "input_labels"
+            "fc3"
+        ],
+        "numInputs": 2,
+        "inputId": [
+            1,
+            4
+        ],
+    }
+}

@@ -24,6 +24,7 @@
 #define TESTS_COMMON_XENOLITH_LAYOUTS_TESTGENERALUPDATE_H_
 
 #include "TestLayout.h"
+#include "XLTemporaryResource.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
@@ -41,7 +42,13 @@ public:
 protected:
 	using TestLayout::init;
 
+	void updateAngle(float val);
+
+	float _angle = 0.0f;
 	Layer *_background = nullptr;
+	Sprite *_sprite = nullptr;
+	Sprite *_sprite2 = nullptr;
+	Rc<TemporaryResource> _resource;
 };
 
 }

@@ -37,7 +37,7 @@ bool Tooltip::init(RendererResult *s, const Vector<String> &ids, WideStringView 
 		return false;
 	}
 
-	setViewDecorationTracked(false);
+	setViewDecorationFlags(material2d::ViewDecorationFlags::None);
 	setDecorationMask(material2d::DecorationMask::None);
 
 	/*_listener = addInputListener(Rc<InputListener>::create());

@@ -20,6 +20,8 @@
  THE SOFTWARE.
  **/
 
+#include "XLCommon.h"
+
 #if MODULE_XENOLITH_SCENE
 
 #include "TestAppScene.h"
@@ -38,6 +40,10 @@
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
+static auto INIT_LAYOUT = LayoutName::MaterialMenuTest;
+
+TestAppScene::~TestAppScene() { }
+
 bool TestAppScene::init(Application *app, const core::FrameContraints &constraints) {
 	// build presentation RenderQueue
 	core::Queue::Builder builder("Loader");
@@ -55,11 +61,11 @@ bool TestAppScene::init(Application *app, const core::FrameContraints &constrain
 
 	basic2d::vk::ShadowPass::makeDefaultRenderQueue(builder, info);
 
-	if (!Scene2d::init(move(builder), constraints)) {
+	if (!material2d::Scene::init(move(builder), constraints)) {
 		return false;
 	}
 
-	auto content = Rc<basic2d::SceneContent2d>::create();
+	auto content = Rc<material2d::SceneContent>::create();
 
 	setContent(content);
 
@@ -67,12 +73,57 @@ bool TestAppScene::init(Application *app, const core::FrameContraints &constrain
 
 	scheduleUpdate();
 
-	content->pushLayout(makeLayoutNode(LayoutName::GeneralUpdateTest));
+	content->pushLayout(makeLayoutNode(INIT_LAYOUT));
 
 	return true;
 }
 
 void TestAppScene::onPresented(Director *dir) {
+	auto c = dir->getFrameConstraints();
+	auto tmp = c;
+
+	tmp.transform = core::SurfaceTransformFlags::Rotate90 | core::SurfaceTransformFlags::PreRotated;
+	dir->setFrameConstraints(tmp);
+
+	tmp.transform = core::SurfaceTransformFlags::Rotate180 | core::SurfaceTransformFlags::PreRotated;
+	dir->setFrameConstraints(tmp);
+
+	tmp.transform = core::SurfaceTransformFlags::Rotate270 | core::SurfaceTransformFlags::PreRotated;
+	dir->setFrameConstraints(tmp);
+
+	tmp.transform = core::SurfaceTransformFlags::Mirror | core::SurfaceTransformFlags::PreRotated;
+	dir->setFrameConstraints(tmp);
+
+	tmp.transform = core::SurfaceTransformFlags::MirrorRotate90 | core::SurfaceTransformFlags::PreRotated;
+	dir->setFrameConstraints(tmp);
+
+	tmp.transform = core::SurfaceTransformFlags::MirrorRotate180 | core::SurfaceTransformFlags::PreRotated;
+	dir->setFrameConstraints(tmp);
+
+	tmp.transform = core::SurfaceTransformFlags::MirrorRotate270 | core::SurfaceTransformFlags::PreRotated;
+	dir->setFrameConstraints(tmp);
+
+	dir->setFrameConstraints(c);
+	dir->getFps();
+	dir->getView()->getAvgFrameInterval();
+	dir->getView()->getAvgFrameTime();
+	dir->getView()->getFrameInterval();
+	dir->getView()->getBackButtonCounter();
+	dir->getView()->retainBackButton();
+	dir->getView()->releaseBackButton();
+	dir->getView()->setDecorationVisible(true);
+
+	auto image = dir->getView()->getSwapchainImageInfo();
+
+	image.imageType = core::ImageType::Image1D;
+	dir->getView()->getSwapchainImageViewInfo(image);
+
+	image.imageType = core::ImageType::Image2D;
+	dir->getView()->getSwapchainImageViewInfo(image);
+
+	image.imageType = core::ImageType::Image3D;
+	dir->getView()->getSwapchainImageViewInfo(image);
+
 	Scene2d::onPresented(dir);
 }
 
@@ -84,11 +135,11 @@ void TestAppScene::update(const UpdateTime &time) {
 	Scene2d::update(time);
 }
 
-void TestAppScene::onEnter(Scene *scene) {
+void TestAppScene::onEnter(xenolith::Scene *scene) {
 	Scene2d::onEnter(scene);
 
-	runAction(Rc<Sequence>::create(1.0f, [this] {
-		runNext(LayoutName::GeneralUpdateTest);
+	runAction(Rc<Sequence>::create(0.6f, [this] {
+		runNext(INIT_LAYOUT);
 	}));
 }
 
@@ -107,22 +158,18 @@ void TestAppScene::runLayout(LayoutName l, Rc<basic2d::SceneLayout2d> &&node) {
 }
 
 void TestAppScene::runNext(LayoutName name) {
-	switch (name) {
-	case LayoutName::GeneralUpdateTest:
-		if (auto l = makeLayoutNode(LayoutName::MaterialColorPickerTest)) {
-			static_cast<basic2d::SceneContent2d *>(_content)->pushLayout(move(l));
-			runAction(Rc<Sequence>::create(1.0f, [this] {
-				runNext(LayoutName::MaterialColorPickerTest);
-			}));
-		}
-		break;
-	case LayoutName::MaterialColorPickerTest:
+	if (toInt(name) == 0) {
 		if (auto v = _director->getView()) {
 			v->close();
 		}
-		break;
-	default:
-		break;
+	} else {
+		auto next = LayoutName(toInt(name) - 1);
+		if (auto l = makeLayoutNode(next)) {
+			static_cast<basic2d::SceneContent2d *>(_content)->pushLayout(move(l));
+			runAction(Rc<Sequence>::create(0.5f, [this, next] {
+				runNext(next);
+			}));
+		}
 	}
 }
 

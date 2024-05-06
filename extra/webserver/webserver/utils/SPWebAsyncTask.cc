@@ -21,7 +21,6 @@
  **/
 
 #include "SPWebAsyncTask.h"
-#include "SPWebHost.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 

@@ -41,17 +41,20 @@ public:
 		}
 	}
 
+	SP_COVERAGE_TRIVIAL
 	virtual ~FileParser() { }
 
-	virtual void run(StringView data) override {
+	virtual bool run(BytesView data) override {
 		if (file && !skip) {
 			if (file->writeSize + data.size() < getConfig().maxFileSize) {
-				file->write(data.data(), data.size());
+				file->write((const char *)data.data(), data.size());
 			} else {
 				file->close();
 				skip = true;
+				return false;
 			}
 		}
+		return true;
 	}
 	virtual void finalize() override { }
 
@@ -64,8 +67,12 @@ class DataParser : public InputParser {
 public:
 	DataParser(const db::InputConfig &c, size_t s) : InputParser(c, s) { }
 
-	virtual void run(StringView data) override {
-		stream.write(data.data(), data.size());
+	SP_COVERAGE_TRIVIAL
+	virtual ~DataParser() { }
+
+	virtual bool run(BytesView data) override {
+		stream.write((const char *)data.data(), data.size());
+		return true;
 	}
 	virtual void finalize() override {
 		root = data::read<Interface>(stream.weak());
@@ -82,10 +89,12 @@ public:
 	UrlEncodeParser(const db::InputConfig &cfg, size_t len)
 	: InputParser(cfg, len) { }
 
+	SP_COVERAGE_TRIVIAL
 	virtual ~UrlEncodeParser() { }
 
-	virtual void run(StringView data) override {
-		stream.write(data.data(), data.size());
+	virtual bool run(BytesView data) override {
+		stream.write((const char *)data.data(), data.size());
+		return true;
 	}
 	virtual void finalize() override {
 		root = data::readUrlencoded<Interface>(stream.weak());
@@ -114,77 +123,72 @@ static InputFilter::Accept getAcceptedData(const Request &req, InputFilter::Exce
 	auto &cfg = r.getInputConfig();
 	InputFilter::Accept ret = InputFilter::Accept::None;
 
+	size_t cl = 0;
+	StringView ct;
+
 	auto &info = req.getInfo();
 
-	if (info.method == RequestMethod::Post || info.method == RequestMethod::Put || info.method == RequestMethod::Patch) {
-		auto ct = r.getRequestHeader("Content-Type");
-		auto b = r.getRequestHeader("Content-Length");
-
-		size_t cl = 0;
-		if (!b.empty()) {
-			cl = b.readInteger(10).get(0);
-		}
-
-		if (cl > config::MAX_INPUT_POST_SIZE || cl > cfg.maxRequestSize) {
+	auto reportError = [&] (InputFilter::Exception ex, StringView info) SP_COVERAGE_TRIVIAL -> InputFilter::Accept {
+		switch (ex) {
+		case InputFilter::Exception::Unrecognized:
+			req.addError("InputFilter", "No data to process", Value{
+				std::make_pair("content", Value(ct)),
+				std::make_pair("available", Value(info)),
+			});
+			break;
+		case InputFilter::Exception::TooLarge:
 			req.addError("InputFilter", "Request size is out of limits", Value{
 				std::make_pair("length", Value(int64_t(cl))),
 				std::make_pair("local", Value(int64_t(cfg.maxRequestSize))),
 				std::make_pair("global", Value(int64_t(config::MAX_INPUT_POST_SIZE))),
 			});
-			e = InputFilter::Exception::TooLarge;
-			return ret;
+			break;
+		default:
+			break;
+		}
+		e = ex;
+		return ret;
+	};
+
+	if (info.method == RequestMethod::Post || info.method == RequestMethod::Put || info.method == RequestMethod::Patch) {
+		ct = r.getRequestHeader("Content-Type");
+		auto b = r.getRequestHeader("Content-Length");
+
+		if (!b.empty()) {
+			cl = b.readInteger(10).get(0);
+		}
+
+		if (cl > config::MAX_INPUT_POST_SIZE || cl > cfg.maxRequestSize) {
+			return reportError(InputFilter::Exception::TooLarge, StringView());
 		}
 
 		if (!ct.empty() && cl != 0 && cl < config::MAX_INPUT_POST_SIZE) {
-			if (ct.starts_with("application/json") || ct.starts_with("application/cbor")) {
-				if ((cfg.required & db::InputConfig::Require::Data) == db::InputConfig::Require::None
-						&& (cfg.required & db::InputConfig::Require::Body) == db::InputConfig::Require::None) {
-					req.addError("InputFilter", "No data to process", Value{
-						std::make_pair("content", Value(ct)),
-						std::make_pair("available", Value("data, body")),
-					});
-					e = InputFilter::Exception::Unrecognized;
-					return ret;
+			if ((cfg.required & db::InputConfig::Require::Data) != db::InputConfig::Require::None
+					|| (cfg.required & db::InputConfig::Require::FilesAsData) != db::InputConfig::Require::None) {
+				if (ct.starts_with("multipart/form-data; boundary=")) {
+					ret = InputFilter::Accept::Multipart;
+				} else if (ct.starts_with(data::MIME_JSON) || ct.starts_with(data::MIME_CBOR) || ct.starts_with(data::MIME_SERENITY)) {
+					ret = InputFilter::Accept::Json;
+				} else if (ct.starts_with(data::MIME_URLENCODED)) {
+					ret = InputFilter::Accept::Urlencoded;
 				}
-				ret = InputFilter::Accept::Json;
-			} else if (ct.starts_with("application/x-www-form-urlencoded")) {
-				if ((cfg.required & db::InputConfig::Require::Data) == db::InputConfig::Require::None
-						&& (cfg.required & db::InputConfig::Require::Body) == db::InputConfig::Require::None) {
-					req.addError("InputFilter", "No data to process", Value{
-						std::make_pair("content", Value(ct)),
-						std::make_pair("available", Value("data, body")),
-					});
-					e = InputFilter::Exception::Unrecognized;
-					return ret;
+			}
+			if (ret == InputFilter::Accept::None) {
+				if ((cfg.required & db::InputConfig::Require::Files) != db::InputConfig::Require::None
+						|| (cfg.required & db::InputConfig::Require::Body) != db::InputConfig::Require::None) {
+					if (ct.starts_with("multipart/form-data; boundary=")) {
+						ret = InputFilter::Accept::Multipart;
+					} else {
+						ret = InputFilter::Accept::Files;
+					}
 				}
-				ret = InputFilter::Accept::Urlencoded;
-			} else if (ct.starts_with("multipart/form-data; boundary=")) {
-				if ((cfg.required & db::InputConfig::Require::Data) == db::InputConfig::Require::None
-						&& (cfg.required & db::InputConfig::Require::Body) == db::InputConfig::Require::None
-						&& (cfg.required & db::InputConfig::Require::Files) == db::InputConfig::Require::None
-						&& (cfg.required & db::InputConfig::Require::FilesAsData) == db::InputConfig::Require::None) {
-					req.addError("InputFilter", "No data to process", Value{
-						std::make_pair("content", Value(ct)),
-						std::make_pair("available", Value("data, body, files")),
-					});
-					e = InputFilter::Exception::Unrecognized;
-					return ret;
-				}
-				ret = InputFilter::Accept::Multipart;
-			} else {
-				if ((cfg.required & db::InputConfig::Require::Files) == db::InputConfig::Require::None) {
-					req.addError("InputFilter", "No data to process", Value{
-						std::make_pair("content", Value(ct)),
-						std::make_pair("available", Value("files")),
-					});
-					e = InputFilter::Exception::Unrecognized;
-					return ret;
-				}
-				ret = InputFilter::Accept::Files;
 			}
 		} else {
 			e = InputFilter::Exception::Unrecognized;
 		}
+	}
+	if (ret == InputFilter::Accept::None) {
+		return reportError(InputFilter::Exception::Unrecognized, StringView("data, body"));
 	}
 	return ret;
 }
@@ -198,6 +202,21 @@ db::InputFile *InputFilter::getFileFromContext(int64_t id) {
 		}
 	}
 	return nullptr;
+}
+
+SP_COVERAGE_TRIVIAL
+Status InputFilter::getStatusForException(Exception ex) {
+	switch (ex) {
+	case InputFilter::Exception::TooLarge:
+		return HTTP_REQUEST_ENTITY_TOO_LARGE;
+		break;
+	case InputFilter::Exception::Unrecognized:
+		return HTTP_UNSUPPORTED_MEDIA_TYPE;
+		break;
+	default:
+		break;
+	}
+	return HTTP_BAD_REQUEST;
 }
 
 InputFilter::Exception InputFilter::insert(const Request &r) {
@@ -261,9 +280,9 @@ Status InputFilter::init() {
 	return OK;
 }
 
-void InputFilter::step(StringView data) {
+bool InputFilter::step(BytesView data) {
 	if (getConfig().required == db::InputConfig::Require::None || _accept == Accept::None) {
-		return;
+		return false;
 	}
 
 	if (_read + data.size() > _contentLength) {
@@ -285,7 +304,7 @@ void InputFilter::step(StringView data) {
 	}
 
 	if (isBodySavingAllowed()) {
-		_body.write(data.data(), data.size());
+		_body.write((const char *)data.data(), data.size());
 	}
 
 	if (_parser && (
@@ -293,8 +312,11 @@ void InputFilter::step(StringView data) {
 			(_accept == Accept::Multipart && (isFileUploadAllowed() || isDataParsingAllowed()) ) ||
 			(_accept == Accept::Json && isDataParsingAllowed()) ||
 			(_accept == Accept::Files && isFileUploadAllowed()))) {
-		_parser->run(data);
+		if (!_parser->run(data)) {
+			return false;
+		}
 	}
+	return true;
 }
 
 void InputFilter::finalize() {
@@ -375,6 +397,10 @@ const db::InputConfig & InputFilter::getConfig() const {
 
 Request InputFilter::getRequest() const {
 	return _request;
+}
+
+memory::pool_t *InputFilter::getPool() const {
+	return _request.pool();
 }
 
 }

@@ -171,6 +171,11 @@ enum class ResourceType {
 	Search
 };
 
+enum class HostComponentType {
+	Dso,
+	Wasm
+};
+
 // brotli compression configuration
 // based on mod_brotli defaults
 struct CompressionInfo {
@@ -240,6 +245,7 @@ struct CookieStorageInfo {
 };
 
 struct HostComponentInfo {
+	HostComponentType type = HostComponentType::Dso;
 	StringView name;
 	StringView version;
 	StringView file;

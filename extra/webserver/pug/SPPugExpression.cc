@@ -24,7 +24,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
-inline void Lexer_parseBufferString(StringView &r, std::ostream &stream) {
+inline void Lexer_parseBufferString(StringView &r, const Lexer::OutStream &stream) {
 #define Z16 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	static const char escape[256] = {
 		Z16, Z16, 0, 0,'\"', 0, 0, 0, 0, '\'', 0, 0, 0, 0, 0, 0, 0,'/',
@@ -46,7 +46,9 @@ inline void Lexer_parseBufferString(StringView &r, std::ostream &stream) {
 				++ r;
 				if (r.is('u') && r.size() >= 5) {
 					++ r;
-					unicode::utf8Encode(stream, char16_t(base16::hexToChar(r[0], r[1]) << 8 | base16::hexToChar(r[2], r[3]) ));
+					unicode::utf8EncodeCb([&] (char c) {
+						stream << c;
+					}, char16_t(base16::hexToChar(r[0], r[1]) << 8 | base16::hexToChar(r[2], r[3]) ));
 					r += 4;
 				} else {
 					auto tmp = escape[(uint8_t)r[0]];
@@ -117,6 +119,8 @@ Expression::Expression(Op op, Expression *l, Expression *r, const StringView & t
 }
 Expression::Expression(Op op, Expression *l, Expression *r, Value && d) : op(op), left(l), right(r), value(move(d)) { }
 
+Expression::~Expression() { }
+
 void Expression::set(Value && d) {
 	isToken = false;
 	value = std::move(d);
@@ -186,7 +190,7 @@ static Expression::Op Lexer_Expression_readOperator(StringView &r, char brace, c
 	else if (r.is('{')) { return checkOperator(Expression::Construct); }
 	else if (r.is('*')) { ++ r; return checkOperator(Expression::Mult); }
 	else if (r.is('/')) { ++ r; return checkOperator(Expression::Div); }
-	else if (r.is('/')) { ++ r; return checkOperator(Expression::Rem); }
+	else if (r.is('%')) { ++ r; return checkOperator(Expression::Rem); }
 	else if (r.is('+')) { ++ r; return checkOperator(Expression::Sum); }
 	else if (r.is('-')) { ++ r; return checkOperator(Expression::Sub); }
 	else if (r.is('<')) { ++ r; return checkOperator(Expression::Lt); }
@@ -194,8 +198,8 @@ static Expression::Op Lexer_Expression_readOperator(StringView &r, char brace, c
 	else if (r.is('&')) { ++ r; return checkOperator(Expression::BitAnd); }
 	else if (r.is('^')) { ++ r; return checkOperator(Expression::BitXor); }
 	else if (r.is('|')) { ++ r; return checkOperator(Expression::BitOr); }
-	else if (r.is(':') && (brace || !opts.hasFlag(Expression::StopOnRootComma))) { ++ r; return checkOperator(Expression::Colon); }
-	else if (r.is(',') && (brace || !opts.hasFlag(Expression::StopOnRootColon))) { ++ r; return checkOperator(Expression::Comma); }
+	else if (r.is(':') && (brace || !opts.hasFlag(Expression::StopOnRootColon))) { ++ r; return checkOperator(Expression::Colon); }
+	else if (r.is(',') && (brace || !opts.hasFlag(Expression::StopOnRootComma))) { ++ r; return checkOperator(Expression::Comma); }
 	else if (r.is(';') && (brace || !opts.hasFlag(Expression::StopOnRootSequence))) { ++ r; return checkOperator(Expression::Sequence); }
 
 	return Expression::NoOp;
@@ -240,9 +244,11 @@ static Expression *Lexer_Expression_insertOp(Expression **node, Expression::Op o
 static bool Lexer_Expression_readOperandValue(Expression *current, StringView &r, Expression::Op op, const Expression::Options &opts) {
 	bool ret = false;
 	if (r.is('\'') || r.is('"')) {
-		StringStream stream;
-		Lexer_parseBufferString(r, stream);
-		current->set(Value(stream.str()));
+		String stream;
+		Lexer_parseBufferString(r, [&] (StringView str) {
+			stream.append(str.data(), str.size());
+		});
+		current->set(Value(stream));
 		ret = true;
 	} else if (r.is<StringView::CharGroup<CharGroupId::Numbers>>()) { // numeric literal
 		bool isFloat = false;
@@ -497,7 +503,7 @@ static bool Lexer_readExpression(Expression **node, StringView &r, const Express
 	return true;
 }
 
-static void stl_print_expression_op(std::ostream &stream, Expression::Op op) {
+static void stl_print_expression_op(const Lexer::OutStream &stream, Expression::Op op) {
 	switch (op) {
 
 	case Expression::NoOp: stream << "<noop>"; break;
@@ -566,7 +572,7 @@ static void stl_print_expression_op(std::ostream &stream, Expression::Op op) {
 	}
 }
 
-static void stl_print_expression_open_block(std::ostream &stream, Expression::Block b, uint16_t depth) {
+static void stl_print_expression_open_block(const Lexer::OutStream &stream, Expression::Block b, uint16_t depth) {
 	switch (b) {
 	case Expression::None:
 		break;
@@ -585,7 +591,7 @@ static void stl_print_expression_open_block(std::ostream &stream, Expression::Bl
 	}
 }
 
-static void stl_print_expression_close_block(std::ostream &stream, Expression::Block b, uint16_t depth) {
+static void stl_print_expression_close_block(const Lexer::OutStream &stream, Expression::Block b, uint16_t depth) {
 	switch (b) {
 	case Expression::None:
 		break;
@@ -604,7 +610,7 @@ static void stl_print_expression_close_block(std::ostream &stream, Expression::B
 	}
 }
 
-static void stl_print_expression(std::ostream &stream, Expression * t, uint16_t depth) {
+static void stl_print_expression(const Lexer::OutStream &stream, Expression * t, uint16_t depth) {
 	if (!t->left && !t->right) {
 		for (size_t i = 0; i < depth; ++ i) { stream << "  "; }
 		if (t->isToken) {
@@ -665,7 +671,7 @@ static void stl_print_expression(std::ostream &stream, Expression * t, uint16_t 
 	}
 }
 
-void Expression::describe(std::ostream &stream, size_t depth) {
+void Expression::describe(const OutStream &stream, size_t depth) {
 	stl_print_expression(stream, this, depth);
 }
 
@@ -676,7 +682,7 @@ Expression::Options Expression::Options::getDefaultInline() {
 Expression::Options Expression::Options::getDefaultScript() {
 	return Options().enableAllOperators().setFlags({StopOnRootColon, StopOnRootComma, StopOnRootSequence});
 }
-Expression::Options Expression::Options::getWithhNewlineToken(const StringView &token) {
+Expression::Options Expression::Options::getWithNewlineToken(const StringView &token) {
 	return Options().enableAllOperators().setFlags({StopOnRootColon, StopOnRootComma, StopOnRootSequence}).useNewlineToken(token);
 }
 

@@ -75,9 +75,9 @@ protected:
 	Vector<ConnectionWorker *> _workers;
 
 	std::atomic<size_t> _taskCounter;
+	memory::PriorityQueue<AsyncTask *> _inputQueue;
 	std::mutex _inputMutexQueue;
 	std::mutex _inputMutexFree;
-	memory::PriorityQueue<AsyncTask *> _inputQueue;
 	std::thread _thread;
 
 	int _pipe[2] = { -1, -1 };

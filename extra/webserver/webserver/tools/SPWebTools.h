@@ -63,6 +63,7 @@ public:
 /* WebSocket shell interface */
 class ShellSocket : public WebsocketManager {
 public:
+	SP_COVERAGE_TRIVIAL
 	virtual ~ShellSocket() = default;
 
 	ShellSocket(const Host &host) : WebsocketManager(host) { };
@@ -74,6 +75,7 @@ public:
 /* WebSocket shell interface GUI */
 class ShellGui : public RequestHandler {
 public:
+	SP_COVERAGE_TRIVIAL
 	virtual bool isRequestPermitted(Request &) override { return true; }
 	virtual Status onPostReadRequest(Request &) override;
 

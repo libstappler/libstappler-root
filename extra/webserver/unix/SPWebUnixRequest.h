@@ -33,6 +33,7 @@ public:
 	virtual ~UnixRequestController() = default;
 
 	UnixRequestController(pool_t *, RequestInfo &&, ConnectionWorker::Client *);
+	UnixRequestController(pool_t *, RequestInfo &&, UnixWebsocketSim *);
 
 	virtual void startResponseTransmission() override;
 
@@ -71,12 +72,16 @@ public:
 
 	virtual void submitResponse(Status);
 
+	virtual WebsocketConnection *convertToWebsocket(WebsocketHandler *, allocator_t *, pool_t *) override;
+
 protected:
 	Map<StringView, StringView> _requestHeaders;
 	Map<StringView, StringView> _responseHeaders;
 	Map<StringView, StringView> _errorHeaders;
+	Map<StringView, StringView> _inputCookies;
 
-	ConnectionWorker::Client *_client;
+	ConnectionWorker::Client *_client = nullptr;
+	UnixWebsocketSim *_websocket = nullptr;
 };
 
 }

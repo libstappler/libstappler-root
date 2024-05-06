@@ -29,3 +29,4 @@
 #include "SPWebUnixConnectionWorker.cc"
 
 #include "SPWebUnixRequest.cc"
+#include "SPWebUnixWebsocket.cc"

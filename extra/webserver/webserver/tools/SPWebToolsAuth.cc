@@ -27,14 +27,20 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web::tools {
 
+static bool reportAuthHandlerError(Request &rctx, StringView text, Status status, Value && = Value()) {
+	rctx.addError("Auth", text);
+	if (status != DECLINED) {
+		rctx.setStatus(status);
+	}
+	return false;
+}
+
 bool AuthHandler::isRequestPermitted(Request &rctx) {
 	if (_subPath != "/login" && _subPath != "/update" && _subPath != "/cancel" && _subPath != "/setup" && _subPath != "/basic" && _subPath != "/touch") {
-		rctx.setStatus(HTTP_NOT_FOUND);
-		return false;
+		return reportAuthHandlerError(rctx, "Invalid handler action", HTTP_NOT_FOUND);
 	}
 	if (_subPath != "/login" && _subPath != "/setup" && _subPath != "/basic" && rctx.getUser() == nullptr) {
-		Root::getCurrent()->error("Auth", "You are not logged in");
-		return false;
+		return reportAuthHandlerError(rctx, "You are not logged in", HTTP_FORBIDDEN);
 	}
 	_allow = AllowMethod::Get;
 	_transaction = rctx.acquireDbTransaction();
@@ -56,19 +62,14 @@ bool AuthHandler::processDataHandler(Request &rctx, Value &result, Value &input)
 	auto &queryData = rctx.getInfo().queryData;
 
 	if (!_transaction) {
-		Root::getCurrent()->error("ResourceHandler", "Database connection failed");
-		rctx.setStatus(HTTP_INTERNAL_SERVER_ERROR);
-		return false;
+		return reportAuthHandlerError(rctx, "Database connection failed", HTTP_INTERNAL_SERVER_ERROR);
 	}
 
 	if (_subPath == "/login") {
 		auto &name = queryData.getString("name");
 		auto &passwd = queryData.getString("passwd");
 		if (name.empty() || passwd.empty()) {
-			Root::getCurrent()->error("Auth", "Name or password is not specified", Value{
-				std::make_pair("Doc", Value("You should specify 'name' and 'passwd' variables in request"))
-			});
-			return false;
+			return reportAuthHandlerError(rctx, "Name or password is not specified", DECLINED, Value{ pair("Doc", Value("You should specify 'name' and 'passwd' variables in request")) });
 		}
 
 		TimeInterval maxAge = TimeInterval::seconds(queryData.getInteger("maxAge"));
@@ -78,8 +79,7 @@ bool AuthHandler::processDataHandler(Request &rctx, Value &result, Value &input)
 
 		auto user = db::User::get(_transaction, name, passwd);
 		if (!user) {
-			Root::getCurrent()->error("Auth", "Invalid username or password");
-			return false;
+			return reportAuthHandlerError(rctx, "Invalid username or password", DECLINED);
 		}
 
 		auto &opts = getOptions();
@@ -107,9 +107,7 @@ bool AuthHandler::processDataHandler(Request &rctx, Value &result, Value &input)
 			}
 		}
 
-		Root::getCurrent()->error("Auth", "Fail to create session");
-
-		return false;
+		return reportAuthHandlerError(rctx, "Fail to create session", DECLINED);
 	} else if (_subPath == "/touch") {
 		if (auto u = rctx.getAuthorizedUser()) {
 			result.setInteger(u->getObjectId(), "userId");
@@ -156,10 +154,7 @@ bool AuthHandler::processDataHandler(Request &rctx, Value &result, Value &input)
 		auto &passwd = queryData.getString("passwd");
 
 		if (name.empty() || passwd.empty()) {
-			Root::getCurrent()->error("Auth", "Name or password is not specified", Value{
-				std::make_pair("Doc", Value("You should specify 'name' and 'passwd' variables in request"))
-			});
-			return false;
+			return reportAuthHandlerError(rctx, "Fail to create session", DECLINED, Value{ pair("Doc", Value("You should specify 'name' and 'passwd' variables in request")) });
 		}
 
 		auto user = db::User::setup(_transaction, name, passwd);
@@ -170,8 +165,7 @@ bool AuthHandler::processDataHandler(Request &rctx, Value &result, Value &input)
 			}
 			return true;
 		} else {
-			Root::getCurrent()->error("Auth", "Setup failed");
-			return false;
+			return reportAuthHandlerError(rctx, "Setup failed", DECLINED);
 		}
 	}
 	return false;

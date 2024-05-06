@@ -33,7 +33,6 @@ class WebserverHandler;
 
 class WebsocketConnection : public AllocBase {
 public:
-	static WebsocketConnection *create(allocator_t *alloc, pool_t *pool, const Request &);
 	static void destroy(WebsocketConnection *);
 
 	virtual ~WebsocketConnection();

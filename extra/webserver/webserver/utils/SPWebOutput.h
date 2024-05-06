@@ -27,10 +27,10 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web::output {
 
-void formatJsonAsHtml(OutputStream &stream, const Value &, bool actionHandling = false);
+void formatJsonAsHtml(const Callback<void(StringView)> &stream, const Value &, bool actionHandling = false);
 
 void writeData(Request &rctx, const Value &, bool allowJsonP = true);
-void writeData(Request &rctx, std::basic_ostream<char> &stream, const Function<void(const String &)> &ct,
+void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Function<void(const String &)> &ct,
 		const Value &, bool allowJsonP = true);
 
 Status writeResourceFileData(Request &rctx, Value &&);

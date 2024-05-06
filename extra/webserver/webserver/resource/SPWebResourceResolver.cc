@@ -27,9 +27,16 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
+template <typename Result = bool>
+SP_COVERAGE_TRIVIAL
+static auto exitWithResolverError(StringView text, Value &&data = Value()) -> Result {
+	Root::getCurrent()->error("ResourceResolver", text, move(data));
+	return Result(0);
+}
+
 static Vector<StringView> parsePath(StringView path) {
 	Vector<StringView> pathVec;
-	if (!path.empty() && path.front() == ':') {
+	if (!path.empty() && (path.front() == ':' || path.starts_with("/:"))) {
 		path.split<StringView::Chars<':'>>([&] (const StringView &v) {
 			pathVec.emplace_back(v);
 		});
@@ -45,7 +52,7 @@ static Vector<StringView> parsePath(StringView path) {
 
 	if (!pathVec.empty()) {
 		std::reverse(pathVec.begin(), pathVec.end());
-		while (pathVec.back().empty()) {
+		while (pathVec.back().empty() || pathVec.back().equals("/")) {
 			pathVec.pop_back();
 		}
 	}
@@ -55,14 +62,12 @@ static Vector<StringView> parsePath(StringView path) {
 
 static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
 	if (path.size() < 2) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'select' query");
-		return false;
+		return exitWithResolverError("invalid 'select' query");
 	}
 
 	auto field = resv->getScheme()->getField(path.back());
 	if (!field || !field->isIndexed()) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'select' query");
-		return false;
+		return exitWithResolverError("invalid 'select' query");
 	}
 	path.pop_back();
 
@@ -90,14 +95,12 @@ static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path, 
 		} else if (valid::validateNumber(cmpStr) && db::checkIfComparationIsValid(field->getType(), cmp, field->getFlags())) {
 			return resv->selectByQuery(db::Query::Select(field->getName(), cmp, cmpStr.readInteger().get(), 0));
 		} else {
-			Root::getCurrent()->error("ResourceResolver", "invalid 'select' query");
-			return false;
+			return exitWithResolverError("invalid 'select' query");
 		}
 	}
 
 	if (path.size() < valuesRequired || !db::checkIfComparationIsValid(field->getType(), cmp, field->getFlags())) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'select' query");
-		return false;
+		return exitWithResolverError("invalid 'select' query");
 	}
 
 	if (valuesRequired == 1) {
@@ -107,8 +110,7 @@ static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path, 
 		} else if (valid::validateNumber(value)) {
 			return resv->selectByQuery(db::Query::Select(field->getName(), cmp, value.readInteger().get(), 0));
 		} else {
-			Root::getCurrent()->error("ResourceResolver", "invalid 'select' query");
-			return false;
+			return exitWithResolverError("invalid 'select' query");
 		}
 	}
 
@@ -125,14 +127,12 @@ static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path, 
 
 static bool getSearchResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
 	if (path.size() < 1) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'search' query");
-		return false;
+		return exitWithResolverError("invalid 'search' query");
 	}
 
 	auto field = resv->getScheme()->getField(path.back());
 	if (!field || field->getType() != db::Type::FullTextView) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'search' query");
-		return false;
+		return exitWithResolverError("invalid 'search' query");
 	}
 	path.pop_back();
 
@@ -141,14 +141,12 @@ static bool getSearchResource(ResourceResolver *resv, Vector<StringView> &path, 
 
 static bool getOrderResource(ResourceResolver *resv, Vector<StringView> &path) {
 	if (path.size() < 1) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'order' query");
-		return false;
+		return exitWithResolverError("invalid 'order' query");
 	}
 
 	auto field = resv->getScheme()->getField(path.back());
 	if (!field || !field->isIndexed()) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'order' query");
-		return false;
+		return exitWithResolverError("invalid 'order' query");
 	}
 	path.pop_back();
 
@@ -182,8 +180,7 @@ static bool getOrderResource(ResourceResolver *resv, Vector<StringView> &path) {
 static bool getOrderResource(ResourceResolver *resv, Vector<StringView> &path, const StringView &fieldName, db::Ordering ord) {
 	auto field = resv->getScheme()->getField(fieldName);
 	if (!field || !field->isIndexed()) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'order' query");
-		return false;
+		return exitWithResolverError("invalid 'order' query");
 	}
 
 	if (!path.empty()) {
@@ -204,8 +201,7 @@ static bool getOrderResource(ResourceResolver *resv, Vector<StringView> &path, c
 
 static bool getLimitResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
 	if (path.size() < 1) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'limit' query");
-		return false;
+		return exitWithResolverError("invalid 'limit' query");
 	}
 
 	StringView value(path.back()); path.pop_back();
@@ -216,36 +212,31 @@ static bool getLimitResource(ResourceResolver *resv, Vector<StringView> &path, b
 		}
 		return resv->limit(val);
 	} else {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'limit' query");
-		return false;
+		return exitWithResolverError("invalid 'limit' query");
 	}
 }
 
 static bool getOffsetResource(ResourceResolver *resv, Vector<StringView> &path) {
 	if (path.size() < 1) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'offset' query");
-		return false;
+		return exitWithResolverError("invalid 'offset' query");
 	}
 
 	StringView value(std::move(path.back())); path.pop_back();
 	if (valid::validateNumber(value)) {
 		return resv->offset(value.readInteger().get());
 	} else {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'offset' query");
-		return false;
+		return exitWithResolverError("invalid 'offset' query");
 	}
 }
 
 static bool getFirstResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
 	if (path.size() < 1) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'first' query");
-		return false;
+		return exitWithResolverError("invalid 'first' query");
 	}
 
 	auto field = resv->getScheme()->getField(path.back());
 	if (!field || !field->isIndexed()) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'first' query");
-		return false;
+		return exitWithResolverError("invalid 'first' query");
 	}
 	path.pop_back();
 
@@ -267,14 +258,12 @@ static bool getFirstResource(ResourceResolver *resv, Vector<StringView> &path, b
 
 static bool getLastResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
 	if (path.size() < 1) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'last' query");
-		return false;
+		return exitWithResolverError("invalid 'last' query");
 	}
 
 	auto field = resv->getScheme()->getField(path.back());
 	if (!field || !field->isIndexed()) {
-		Root::getCurrent()->error("ResourceResolver", "invalid 'last' query");
-		return false;
+		return exitWithResolverError("invalid 'last' query");
 	}
 	path.pop_back();
 
@@ -362,17 +351,8 @@ static Resource *parseResource(ResourceResolver *resv, Vector<StringView> &path)
 				if (!getLastResource(resv, path, isSingleObject)) {
 					return nullptr;
 				}
-			} else if (filter.size() > 2 && filter.front() == '+') {
-				if (!getOrderResource(resv, path, filter.sub(1), db::Ordering::Ascending)) {
-					return nullptr;
-				}
-			} else if (filter.size() > 2 && filter.front() == '-') {
-				if (!getOrderResource(resv, path, filter.sub(1), db::Ordering::Descending)) {
-					return nullptr;
-				}
 			} else {
-				Root::getCurrent()->error("ResourceResolver", "Invalid query", Value(filter));
-				return nullptr;
+				return exitWithResolverError<Resource *>("Invalid query", Value(filter));
 			}
 		} else {
 			if (filter == "offset" && !path.empty() && valid::validateNumber(path.back())) {
@@ -381,10 +361,10 @@ static Resource *parseResource(ResourceResolver *resv, Vector<StringView> &path)
 					continue;
 				}
 			}
+
 			auto f = resv->getScheme()->getField(filter);
 			if (!f) {
-				Root::getCurrent()->error("ResourceResolver", "No such field", Value(filter));
-				return nullptr;
+				return exitWithResolverError<Resource *>("No such field", Value(filter));
 			}
 
 			auto type = f->getType();
@@ -411,8 +391,7 @@ static Resource *parseResource(ResourceResolver *resv, Vector<StringView> &path)
 					return nullptr;
 				}
 			} else {
-				Root::getCurrent()->error("ResourceResolver", "Invalid query", Value(filter));
-				return nullptr;
+				return exitWithResolverError<Resource *>("Invalid query", Value(filter));
 			}
 		}
 	}
@@ -488,8 +467,7 @@ bool ResourceResolver::selectById(uint64_t oid) {
 			return true;
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'select by id', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'select by id', invalid resource type");
 }
 
 bool ResourceResolver::selectByAlias(const StringView &str) {
@@ -498,8 +476,7 @@ bool ResourceResolver::selectByAlias(const StringView &str) {
 			return true;
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'select by alias', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'select by alias', invalid resource type");
 }
 
 bool ResourceResolver::selectByQuery(db::Query::Select &&q) {
@@ -508,8 +485,7 @@ bool ResourceResolver::selectByQuery(db::Query::Select &&q) {
 			return true;
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'select by query', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'select by query', invalid resource type");
 }
 
 bool ResourceResolver::searchByField(const db::Field *field) {
@@ -518,8 +494,7 @@ bool ResourceResolver::searchByField(const db::Field *field) {
 		_type = Search;
 		return true;
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'search', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'search', invalid resource type");
 }
 
 bool ResourceResolver::order(const StringView &f, db::Ordering o) {
@@ -528,8 +503,7 @@ bool ResourceResolver::order(const StringView &f, db::Ordering o) {
 			return true;
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'order', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'order', invalid resource type");
 }
 
 bool ResourceResolver::first(const StringView &f, size_t v) {
@@ -538,8 +512,7 @@ bool ResourceResolver::first(const StringView &f, size_t v) {
 			return true;
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'first', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'first', invalid resource type");
 }
 
 bool ResourceResolver::last(const StringView &f, size_t v) {
@@ -548,8 +521,7 @@ bool ResourceResolver::last(const StringView &f, size_t v) {
 			return true;
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'last', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'last', invalid resource type");
 }
 
 bool ResourceResolver::limit(size_t limit) {
@@ -558,8 +530,7 @@ bool ResourceResolver::limit(size_t limit) {
 			return true;
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'limit', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'limit', invalid resource type");
 }
 
 bool ResourceResolver::offset(size_t offset) {
@@ -568,8 +539,7 @@ bool ResourceResolver::offset(size_t offset) {
 			return true;
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'offset', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'offset', invalid resource type");
 }
 
 bool ResourceResolver::getObject(const db::Field *f) {
@@ -581,8 +551,7 @@ bool ResourceResolver::getObject(const db::Field *f) {
 			}
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'getObject', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'getObject', invalid resource type");
 }
 
 bool ResourceResolver::getSet(const db::Field *f) {
@@ -594,8 +563,7 @@ bool ResourceResolver::getSet(const db::Field *f) {
 			}
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'getSet', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'getSet', invalid resource type");
 }
 
 bool ResourceResolver::getView(const db::Field *f) {
@@ -607,8 +575,7 @@ bool ResourceResolver::getView(const db::Field *f) {
 			}
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'getView', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'getView', invalid resource type");
 }
 
 bool ResourceResolver::getField(const StringView &str, const db::Field *f) {
@@ -623,8 +590,7 @@ bool ResourceResolver::getField(const StringView &str, const db::Field *f) {
 		_type = File;
 		return true;
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'getField', invalid resource type");
-	return false;
+	return exitWithResolverError("Invalid 'getField', invalid resource type");
 }
 
 bool ResourceResolver::getAll() {
@@ -633,8 +599,7 @@ bool ResourceResolver::getAll() {
 			return true;
 		}
 	}
-	Root::getCurrent()->error("ResourceResolver", "Invalid 'getAll', invalid resource type or already enabled");
-	return false;
+	return exitWithResolverError("Invalid 'getAll', invalid resource type or already enabled");
 }
 
 Resource *ResourceResolver::getResult() {

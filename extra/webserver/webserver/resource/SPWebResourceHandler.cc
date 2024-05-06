@@ -30,6 +30,14 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
+SP_COVERAGE_TRIVIAL
+static void exitWithResourceHandlerError(Request &rctx, StringView text, const Value &source = Value(), Value &&data = Value()) {
+	rctx.setStatus(HTTP_BAD_REQUEST);
+	if (source.isNull()) {
+		Root::getCurrent()->error("ResourceHandler", text, Value(data));
+	}
+}
+
 ResourceHandler::ResourceHandler(const db::Scheme &scheme, const Value &val)
 : _scheme(scheme), _value(val) { }
 
@@ -39,14 +47,19 @@ bool ResourceHandler::isRequestPermitted(Request &rctx) {
 }
 
 Status ResourceHandler::onTranslateName(Request &rctx) {
-	if (!isRequestPermitted(rctx)) {
-		return HTTP_FORBIDDEN;
-	}
+	if (!isRequestPermitted(rctx)) { return HTTP_FORBIDDEN; }
 
 	_method = rctx.getInfo().method;
-	if (_method != RequestMethod::Get && _method != RequestMethod::Post && _method != RequestMethod::Put
-			&& _method != RequestMethod::Delete && _method != RequestMethod::Patch) {
+	switch (_method) {
+	case RequestMethod::Get:
+	case RequestMethod::Post:
+	case RequestMethod::Put:
+	case RequestMethod::Patch:
+	case RequestMethod::Delete:
+		break;
+	default:
 		return HTTP_NOT_IMPLEMENTED;
+		break;
 	}
 
 	auto &data = rctx.getInfo().queryData;
@@ -66,9 +79,7 @@ Status ResourceHandler::onTranslateName(Request &rctx) {
 	}
 
 	_resource = getResource(rctx);
-	if (!_resource) {
-		return HTTP_NOT_FOUND;
-	}
+	if (!_resource) { return HTTP_NOT_FOUND; }
 
 	auto user = rctx.getAuthorizedUser();
 	if (!user && data.isString("token")) {
@@ -78,23 +89,9 @@ Status ResourceHandler::onTranslateName(Request &rctx) {
 	_resource->setUser(user);
 	_resource->setFilterData(_value);
 
-	if (data.hasValue("pageCount")) {
-		_resource->setPageCount(data.getInteger("pageCount"));
-	}
-	if (data.hasValue("pageFrom")) {
-		_resource->setPageFrom(data.getInteger("pageFrom"));
-	}
-
 	auto args = rctx.getInfo().url.query;
 	if (!args.empty() && args.front() == '(') {
 		_resource->applyQuery(data);
-	} else {
-		if (data.hasValue("resolve")) {
-			_resource->setResolveOptions(data.getValue("resolve"));
-		}
-		if (data.hasValue("resolveDepth")) {
-			_resource->setResolveDepth(data.getInteger("resolveDepth"));
-		}
 	}
 
 	switch (_method) {
@@ -112,6 +109,7 @@ Status ResourceHandler::onTranslateName(Request &rctx) {
 		if (mt > 0 && _resource->getType() == ResourceType::Object) {
 			if (auto res = dynamic_cast<ResourceObject *>(_resource)) {
 				if (auto objMtime = res->getObjectMtime()) {
+					rctx.setResponseHeader("Last-Modified", Time::microseconds(objMtime).toHttp<Interface>());
 					if (mt >= uint64_t(objMtime / 1000000)) {
 						return HTTP_NOT_MODIFIED;
 					}
@@ -140,45 +138,37 @@ Status ResourceHandler::onTranslateName(Request &rctx) {
 				}
 			}
 			return HTTP_NO_CONTENT;
-		} else {
-			return getHintedStatus(HTTP_FORBIDDEN);
 		}
 		break;
 	case RequestMethod::Post:
 		_resource->prepare();
 		if (_resource->prepareCreate()) {
 			return DECLINED;
-		} else {
-			return getHintedStatus(HTTP_FORBIDDEN);
 		}
 		break;
 	case RequestMethod::Put:
 		_resource->prepare();
 		if (_resource->prepareUpdate()) {
 			return DECLINED;
-		} else {
-			return getHintedStatus(HTTP_FORBIDDEN);
 		}
 		break;
 	case RequestMethod::Patch:
 		_resource->prepare();
 		if (_resource->prepareAppend()) {
 			return DECLINED;
-		} else {
-			return getHintedStatus(HTTP_FORBIDDEN);
 		}
 		break;
 	default:
 		break;
 	}
 
-	return HTTP_NOT_IMPLEMENTED;
+	return getHintedStatus(HTTP_FORBIDDEN);
 }
 
 void ResourceHandler::onInsertFilter(Request &rctx) {
 	if (_method == RequestMethod::Post || _method == RequestMethod::Put || _method == RequestMethod::Patch) {
 		rctx.setInputConfig(db::InputConfig{
-			db::InputConfig::Require::Data | db::InputConfig::Require::Files,
+			_resource->getInputFlags(),
 			_resource->getMaxRequestSize(),
 			_resource->getMaxVarSize(),
 			_resource->getMaxFileSize()
@@ -186,17 +176,10 @@ void ResourceHandler::onInsertFilter(Request &rctx) {
 
 		auto ex = InputFilter::insert(rctx);
 		if (ex != InputFilter::Exception::None) {
-			if (ex == InputFilter::Exception::TooLarge) {
-				rctx.setStatus(HTTP_REQUEST_ENTITY_TOO_LARGE);
-			} else if (ex == InputFilter::Exception::Unrecognized) {
-				rctx.setStatus(HTTP_UNSUPPORTED_MEDIA_TYPE);
-			} else {
-				rctx.setStatus(HTTP_BAD_REQUEST);
-			}
+			rctx.setStatus(InputFilter::getStatusForException(ex));
 		}
 	} else if (_method != RequestMethod::Get && _method != RequestMethod::Delete) {
-		rctx.setStatus(HTTP_BAD_REQUEST);
-		Root::getCurrent()->error("Resource", "Input data can not be recieved, no available filters");
+		exitWithResourceHandlerError(rctx, "Input data can not be recieved, no available filters");
 	}
 }
 
@@ -223,10 +206,7 @@ void ResourceHandler::onFilterComplete(InputFilter *filter) {
 				rctx.setStatus(HTTP_OK);
 			}
 		} else {
-			rctx.setStatus(HTTP_BAD_REQUEST);
-			if (result.isNull()) {
-				Root::getCurrent()->error("Resource", "Fail to perform update", Value(filter->getData()));
-			}
+			exitWithResourceHandlerError(rctx, "Fail to perform update", result, Value(filter->getData()));
 		}
 	} else if (_method == RequestMethod::Post) {
 		auto &d = filter->getData();
@@ -241,10 +221,7 @@ void ResourceHandler::onFilterComplete(InputFilter *filter) {
 				rctx.setStatus(HTTP_CREATED);
 			}
 		} else {
-			rctx.setStatus(HTTP_BAD_REQUEST);
-			if (result.isNull()) {
-				Root::getCurrent()->error("Resource", "Fail to perform create", Value(move(tmp)));
-			}
+			exitWithResourceHandlerError(rctx, "Fail to perform create", result, Value(move(tmp)));
 		}
 	} else if (_method == RequestMethod::Patch) {
 		auto result = _resource->appendObject(filter->getData());
@@ -257,10 +234,7 @@ void ResourceHandler::onFilterComplete(InputFilter *filter) {
 				rctx.setStatus(HTTP_OK);
 			}
 		} else {
-			rctx.setStatus(HTTP_BAD_REQUEST);
-			if (result.isNull()) {
-				Root::getCurrent()->error("Resource", "Fail to perform append", Value(filter->getData()));
-			}
+			exitWithResourceHandlerError(rctx, "Fail to perform append", result, Value(filter->getData()));
 		}
 	}
 }
@@ -303,7 +277,7 @@ Status ResourceHandler::writeInfoToReqest(Request &rctx) {
 		return output::writeResourceFileHeader(rctx, result);
 	}
 
-	return OK;
+	return getHintedStatus(HTTP_NO_CONTENT);
 }
 
 Status ResourceHandler::writeToRequest(Request &rctx) {
