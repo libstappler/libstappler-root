@@ -26,6 +26,7 @@
 #if MODULE_STAPPLER_DB
 
 #include "SPData.h"
+#include "SPValid.h"
 #include "SPSqlDriver.h"
 #include "SPDbScheme.h"
 #include "SPDbFieldExtensions.h"
@@ -53,6 +54,9 @@ public:
 	bool runRelationTest(Server &server);
 	bool runVirtualTest(const db::Transaction &t);
 
+	void fillData(const db::Transaction &t);
+	void requestData(const db::Transaction &t);
+
 protected:
 	memory::pool_t *_pool = nullptr;
 	db::Scheme _users = db::Scheme("__users");
@@ -72,6 +76,8 @@ protected:
 
 	db::Scheme _updateTestScheme = db::Scheme("update_test_scheme");
 	db::Scheme _virtualTest = db::Scheme("virtual_test");
+	db::Scheme _test = db::Scheme("test");
+	search::Configuration _search = search::Configuration(search::Language::Simple);
 };
 
 class Server : public db::ApplicationInterface, public AllocBase {
@@ -96,6 +102,7 @@ public:
 protected:
 	memory::pool_t *_staticPool = nullptr;
 	memory::pool_t *_contextPool = nullptr;
+	memory::pool_t *_updatePool = nullptr;
 	Rc<ServerScheme> _scheme;
 
 	db::String _documentRoot;
@@ -353,6 +360,71 @@ ServerScheme::ServerScheme(memory::pool_t *p, uint32_t version) : _pool(p) {
 			return true;
 		}), Vector<String>({"name"}))
 	});
+
+	_test.define({
+		Field::Text("key", Transform::Alias),
+		Field::Integer("index", Flags::Indexed, Flags::Unique),
+		Field::Float("value", Flags::Indexed),
+		Field::Boolean("flag", Flags::Indexed),
+		Field::Integer("time", Flags::Indexed | Flags::AutoMTime),
+		Field::Bytes("secret"),
+		Field::Data("data"),
+		Field::Custom(new FieldBigIntArray("clusters")),
+		Field::Custom(new FieldIntArray("refs")),
+		Field::Custom(new FieldTextArray("text")),
+		Field::Custom(new FieldPoint("coords")),
+
+		Field::Extra("tsvData", Vector<Field>{
+			Field::Text("text", MaxLength(1_KiB)),
+			Field::Text("html", MaxLength(1_KiB)),
+			Field::Data("words"),
+		}, AutoFieldDef{
+			Vector<AutoFieldScheme>({
+				AutoFieldScheme{ _test, {"text", "key"} }
+			}),
+			DefaultFn([this] (const Value &data) -> Value {
+				StringStream html;
+				StringStream text;
+				text << data.getString("key") << " ";
+				html << "<html><body><h1>" <<  data.getString("key") << "</h1>";
+				for (auto &it : data.getArray("text")) {
+					text << it.getString() << " ";
+					html << "<p>" <<  it.getString() << "</p>";
+				}
+				html << "</body></html>";
+
+				auto textdata = StringView(text.weak());
+				textdata.trimChars<StringView::WhiteSpace>();
+
+				Value ret;
+				ret.setString(textdata, "text");
+				ret.setString(html.str(), "html");
+				auto &words = ret.emplace("words");
+
+				textdata.split<StringView::WhiteSpace>([&] (StringView word) {
+					words.addString(word);
+				});
+
+				return ret;
+			}),
+			Vector<String>({"text", "key"}),
+		}),
+
+		Field::FullTextView("tsv", db::FullTextViewFn([this] (const db::Scheme &scheme, const db::Value &obj) -> db::FullTextVector {
+			size_t count = 0;
+			db::FullTextVector vec;
+
+			count = _search.makeSearchVector(vec, obj.getString("key"), db::FullTextRank::A, count);
+			for (auto &it : obj.getArray("text")) {
+				count = _search.makeSearchVector(vec, it.getString(), db::FullTextRank::B, count);
+			}
+
+			return vec;
+		}), /* db::FullTextQueryFn([this] (const db::Value &data) -> db::FullTextQuery {
+			return _search.parseQuery(data.getString());
+		}), */ _search, Vector<String>({"key", "text"})),
+	});
+
 }
 
 void ServerScheme::fillSchemes(db::Map<StringView, const db::Scheme *> &schemes) {
@@ -373,6 +445,7 @@ void ServerScheme::fillSchemes(db::Map<StringView, const db::Scheme *> &schemes)
 
 	schemes.emplace(_updateTestScheme.getName(), &_updateTestScheme);
 	schemes.emplace(_virtualTest.getName(), &_virtualTest);
+	schemes.emplace(_test.getName(), &_test);
 }
 
 bool ServerScheme::runAccessTest(const db::Transaction &t, db::AccessRoleId role) {
@@ -582,6 +655,44 @@ bool ServerScheme::runVirtualTest(const db::Transaction &t) {
 	return true;
 }
 
+void ServerScheme::fillData(const db::Transaction &t) {
+	for (size_t i = 0; i < 30; ++ i) {
+		Value data {
+			pair("key", Value(toString("key", i))),
+			pair("index", Value(10 + i)),
+			pair("value", Value(1.5 + i)),
+			pair("flag", Value(i < 15)),
+			pair("secret", Value(valid::makeRandomBytes<mem_pool::Interface>(12))),
+			pair("clusters", Value{
+				Value(i * 1000 + 100), Value(-i * 1000 - 200)
+			}),
+			pair("refs", Value{
+				Value(i * 100000 + 1000), Value(-i * 100000 - 2000)
+			}),
+			pair("text", Value{
+				Value(toString("key", i)),
+				Value(toString("value", i)),
+				Value(toString("word", i, " ", "sub", i))
+			}),
+			pair("coords", Value{
+				Value(0.5 + i), Value(toString(-0.5 - i))
+			}),
+			pair("data", Value{
+				pair("key", Value(toString("key", i))),
+				pair("index", Value(10 + i)),
+				pair("value", Value(1.5 + i)),
+			})
+		};
+
+		_test.create(t,  data);
+	}
+}
+
+void ServerScheme::requestData(const db::Transaction &t) {
+	_test.select(t, db::Query().select("tsv", _search.parseQuery("value12")));
+	_test.select(t, db::Query().select("tsv", _search.parseQuery("!value12")));
+}
+
 Server::~Server() {
 	_scheme = nullptr;
 	//db::setStorageRoot(nullptr);
@@ -596,6 +707,7 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 	memory::pool::initialize();
 	_staticPool = memory::pool::create();
 	_contextPool = memory::pool::create();
+	_updatePool = memory::pool::create();
 
 	db::Map<StringView, StringView> initParams;
 
@@ -672,10 +784,12 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 }
 
 void Server::scheduleAyncDbTask(const db::Callback<db::Function<void(const db::Transaction &)>(db::pool_t *)> &setupCb) const {
+	memory::pool::push(_updatePool);
 	if (!asyncTasks) {
-		asyncTasks = new (_contextPool) db::Vector<db::Function<void(const db::Transaction &)>>;
+		asyncTasks = new (_updatePool) db::Vector<db::Function<void(const db::Transaction &)>>;
 	}
-	asyncTasks->emplace_back(setupCb(_contextPool));
+	asyncTasks->emplace_back(setupCb(_updatePool));
+	memory::pool::pop();
 }
 
 StringView Server::getDocumentRoot() const {
@@ -717,8 +831,8 @@ void Server::update() {
 				});
 			});
 		}
-	}, _contextPool);
-	memory::pool::clear(_contextPool);
+	}, _updatePool);
+	memory::pool::clear(_updatePool);
 }
 
 void Server::perform(const Callback<bool(const db::Transaction &)> &cb) {
@@ -820,6 +934,21 @@ struct PqTest : MemPoolTest {
 
 		size_t count = 0;
 		size_t passed = 0;
+
+		runTest(stream, "FillTest", count, passed, [&] () -> bool {
+			server.perform([&] (const db::Transaction &t) {
+				t.setRole(db::AccessRoleId::System);
+				test->fillData(t);
+				return true;
+			});
+			server.update();
+			server.perform([&] (const db::Transaction &t) {
+				t.setRole(db::AccessRoleId::System);
+				test->requestData(t);
+				return true;
+			});
+			return true;
+		});
 
 		runTest(stream, "AccessTest", count, passed, [&] () -> bool {
 			auto ret = true;

@@ -47,6 +47,11 @@ struct ValidTest : MemPoolTest {
 
 		uint32_t failed = 0;
 
+		valid::readIp("123.45.67.89");
+		valid::readIp("123.45.89");
+		valid::readIp("123.45.89.12.34");
+		valid::readIp("123.345.89.12");
+
 		data::ValueTemplate<memory::PoolInterface> emails;
 		if (valid::readIpRange("123.45.67.89-98.76.54.32") == pair(makeIp(123,45,67,89), makeIp(98,76,54,32))) {
 			stream << "123.45.67.89-98.76.54.32 : [valid]\n";
@@ -104,8 +109,9 @@ struct ValidTest : MemPoolTest {
 		urls.addString("йакреведко.рф");
 
 		for (auto &it : urls.asArray()) {
+			std::string str2(StringView(it.getString()).str<mem_std::Interface>());
 			memory::string str(it.getString());
-			if (!valid::validateUrl(str)) {
+			if (!valid::validateUrl(str) || !valid::validateUrl(str2)) {
 				stream << "Url: [invalid] " << str << "\n";
 				++ failed;
 			} else {
@@ -135,7 +141,7 @@ struct ValidTest : MemPoolTest {
 
 		for (auto &it : emails.asArray()) {
 			memory::string str(it.getString());
-			if (!valid::validateEmail(str)) {
+			if (!valid::validateEmail(str) || !valid::validateEmailWithoutNormalization(str)) {
 				stream << "Email: [invalid] " << str << "\n";
 				++ failed;
 			} else {

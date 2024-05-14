@@ -27,13 +27,19 @@
 #include "MaterialSceneContent.h"
 #include "XL2dSprite.h"
 #include "XL2dLayer.h"
+#include "XLAssetLibrary.h"
+#include "XLSubscriptionListener.h"
+#include "XLEventHeader.h"
 
 #include "TestLayout.h"
+#include "TestStorage.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 class TestAppScene : public material2d::Scene {
 public:
+	static EventHeader onCustomEvent;
+
 	virtual ~TestAppScene();
 
 	virtual bool init(Application *, const core::FrameContraints &constraints);
@@ -52,7 +58,12 @@ public:
 protected:
 	void runNext(LayoutName name);
 
+	void handleAssetUpdate(SubscriptionFlags);
+
 	using Scene::init;
+
+	Rc<StorageTestComponentContainer> _container;
+	DataListener<storage::Asset> *_assetListener = nullptr;
 };
 
 }

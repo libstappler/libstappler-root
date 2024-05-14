@@ -29,18 +29,25 @@
 #include "TestGeneralUpdate.h"
 
 #include "XLVkAttachment.h"
+#include "XLActionManager.h"
 #include "XLDirector.h"
 #include "XL2dSprite.h"
 #include "XLApplication.h"
+#include "XLEventListener.h"
 
 #include "XLVkAttachment.h"
 #include "XL2dSceneContent.h"
 
 #include "backend/vk/XL2dVkShadowPass.h"
 
+#include "TestStorage.cc"
+
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
-static auto INIT_LAYOUT = LayoutName::MaterialMenuTest;
+static auto INIT_LAYOUT = LayoutName::Empty;
+static float INIT_TIME = 0.6f;
+
+XL_DECLARE_EVENT_CLASS(TestAppScene, onCustomEvent)
 
 TestAppScene::~TestAppScene() { }
 
@@ -65,7 +72,34 @@ bool TestAppScene::init(Application *app, const core::FrameContraints &constrain
 		return false;
 	}
 
+	_assetListener = addComponent(Rc<DataListener<storage::Asset>>::create([this] (SubscriptionFlags flags) {
+		handleAssetUpdate(flags);
+	}));
+
+	_container = Rc<StorageTestComponentContainer>::create();
+
 	auto content = Rc<material2d::SceneContent>::create();
+
+	auto el = content->addComponent(Rc<EventListener>::create());
+	el->onEvent(View::onBackground, [el] (const Event &ev) {
+		auto fn = [] (int id) {
+
+		};
+
+		EventHeader header(onCustomEvent);
+		EventHeader header2(move(header));
+		EventHeader header3(onCustomEvent);
+		header3 = move(header2);
+		header3 = onCustomEvent;
+		fn(onCustomEvent);
+
+		if (ev == View::onBackground && View::onBackground == ev) {
+			ev.getCategory();
+			ev.is(View::onBackground);
+			log::debug("TestAppScene", "onBackground");
+		}
+		el->clear();
+	}, true);
 
 	setContent(content);
 
@@ -75,6 +109,31 @@ bool TestAppScene::init(Application *app, const core::FrameContraints &constrain
 
 	content->pushLayout(makeLayoutNode(INIT_LAYOUT));
 
+	auto l = content->runAction(Rc<DelayTime>::create(0.5f), 1);
+	content->stopAction(l);
+	content->runAction(Rc<DelayTime>::create(0.5f), 1);
+	content->getActionByTag(1);
+	content->stopActionByTag(1);
+	content->runAction(Rc<DelayTime>::create(0.5f), 1);
+	content->stopAllActionsByTag(1);
+	content->runAction(Rc<DelayTime>::create(0.5f), 1);
+	content->getNumberOfRunningActions();
+	content->stopAllActions();
+	content->setNodeToParentTransform(Mat4::IDENTITY);
+
+	auto data = material2d::SnackbarData("Test text", Color::Red_500, 0.5f)
+					.withButton("BUTTON", [] () { }, Color::Blue_500, 0.5f)
+					.withButton(IconName::Action_accessibility_solid, [] () { }, Color::Blue_500, 0.5f)
+					.withButton("BUTTON", IconName::Action_accessibility_solid, [] () { }, Color::Blue_500, 0.5f)
+					.delayFor(1.0f);
+	content->showSnackbar(move(data));
+
+	if (!isClipContent()) {
+		setClipContent(true);
+	}
+	if (isClipContent()) {
+		setClipContent(false);
+	}
 	return true;
 }
 
@@ -138,9 +197,44 @@ void TestAppScene::update(const UpdateTime &time) {
 void TestAppScene::onEnter(xenolith::Scene *scene) {
 	Scene2d::onEnter(scene);
 
-	runAction(Rc<Sequence>::create(0.6f, [this] {
+	runAction(Rc<Sequence>::create(INIT_TIME, [this] {
 		runNext(INIT_LAYOUT);
 	}));
+
+	_content->setHandlesViewDecoration(false);
+	_content->setHandlesViewDecoration(true);
+	_content->hideViewDecoration();
+	_content->showViewDecoration();
+	_content->hideViewDecoration();
+	_content->setHandlesViewDecoration(false);
+	if (!_content->isHandlesViewDecoration()) {
+		_content->setHandlesViewDecoration(true);
+	}
+
+	auto serv = _director->getApplication()->getExtension<storage::Server>();
+
+	serv->addComponentContainer(_container);
+
+	_container->getAll([this] (Value &&val) { }, this);
+
+	auto lib = _director->getApplication()->getExtension<storage::AssetLibrary>();
+	lib->acquireAsset("https://finuch.ru/api/v1/pages/id8261/images/id8262/content", [this] (const Rc<storage::Asset> &asset) {
+		if (_running) {
+			_assetListener->setSubscription(asset);
+			asset->download();
+		}
+	}, TimeInterval::seconds(60 * 60), this);
+
+	onCustomEvent.getCategory();
+	onCustomEvent.getName();
+	onCustomEvent.isInCategory(EventHeader::getCategoryForName("TestAppScene"));
+
+	onCustomEvent(this, 0.5f);
+	onCustomEvent(this, scene);
+	onCustomEvent(this, "AppScene::onEnter");
+	onCustomEvent(this, String("AppScene::onEnter"));
+	onCustomEvent(this, StringView("AppScene::onEnter"));
+	onCustomEvent(this, Value("AppScene::onEnter"));
 }
 
 void TestAppScene::onExit() {
@@ -159,6 +253,7 @@ void TestAppScene::runLayout(LayoutName l, Rc<basic2d::SceneLayout2d> &&node) {
 
 void TestAppScene::runNext(LayoutName name) {
 	if (toInt(name) == 0) {
+		_actionManager->removeAllActions();
 		if (auto v = _director->getView()) {
 			v->close();
 		}
@@ -166,11 +261,15 @@ void TestAppScene::runNext(LayoutName name) {
 		auto next = LayoutName(toInt(name) - 1);
 		if (auto l = makeLayoutNode(next)) {
 			static_cast<basic2d::SceneContent2d *>(_content)->pushLayout(move(l));
-			runAction(Rc<Sequence>::create(0.5f, [this, next] {
+			runAction(Rc<Sequence>::create(INIT_TIME, [this, next] {
 				runNext(next);
 			}));
 		}
 	}
+}
+
+void TestAppScene::handleAssetUpdate(SubscriptionFlags) {
+
 }
 
 }

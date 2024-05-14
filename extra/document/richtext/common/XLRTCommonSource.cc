@@ -221,14 +221,14 @@ void CommonSource::onDocumentLoaded(Document *doc) {
 	}
 }
 
-void CommonSource::acquireNetworkAsset(const StringView &url, const Function<void(SourceAsset *)> &fn) {
+void CommonSource::acquireNetworkAsset(Document *doc, const StringView &url, const Function<void(SourceAsset *)> &fn) {
 	StringView urlView(url);
 	_assetLibrary->acquireAsset(url, [this, fn] (const Rc<Asset> &a) {
 		fn(Rc<SourceNetworkAsset>::create(a));
 	}, config::getDocumentAssetTtl(), this);
 }
 
-Rc<SourceAsset> CommonSource::acquireLocalAsset(const StringView &url) {
+Rc<SourceAsset> CommonSource::acquireLocalAsset(Document *doc, const StringView &url) {
 	if (filepath::isAbsolute(url)) {
 		if (filesystem::exists(url)) {
 			return Rc<SourceFileAsset>::create(url);
@@ -271,7 +271,7 @@ bool CommonSource::onDocumentAssets(Document *doc, const Set<String> &assets) {
 				auto a_it = _networkAssets.emplace(it, NetworkAssetData{it}).first;
 				NetworkAssetData * data = &a_it->second;
 				addAssetRequest(data);
-				acquireNetworkAsset(it, [this, data] (SourceAsset *a) {
+				acquireNetworkAsset(doc, it, [this, data] (SourceAsset *a) {
 					if (a) {
 						data->asset = a;
 						if (data->asset->isReadAvailable()) {
@@ -292,7 +292,7 @@ bool CommonSource::onDocumentAssets(Document *doc, const Set<String> &assets) {
 
 			auto n_it = _localAssets.find(it);
 			if (n_it == _localAssets.end()) {
-				if (auto asset = acquireLocalAsset(it)) {
+				if (auto asset = acquireLocalAsset(doc, it)) {
 					auto a_it = _localAssets.emplace(it, LocalAssetData{it}).first;
 					LocalAssetData * data = &a_it->second;
 					data->asset = asset;

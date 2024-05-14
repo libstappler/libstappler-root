@@ -57,6 +57,8 @@ protected:
 
 	Rc<basic2d::VectorSprite> _pathSprite;
 	Rc<basic2d::VectorSprite> _overlay;
+
+	bool _vertexesVisible = true;
 };
 
 class CommonView : public basic2d::ScrollView {

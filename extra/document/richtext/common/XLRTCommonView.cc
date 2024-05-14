@@ -128,20 +128,42 @@ bool CommonObject::initAsLabel(document::Label *label) {
 }
 
 bool CommonObject::initAsBackground(document::Background *bg) {
+	auto tryLoadFromDocument = [&] {
+		auto img = _result->document->getImage(bg->background.backgroundImage);
+		if (img && img->ct == "image/svg") {
+			_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(img->data));
+			_pathSprite->setAutofit(Sprite::Autofit::Contain);
+			_vertexesVisible = false;
+			return true;
+		}
+		return false;
+	};
+
 	if (!bg->background.backgroundImage.empty()) {
 		if (_result->resource) {
-			if (auto tex = _result->resource->resource->acquireTexture(bg->background.backgroundImage)) {
-				setTexture(move(tex));
-				setSamplerIndex(1);
+			if (_result->resource->textures.find(bg->background.backgroundImage) != _result->resource->textures.end()) {
+				if (auto tex = _result->resource->resource->acquireTexture(bg->background.backgroundImage)) {
+					setTexture(move(tex));
+					setSamplerIndex(1);
+				}
 			} else {
+				auto it = _result->resource->svgs.find(bg->background.backgroundImage);
+				if (it != _result->resource->svgs.end()) {
+					_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(StringView(it->second)));
+					_pathSprite->setAutofit(Sprite::Autofit::Contain);
+					_vertexesVisible = false;
+				} else if (!tryLoadFromDocument()) {
+					// replace with filler
+					_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(StringView(ImageFillerData)));
+					_pathSprite->setAutofit(Sprite::Autofit::Contain);
+				}
+			}
+		} else {
+			if (!tryLoadFromDocument()) {
 				// replace with filler
 				_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(StringView(ImageFillerData)));
 				_pathSprite->setAutofit(Sprite::Autofit::Contain);
 			}
-		} else {
-			// replace with filler
-			_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(StringView(ImageFillerData)));
-			_pathSprite->setAutofit(Sprite::Autofit::Contain);
 		}
 	} else {
 		setColor(Color4F(bg->background.backgroundColor), true);
@@ -189,7 +211,9 @@ void CommonObject::updateVertexes() {
 		updateLabel((document::Label *)_object);
 		break;
 	case document::Object::Type::Background:
-		Sprite::updateVertexes();
+		if (_vertexesVisible) {
+			Sprite::updateVertexes();
+		}
 		break;
 	case document::Object::Type::Path:
 		break;

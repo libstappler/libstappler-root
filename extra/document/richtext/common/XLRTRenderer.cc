@@ -300,12 +300,13 @@ void Renderer::onSource() {
 	}
 }
 
-Rc<core::Resource> Renderer::prepareResource(StringView name, Time ctime, const Map<String, DocumentAssetMeta> &assets) {
+Rc<core::Resource> Renderer::prepareResource(RendererResource *res, StringView name, Time ctime, const Map<String, DocumentAssetMeta> &assets) {
 	core::Resource::Builder builder(toString(name, ctime.toMicros()));
 
 	bool empty = true;
 	for (const Pair<const String, DocumentAssetMeta> &it : assets) {
-		if (it.second.isImage()) {
+		if (it.second.isImage() && it.second.type != "image/svg") {
+			res->textures.emplace(it.first);
 			builder.addImage(it.first, core::ImageInfo(
 					core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, Extent2(it.second.imageWidth, it.second.imageHeight)),
 					[lock = it.second.lock] (uint8_t *data, uint64_t size, const core::ImageData::DataCallback &cb) {
@@ -314,6 +315,10 @@ Rc<core::Resource> Renderer::prepareResource(StringView name, Time ctime, const 
 				});
 			});
 			empty = false;
+		} else if (it.second.type == "image/svg") {
+			it.second.lock->load([&] (BytesView d) {
+				res->svgs.emplace(it.first, d.toStringView().str<Interface>());
+			});
 		}
 	}
 
@@ -360,11 +365,14 @@ bool Renderer::requestRendering() {
 			// reuse resource if possible
 			req->resource = _result->resource;
 		} else {
-			if (auto resource = prepareResource(document->getName(), req->ctime, req->assets)) {
-				auto res = Rc<RendererResource>::alloc();
+			auto res = Rc<RendererResource>::alloc();
+			if (auto resource = prepareResource(res, document->getName(), req->ctime, req->assets)) {
 				res->cache = _owner->getDirector()->getResourceCache();
-				res->resource = res->cache->addTemporaryResource(move(resource), TimeInterval::seconds(720), TemporaryResourceFlags::CompileWhenAdded);
 
+				res->resource = res->cache->addTemporaryResource(move(resource), TimeInterval::seconds(720), TemporaryResourceFlags::CompileWhenAdded);
+			}
+
+			if (res->resource || !res->svgs.empty()) {
 				req->resource = res;
 			}
 		}

@@ -51,6 +51,10 @@ struct XenolithGuiTest : Test {
 		auto mempool = memory::pool::create();
 		memory::pool::push(mempool);
 
+		auto caches = filesystem::cachesPath<Interface>();
+		filesystem::remove(caches, true, true);
+		filesystem::mkdir(caches);
+
 		xenolith::ViewCommandLineData data;
 
 		auto app = Rc<TestAppDelegate>::create(move(data));

@@ -25,6 +25,7 @@
 
 #include "TestLayout.h"
 #include "XLTemporaryResource.h"
+#include "XLSubscriptionListener.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
@@ -48,7 +49,13 @@ protected:
 	Layer *_background = nullptr;
 	Sprite *_sprite = nullptr;
 	Sprite *_sprite2 = nullptr;
+	Sprite *_sprite3 = nullptr;
+	Layer *_spriteLayer = nullptr;
+	Layer *_spriteLayer2 = nullptr;
 	Rc<TemporaryResource> _resource;
+	Component *_component = nullptr;
+	InputListener *_listener = nullptr;
+	SubscriptionListener *_sub = nullptr;
 };
 
 }

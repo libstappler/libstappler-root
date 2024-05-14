@@ -1,6 +1,6 @@
 /**
 Copyright (c) 2022 Roman Katuntsev <sbkarr@stappler.org>
-Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+Copyright (c) 2023-2024 Stappler LLC <admin@stappler.dev>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,7 @@ THE SOFTWARE.
 #if MODULE_STAPPLER_CRYPTO
 
 #include "SPCrypto.h"
+#include "SPCryptoAsn1.h"
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
@@ -247,16 +248,74 @@ Hnk1VdlqrfqjyV13si/4BEYpYmC75paNA5opHYg=
 -----END PUBLIC KEY-----
 )GostKey");
 
+static constexpr StringView s_TestCert(
+R"(MIIFWjCCA0KgAwIBAgISEdK7udcjGJ5AXwqdLdDfJWfRMA0GCSqGSIb3DQEBDAUA
+MEYxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMRwwGgYD
+VQQDExNHbG9iYWxTaWduIFJvb3QgUjQ2MB4XDTE5MDMyMDAwMDAwMFoXDTQ2MDMy
+MDAwMDAwMFowRjELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
+c2ExHDAaBgNVBAMTE0dsb2JhbFNpZ24gUm9vdCBSNDYwggIiMA0GCSqGSIb3DQEB
+AQUAA4ICDwAwggIKAoICAQCsrHQy6LNl5brtQyYdpokNRbopiLKkHWPd08EsCVeJ
+OaFV6Wc0dwxu5FUdUiXSE2te4R2pt32JMl8Nnp8semNgQB+msLZ4j5lUlghYruQG
+vGIFAha/r6gjA7aUD7xubMLL1aa7DOn2wQL7Id5m3RerdELv8HQvJfTqa1VbkNud
+316HCkD7rRlr+/fKYIje2sGP1q7Vf9Q8g+7XFkyDRTNrJ9CG0Bwta/OrffGFqfUo
+0q3v84RLHIf8E6M6cqJaESvWJ3En7YEtbWaBkoe0G1h6zD8K+kZPTXhc+CtI4wSE
+y132tGqzZfxCnlEmIyDLPRT5ge1lFgBPGmSXZgjPjHvjK8Cd+RTyG/FWaha/LIWF
+zXg4mutCagI0GIMXTpRW+LaCtfOW3T3zvn8gdz57GSNrLNRyc0NXfeD412lPFzYE
++cCQYDdF3uYM2HSNrpyibXRdQr4G9dlkbgIQrImwTDsHTUB+JMWKmIJ5jqSngiCN
+I/onccnfxkF0oE32kRbcRoxfKWMxWXEM2G/CtjJ9++ZdU6Z+Ffy7dXxd7Pj2Fxzs
+x2sZy/N78CsHpdlseVR2bJ0cpm4O6XkMqCNqo98bMDGfsVR7/mrLZqrcZdCinkqa
+ByFrgY/bxFn63iLABJzjqls2k+g9vXqhnQt2sQvHnf3PmKgGwvgqo6GDoLclcqUC
+4wIDAQABo0IwQDAOBgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNV
+HQ4EFgQUA1yrc4GHqMywptWU4jaWSf8FmSwwDQYJKoZIhvcNAQEMBQADggIBAHx4
+7PYCLLtbfpIrXTncvtgdokIzTfnvpCo7RGkerNlFo048p9gkUbJUHJNOxO97k4Vg
+JuoJSOD1u8fpaNK7ajFxzHmuEajwmf3lH7wvqMxX63bEIaZHU1VNaL8FpO7XJqti
+2kM3S+LGteWygxk6x9PbTZ4IevPuzz5i+6zoYMzRx6Fcg0XERczzF2sUyQQCPtIk
+pnnpHs6i58FZFZ8d4kuaPp92CC1r2LpXFNqD6v6MVenQTqnMdzGxRBF6XLE+0xRF
+FRhiJBPSy03OXIPBNvIQtQ6IbbjhVp+J3pZmOUdkLG5NrmJ7v2B0GbhWrJKsFjLt
+rWhV/pi60zTe9Mlhww6G9kuEYO4Ne7UyWHmRVSyBQ7N0H3qqJZ4d16GLuc1CLgSk
+ZoNNiTW2bKg2SnkheCLQQrzRQDGQob4Ez8pn7fXwgNNgyYMqIgXQBztSvwyeqiv5
+u+YfjyW6hY0XHgL+XVAEV8/+LbzvXMAaq7afJMbfc2hIkCwU9D9SGuTSyxTDYWnP
+4vkYxboznxSjBF25cfe1lNj2M8FawTSLfJvdkzrnE6JwYZ+vj+vYxXX4M2bUdGc6
+N3ec592kD3ZDZopD8p/7DEJ4Y9HiD2971KE9dJeFt0g5QdYg/NA6s/rob8SKunE3
+vouXsXgxT7PntgMTzlSdriVZzH81Xwj3QEUxeCp6
+)");
 
+struct KeyReader {
+	using Decoder = crypto::Asn1Decoder<memory::StandartInterface, KeyReader>;
+
+	KeyReader(const BytesViewNetwork &source) {
+		Decoder dec;
+		dec.decode(*this, source);
+	}
+
+	void onBeginSet(Decoder &) { }
+	void onEndSet(Decoder &) { }
+
+	void onBeginSequence(Decoder &) { }
+	void onEndSequence(Decoder &) { }
+
+	void onOid(Decoder &, const StringView &val) { }
+	void onNull(Decoder &) { }
+	void onInteger(Decoder &, int64_t val) { }
+	void onBigInteger(Decoder &, const BytesViewNetwork &val) { }
+	void onBoolean(Decoder &, bool val) { }
+	void onBytes(Decoder &, const BytesViewNetwork &val) { }
+	void onString(Decoder &, const BytesViewNetwork &val, Decoder::Type t) { }
+	void onCustom(Decoder &, uint8_t, const BytesViewNetwork &val) { }
+};
 
 static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b, crypto::KeyType type) {
 	crypto::PrivateKey key(b);
+	crypto::PrivateKey key2(b);
+	crypto::PrivateKey key3(b);
 
 	if (!key.isGenerateSupported(type)) {
 		return true;
 	}
 
 	key.generate(crypto::KeyBits::_2048, type);
+	key2.generate(crypto::KeyBits::_1024, type);
+	key3.generate(crypto::KeyBits::_4096, type);
 
 	String pemPKCS1;
 	String derPKCS1;
@@ -270,6 +329,8 @@ static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b, crypto::K
 		}, crypto::KeyFormat::PKCS1);
 
 		key.exportDer([&] (BytesView data) {
+			KeyReader r(data);
+
 			StringStream derKeyData;
 			derKeyData << "-----BEGIN RSA PRIVATE KEY-----\n";
 			size_t counter = 0;
@@ -296,7 +357,11 @@ static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b, crypto::K
 			pemPKCS8 = StringView(data.toStringView()).str<Interface>();
 		}, crypto::KeyFormat::PKCS8);
 
+		key.exportPem([&] (BytesView data) { }, crypto::KeyFormat::PKCS8, CoderSource("password"));
+
 		key.exportDer([&] (BytesView data) {
+			KeyReader r(data);
+
 			StringStream derKeyData;
 			StringStream encodedData;
 			derKeyData << "-----BEGIN PRIVATE KEY-----\n";
@@ -316,7 +381,25 @@ static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b, crypto::K
 			}
 
 			derPKCS8 = derKeyData.str();
+
+			key.exportPem([&] (BytesView data) { });
+			key.exportDer([&] (BytesView data) {
+				KeyReader r(data);
+			});
+
+			key.exportPem([&] (BytesView data) {
+				crypto::PrivateKey key(b, data, CoderSource("password"));
+			}, CoderSource("password"));
+			key.exportDer([&] (BytesView data) {
+				KeyReader r(data);
+				crypto::PrivateKey key(b, data, CoderSource("password"));
+			}, CoderSource("password"));
+
 		}, crypto::KeyFormat::PKCS8);
+
+		key.exportDer([&] (BytesView data) {
+			KeyReader r(data);
+		}, crypto::KeyFormat::PKCS8, CoderSource("password"));
 
 		if (pemPKCS8 != derPKCS8) {
 			stream << "PKCS8: DER != PEM";
@@ -334,6 +417,8 @@ static bool CryptoTest_genkey(std::ostream &stream, crypto::Backend b, crypto::K
 	});
 
 	pub.exportDer([&] (BytesView data) {
+		KeyReader r(data);
+
 		StringStream derKeyData;
 		derKeyData << "-----BEGIN PUBLIC KEY-----\n";
 		size_t counter = 0;
@@ -368,6 +453,8 @@ static bool CryptoTest_load(std::ostream &stream, crypto::Backend b) {
 
 	if (key1.isSupported(crypto::KeyFormat::PKCS8)) {
 		key1.exportDer([&] (BytesView data) {
+			KeyReader r(data);
+
 			if (BytesView(key4Data) != data) {
 				stream << " PKCS8 export not match;";
 				success = false;
@@ -382,6 +469,8 @@ static bool CryptoTest_load(std::ostream &stream, crypto::Backend b) {
 
 	if (key1.isSupported(crypto::KeyFormat::PKCS1)) {
 		key1.exportDer([&] (BytesView data) {
+			KeyReader r(data);
+
 			if (BytesView(key3Data) != data) {
 				stream << " PKCS1 export not match;";
 				success = false;
@@ -469,6 +558,8 @@ static bool CryptoTest_pubload(std::ostream &stream, crypto::Backend b) {
 	});
 
 	key1.exportDer([&] (BytesView data) {
+		KeyReader r(data);
+
 		if (key1Data != data) {
 			stream << " PUB1 -> DER != PUB2(DER);";
 			success = false;
@@ -483,6 +574,8 @@ static bool CryptoTest_pubload(std::ostream &stream, crypto::Backend b) {
 	});
 
 	key2.exportDer([&] (BytesView data) {
+		KeyReader r(data);
+
 		if (key1Data != data) {
 			stream << " PUB2 -> DER != PUB2(DER);";
 			success = false;
@@ -501,6 +594,11 @@ static bool CryptoTest_ssh(std::ostream &stream, crypto::Backend b) {
 
 	crypto::PublicKey key2(b, s_PubSshPem);
 	if (!key2) {
+		return false;
+	}
+
+	crypto::PublicKey key3(b, s_PubSsh);
+	if (!key3) {
 		return false;
 	}
 
@@ -525,91 +623,317 @@ static bool CryptoTest_ssh(std::ostream &stream, crypto::Backend b) {
 }
 
 static bool CryptoTest_sign_validate(std::ostream &stream, crypto::Backend b) {
-	bool success = false;
+	bool _success = true;
 
 	crypto::PrivateKey pk(b, BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size()));
 
 	auto pub = pk.exportPublic();
 
-	String signData;
+	do {
+		String signData;
 
-	// follow serenity pkey auth method
-	pub.exportDer([&] (BytesView pub) {
-		crypto::PublicKey spub(b, pub);
-		if (!spub) {
-			return;
+		// follow serenity pkey auth method
+		pub.exportDer([&] (BytesView pub) {
+			KeyReader r(pub);
+
+			crypto::PublicKey spub(b, pub);
+			if (!spub) {
+				return;
+			}
+
+			crypto::makeBlockKey(BytesView((const uint8_t *)s_PKCS8PemKey.data(), s_PKCS8PemKey.size()), pub);
+			crypto::makeBlockKey(pub, pub);
+			crypto::makeBlockKey(pub, pub, crypto::BlockCipher::AES_CFB8);
+			crypto::makeBlockKey(pk, pub);
+			crypto::makeBlockKey(pk, pub, 1);
+
+			Bytes signResult;
+			pk.sign([&] (BytesView sign) {
+				signResult = sign.bytes<Interface>();
+				signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
+					data::ValueTemplate<Interface>(pub),
+					data::ValueTemplate<Interface>(sign)
+				})));
+			}, pub, crypto::SignAlgorithm::RSA_SHA512);
+
+			pk.encrypt([] (BytesView) { }, BytesView(BytesView(signData), crypto::Sha512::Length));
+			pk.verify(pub, signResult, crypto::SignAlgorithm::RSA_SHA512);
+		});
+
+		if (!signData.empty()) {
+			auto data = data::read<Interface>(base64::decode<Interface>(signData));
+
+			BytesView signedKey = data.getBytes(0);
+			BytesView signature = data.getBytes(1);
+
+			crypto::PublicKey spub(b, signedKey);
+
+			auto success = spub.verify(signedKey, signature, crypto::SignAlgorithm::RSA_SHA512);
+			if (!success) {
+				stream << "verification failed;";
+				_success = false;
+			}
+			spub.encrypt([] (BytesView) { }, BytesView(BytesView(signData), crypto::Sha512::Length));
+
+			crypto::PublicKey spub2(move(spub));
+			crypto::PublicKey spub3;
+			spub3 = (move(spub2));
+			spub3.getBackend();
 		}
+	} while (0);
 
-		pk.sign([&] (BytesView sign) {
-			signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
-				data::ValueTemplate<Interface>(pub),
-				data::ValueTemplate<Interface>(sign)
-			})));
-		}, pub, crypto::SignAlgorithm::RSA_SHA512);
-	});
+	do {
+		String signData;
 
-	if (!signData.empty()) {
-		auto data = data::read<Interface>(base64::decode<Interface>(signData));
+		// follow serenity pkey auth method
+		pub.exportDer([&] (BytesView pub) {
+			KeyReader r(pub);
 
-		BytesView signedKey = data.getBytes(0);
-		BytesView signature = data.getBytes(1);
+			crypto::PublicKey spub(b, pub);
+			if (!spub) {
+				return;
+			}
 
-		crypto::PublicKey spub(b, signedKey);
+			Bytes signResult;
+			pk.fingerprint([&] (BytesView sign) {
+				signResult = sign.bytes<Interface>();
+				signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
+					data::ValueTemplate<Interface>(pub),
+					data::ValueTemplate<Interface>(sign)
+				})));
+			}, pub);
 
-		success = spub.verify(signedKey, signature, crypto::SignAlgorithm::RSA_SHA512);
-		if (!success) {
-			stream << "verification failed;";
+			pk.verify(pub, signResult, crypto::SignAlgorithm::RSA_SHA512);
+		});
+
+		if (!signData.empty()) {
+			auto data = data::read<Interface>(base64::decode<Interface>(signData));
+
+			BytesView signedKey = data.getBytes(0);
+			BytesView signature = data.getBytes(1);
+
+			crypto::PublicKey spub(b, signedKey);
+
+			auto success = spub.verify(signedKey, signature, crypto::SignAlgorithm::RSA_SHA512);
+			if (!success) {
+				stream << "verification failed;";
+				_success = false;
+			}
+			spub.encrypt([] (BytesView) { }, BytesView(BytesView(signData), crypto::Sha512::Length));
 		}
-	}
+	} while (0);
 
-	return success;
+	do {
+		String signData;
+
+		// follow serenity pkey auth method
+		pub.exportDer([&] (BytesView pub) {
+			KeyReader r(pub);
+
+			crypto::PublicKey spub(b, pub);
+			if (!spub) {
+				return;
+			}
+
+			Bytes signResult;
+			pk.sign([&] (BytesView sign) {
+				signResult = sign.bytes<Interface>();
+				signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
+					data::ValueTemplate<Interface>(pub),
+					data::ValueTemplate<Interface>(sign)
+				})));
+			}, pub, crypto::SignAlgorithm::RSA_SHA256);
+
+			pk.encrypt([] (BytesView) { }, BytesView(BytesView(signData), crypto::Sha256::Length));
+			pk.verify(pub, signResult, crypto::SignAlgorithm::RSA_SHA256);
+		});
+
+		if (!signData.empty()) {
+			auto data = data::read<Interface>(base64::decode<Interface>(signData));
+
+			BytesView signedKey = data.getBytes(0);
+			BytesView signature = data.getBytes(1);
+
+			crypto::PublicKey spub(b, signedKey);
+
+			auto success = spub.verify(signedKey, signature, crypto::SignAlgorithm::RSA_SHA256);
+			if (!success) {
+				stream << "verification failed;";
+				_success = false;
+			}
+			spub.encrypt([] (BytesView) { }, BytesView(BytesView(signData), crypto::Sha512::Length));
+		}
+	} while (0);
+
+	return _success;
 }
 
 static bool CryptoTest_gost_sign(std::ostream &stream, crypto::Backend b) {
-	crypto::PrivateKey pk(b, BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size()));
-	if (pk.getType() != crypto::KeyType::GOST3410_2012_512) {
-		return false;
-	}
+	bool _success = true;
+	do {
+		crypto::PrivateKey pk(b, BytesView((const uint8_t *)s_GostPrivKey.data(), s_GostPrivKey.size()));
+		if (pk.getType() != crypto::KeyType::GOST3410_2012_512) {
+			return false;
+		}
 
-	String pkStr;
-	pk.exportPem([&] (BytesView data) {
-		pkStr = StringView(data.toStringView()).str<Interface>();
-	});
+		String pkStr;
+		pk.exportPem([&] (BytesView data) {
+			pkStr = StringView(data.toStringView()).str<Interface>();
+		});
 
-	crypto::PublicKey pub(b, BytesView((const uint8_t *)s_GostPubKey.data(), s_GostPubKey.size()));
-	if (pub.getType() != crypto::KeyType::GOST3410_2012_512) {
-		return false;
-	}
+		crypto::PublicKey pub(b, BytesView((const uint8_t *)s_GostPubKey.data(), s_GostPubKey.size()));
+		if (pub.getType() != crypto::KeyType::GOST3410_2012_512) {
+			return false;
+		}
 
+		Bytes pubStr;
+		pub.exportDer([&] (BytesView data) {
+			KeyReader r(data);
+
+			pubStr = data.bytes<Interface>();
+		});
+
+		crypto::makeBlockKey(pk, pubStr);
+		crypto::makeBlockKey(pk, pubStr, 1);
+
+		do {
+			String signData;
+			Bytes signBytes;
+			pk.sign([&] (BytesView sign) {
+				signBytes = sign.bytes<Interface>();
+				signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
+					data::ValueTemplate<Interface>(pubStr),
+					data::ValueTemplate<Interface>(sign)
+				})));
+			}, pubStr, crypto::SignAlgorithm::GOST_512);
+
+			pk.encrypt([] (BytesView) { }, BytesView(BytesView(signData), crypto::Sha512::Length));
+			pk.verify(pubStr, signBytes, crypto::SignAlgorithm::GOST_512);
+
+			if (!signData.empty()) {
+				auto data = data::read<Interface>(base64::decode<Interface>(signData));
+
+				BytesView signedKey = data.getBytes(0);
+				BytesView signature = data.getBytes(1);
+
+				crypto::PublicKey spub(b, signedKey);
+
+				auto success = spub.verify(signedKey, signature, crypto::SignAlgorithm::GOST_512);
+				if (!success) {
+					stream << "verification failed;";
+					_success = false;
+				}
+			}
+		} while (0);
+
+		do {
+			String signData;
+			Bytes signBytes;
+			pk.fingerprint([&] (BytesView sign) {
+				signBytes = sign.bytes<Interface>();
+				signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
+					data::ValueTemplate<Interface>(pubStr),
+					data::ValueTemplate<Interface>(sign)
+				})));
+			}, pubStr);
+			pk.verify(pubStr, signBytes, crypto::SignAlgorithm::GOST_512);
+
+			if (!signData.empty()) {
+				auto data = data::read<Interface>(base64::decode<Interface>(signData));
+
+				BytesView signedKey = data.getBytes(0);
+				BytesView signature = data.getBytes(1);
+
+				crypto::PublicKey spub(b, signedKey);
+
+				auto success = spub.verify(signedKey, signature, crypto::SignAlgorithm::GOST_512);
+				if (!success) {
+					stream << "verification failed;";
+					_success = false;
+				}
+				spub.encrypt([] (BytesView) { }, BytesView(BytesView(signData), crypto::Sha512::Length));
+			}
+		} while (0);
+	} while (0);
+
+	crypto::PrivateKey pk2(b);
+	pk2.generate(crypto::KeyType::GOST3410_2012_256);
+
+	auto pub = pk2.exportPublic();
 	Bytes pubStr;
 	pub.exportDer([&] (BytesView data) {
+		KeyReader r(data);
+
 		pubStr = data.bytes<Interface>();
 	});
 
-	String signData;
-	pk.sign([&] (BytesView sign) {
-		signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
-			data::ValueTemplate<Interface>(pubStr),
-			data::ValueTemplate<Interface>(sign)
-		})));
-	}, pubStr, crypto::SignAlgorithm::GOST_512);
+	crypto::makeBlockKey(pk2, pubStr);
+	crypto::makeBlockKey(pk2, pubStr, 1);
 
-	if (!signData.empty()) {
-		auto data = data::read<Interface>(base64::decode<Interface>(signData));
+	do {
+		String signData;
+		Bytes signBytes;
+		pk2.sign([&] (BytesView sign) {
+			signBytes = sign.bytes<Interface>();
+			signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
+				data::ValueTemplate<Interface>(pubStr),
+				data::ValueTemplate<Interface>(sign)
+			})));
+		}, pubStr, crypto::SignAlgorithm::GOST_256);
+		pk2.verify(pubStr, signBytes, crypto::SignAlgorithm::GOST_256);
+		pk2.encrypt([] (BytesView) { }, BytesView(BytesView(signData), crypto::Sha256::Length));
 
-		BytesView signedKey = data.getBytes(0);
-		BytesView signature = data.getBytes(1);
+		if (!signData.empty()) {
+			auto data = data::read<Interface>(base64::decode<Interface>(signData));
 
-		crypto::PublicKey spub(b, signedKey);
+			BytesView signedKey = data.getBytes(0);
+			BytesView signature = data.getBytes(1);
 
-		auto success = spub.verify(signedKey, signature, crypto::SignAlgorithm::GOST_512);
-		if (!success) {
-			stream << "verification failed;";
+			crypto::PublicKey spub(b, signedKey);
+
+			auto success = spub.verify(signedKey, signature, crypto::SignAlgorithm::GOST_256);
+			if (!success) {
+				stream << "verification failed;";
+				_success = false;
+			}
 		}
-		return success;
-	}
+	} while (0);
 
-	return false;
+	do {
+		String signData;
+		Bytes signBytes;
+		pk2.fingerprint([&] (BytesView sign) {
+			signBytes = sign.bytes<Interface>();
+			signData = base64::encode<Interface>(data::write<Interface>(data::ValueTemplate<Interface>({
+				data::ValueTemplate<Interface>(pubStr),
+				data::ValueTemplate<Interface>(sign)
+			})));
+		}, pubStr);
+		pk2.verify(pubStr, signBytes, crypto::SignAlgorithm::GOST_256);
+
+		if (!signData.empty()) {
+			auto data = data::read<Interface>(base64::decode<Interface>(signData));
+
+			BytesView signedKey = data.getBytes(0);
+			BytesView signature = data.getBytes(1);
+
+			crypto::PublicKey spub(b, signedKey);
+
+			auto success = spub.verify(signedKey, signature, crypto::SignAlgorithm::GOST_256);
+			if (!success) {
+				stream << "verification failed;";
+				_success = false;
+			}
+
+			spub.encrypt([] (BytesView) { }, BytesView(BytesView(signData), crypto::Sha256::Length));
+		}
+	} while (0);
+
+	crypto::PrivateKey pk3(move(pk2));
+	crypto::PrivateKey pk4;
+	pk4 = move(pk3);
+
+	return _success;
 }
 
 struct CryptoTest : Test {
@@ -621,18 +945,57 @@ struct CryptoTest : Test {
 		size_t passed = 0;
 		stream << "\n";
 
+		do {
+			crypto::PrivateKey keyGost_gtls(crypto::Backend::GnuTLS);
+			keyGost_gtls.generate(crypto::KeyType::GOST3410_2012_256);
+
+			crypto::PrivateKey keyGost_ossl(crypto::Backend::OpenSSL);
+			keyGost_gtls.exportDer([&] (BytesView v) {
+				keyGost_ossl.import(v);
+			});
+
+			if (keyGost_gtls && keyGost_ossl) {
+				crypto::PrivateKey keyGost_gtls2(crypto::Backend::GnuTLS);
+				keyGost_gtls.exportDer([] (BytesView v) {
+					std::cout << "GTLS: " << base16::encode<Interface>(v) << "\n";
+				});
+				keyGost_ossl.exportDer([&] (BytesView v) {
+					std::cout << "OSSL: " << base16::encode<Interface>(v) << "\n";
+					keyGost_gtls2.import(v);
+					if (!keyGost_gtls2) {
+						std::cout << "Test\n";
+					}
+				});
+			}
+		} while (0);
+
+		do {
+			crypto::PrivateKey keyGost_gtls(crypto::Backend::OpenSSL);
+			keyGost_gtls.generate(crypto::KeyType::GOST3410_2012_256);
+
+			crypto::PrivateKey keyGost_ossl(crypto::Backend::GnuTLS);
+			keyGost_gtls.exportDer([&] (BytesView v) {
+				keyGost_ossl.import(v);
+			});
+		} while (0);
+
 		runTest(stream, toString("gost3411-interop"), count, passed, [&] () -> bool {
 			auto test = [] (const CoderSource & msg, BytesView result256, BytesView result512) {
 				auto v256_1 = crypto::hash256(crypto::Backend::Embedded, msg, crypto::HashFunction::GOST_3411);
 				auto v256_2 = crypto::hash256(crypto::Backend::GnuTLS, msg, crypto::HashFunction::GOST_3411);
 				auto v256_3 = crypto::hash256(crypto::Backend::OpenSSL, msg, crypto::HashFunction::GOST_3411);
+				auto v256_4 = crypto::hash256(msg, crypto::HashFunction::GOST_3411);
+				crypto::hash256([&] (const Callback<bool(const CoderSource &)> &upd) {
+					upd(msg);
+				}, crypto::HashFunction::GOST_3411);
 
 				auto v512_1 = crypto::hash512(crypto::Backend::Embedded, msg, crypto::HashFunction::GOST_3411);
 				auto v512_2 = crypto::hash512(crypto::Backend::GnuTLS, msg, crypto::HashFunction::GOST_3411);
 				auto v512_3 = crypto::hash512(crypto::Backend::OpenSSL, msg, crypto::HashFunction::GOST_3411);
+				auto v512_4 = crypto::hash512(msg, crypto::HashFunction::GOST_3411);
 
-				return v256_1 == v256_2 && v256_2 == v256_3 && v256_3 == result256
-						&& v512_1 == v512_2 && v512_2 == v512_3 && v512_3 == result512;
+				return v256_1 == v256_2 && v256_2 == v256_3 && v256_3 == result256 && v256_3 == v256_4
+						&& v512_1 == v512_2 && v512_2 == v512_3 && v512_3 == result512 && v512_3 == v512_4;
 			};
 
 			return test(
@@ -803,9 +1166,11 @@ struct CryptoTest : Test {
 		runTest(stream, toString("block-cipher-aes"), count, passed, [&] () -> bool {
 			crypto::PrivateKey mbedtlsPk(crypto::Backend::MbedTLS, s_PKCS8PemKey);
 			auto mbedtlsAesKey = crypto::makeBlockKey(mbedtlsPk, s_PKCS8PemKey, crypto::BlockCipher::AES_CBC);
+			crypto::makeBlockKey(mbedtlsPk, s_PKCS8PemKey, crypto::BlockCipher::AES_CFB8);
 
 			crypto::PrivateKey opensslPk(crypto::Backend::OpenSSL, s_PKCS8PemKey);
 			auto opensslAesKey = crypto::makeBlockKey(opensslPk, s_PKCS8PemKey, crypto::BlockCipher::AES_CBC);
+			crypto::makeBlockKey(opensslPk, s_PKCS8PemKey, crypto::BlockCipher::AES_CFB8);
 
 			if (opensslAesKey != mbedtlsAesKey) {
 				return false;
@@ -1029,6 +1394,19 @@ struct CryptoTest : Test {
 				return CryptoTest_sign_validate(stream, b);
 			});
 		});
+
+		crypto::Sha1::Buf buf;
+
+		crypto::Gost3411_256::make("teststring1", "teststring2");
+		crypto::Gost3411_512::make("teststring1", "teststring2");
+		crypto::Sha256::make("teststring1", "teststring2");
+		crypto::Sha1::make("teststring1", "teststring2");
+		crypto::Sha1::hmac("teststring1", "teststring2");
+		crypto::Sha1().init().update("teststring1").final(buf.data());
+		crypto::Sha1().init().update("teststring1").final();
+
+		auto data = base64::decode<Interface>(s_TestCert);
+		KeyReader r(data);
 
 		_desc = stream.str();
 

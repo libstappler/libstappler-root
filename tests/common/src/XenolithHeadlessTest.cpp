@@ -290,6 +290,8 @@ bool NoisePass::init(Queue::Builder &queueBuilder, QueuePassBuilder &builder, co
 		});
 	});
 
+	Shader::inspectShader(NoiseComp);
+
 	builder.addSubpass([&] (SubpassBuilder &subpassBuilder) {
 		subpassBuilder.addComputePipeline("NoisePipeline", layout,
 				queueBuilder.addProgramByRef("NoisePipelineComp", NoiseComp));

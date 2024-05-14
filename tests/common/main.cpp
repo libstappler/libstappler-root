@@ -127,6 +127,39 @@ struct TimeTest : Test {
 
 		bool success = true;
 
+		sp_time_exp_t ext(Time::now().toMicros(), 0);
+		sp_time_exp_t ext2(Time::now().toMicros(), true);
+		sp_time_exp_t ext3(Time::now(), 0, true);
+		sp_time_exp_t ext4(Time::now(), 0);
+
+		Time t5;
+		t5.setMicros(1000);
+		t5.setMicroseconds(1000);
+		t5.setMillis(1000);
+		t5.setMilliseconds(1000);
+		t5.setSeconds(1000);
+		Time::floatSeconds(0.5f);
+
+		TimeInterval ti;
+		ti = nullptr;
+		t5 = nullptr;
+
+		Time::fromHttp("Sun, 06 Nov 1994 08:49:37 GMT");
+		Time::fromHttp("Sunday, 06-Nov-94 08:49:37 GMT");
+		Time::fromHttp("Sun Nov  6 08:49:37 1994");
+		Time::fromHttp("2011-04-28T06:34:00+09:00");
+		Time::fromHttp("2011-04-28T06:34:00-09");
+		Time::fromHttp("2012-02-29T06:34:00-09");
+		Time::fromHttp("2011-04-28+09:00");
+		Time::fromHttp("12.03.2010");
+		Time::fromHttp("Sun Feb 29 08:49:37 2000");
+		Time::fromHttp("Sunday, 06-Nov-94 08:49:37 GMT");
+		t5 = Time::fromHttp("6 Nov 1994 08:49:37 GMT");
+		t5.toFormat<Interface>("%A %c");
+
+		t5.asGmt();
+		t5.asLocal();
+
 		for (int i = 0; i <= 10; ++ i) {
 			auto t = now + TimeInterval::milliseconds( (i == 0) ? 0 : rand());
 

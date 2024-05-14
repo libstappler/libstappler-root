@@ -26,6 +26,7 @@ LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 
 LOCAL_OUTDIR := stappler-build
 LOCAL_EXECUTABLE := testapp
+LOCAL_WASM_MODULE := app.wasm
 
 LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/core/stappler-modules.mk \
@@ -68,10 +69,12 @@ LOCAL_ROOT = .
 SHADERNN_DIR := $(STAPPLER_ROOT)/xenolith/utils/shadernn
 
 LOCAL_SRCS_DIRS :=  src xenolith web $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests
-LOCAL_SRCS_OBJS :=
+LOCAL_SRCS_OBJS := app.wit
 
 LOCAL_INCLUDES_DIRS := src xenolith $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests
 LOCAL_INCLUDES_OBJS :=
+
+LOCAL_WASM_DIRS := wasm
 
 LOCAL_MAIN := main.cpp
 
@@ -82,6 +85,8 @@ SHADER_WORK_GROUP_Z = 4
 LOCAL_SHADERS_RULES := -DWG_X=${SHADER_WORK_GROUP_X} -DWG_Y=${SHADER_WORK_GROUP_Y} -DWG_Z=${SHADER_WORK_GROUP_Z}
 LOCAL_SHADERS_DIR := shaders \
 	$(SHADERNN_DIR)/shaders/f16 $(SHADERNN_DIR)/shaders/f32 $(SHADERNN_DIR)/shaders/nme $(SHADERNN_DIR)/shaders/stat
+
+#ASAN := 1
 
 ifdef LINUX
 # For dynamic self-loading

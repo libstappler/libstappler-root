@@ -26,10 +26,17 @@
 
 #include "TestLayout.cc"
 #include "TestGeneralUpdate.cc"
+#include "TestGeneralActions.cc"
 #include "TestMaterialColor.cc"
 #include "TestMaterialNodes.cc"
 #include "TestMaterialScroll.cc"
 #include "TestMaterialInput.cc"
 #include "TestMaterialMenu.cc"
+#include "TestMaterialTabBar.cc"
+#include "TestDynamicFont.cc"
+#include "TestIcons.cc"
+#include "TestAutofit.cc"
+#include "TestZOrder.cc"
+#include "TestScroll.cc"
 
 #endif

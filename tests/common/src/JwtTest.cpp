@@ -120,22 +120,69 @@ struct JwtTest : Test {
 		size_t passed = 0;
 		stream << "\n";
 
-		runTest(stream, "jwt-gost", count, passed, [&] () -> bool {
-			crypto::PrivateKey key(crypto::Backend::OpenSSL);
-			key.generate(crypto::KeyType::GOST3410_2012_512);
+		BytesView secret((const uint8_t *)PRIVATE_KEY, strlen(PRIVATE_KEY));
 
-			auto pub = key.exportPublic();
+		crypto::PrivateKey keyGost(crypto::Backend::OpenSSL);
+		keyGost.generate(crypto::KeyType::GOST3410_2012_512);
+
+		crypto::PrivateKey keyGost2(crypto::Backend::OpenSSL);
+		keyGost2.generate(crypto::KeyType::GOST3410_2012_256);
+
+		auto pubGost = keyGost.exportPublic();
+		auto pubGost2 = keyGost2.exportPublic();
+
+		runTest(stream, "jwt-ecdsa", count, passed, [&] () -> bool {
+			crypto::PrivateKey keyEcdsa(crypto::Backend::OpenSSL);
+			keyEcdsa.generate(crypto::KeyType::ECDSA);
+
+			crypto::PrivateKey keyEcdsa2(crypto::Backend::OpenSSL);
+			keyEcdsa2.generate(crypto::KeyType::EDDSA_ED448);
 
 			JsonWebToken<Interface> token({
 				pair("data", Value("data")),
 				pair("int", Value(42)),
 			});
 
-			auto d = token.exportSigned(key);
+			auto d1 = token.exportSigned(JsonWebToken<Interface>::ES256, keyEcdsa);
+			auto d2 = token.exportSigned(keyEcdsa2);
 
-			JsonWebToken<Interface> tmpToken(d);
+			token.exportSigned(keyGost2);
 
-			if (!tmpToken.validate(pub)) {
+			JsonWebToken<Interface> tmpToken1(d1);
+			JsonWebToken<Interface> tmpToken2(d2);
+
+			auto pubEcdsa = keyEcdsa.exportPublic();
+			auto pubEcdsa2 = keyEcdsa2.exportPublic();
+
+			if (!tmpToken1.validate(pubEcdsa)) {
+				return false;
+			}
+			if (!tmpToken2.validate(pubEcdsa2)) {
+				return false;
+			}
+			return true;
+		});
+
+		runTest(stream, "jwt-gost", count, passed, [&] () -> bool {
+			JsonWebToken<Interface> token({
+				pair("data", Value("data")),
+				pair("int", Value(42)),
+			});
+
+			auto d1 = token.exportSigned(keyGost);
+			auto d2 = token.exportSigned(keyGost2);
+			token.exportSigned(JsonWebToken<Interface>::HS256, secret);
+			token.exportSigned(JsonWebToken<Interface>::HS512, secret);
+
+			token.exportSigned(keyGost2);
+
+			JsonWebToken<Interface> tmpToken1(d1);
+			JsonWebToken<Interface> tmpToken2(d2);
+
+			if (!tmpToken1.validate(pubGost)) {
+				return false;
+			}
+			if (!tmpToken2.validate(pubGost2)) {
 				return false;
 			}
 			return true;
@@ -144,37 +191,66 @@ struct JwtTest : Test {
 		runTest(stream, "aes-gost", count, passed, [&] () -> bool {
 			auto secret = string::Sha512::make(PUBLIC_KEY);
 
-			crypto::PrivateKey priv(crypto::Backend::OpenSSL);
-			priv.generate(crypto::KeyType::GOST3410_2012_512);
+			do {
+				AesToken<Interface>::Keys keys({
+					&pubGost,
+					&keyGost,
+					BytesView(secret)
+				});
 
-			auto pub = priv.exportPublic();
+				AesToken<Interface> tok = AesToken<Interface>::create(keys);
 
-			AesToken<Interface>::Keys keys({
-				&pub,
-				&priv,
-				BytesView(secret)
-			});
+				tok.setString(StringView("String"), "string");
+				tok.setInteger(42, "integer");
 
-			AesToken<Interface> tok = AesToken<Interface>::create(keys);
+				auto fp = AesToken<Interface>::Fingerprint(crypto::HashFunction::GOST_3411, BytesView(secret));
+				auto d = tok.exportData(fp);
+				auto jwtTok = tok.exportToken("stappler.org", fp, 720_sec, "stappler.org");
 
-			tok.setString(StringView("String"), "string");
-			tok.setInteger(42, "integer");
+				auto next = AesToken<Interface>::parse(d, fp, keys);
+				auto jwtNext = AesToken<Interface>::parse(jwtTok, fp, "stappler.org", "stappler.org", keys);
 
-			auto fp = AesToken<Interface>::Fingerprint(crypto::HashFunction::GOST_3411, BytesView(secret));
-			auto d = tok.exportData(fp);
-			auto jwtTok = tok.exportToken("stappler.org", fp, 720_sec, "stappler.org");
+				if (next.getData() != tok.getData()) {
+					std::cout << data::EncodeFormat::Pretty << next.getData() << "\n" << tok.getData() << "\n";
+					return false;
+				}
+				if (jwtNext.getData() != tok.getData()) {
+					std::cout << data::EncodeFormat::Pretty << jwtNext.getData() << "\n" << tok.getData() << "\n";
+					return false;
+				}
+			} while (0);
 
-			auto next = AesToken<Interface>::parse(d, fp, keys);
-			auto jwtNext = AesToken<Interface>::parse(jwtTok, fp, "stappler.org", "stappler.org", keys);
+			do {
+				AesToken<Interface>::Keys keys({
+					&pubGost2,
+					&keyGost2,
+					BytesView(secret)
+				});
 
-			if (next.getData() != tok.getData()) {
-				std::cout << data::EncodeFormat::Pretty << next.getData() << "\n" << tok.getData() << "\n";
-				return false;
-			}
-			if (jwtNext.getData() != tok.getData()) {
-				std::cout << data::EncodeFormat::Pretty << jwtNext.getData() << "\n" << tok.getData() << "\n";
-				return false;
-			}
+				AesToken<Interface> tok = AesToken<Interface>::create(keys);
+
+				tok.setString(StringView("String"), "string");
+				tok.setInteger(42, "integer");
+
+				auto fp = AesToken<Interface>::Fingerprint(crypto::HashFunction::GOST_3411, BytesView(secret));
+				auto d = tok.exportData(fp);
+				auto jwtTok = tok.exportToken("stappler.org", fp, 720_sec, "stappler.org");
+
+				auto next = AesToken<Interface>::parse(d, fp, keys);
+				auto jwtNext = AesToken<Interface>::parse(jwtTok, fp, "stappler.org", "stappler.org", keys);
+
+				if (next.getData() != tok.getData()) {
+					next = AesToken<Interface>::parse(d, fp, keys);
+					std::cout << data::EncodeFormat::Pretty << next.getData() << "\n" << tok.getData() << "\n";
+					return false;
+				}
+				if (jwtNext.getData() != tok.getData()) {
+					jwtNext = AesToken<Interface>::parse(jwtTok, fp, "stappler.org", "stappler.org", keys);
+					std::cout << data::EncodeFormat::Pretty << jwtNext.getData() << "\n" << tok.getData() << "\n";
+					return false;
+				}
+			} while (0);
+
 			return true;
 		});
 		runTest(stream, "pubkey", count, passed, [&] () -> bool {
@@ -188,19 +264,46 @@ struct JwtTest : Test {
 		});
 
 		runTest(stream, "jwt", count, passed, [&] () -> bool {
-			JsonWebToken<Interface> token({
-				pair("data", Value("data")),
-				pair("int", Value(42)),
-			});
+			do {
+				JsonWebToken<Interface> token({
+					pair("data", Value("data")),
+					pair("int", Value(42)),
+				});
 
-			auto d = token.exportSigned(JsonWebToken<Interface>::SigAlg::RS256, StringView(PRIVATE_KEY));
-			//std::cout << d << "\n";
+				auto d = token.exportSigned(JsonWebToken<Interface>::SigAlg::RS256, StringView(PRIVATE_KEY));
+				auto d2 = token.exportSigned(JsonWebToken<Interface>::SigAlg::RS512, StringView(PRIVATE_KEY));
 
-			JsonWebToken<Interface> tmpToken(d);
+				JsonWebToken<Interface> tmpToken(d);
+				JsonWebToken<Interface> tmpToken2(d2);
 
-			if (!tmpToken.validate(StringView(PUBLIC_KEY))) {
-				return false;
-			}
+				if (!tmpToken.validate(StringView(PUBLIC_KEY))) {
+					return false;
+				}
+				if (!tmpToken2.validate(StringView(PUBLIC_KEY))) {
+					return false;
+				}
+			} while (0);
+
+			do {
+				JsonWebToken<Interface> token({
+					pair("data", Value("data")),
+					pair("int", Value(42)),
+				});
+
+				auto d1 = token.exportSigned(JsonWebToken<Interface>::SigAlg::HS256, secret);
+				auto d2 = token.exportSigned(JsonWebToken<Interface>::SigAlg::HS512, secret);
+
+				JsonWebToken<Interface> tmpToken1(d1);
+				JsonWebToken<Interface> tmpToken2(d2);
+
+				if (!tmpToken1.validate(secret)) {
+					return false;
+				}
+				if (!tmpToken2.validate(secret)) {
+					return false;
+				}
+			} while (0);
+
 			return true;
 		});
 
@@ -227,7 +330,31 @@ struct JwtTest : Test {
 				std::cout << data::EncodeFormat::Pretty << next.getData() << "\n" << tok.getData() << "\n";
 				return false;
 			}
-			return true;
+
+			tok.exportToken("stappler.org", fp, TimeInterval::seconds(720), "stappler.org");
+
+			auto fp2 = AesToken<Interface>::Fingerprint(crypto::HashFunction::GOST_3411,
+					[&] (const Callback<bool(const CoderSource &)> &cb) {
+				cb(BytesView(secret));
+			});
+			tok.exportData(fp2);
+
+			auto fp3 = AesToken<Interface>::Fingerprint(crypto::HashFunction::GOST_3411, nullptr);
+			tok.exportData(fp3);
+
+			auto fp4 = AesToken<Interface>::Fingerprint(crypto::HashFunction::SHA_2,
+					[&] (const Callback<bool(const CoderSource &)> &cb) {
+				cb(BytesView(secret));
+			});
+			tok.exportData(fp4);
+
+			auto fp5 = AesToken<Interface>::Fingerprint(crypto::HashFunction::SHA_2, nullptr);
+			tok.exportData(fp5);
+
+			auto fp6 = AesToken<Interface>::Fingerprint(crypto::HashFunction::SHA_2, BytesView(secret));
+			tok.exportData(fp6);
+
+			return tok ? true : false;
 		});
 
 		_desc = stream.str();

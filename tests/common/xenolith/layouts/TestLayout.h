@@ -27,6 +27,8 @@
 #include "XL2dSceneLayout.h"
 #include "XL2dLabel.h"
 #include "XL2dLayer.h"
+#include "XL2dLinearProgress.h"
+#include "XL2dRoundedProgress.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
@@ -35,11 +37,19 @@ using namespace basic2d;
 enum class LayoutName {
 	None,
 	GeneralUpdateTest,
+	GeneralActionTest,
 	MaterialColorPickerTest,
 	MaterialNodeTest,
 	MaterialScrollTest,
 	MaterialInputTest,
-	MaterialMenuTest
+	MaterialMenuTest,
+	MaterialDynamicFont,
+	MaterialTabBar,
+	IconList,
+	Autofit,
+	ZOrder,
+	Scroll,
+	Empty
 };
 
 StringView getLayoutNameId(LayoutName);
@@ -64,6 +74,18 @@ protected:
 
 	LayoutName _layout = LayoutName::None;
 	Label *_infoLabel = nullptr;
+	RoundedProgress *_roundedProgress = nullptr;
+	LinearProgress *_linearProgress = nullptr;
+};
+
+class TestEmpty : public TestLayout {
+public:
+	virtual ~TestEmpty() { }
+
+	virtual bool init() override;
+
+protected:
+	using TestLayout::init;
 };
 
 }

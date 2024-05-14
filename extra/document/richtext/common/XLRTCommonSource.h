@@ -95,8 +95,8 @@ protected:
 	virtual void onDocumentAssetUpdated(Subscription::Flags);
 	virtual void onDocumentLoaded(Document *);
 
-	virtual void acquireNetworkAsset(const StringView &, const Function<void(SourceAsset *)> &);
-	virtual Rc<SourceAsset> acquireLocalAsset(const StringView &);
+	virtual void acquireNetworkAsset(Document *doc, const StringView &, const Function<void(SourceAsset *)> &);
+	virtual Rc<SourceAsset> acquireLocalAsset(Document *doc, const StringView &);
 	virtual bool isExternalAsset(Document *doc, const StringView &); // true is asset is external (not stored in document itself)
 
 	virtual bool onDocumentAssets(Document *doc, const Set<String> &); // true if no asset requests is performed

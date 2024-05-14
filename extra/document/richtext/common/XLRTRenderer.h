@@ -32,6 +32,8 @@ struct RendererResource : public Ref {
 	~RendererResource();
 
 	Rc<ResourceCache> cache;
+	Set<String> textures;
+	Map<String, String> svgs;
 	Rc<TemporaryResource> resource;
 };
 
@@ -111,7 +113,7 @@ public:
 	virtual void onResult(RendererResult *result);
 
 protected:
-	virtual Rc<core::Resource> prepareResource(StringView name, Time ctime, const Map<String, DocumentAssetMeta> &);
+	virtual Rc<core::Resource> prepareResource(RendererResource *res, StringView name, Time ctime, const Map<String, DocumentAssetMeta> &);
 	virtual bool requestRendering();
 	virtual void onSource();
 	virtual void pushVersionOptions();
