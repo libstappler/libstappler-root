@@ -74,7 +74,7 @@ protected:
 	void writeHeader(ap_filter_t* f, StringStream &) const;
 
 	apr_bucket_brigade *_tmpBB;
-	bool _hookErrors = false;
+	bool _hookErrors = true;
 	bool _seenEOS = false;
 	bool _skipFilter = false;
 	Request _request;

@@ -46,7 +46,6 @@ LOCAL_MAIN := main.cpp
 
 LOCAL_SHADERS_DIR := shaders
 
-
 # Android config
 LOCAL_ANDROID_MK := proj.android/app/Android.mk # path to root Android.mk
 LOCAL_APPLICATION_MK := proj.android/app/Application.mk # path to Application.mk

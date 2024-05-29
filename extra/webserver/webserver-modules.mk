@@ -22,7 +22,7 @@
 WEBSERVER_MODULE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 WEBSERVER_VERSION_NUMBER := 1
-WEBSERVER_VERSION_BUILD := 1
+WEBSERVER_VERSION_BUILD := 2
 
 include $(WEBSERVER_MODULE_DIR)/webserver/webserver.mk
 include $(WEBSERVER_MODULE_DIR)/pug/pug.mk

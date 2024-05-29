@@ -124,6 +124,8 @@ HttpdHostController::HttpdHostController(Root *root, pool_t *pool, server_rec *s
 }
 
 void HttpdHostController::handleChildInit(const Host &host, pool_t *p) {
+	init(Host(this));
+
 	_hostInfo.hostname = StringView(_server->server_hostname);
 	core_server_config *sconf = (core_server_config *)ap_get_core_module_config(_server->module_config);
 	_hostInfo.documentRoot = StringView(sconf->ap_document_root);

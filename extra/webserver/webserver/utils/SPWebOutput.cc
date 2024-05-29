@@ -308,12 +308,12 @@ void writeData(Request &rctx, const Value &data, bool allowJsonP) {
 	Request r = rctx;
 	writeData(rctx, [&] (StringView str) {
 		rctx << str;
-	}, [&] (const String &ct) {
-		r.setContentType(String(ct));
+	}, [&] (StringView ct) {
+		r.setContentType(ct);
 	}, data, allowJsonP);
 }
 
-void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Function<void(const String &)> &ct,
+void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Callback<void(StringView)> &ct,
 		const Value &data, bool allowJsonP) {
 
 	auto &info = rctx.getInfo();
@@ -431,7 +431,7 @@ Status writeResourceFileHeader(Request &rctx, const Value &result) {
 	return DONE;
 }
 
-bool writeFileHeaders(Request &rctx, const Value &file, const String &convertType) {
+bool writeFileHeaders(Request &rctx, const Value &file, StringView convertType) {
 	auto path = db::File::getFilesystemPath(rctx.host().getRoot(), file.getInteger("__oid"));
 
 	rctx.setFilename(path, true, file.getInteger("mtime"));
@@ -459,13 +459,13 @@ bool writeFileHeaders(Request &rctx, const Value &file, const String &convertTyp
 		rctx.setResponseHeader("X-FileLocation", file.getString("location"));
 	}
 	if (!convertType.empty()) {
-		rctx.setContentType(String(convertType));
+		rctx.setContentType(convertType);
 	} else {
 		rctx.setResponseHeader("X-FileSize", toString(file.getInteger("size")));
 		if (info.headerRequest) {
 			rctx.setResponseHeader("Content-Length", toString(info.stat.size));
 		}
-		rctx.setContentType(String(file.getString("type")));
+		rctx.setContentType(file.getString("type"));
 	}
 	return true;
 

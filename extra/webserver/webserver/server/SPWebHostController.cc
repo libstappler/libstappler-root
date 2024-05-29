@@ -60,62 +60,21 @@ HostController::HostController(Root *root, pool_t *pool)
 }
 
 db::Scheme HostController::makeUserScheme() const {
-	return db::Scheme(config::USER_SCHEME_NAME, {
-		db::Field::Text("name", db::Transform::Alias, db::Flags::Required),
-		db::Field::Bytes("pubkey", db::Transform::PublicKey, db::Flags::Indexed),
-		db::Field::Password("password", db::PasswordSalt(config::DEFAULT_PASSWORD_SALT), db::Flags::Required | db::Flags::Protected),
-		db::Field::Boolean("isAdmin", Value(false)),
-		db::Field::Extra("data", Vector<db::Field>({
-			db::Field::Text("email", db::Transform::Email),
-			db::Field::Text("public"),
-			db::Field::Text("desc"),
-		})),
-		db::Field::Text("email", db::Transform::Email, db::Flags::Unique),
-	});
+	db::Scheme scheme(config::USER_SCHEME_NAME);
+	db::ApplicationInterface::defineUserScheme(scheme);
+	return scheme;
 }
 
 db::Scheme HostController::makeFileScheme() const {
-	return db::Scheme(config::FILE_SCHEME_NAME, {
-		db::Field::Text("location", db::Transform::Url),
-		db::Field::Text("type", db::Flags::ReadOnly),
-		db::Field::Integer("size", db::Flags::ReadOnly),
-		db::Field::Integer("mtime", db::Flags::AutoMTime | db::Flags::ReadOnly),
-		db::Field::Extra("image", Vector<db::Field>{
-			db::Field::Integer("width"),
-			db::Field::Integer("height"),
-		})
-	});
+	db::Scheme scheme(config::FILE_SCHEME_NAME);
+	db::ApplicationInterface::defineFileScheme(scheme);
+	return scheme;
 }
 
 db::Scheme HostController::makeErrorScheme() const {
-	return db::Scheme(config::ERROR_SCHEME_NAME, {
-		db::Field::Boolean("hidden", Value(false)),
-		db::Field::Boolean("delivered", Value(false)),
-		db::Field::Text("name"),
-		db::Field::Text("documentRoot"),
-		db::Field::Text("url"),
-		db::Field::Text("request"),
-		db::Field::Text("ip"),
-		db::Field::Data("headers"),
-		db::Field::Data("data"),
-		db::Field::Integer("time"),
-		db::Field::Custom(new db::FieldTextArray("tags", db::Flags::Indexed,
-				db::DefaultFn([&] (const Value &data) -> Value {
-			Vector<String> tags;
-			for (auto &it : data.getArray("data")) {
-				auto text = it.getString("source");
-				if (!text.empty()) {
-					emplace_ordered(tags, text);
-				}
-			}
-
-			Value ret;
-			for (auto &it : tags) {
-				ret.addString(it);
-			}
-			return ret;
-		})))
-	});
+	db::Scheme scheme(config::ERROR_SCHEME_NAME);
+	db::ApplicationInterface::defineErrorScheme(scheme);
+	return scheme;
 }
 
 bool HostController::loadComponent(const Host &serv, const HostComponentInfo &info) {
@@ -282,21 +241,23 @@ void HostController::handleChildInit(const Host &host, pool_t *p) {
 	if (!_loadingFalled) {
 		db::Scheme::initSchemes(_schemes);
 
-		perform_temporary([&, this] {
-			_dbDriver->performWithStorage(db, [&, this] (const db::Adapter &storage) {
-				storage.init(db::BackendInterface::Config{StringView(_hostInfo.hostname), host.getFileScheme()}, _schemes);
+		if (_dbDriver) {
+			perform_temporary([&, this] {
+				_dbDriver->performWithStorage(db, [&, this] (const db::Adapter &storage) {
+					storage.init(db::BackendInterface::Config{StringView(_hostInfo.hostname), host.getFileScheme()}, _schemes);
 
-				if (_hostSecret != string::Sha512::Buf{0}) {
-					initHostKeys(host, storage);
-				}
+					if (_hostSecret != string::Sha512::Buf{0}) {
+						initHostKeys(host, storage);
+					}
 
-				for (auto &it : _components) {
-					_currentComponent = it.second->getName();
-					it.second->handleStorageInit(host, storage);
-					_currentComponent = String();
-				}
-			});
-		}, p);
+					for (auto &it : _components) {
+						_currentComponent = it.second->getName();
+						it.second->handleStorageInit(host, storage);
+						_currentComponent = String();
+					}
+				});
+			}, p);
+		}
 	}
 
 	if (db.get()) {

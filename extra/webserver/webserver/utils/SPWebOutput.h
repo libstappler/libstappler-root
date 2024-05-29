@@ -30,7 +30,7 @@ namespace STAPPLER_VERSIONIZED stappler::web::output {
 void formatJsonAsHtml(const Callback<void(StringView)> &stream, const Value &, bool actionHandling = false);
 
 void writeData(Request &rctx, const Value &, bool allowJsonP = true);
-void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Function<void(const String &)> &ct,
+void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Callback<void(StringView)> &ct,
 		const Value &, bool allowJsonP = true);
 
 Status writeResourceFileData(Request &rctx, Value &&);
@@ -40,7 +40,7 @@ Status writeResourceFileHeader(Request &rctx, const Value &);
 
 // write file headers with respect for cache headers (if-none-match, if-modified-since)
 // returns true if we should write file data or false if we should return HTTP_NOT_MODIFIED
-bool writeFileHeaders(Request &rctx, const Value &, const String &convertType = String());
+bool writeFileHeaders(Request &rctx, const Value &, StringView convertType = StringView());
 
 String makeEtag(uint32_t idHash, Time mtime);
 

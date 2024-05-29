@@ -1,0 +1,6 @@
+
+/* @export */ interface app {
+	use webserver.{host, host-component-info, host-component};
+
+	make-component: func(h: borrow<host>, i: borrow<host-component-info>) -> host-component;
+}

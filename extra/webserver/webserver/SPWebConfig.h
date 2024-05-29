@@ -47,8 +47,6 @@ constexpr auto FILE_SCHEME_NAME = "__files";
 constexpr auto USER_SCHEME_NAME = "__users";
 constexpr auto ERROR_SCHEME_NAME = "__error";
 
-constexpr auto DEFAULT_PASSWORD_SALT = "SP_USER_PASSWORD_KEY";
-
 constexpr auto DEFAULT_SESSION_NAME = "SID";
 constexpr auto DEFAULT_SESSION_KEY = "STAPPLER_SESSION_KEY";
 

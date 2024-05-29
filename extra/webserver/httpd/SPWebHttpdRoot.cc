@@ -66,7 +66,7 @@ static void __log2(log::LogType lt, const StringView &tag, const StringView &str
 	ap_log_perror(APLOG_MARK, logLevel, 0, (apr_pool_t *)p, "%s: %.*s", tag.data(), int(str.size()), str.data());
 }
 
-static bool __log(log::LogType lt, const StringView &tag, log::CustomLog::Type t, log::CustomLog::VA &va) {
+static bool __log(log::LogType lt, StringView tag, log::CustomLog::Type t, log::CustomLog::VA &va) {
 	if (t == log::CustomLog::Text) {
 		if (!va.text.empty()) {
 			__log2(lt, tag, va.text);

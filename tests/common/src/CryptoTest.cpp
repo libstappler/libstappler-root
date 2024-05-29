@@ -1070,7 +1070,7 @@ struct CryptoTest : Test {
 				gnutlsEncoded = buf.bytes<Interface>();
 			});
 
-			if constexpr (crypto::SafeBlockEncoding) {
+			if constexpr (crypto::SAFE_BLOCK_ENCODING) {
 				if (opensslEncoded != gnutlsEncoded) {
 					return false;
 				}
@@ -1132,7 +1132,7 @@ struct CryptoTest : Test {
 				gnutlsEncoded = buf.bytes<Interface>();
 			});
 
-			if constexpr (crypto::SafeBlockEncoding) {
+			if constexpr (crypto::SAFE_BLOCK_ENCODING) {
 				if (opensslEncoded != gnutlsEncoded) {
 					return false;
 				}
@@ -1251,7 +1251,7 @@ struct CryptoTest : Test {
 				}
 			});
 
-			if constexpr (crypto::SafeBlockEncoding) {
+			if constexpr (crypto::SAFE_BLOCK_ENCODING) {
 				if (mbedtlsEncoded != gnutlsEncoded) {
 					return false;
 				}
