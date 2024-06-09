@@ -154,6 +154,12 @@ VkComponent::VkComponent(const Host &serv, const HostComponentInfo &info)
 	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
 		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
 	};
+	data->deviceExtensionsCallback = [] (const vk::DeviceInfo &dev) -> xenolith::Vector<StringView> {
+		return xenolith::Vector<StringView>();
+	};
+	data->deviceFeaturesCallback = [] (const vk::DeviceInfo &dev) -> vk::DeviceInfo::Features {
+		return vk::DeviceInfo::Features();
+	};
 
 	core::LoopInfo loopInfo;
 	loopInfo.platformData = data;

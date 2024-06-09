@@ -42,8 +42,6 @@ public:
 
 	virtual bool init(Queue::Builder &queueBuilder, QueuePassBuilder &, const AttachmentData *, const AttachmentData *);
 
-	virtual Rc<QueuePassHandle> makeFrameHandle(const FrameQueue &) override;
-
 	const AttachmentData *getDataAttachment() const { return _dataAttachment; }
 	const AttachmentData *getImageAttachment() const { return _imageAttachment; }
 
@@ -52,18 +50,6 @@ protected:
 
 	const AttachmentData *_dataAttachment = nullptr;
 	const AttachmentData *_imageAttachment = nullptr;
-};
-
-class NoisePassHandle : public vk::QueuePassHandle {
-public:
-	virtual ~NoisePassHandle() { }
-
-	virtual bool prepare(FrameQueue &q, Function<void(bool)> &&cb) override;
-
-protected:
-	virtual Vector<const vk::CommandBuffer *> doPrepareCommands(FrameHandle &) override;
-
-	const vk::ImageAttachmentHandle *_image = nullptr;
 };
 
 bool NoiseQueue::run(StringView target, NoiseData noiseData, Extent2 extent) {
@@ -237,53 +223,34 @@ bool NoisePass::init(Queue::Builder &queueBuilder, QueuePassBuilder &builder, co
 	builder.addSubpass([&] (SubpassBuilder &subpassBuilder) {
 		subpassBuilder.addComputePipeline("NoisePipeline", layout,
 				queueBuilder.addProgramByRef("NoisePipelineComp", NoiseComp));
+
+		subpassBuilder.setCommandsCallback([&] (const SubpassData &subpass, FrameQueue &frame, CommandBuffer &commands) {
+			auto &buf = static_cast<vk::CommandBuffer &>(commands);
+			auto imageAttachment = static_cast<vk::ImageAttachmentHandle *>(frame.getAttachment(_imageAttachment)->handle.get());
+			auto image = (vk::Image *)imageAttachment->getImage()->getImage().get();
+			auto extent = frame.getFrame()->getFrameConstraints().extent;
+
+			vk::ImageMemoryBarrier inImageBarriers[] = {
+				vk::ImageMemoryBarrier(image, 0, VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL)
+			};
+
+			buf.cmdPipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
+					inImageBarriers);
+
+			buf.cmdBindDescriptorSets(static_cast<vk::RenderPass *>(subpass.pass->impl.get()), 0);
+
+			auto pipeline = (vk::ComputePipeline *)subpass.computePipelines.get("NoisePipeline")->pipeline.get();
+
+			buf.cmdBindPipeline(pipeline);
+
+			buf.cmdDispatch((extent.width - 1) / pipeline->getLocalX() + 1, (extent.height - 1) / pipeline->getLocalY() + 1);
+		});
 	});
 
 	_dataAttachment = data;
 	_imageAttachment = image;
 
 	return QueuePass::init(builder);
-}
-
-auto NoisePass::makeFrameHandle(const FrameQueue &queue) -> Rc<QueuePassHandle> {
-	return Rc<NoisePassHandle>::create(*this, queue);
-}
-
-bool NoisePassHandle::prepare(FrameQueue &q, Function<void(bool)> &&cb) {
-	auto pass = (NoisePass *)_queuePass.get();
-
-	if (auto imageAttachment = q.getAttachment(pass->getImageAttachment())) {
-		_image = (const vk::ImageAttachmentHandle *)imageAttachment->handle.get();
-	}
-
-	return vk::QueuePassHandle::prepare(q, move(cb));
-}
-
-Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle &handle) {
-	auto buf = _pool->recordBuffer(*_device, [&] (vk::CommandBuffer &buf) {
-		auto pass = _data->impl.cast<vk::RenderPass>().get();
-		pass->perform(*this, buf, [&] {
-			auto sdfImage = (vk::Image *)_image->getImage()->getImage().get();
-			auto extent = handle.getFrameConstraints().extent;
-
-			vk::ImageMemoryBarrier inImageBarriers[] = {
-				vk::ImageMemoryBarrier(sdfImage, 0, VK_ACCESS_SHADER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL)
-			};
-
-			buf.cmdPipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 0,
-					inImageBarriers);
-
-			buf.cmdBindDescriptorSets(pass, 0);
-
-			auto pipeline = (vk::ComputePipeline *)_data->subpasses[0]->computePipelines.get("NoisePipeline")->pipeline.get();
-
-			buf.cmdBindPipeline(pipeline);
-
-			buf.cmdDispatch((extent.width - 1) / pipeline->getLocalX() + 1, (extent.height - 1) / pipeline->getLocalY() + 1);
-		});
-		return true;
-	});
-	return Vector<const vk::CommandBuffer *>{buf};
 }
 
 }
