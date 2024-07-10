@@ -32,10 +32,13 @@ bool ExampleApplication::init(ViewCommandLineData &&data, void *native) {
 		return false;
 	}
 
+	// Здесь должна быть пользовательская инициализация
+
 	return true;
 }
 
 Rc<Scene> ExampleApplication::createSceneForView(vk::View &view, const core::FrameContraints &constraints) {
+	// Создаём сцену с примером
 	return Rc<ExampleScene>::create(this, constraints);
 }
 

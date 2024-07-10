@@ -53,6 +53,8 @@ SDK позволяет создавать полнофункциональные
 
 # Установка и запуск
 
+Подробнее на странице [установка и запуск](https://github.com/libstappler/libstappler-doc/blob/master/docs-ru/basics/installation.md)
+
 ## Зависимости
 
 ### Сборка и компиляция
@@ -62,27 +64,30 @@ SDK позволяет создавать полнофункциональные
 
 ### Базы данных
 
-PostgreSQL или PostgresPro версии от 12. SQLite входит в поставку.
+[PostgreSQL](https://www.postgresql.org/download/) или [PostgresPro](https://postgrespro.com/products/download) версии от 12. [SQLite](https://www.sqlite.org/index.html) входит в поставку Stappler SDK.
 
 ### Для Vulkan:
 
-* Заголовки Vulkan в система или Vulkan SDK (Переменная `VULKAN_SDK_PREFIX`)
-* glslangValidator (входит в SDK, переменная `GLSLC`)
-* spirv-link (входит в SDK, переменная `SPIRV_LINK`)
+* Заголовки Vulkan в системе или [Vulkan SDK](https://www.lunarg.com/vulkan-sdk/) (Переменная `VULKAN_SDK_PREFIX`)
+* glslangValidator (входит в Vulkan SDK или пакет glslang/glslang-tools, переменная `GLSLC`)
+* spirv-link (входит в Vulkan SDK или пакет spirv-tools, переменная `SPIRV_LINK`)
 
 ### Для WebAssembly
 
-* WASI SDK (`WASI_SDK ?= /opt/wasi-sdk`)
-* wit-bindgen (`WIT_BINDGEN ?= wit-bindgen`)
+* [WASI SDK](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-22) (`WASI_SDK ?= /opt/wasi-sdk`)
+* [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen), возможна установка из cargo: `cargo install wit-bindgen-cli` (`WIT_BINDGEN ?= wit-bindgen`)
 
 ### Для вебсервера
 
-* Apache HTTPD
+* [Apache HTTPD](https://httpd.apache.org/download.cgi#apache24)
 * Заголовки в системе (`APACHE_HTTPD_INCLUDE ?= /usr/local/include/apache`)
 
 ## Установка
 
+Быстрая установка для Linux (на apt):
+
 ```sh
+sudo apt-get install git make gcc g++
 git clone git@github.com:libstappler/libstappler-root.git
 cd libstappler-root
 git submodule update --init
@@ -96,13 +101,7 @@ make && make install
 stappler-build/host/genpasswd
 ```
 
-Тесты
-
-```sh
-cd tests/common
-make && make install
-stappler-build/host/testapp
-```
+См. [полное руководство](https://docs.stappler.dev/manual/basics/installation) по установке для всех платформ
 
 ## Первое приложение
 
@@ -220,7 +219,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 
 ## Документация
 
-Основная документация расположена по адресу https://docs.stappler.dev/
+Основная документация расположена по адресу [https://docs.stappler.dev/](https://docs.stappler.dev/)
 
 Рабочая версия руководства по SDK: https://github.com/libstappler/libstappler-doc/tree/master/docs
 

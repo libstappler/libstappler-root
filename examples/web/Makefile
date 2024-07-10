@@ -52,10 +52,9 @@ LOCAL_INCLUDES_OBJS :=
 
 LOCAL_WASM_DIRS := wasm
 
-LOCAL_SHADERS_DIR := shaders
-
 include $(STAPPLER_ROOT)/build/make/universal.mk
 
+# Автогенерированная конфигурация для запуска Apache HTTPD
 define HTTPD_DEFAULT_CONFIG
 StartServers 2
 DirectoryIndex index.html

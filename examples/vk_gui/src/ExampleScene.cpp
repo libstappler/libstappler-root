@@ -27,29 +27,44 @@
 namespace stappler::xenolith::app {
 
 bool ExampleScene::init(Application *app, const core::FrameContraints &constraints) {
+	// Инициализируем суперкласс
 	if (!Scene2d::init(app, constraints)) {
 		return false;
 	}
 
+	// Создаём объект, хранящий содержимое сцены
+	// Содержимое сцены связывается с конкретным проходом очереди рендеринга
+	// Для нескольких проходов в рамках одной сцены потребуется несколько таких объектов
 	auto content = Rc<basic2d::SceneContent2d>::create();
 
+	// Создаём в содержимом сцены текстовое поле
 	_helloWorldLabel = content->addChild(Rc<basic2d::Label>::create());
 	_helloWorldLabel->setString("Hello World");
 	_helloWorldLabel->setAnchorPoint(Anchor::Middle);
 
+	// Применяем содержимое сцены
 	setContent(content);
+
+	// Настраиваем систему 2D-освещения (не обязательно, пример не использует тени)
 
 	auto color = Color4F::WHITE;
 	color.a = 0.5f;
 
+	// Свет сверху под углом, дающий удлиннение теней снизу
 	auto light = Rc<basic2d::SceneLight>::create(basic2d::SceneLightType::Ambient, Vec2(0.0f, 0.3f), 1.5f, color);
+
+	// Свет строго сверху, дающий базовые тени
 	auto ambient = Rc<basic2d::SceneLight>::create(basic2d::SceneLightType::Ambient, Vec2(0.0f, 0.0f), 1.5f, color);
 
-	content->setGlobalLight(Color4F::WHITE);
 	content->removeAllLights();
+
+	// Базовый белый заполняющий свет
+	content->setGlobalLight(Color4F::WHITE);
+
 	content->addLight(move(light));
 	content->addLight(move(ambient));
 
+	// создаём директорию для хранения кешей
 	filesystem::mkdir(filesystem::cachesPath<Interface>());
 
 	return true;
@@ -58,6 +73,7 @@ bool ExampleScene::init(Application *app, const core::FrameContraints &constrain
 void ExampleScene::onContentSizeDirty() {
 	Scene2d::onContentSizeDirty();
 
+	// Размещаем тексовое поле в нужном положении, в центре сцены
 	_helloWorldLabel->setPosition(_content->getContentSize() / 2.0f);
 }
 

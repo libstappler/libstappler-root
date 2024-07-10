@@ -109,8 +109,12 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 
 	bool success = true;
 
+	// выполняем в контексте временного пула памяти
 	perform_temporary([&] {
-		success = ExampleDb::run(opts.first, opts.second.size() > 1 ? opts.second.at(1) : StringView());
+		// соединяемся с БД
+		success = ExampleDb::run(opts.first,
+				// Так можно передать команду на исполнение серверу аргументом, сейчас не используется
+				opts.second.size() > 1 ? opts.second.at(1) : StringView());
 	});
 
 	return success ? 0 : -1;

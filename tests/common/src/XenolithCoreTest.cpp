@@ -339,9 +339,9 @@ static bool XenolithCoreTest_core() {
 	}
 
 #ifdef VK_VERSION_1_3
-	for (size_t i = toInt(VkFormat::VK_FORMAT_G8B8G8R8_422_UNORM); i < toInt(VkFormat::VK_FORMAT_A8_UNORM_KHR) + 1; ++ i) {
-		out << xenolith::vk::getVkFormatName(VkFormat(i)) << ":" << xenolith::vk::getFormatBlockSize(VkFormat(i));
-	}
+	//for (size_t i = toInt(VkFormat::VK_FORMAT_G8B8G8R8_422_UNORM); i < toInt(VkFormat::VK_FORMAT_A8_UNORM_KHR) + 1; ++ i) {
+	//	out << xenolith::vk::getVkFormatName(VkFormat(i)) << ":" << xenolith::vk::getFormatBlockSize(VkFormat(i));
+	//}
 #endif
 
 	out << getColorSpaceName(ColorSpace(0));

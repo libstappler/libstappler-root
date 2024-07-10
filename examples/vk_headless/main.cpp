@@ -28,7 +28,7 @@ namespace stappler::xenolith::app {
 
 // Строка при запросе помощи по команде
 static constexpr auto HELP_STRING(
-R"HelpString(dbconnect <options> - generates password
+R"HelpString(noisegen <options> <filename> - generates noise image
 Options are one of:
 	--dx <number> - seed for X
 	--dy <number> - seed for Y
@@ -104,25 +104,34 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		}
 	}
 
+	// Проверяем, что аргумент файла результата передан
 	if (opts.second.size() != 2) {
+		std::cerr << "<filename> is missed\n";
 		return -2;
 	}
 
 	bool success = true;
 
+	// Конвертируем в путь от текущей рабочей директории
 	auto path = opts.second.at(1);
 	if (path[0] != '/') {
 		path = filesystem::currentDir<Interface>(path);
 	}
 
+	// выполняем в контексте временного пула памяти
 	perform_temporary([&] {
+		// Размерность изображения
 		Extent2 extent(1024, 768);
+
+		// Данные для генерации шума - зерно и плотность пикселей
 		NoiseData data{0, 0, 1.0f, 1.0f};
 
+		// Проверяем, запрошено ли случайное зерно
 		if (opts.first.getBool("random")) {
 			valid::makeRandomBytes((uint8_t *)&data, sizeof(uint32_t) * 2);
 		}
 
+		// Читаем значения зерна
 		if (opts.first.isInteger("dx")) {
 			data.seedX = opts.first.getInteger("dx");
 		}
@@ -131,6 +140,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			data.seedY = opts.first.getInteger("dx");
 		}
 
+		// Читаем значения размерности
 		if (opts.first.isInteger("width")) {
 			extent.width = opts.first.getInteger("width");
 		}
@@ -139,6 +149,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			extent.height = opts.first.getInteger("height");
 		}
 
+		// Запускаем генератор
 		success = NoiseQueue::run(path, data, extent);
 	});
 

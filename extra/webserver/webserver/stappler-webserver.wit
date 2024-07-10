@@ -42,7 +42,7 @@
 		get-version: func() -> string;
 		get-file: func() -> string;
 		get-symbol: func() -> string;
-		get-data: func() -> borrow<value>;
+		get-data: func() -> value;
 	}
 
 	resource host-component {
@@ -54,7 +54,7 @@
 	resource host {
 		add-protected-location: func(location: string);
 
-		get-component: func(name: string) -> borrow<host-component>;
+		get-component: func(name: string) -> host-component;
 		add-component: func(comp: host-component);
 
 		add-pre-request: func(callback: callback);
@@ -62,7 +62,7 @@
 		add-handler: func(path: string, callback: callback);
 		add-handler-with-value: func(path: string, callback: callback, value: borrow<value>);
 
-		next: func() -> borrow<host>;
+		next: func() -> host;
 
 		get-hostname: func() -> string;
 		get-document-root: func() -> string;

@@ -28,13 +28,16 @@
 
 namespace stappler::xenolith::app {
 
+// Класс использует базовую основу для приложения в виде vk::BootstrapApplication
 class ExampleApplication : public vk::BootstrapApplication {
 public:
 	virtual ~ExampleApplication();
 
+	// Переопределяем функцию создания приложения
 	virtual bool init(ViewCommandLineData &&, void *native = nullptr) override;
 
 protected:
+	// Переопределяем функцию создания сцены для окна
 	virtual Rc<Scene> createSceneForView(vk::View &view, const core::FrameContraints &constraints) override;
 };
 
