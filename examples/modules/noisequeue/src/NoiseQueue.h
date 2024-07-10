@@ -32,16 +32,18 @@ namespace stappler::xenolith::app {
 struct NoiseData {
 	uint32_t seedX;
 	uint32_t seedY;
-	float densityX;
-	float densityY;
+	float densityX; // не используется
+	float densityY; // не используется
 };
 
 struct NoiseDataInput : core::AttachmentInputData {
 	NoiseData data;
 };
 
+// Основной тип очереди
 class NoiseQueue : public core::Queue {
 public:
+	// Запуск приложения на одну генерацию в одной функции
 	static bool run(StringView target, NoiseData data, Extent2);
 
 	virtual ~NoiseQueue();
@@ -51,15 +53,20 @@ public:
 	const AttachmentData *getDataAttachment() const { return _dataAttachment; }
 	const AttachmentData *getImageAttachment() const { return _imageAttachment; }
 
+	// Запуск для записи в файл
 	void run(Application *, NoiseData data, Extent2 extent, StringView target);
 
+	// Запуск для получения в функции результата
 	void run(core::Loop *, NoiseData data, Extent2 extent,
 			Function<void(core::ImageInfoData info, BytesView view)> &&);
 
 protected:
 	using core::Queue::init;
 
+	// Входящее вложение
 	const AttachmentData *_dataAttachment = nullptr;
+
+	// Исходящее вложение
 	const AttachmentData *_imageAttachment = nullptr;
 };
 

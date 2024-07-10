@@ -40,10 +40,12 @@ protected:
 
 TestComponent::TestComponent(const Host &serv, const HostComponentInfo &info)
 : HostComponent(serv, info) {
+	// Экспортируем схему данных на сервер
 	exportValues(_objects);
 
 	using namespace db;
 
+	// Определяем простую схему данных
 	_objects.define(Vector<Field>{
 		Field::Text("text", MinLength(3)),
 		Field::Extra("data", Vector<Field>{
@@ -58,10 +60,13 @@ TestComponent::TestComponent(const Host &serv, const HostComponentInfo &info)
 }
 
 void TestComponent::handleChildInit(const Host &serv) {
+	// Создаём автоматический ресурс для схемы данных
 	serv.addResourceHandler("/objects/", _objects);
 
+	// Пример административной команды, экспортируемой компонентом
 	addOutputCommand("test", [&] (StringView str, const Callback<void(const Value &)> &cb) -> bool {
 		if (auto t = db::Transaction::acquireIfExists()) {
+			// cb вызывается для вывода в консоль
 			cb(Value("test"));
 		}
 		return true;
@@ -69,9 +74,11 @@ void TestComponent::handleChildInit(const Host &serv) {
 }
 
 void TestComponent::initTransaction(db::Transaction &t) {
+	// Принудительно устанавливаем роль пользователя
 	t.setRole(db::AccessRoleId::Authorized);
 }
 
+// Функция загрузки компонента
 SP_EXTERN_C HostComponent * CreateTestComponent(const Host &serv, const HostComponentInfo &info) {
 	return new TestComponent(serv, info);
 }

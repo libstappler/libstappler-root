@@ -28,17 +28,21 @@
 
 namespace stappler::xenolith::app {
 
+// Используем базовую 2D-сцену в качестве основы
 class ExampleScene : public basic2d::Scene2d {
 public:
 	virtual ~ExampleScene() = default;
 
+	// переопределяем создание сцены
 	virtual bool init(Application *, const core::FrameContraints &constraints) override;
 
+	// переопределяем размещение объектов на сцене при изменении размера
 	virtual void onContentSizeDirty() override;
 
 protected:
 	using Scene::init;
 
+	// Текстовое поле Hello world
 	basic2d::Label *_helloWorldLabel = nullptr;
 };
 

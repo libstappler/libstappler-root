@@ -29,6 +29,14 @@ namespace stappler::xenolith::app {
 static constexpr auto HELP_STRING(
 R"HelpString(testapp <options>
 Options are one of:
+	--w=<initial screen width in pixels>
+	--h=<initial screen height in pixels>
+	--d=<pixel density>
+	--l=<application locale code>
+	--bundle=<application bundle name>
+	--renderdoc - try to connect with renderdoc capture layers
+	--novalidation - force-disable vulkan validation
+	--decor=<left,top,right,bottom> - view decoration padding in pixels
 	-v (--verbose)
 	-h (--help))HelpString");
 
@@ -36,6 +44,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	ViewCommandLineData data;
 	Vector<String> args;
 
+	// читаем данные командной строки в структуру данных о приложении
 	data::parseCommandLineOptions<Interface, ViewCommandLineData>(data, argc, argv,
 		[&] (ViewCommandLineData &, StringView str) {
 			args.emplace_back(str.str<Interface>());
@@ -59,6 +68,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		}
 	}
 
+	// создаём и запускаем приложение
 	auto app = Rc<ExampleApplication>::create(move(data));
 	app->run();
 	return 0;

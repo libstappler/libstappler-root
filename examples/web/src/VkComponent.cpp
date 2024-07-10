@@ -34,6 +34,7 @@ namespace stappler::web::test {
 
 class VkComponent;
 
+// Компонент для работы с Vulkan
 class VkComponent : public HostComponent {
 public:
 	VkComponent(const Host &serv, const HostComponentInfo &info);
@@ -56,18 +57,23 @@ protected:
 	Rc<xenolith::app::NoiseQueue> _queue;
 };
 
+// Обработчик запроса для создания шума
 class VkRequestHandler : public RequestHandler {
 public:
+	// Разрешаем запрос для всех
 	virtual bool isRequestPermitted(Request & rctx) override {
 		return true;
 	}
 
+	// Обрабатываем запрос после того, как стал известен путь и параметры извлечены
 	virtual Status onTranslateName(Request &rctx) override {
 		auto comp = rctx.host().getComponent<VkComponent>();
 		if (!comp->isQueueStarted()) {
+			// компонент ещё не готов к работе, завершаем запрос
 			return HTTP_BAD_REQUEST;
 		}
 
+		// заполняем данные из запроса
 		xenolith::app::NoiseData data{0, 0, 1.0f, 1.0f};
 		xenolith::Extent2 extent(1024, 768);
 
@@ -93,10 +99,12 @@ public:
 			extent.height = queryData.getInteger("height", 768);
 		}
 
+		// Выполняенм запрос, блокируя текущий поток
 		std::unique_lock lock(_mutex);
 
 		comp->getQueue()->run(comp->getLoop(), data, extent,
 				[&] (xenolith::core::ImageInfoData info, BytesView view) {
+			// результат приходит в потоке графического цикла, при получении шлём уведомление ожидающему потоку
 			if (!view.empty()) {
 				auto fmt = xenolith::core::getImagePixelFormat(info.format);
 				bitmap::PixelFormat pixelFormat = bitmap::PixelFormat::Auto;
@@ -114,9 +122,11 @@ public:
 			_var.notify_all();
 		});
 
+		// ожидаем сигнала в текущем потоке
 		_var.wait(lock);
 
 		if (!_bitmap.empty()) {
+			// если результат получен - отправляем его клиенту
 			auto bytes = _bitmap.write(bitmap::FileFormat::Png);
 
 			rctx.setContentType("image/png");
@@ -124,6 +134,7 @@ public:
 			return DONE;
 		}
 
+		// не смогли получить результат, завершаем запрос
 		return HTTP_NOT_FOUND;
 	}
 
@@ -141,6 +152,7 @@ VkComponent::VkComponent(const Host &serv, const HostComponentInfo &info)
 : HostComponent(serv, info) {
 	using namespace xenolith;
 
+	// Загружаем API Vulkan
 	_appName = "stappler-web";
 	_appVersion = "0.1.0";
 
@@ -150,35 +162,46 @@ VkComponent::VkComponent(const Host &serv, const HostComponentInfo &info)
 		return true;
 	});
 
+	// Создаём графический цикл исполнения
 	auto data = Rc<vk::LoopData>::alloc();
 	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
+		// проверяем только базово необходимые фнкции и расширения
 		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
 	};
 	data->deviceExtensionsCallback = [] (const vk::DeviceInfo &dev) -> xenolith::Vector<StringView> {
+		// не просим дополнительных расширений
 		return xenolith::Vector<StringView>();
 	};
 	data->deviceFeaturesCallback = [] (const vk::DeviceInfo &dev) -> vk::DeviceInfo::Features {
+		// не просим дополнительных функций
 		return vk::DeviceInfo::Features();
 	};
 
+	// Запускаем цикл
 	core::LoopInfo loopInfo;
 	loopInfo.platformData = data;
 	_loop = _instance->makeLoop(move(loopInfo));
+
+	// между запуском и ожиданием инициализации разумно размещать другую инициализацию
+
 	_loop->waitRinning();
 }
 
 void VkComponent::handleChildInit(const Host &serv) {
+	// создаём очередь исполнения для Vulkan
 	_queue = Rc<xenolith::app::NoiseQueue>::create();
 
-	// then compile it on graphics device
+	// После чего собираем её на устройстве
 	_loop->compileQueue(_queue, [this] (bool success) {
 		_queueStarted = success;
 		log::verbose("VkComponent", "Queue compiled");
 	});
 
+	// Добавляет адрес для обработчика запроса
 	serv.addHandler("/vk", RequestHandler::Make<VkRequestHandler>());
 }
 
+// Функция загрузки компонента
 SP_EXTERN_C HostComponent * CreateVkComponent(const Host &serv, const HostComponentInfo &info) {
 	return new VkComponent(serv, info);
 }

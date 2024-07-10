@@ -1,5 +1,5 @@
 FROM scratch
-ADD alpine-minirootfs-3.20.0-x86_64.tar.gz /
+ADD alpine-minirootfs-3.20.1-x86_64.tar.gz /
 RUN \
 	apk add make cmake gcc g++ git pkgconfig perl linux-headers binutils-gold \
 	&& cd /opt \

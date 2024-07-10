@@ -26,7 +26,7 @@ LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 
 LOCAL_OUTDIR := stappler-build
 LOCAL_EXECUTABLE := testapp
-#LOCAL_WASM_MODULE := app.wasm
+LOCAL_WASM_MODULE := app.wasm
 
 LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/core/stappler-modules.mk \
@@ -93,11 +93,5 @@ LOCAL_SHADERS_DIR := shaders \
 	$(SHADERNN_DIR)/shaders/f16 $(SHADERNN_DIR)/shaders/f32 $(SHADERNN_DIR)/shaders/nme $(SHADERNN_DIR)/shaders/stat
 
 #ASAN := 1
-
-ifdef LINUX
-# For dynamic self-loading
-TOOLKIT_CFLAGS := -DXL_LINK=1
-LOCAL_LDFLAGS := -Wl,--export-dynamic -ldbus-1 -lwayland-client -lxcb -lxcb-randr -lxcb-keysyms -lxcb-xkb -lxkbcommon -lxkbcommon-x11
-endif
 
 include $(STAPPLER_ROOT)/build/make/universal.mk

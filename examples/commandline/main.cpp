@@ -39,9 +39,9 @@ static constexpr size_t DEFAULT_LENGTH = 0;
 
 // Строка при запросе помощи по команде
 static constexpr auto HELP_STRING(
-R"HelpString(genpasswd <options> - generates password
+R"HelpString(genpasswd <options> - generates password, at least one number, uppercase and lowercase char
 Options are one of:
-	-l<n> (--length <n>) - length for password in [4-256] (default: 8)
+	-l<n> (--length <n>) - length for password in [6-256] (default: 6)
 	-v (--verbose)
 	-h (--help))HelpString");
 
@@ -129,7 +129,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	}
 
 	// читаем запрошенную длину из параметров
-	size_t length = math::clamp<size_t>(opts.first.getInteger("length", DEFAULT_LENGTH), 4, 256);
+	size_t length = math::clamp<size_t>(opts.first.getInteger("length", DEFAULT_LENGTH), valid::MIN_GENPASSWORD_LENGTH, 256);
 
 	// выполняем в контексте временного пула памяти
 	// пример не использует подсистему пулов памяти, но всегда заворачивать выполнение основного

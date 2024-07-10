@@ -28,11 +28,17 @@
 namespace STAPPLER_VERSIONIZED stappler::app {
 
 bool ExampleDb::run(const Value &val, StringView command) {
+	bool isSqlite = true;
 	db::Value data;
 	if (val.isString("driver")) {
+		if (val.getString("driver") != "sqlite") {
+			isSqlite = false;
+		}
 		data.setString(val.getString("driver"), "driver");
 	} else {
+		// если установлен хост - не используем sqlite
 		if (val.hasValue("host")) {
+			isSqlite = false;
 			data.setString("pgsql", "driver");
 		} else {
 			data.setString("sqlite", "driver");
@@ -43,7 +49,13 @@ bool ExampleDb::run(const Value &val, StringView command) {
 		if (it.first == "host") {
 			data.setString(it.second.getString(), "host");
 		} else if (it.first == "dbname") {
-			data.setString(it.second.getString(), "dbname");
+			if (isSqlite) {
+				// для sqlite - конвертируем путь в зависимый от текущей директории
+				// абсолютные пути корректно обрабатываются автоматически
+				data.setString(filesystem::currentDir<Interface>(it.second.getString()), "dbname");
+			} else {
+				data.setString(it.second.getString(), "dbname");
+			}
 		} else if (it.first == "user") {
 			data.setString(it.second.getString(), "user");
 		} else if (it.first == "password") {
@@ -53,7 +65,12 @@ bool ExampleDb::run(const Value &val, StringView command) {
 
 	auto path = filesystem::writablePath<Interface>();
 
-	auto serv = Rc<db::SimpleServer>::create(data, path, db::AccessRoleId::Admin, SpanView<const db::Scheme *>());
+	// создаём простой сервер и соединяемся с ним
+	auto serv = Rc<db::SimpleServer>::create(data,
+			path, // базовый путь для хранения файлов вне БД
+			db::AccessRoleId::Admin, // Пользовательская роль соединения
+			SpanView<const db::Scheme *>() // список схем данных для загрузки, сейчас пустой
+			);
 	if (serv) {
 		std::cout << "Connected!\n";
 		return true;
