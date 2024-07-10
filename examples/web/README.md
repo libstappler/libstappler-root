@@ -17,6 +17,8 @@ src/component.wit - интерфейс загрузки WebAssembly компон
 wasm/module.cpp - пример модуля WebAssembly
 conf/httpd.conf - базовая конфигурация для Apache HTTPD
 
+Приложение использует вспомогательный модуль, расположенный в [examples/modules/noisequeue](../modules/noisequeue).
+
 ## Сборка
 
 При использовании Vulkan SDK необходимо указать переменную `VULKAN_SDK_PREFIX=<префикс платформы внутри SDK>`.

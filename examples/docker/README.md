@@ -6,7 +6,12 @@
 
 Приложение командной строки [docker](https://docs.docker.com/engine/reference/commandline/cli/)
 
-Дистрибутив [Alpine Linux](https://www.alpinelinux.org/downloads/) в виде архива (alpine-minirootfs-3.20.0-x86_64.tar.gz), помещённый в эту директорию.
+Образ [sbkarr/libstappler-root](https://hub.docker.com/repository/docker/sbkarr/libstappler-root/general) из Docker Hub (автоматически), или собранный из корня SDK локально с тегом latest:
+
+```
+cd <путь>/libstappler-root
+docker build -t sbkarr/libstappler-root:latest .
+```
 
 ## Структура
 
@@ -22,8 +27,8 @@ web/conf/httpd.conf - базовая конфигурация для Apache HTTP
 
 ```sh
 wget https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-minirootfs-3.20.1-x86_64.tar.gz
-docker build -t stappler-alpine .
-docker run -it --rm stappler-alpine /bin/sh
+docker build -t libstappler-example-docker .
+docker run -it --rm libstappler-example-docker /bin/sh
 ```
 
 Внутри контейнера:

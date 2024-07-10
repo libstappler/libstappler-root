@@ -1,26 +1,13 @@
-FROM scratch
-ADD alpine-minirootfs-3.20.1-x86_64.tar.gz /
+FROM sbkarr/libstappler-root
 RUN \
 	apk add make cmake gcc g++ git pkgconfig perl linux-headers binutils-gold \
 	&& cd /opt \
-	&& git clone https://github.com/libstappler/libstappler-root.git \
-	&& cd libstappler-root \
-	&& git submodule update --init \
-	&& rm -rf doc tests .git \
-	&& cd deps \
-	&& rm -rf android windows \
-	&& make \
-	&& cd linux \
-	&& make clean \
-	&& make DISABLE_GNUTLS=1 \
-	&& cd .. \
-	&& rm -rf src \
-	&& cd /opt \
 	&& mkdir httpd \
 	&& cd httpd \
-	&& wget https://dlcdn.apache.org/httpd/httpd-2.4.59.tar.bz2 \
-	&& tar -xf httpd-2.4.59.tar.bz2 \
-	&& rm httpd-2.4.59.tar.bz2 \
+	&& wget https://dlcdn.apache.org/httpd/httpd-2.4.61.tar.bz2 \
+	&& tar -xf httpd-2.4.61.tar.bz2 \
+	&& rm httpd-2.4.61.tar.bz2 \
+	&& mv httpd-2.4.61 httpd \
 	&& wget https://dlcdn.apache.org//apr/apr-1.7.4.tar.bz2 \
 	&& tar -xf apr-1.7.4.tar.bz2 \
 	&& rm apr-1.7.4.tar.bz2 \
@@ -45,7 +32,7 @@ RUN \
 	&& make \
 	&& make install \
 	&& cd .. \
-	&& cd httpd-2.4.59 \
+	&& cd httpd \
 	&& export STAPPLER_DEPS_ROOT=/opt/libstappler-root/deps/linux/x86_64 \
 	&& chmod +x /opt/libstappler-root/deps/replacements/httpd/configure-stappler.sh \
 	&& /opt/libstappler-root/deps/replacements/httpd/configure-stappler.sh /opt/apache \
@@ -54,11 +41,14 @@ RUN \
 	&& cd .. \
 	&& rm -rf /opts/httpd
 
+# To build image:
+# $ docker build -t libstappler-example-docker .
+
 # To build example within container:
-# cd /opt/libstappler-root/examples/docker/web
-# make APACHE_HTTPD_INCLUDE=/opt/apache/include install
+# $ cd /opt/libstappler-root/examples/docker/web
+# $ make APACHE_HTTPD_INCLUDE=/opt/apache/include install
 
 # To run example:
-# /opt/apache/bin/httpd -X -f /opt/libstappler-root/examples/docker/web/stappler-build/httpd.conf
+# $ /opt/apache/bin/httpd -X -f /opt/libstappler-root/examples/docker/web/stappler-build/httpd.conf
 
 CMD ["/bin/sh"]

@@ -11,7 +11,7 @@
 Makefile - Файл описания проекта
 main.cpp - Код приложения
 
-Приложение использует вспомогательный модуль, расположенный в examples/modules/noisequeue.
+Приложение использует вспомогательный модуль, расположенный в [examples/modules/noisequeue](../modules/noisequeue).
 
 ## Сборка
 
