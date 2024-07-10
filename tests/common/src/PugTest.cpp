@@ -25,6 +25,7 @@
 #include "SPPugCache.h"
 #include "SPPugContext.h"
 
+#if LINUX
 #include <errno.h>
 #include <poll.h>
 #include <stdio.h>
@@ -32,6 +33,7 @@
 #include <sys/inotify.h>
 #include <unistd.h>
 #include <string.h>
+#endif
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
@@ -235,6 +237,7 @@ struct PugTest : MemPoolTest {
 	}
 
 	virtual void updateNotify(int notify) {
+#if LINUX
 		static bool regenerate = false;
 		char buf[4096] __attribute__ ((aligned(__alignof__(struct inotify_event))));
 		const struct inotify_event *event;
@@ -258,6 +261,7 @@ struct PugTest : MemPoolTest {
 				}
 			}
 		}
+#endif
 	}
 
 	virtual bool run(pool_t *p) override {

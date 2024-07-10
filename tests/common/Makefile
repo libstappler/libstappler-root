@@ -26,7 +26,7 @@ LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 
 LOCAL_OUTDIR := stappler-build
 LOCAL_EXECUTABLE := testapp
-LOCAL_WASM_MODULE := app.wasm
+#LOCAL_WASM_MODULE := app.wasm
 
 LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/core/stappler-modules.mk \
@@ -47,17 +47,23 @@ LOCAL_MODULES ?= \
 	stappler_crypto_mbedtls \
 	stappler_font
 
-ifndef WIN32
+ifdef LINUX
 ifneq ($(STAPPLER_ARCH),e2k)
 ifneq ($(STAPPLER_ARCH),aarch64)
 LOCAL_MODULES += \
 	stappler_crypto_gnutls
 endif
 endif
+
+LOCAL_MODULES += \
+	stappler_webserver_unix
+
+endif
+
+ifndef WIN32
 LOCAL_MODULES += \
 	stappler_webserver_pug \
 	stappler_webserver_webserver \
-	stappler_webserver_unix \
 	xenolith_font \
 	xenolith_backend_vkgui \
 	xenolith_resources_assets \

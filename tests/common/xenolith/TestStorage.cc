@@ -70,7 +70,7 @@ public:
 				db::Vector<AutoFieldScheme>({
 					AutoFieldScheme{ _objects, {"text", "key"} }
 				}),
-				DefaultFn([this] (const db::Value &data) -> db::Value {
+				DefaultFn([] (const db::Value &data) -> db::Value {
 					db::StringStream html;
 					db::StringStream text;
 					text << data.getString("key") << " ";
@@ -205,10 +205,10 @@ void StorageTestComponentContainer::handleComponentsLoaded(const storage::Server
 		q.include("index", "key");
 	});
 
-	_server->count(_component->getObjects(), [this] (size_t count) {
+	_server->count(_component->getObjects(), [] (size_t count) {
 		log::debug("StorageTestComponentContainer", toString("Count: ", count));
 	});
-	_server->count(_component->getObjects(), [this] (size_t count) {
+	_server->count(_component->getObjects(), [] (size_t count) {
 		log::debug("StorageTestComponentContainer", toString("Count: ", count));
 	}, [] (db::Query &q) {
 
@@ -220,7 +220,7 @@ void StorageTestComponentContainer::handleComponentsLoaded(const storage::Server
 	_server->set("StorageTestComponentContainer", Value({
 		pair("key", Value("StorageTestComponentContainer"))
 	}), [this] (const Value &val) {
-		_server->get("StorageTestComponentContainer", [this] (const Value &val) { });
+		_server->get("StorageTestComponentContainer", [] (const Value &val) { });
 		_server->clear("StorageTestComponentContainer", [] (const Value &) { });
 		_server->clear("StorageTestComponentContainer");
 	});

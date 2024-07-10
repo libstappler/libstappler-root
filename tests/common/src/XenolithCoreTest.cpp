@@ -1137,10 +1137,10 @@ static bool XenolithCoreTest_queue() {
 
 	auto a1 = builder.addAttachemnt("Attachment1", [&] (AttachmentBuilder &b) -> Rc<Attachment> {
 		b.defineAsOutput();
-		auto a = Rc<ImageAttachment>::create(b, image1, ImageAttachment::AttachmentInfo(
+		auto a = Rc<ImageAttachment>::create(b, image1, ImageAttachment::AttachmentInfo({
 			AttachmentLayout::ShaderReadOnlyOptimal,
 			AttachmentLayout::TransferSrcOptimal
-		));
+		}));
 		a->isCompatible(*image2);
 		a->setInputCallback([] (FrameQueue &, const Rc<AttachmentHandle> &, Function<void(bool)> &&) { });
 		a->getName();

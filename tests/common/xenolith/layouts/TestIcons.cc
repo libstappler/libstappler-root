@@ -93,8 +93,8 @@ bool TestIcons::init()  {
 	auto controller = _scrollView->setController(Rc<ScrollController>::create());
 
 	for (uint32_t i = toInt(IconName::Action_3d_rotation_outline); i < toInt(IconName::Max); ++ i) {
-		controller->addItem([this, i] (const ScrollController::Item &) -> Rc<Node> {
-			return Rc<VgIconListNode>::create(IconName(i), [this] (IconName name) { });
+		controller->addItem([i] (const ScrollController::Item &) -> Rc<Node> {
+			return Rc<VgIconListNode>::create(IconName(i), [] (IconName name) { });
 		}, 72.0f, 0);
 	}
 

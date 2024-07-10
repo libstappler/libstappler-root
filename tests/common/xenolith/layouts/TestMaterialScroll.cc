@@ -41,7 +41,7 @@ bool TestMaterialScroll::init() {
 			material2d::NodeStyle::Filled, material2d::ColorRole::PrimaryContainer)));
 	_appBar->setTitle("Test App Bar");
 	_appBar->setNavButtonIcon(IconName::Navigation_arrow_back_solid);
-	_appBar->setNavCallback([this] {
+	_appBar->setNavCallback([] {
 
 	});
 	_appBar->setMaxActionIcons(4);
@@ -54,12 +54,12 @@ bool TestMaterialScroll::init() {
 			_appBar->setLayout(material2d::AppBarLayout::CenterAligned);
 		}
 	});
-	actionMenu->addButton("", IconName::Editor_vertical_align_top_solid, [this] (material2d::Button *, material2d::MenuSourceButton *) {
+	actionMenu->addButton("", IconName::Editor_vertical_align_top_solid, [] (material2d::Button *, material2d::MenuSourceButton *) {
 
 	});
 	actionMenu->addButton("", IconName::Notification_do_disturb_on_outline, [this] (material2d::Button *, material2d::MenuSourceButton *) {
 		if (auto content = dynamic_cast<material2d::SceneContent *>(_scene->getContent())) {
-			content->showSnackbar(move(material2d::SnackbarData("test shackbar").withButton("Button", IconName::Action_accessibility_solid, [this, content] () {
+			content->showSnackbar(move(material2d::SnackbarData("test shackbar").withButton("Button", IconName::Action_accessibility_solid, [content] () {
 				content->showSnackbar(material2d::SnackbarData("updated shackbar", Color::Red_500, 1.0f));
 			}, Color::Green_500, 1.0f)));
 		}
@@ -79,7 +79,7 @@ bool TestMaterialScroll::init() {
 	_scrollView->setLoaderSize(100.0f);
 	_scrollView->setMinLoadTime(TimeInterval::milliseconds(100));
 
-	_scrollView->setLoaderCallback([this] (material2d::DataScroll::Request, const Function<void()> &cb) -> Rc<material2d::DataScroll::Loader> {
+	_scrollView->setLoaderCallback([] (material2d::DataScroll::Request, const Function<void()> &cb) -> Rc<material2d::DataScroll::Loader> {
 		return Rc<material2d::DataScroll::Loader>::create(cb);
 	});
 

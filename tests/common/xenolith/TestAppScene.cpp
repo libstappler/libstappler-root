@@ -215,7 +215,7 @@ void TestAppScene::onEnter(xenolith::Scene *scene) {
 
 	serv->addComponentContainer(_container);
 
-	_container->getAll([this] (Value &&val) { }, this);
+	_container->getAll([] (Value &&val) { }, this);
 
 	auto lib = _director->getApplication()->getExtension<storage::AssetLibrary>();
 	lib->acquireAsset("https://finuch.ru/api/v1/pages/id8261/images/id8262/content", [this] (const Rc<storage::Asset> &asset) {

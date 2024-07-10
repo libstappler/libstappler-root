@@ -1367,7 +1367,7 @@ struct CryptoTest : Test {
 
 		crypto::listBackends([&] (crypto::Backend b, StringView title, crypto::BackendFlags flags) {
 			if ((flags & crypto::BackendFlags::SupportsGost3410_2012) != crypto::BackendFlags::None) {
-				runTest(stream, toString(title, "-gost-sign"), count, passed, [&, this] () -> bool {
+				runTest(stream, toString(title, "-gost-sign"), count, passed, [&] () -> bool {
 					return CryptoTest_gost_sign(stream, b);
 				});
 			}

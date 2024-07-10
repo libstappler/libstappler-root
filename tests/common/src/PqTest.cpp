@@ -382,7 +382,7 @@ ServerScheme::ServerScheme(memory::pool_t *p, uint32_t version) : _pool(p) {
 			Vector<AutoFieldScheme>({
 				AutoFieldScheme{ _test, {"text", "key"} }
 			}),
-			DefaultFn([this] (const Value &data) -> Value {
+			DefaultFn([] (const Value &data) -> Value {
 				StringStream html;
 				StringStream text;
 				text << data.getString("key") << " ";

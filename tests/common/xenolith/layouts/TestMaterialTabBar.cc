@@ -30,9 +30,9 @@ bool TestMaterialTabBar::init() {
 	}
 
 	auto source = Rc<material2d::MenuSource>::create();
-	source->addButton("Test1", IconName::Action_bookmarks_solid, std::bind([this] { }))->setSelected(true);
-	source->addButton("Test2", IconName::Action_history_solid, std::bind([this] { }));
-	source->addButton("Test3", IconName::Action_list_solid, std::bind([this] { }));
+	source->addButton("Test1", IconName::Action_bookmarks_solid, std::bind([] { }))->setSelected(true);
+	source->addButton("Test2", IconName::Action_history_solid, std::bind([] { }));
+	source->addButton("Test3", IconName::Action_list_solid, std::bind([] { }));
 
 	_tabBar = _background->addChild(Rc<material2d::TabBar>::create(source,
 			material2d::TabBar::ButtonStyle::TitleIcon, material2d::TabBar::BarStyle::Layout, material2d::TabBar::Alignment::Justify

@@ -279,11 +279,11 @@ void TestGeneralUpdate::onEnter(xenolith::Scene *scene) {
 
 		_spriteLayer2->stopAllActions();
 
-		_spriteLayer2->runAction(Rc<RemoveSelf>::create(true));
+		_spriteLayer2->runAction(Rc<RemoveSelf>::create(true, false));
 		_spriteLayer2 = nullptr;
 	}, 0.03f, [this] {
 		_sprite->stopAllActions();
-	}, 0.03f, [this] { }));
+	}, 0.03f, [] { }));
 }
 
 void TestGeneralUpdate::update(const UpdateTime &time) {
