@@ -103,6 +103,8 @@ stappler-build/host/genpasswd
 
 См. [полное руководство](https://docs.stappler.dev/manual/basics/installation) по установке для всех платформ
 
+Также, см. [обучающие примеры и примеры использования](https://github.com/libstappler/libstappler-doc/blob/master/docs-ru/basics/examples.md).
+
 ## Первое приложение
 
 Структура приложения:
@@ -221,6 +223,18 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 
 Основная документация расположена по адресу [https://docs.stappler.dev/](https://docs.stappler.dev/)
 
+[Данные о покрытии тестами](https://docs.stappler.dev/tests).
+
 Рабочая версия руководства по SDK: https://github.com/libstappler/libstappler-doc/tree/master/docs
 
 Email для связи: admin@stappler.dev
+
+# Нас используют:
+
+* Приложение «Финграмотность» в [Google Play](https://play.google.com/store/apps/details?id=ru.msu.econ.finedu/)
+* Сервер для [сайта](https://finuch.ru/) «Финансовая грамотность в вузах» (общий с приложением)
+* Приложение «Журнал [off]» в [Google Play](https://play.google.com/store/search?q=%D0%B6%D1%83%D1%80%D0%BD%D0%B0%D0%BB%20off&c=apps/).
+* Приложение «АПК Эксперт» в [Google Play](https://play.google.com/store/apps/details?id=org.stappler.apkexpert/).
+* Сервер для [сайта](https://sold-online.ru/) Sold Online
+* Сервер для [сайта](https://kg.newdiamed.ru/) журнала «Клиническая геронтология»
+* Пользовательский веб-интерфейс и вычислительная модель симптом-чекера [MeDiCase](https://medicase.pro/)
