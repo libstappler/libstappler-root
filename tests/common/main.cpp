@@ -30,7 +30,7 @@ THE SOFTWARE.
 #endif
 
 static constexpr auto HELP_STRING(
-R"HelpString(sptest <options> <test-name|all>
+R"HelpString(testapp <options> <list|test-name|all>
 Options are one of:
     -v (--verbose)
     -h (--help))HelpString");
