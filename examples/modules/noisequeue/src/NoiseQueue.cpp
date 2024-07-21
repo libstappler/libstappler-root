@@ -98,10 +98,13 @@ bool NoiseQueue::run(StringView target, NoiseData noiseData, Extent2 extent) {
 	core::LoopInfo info;
 	info.platformData = data;
 
-	// запускаем основной цикл
-	app->run(callbackInfo, move(info), 2, TimeInterval::microseconds(500000));
+	if (app) {
+		// запускаем основной цикл
+		app->run(callbackInfo, move(info), 2, TimeInterval::microseconds(500000));
 
-	return true;
+		return true;
+	}
+	return false;
 }
 
 NoiseQueue::~NoiseQueue() { }

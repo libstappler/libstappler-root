@@ -82,7 +82,7 @@ void runApplication(Application::CommonInfo &&info, float density, Function<void
 	Application::CallbackInfo callbacks({
 		.initCallback = [&] (const Application &) {
 			mainLoop->addView(ViewInfo{
-				.name = name,
+				.title = name,
 				.bundleId = bundle,
 				.density = density,
 				.selectConfig = [] (View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
