@@ -10,7 +10,9 @@
 
 ```
 cd <путь>/libstappler-root
+wget https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-minirootfs-3.20.2-x86_64.tar.gz
 docker build -t sbkarr/libstappler-root:latest .
+rm alpine-minirootfs-3.20.2-x86_64.tar.gz
 ```
 
 ## Структура
@@ -26,7 +28,6 @@ web/conf/httpd.conf - базовая конфигурация для Apache HTTP
 Сборка и запуск контейнера
 
 ```sh
-wget https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-minirootfs-3.20.1-x86_64.tar.gz
 docker build -t libstappler-example-docker .
 docker run -it --rm libstappler-example-docker /bin/sh
 ```
@@ -34,6 +35,7 @@ docker run -it --rm libstappler-example-docker /bin/sh
 Внутри контейнера:
 
 ```sh
+apk add make gcc g++ linux-headers binutils-gold
 cd /opt/libstappler-root/examples/docker/web
 make APACHE_HTTPD_INCLUDE=/opt/apache/include install
 

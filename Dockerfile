@@ -1,8 +1,8 @@
 # Для сборки поместите дистрибутив [Alpine Linux](https://www.alpinelinux.org/downloads/)
-# в виде архива (alpine-minirootfs-3.20.1-x86_64.tar.gz), в текущую директорию.
+# в виде архива (alpine-minirootfs-3.20.2-x86_64.tar.gz), в текущую директорию.
 
 FROM scratch
-ADD alpine-minirootfs-3.20.1-x86_64.tar.gz /
+ADD alpine-minirootfs-3.20.2-x86_64.tar.gz /
 RUN \
 	apk add make cmake gcc g++ git pkgconfig perl linux-headers binutils-gold \
 	&& cd /opt \
