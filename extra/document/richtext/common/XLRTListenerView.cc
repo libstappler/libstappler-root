@@ -172,7 +172,7 @@ void ListenerView::Selection::emplaceRect(const Rect &rect, size_t idx, size_t c
 	}
 }
 
-void ListenerView::Selection::updateVertexes() {
+void ListenerView::Selection::updateVertexes(FrameInfo &frame) {
 	if (!_view->getResult()) {
 		return;
 	}

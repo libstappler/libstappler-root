@@ -118,7 +118,7 @@ void MaterialColorPicker::initVertexes() {
 	_vertexesDirty = true;
 }
 
-void MaterialColorPicker::updateVertexes() {
+void MaterialColorPicker::updateVertexes(FrameInfo &frame) {
 	_vertexes.clear();
 
 	auto texExtent = _texture->getExtent();

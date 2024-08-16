@@ -68,7 +68,7 @@ public:
 		virtual void setDirty();
 	protected:
 		virtual void emplaceRect(const Rect &, size_t idx, size_t count);
-		virtual void updateVertexes() override;
+		virtual void updateVertexes(FrameInfo &frame) override;
 
 		View *_view = nullptr;
 		Vector<Pair<SelectionPosition, SelectionPosition>> _selectionBounds;
