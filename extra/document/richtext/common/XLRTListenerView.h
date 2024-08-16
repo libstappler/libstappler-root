@@ -87,7 +87,7 @@ public:
 		virtual const Object *getSelectedObject(Result *, const Vec2 &, size_t pos, int32_t offset) const;
 
 		virtual void emplaceRect(const Rect &, size_t idx, size_t count);
-		virtual void updateVertexes() override;
+		virtual void updateVertexes(FrameInfo &frame) override;
 
 		ListenerView *_view = nullptr;
 		const Object *_object = nullptr;

@@ -105,7 +105,9 @@ struct TessTest : Test {
 		for (size_t j = 0; j <= size_t(toInt(geom::Tesselator::RelocateRule::Monotonize)); ++ j) {
 			i = toInt(xenolith::IconName::Dynamic_Loader);
 
-			canvas->setRelocateRule(geom::Tesselator::RelocateRule(j));
+			xenolith::basic2d::VectorCanvasConfig config;
+			config.relocateRule = geom::Tesselator::RelocateRule(j);
+			canvas->setConfig(config);
 
 			for (; i < max; ++ i) {
 				drawIcon(stream, canvas, i, failed, vg::DrawStyle::Fill, true);

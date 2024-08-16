@@ -744,7 +744,7 @@ void View::Highlight::emplaceRect(const Rect &rect, size_t idx, size_t count) {
 	quad.setGeometry(Vec4(origin, 0, 1), rect.size);
 }
 
-void View::Highlight::updateVertexes() {
+void View::Highlight::updateVertexes(FrameInfo &frame) {
 	auto res = _view->getResult();
 	if (res) {
 		_vertexes.clear();

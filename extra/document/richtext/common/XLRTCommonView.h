@@ -45,7 +45,7 @@ protected:
 	virtual bool initAsPath(document::PathObject *);
 
 	virtual void updateLabel(document::Label *);
-	virtual void updateVertexes() override;
+	virtual void updateVertexes(FrameInfo &frame) override;
 
 	virtual void updateColor() override;
 	virtual void updateVertexesColor() override;

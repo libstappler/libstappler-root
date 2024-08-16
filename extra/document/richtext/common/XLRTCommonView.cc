@@ -203,7 +203,7 @@ void CommonObject::updateLabel(document::Label *label) {
 	basic2d::Label::writeQuads(_vertexes, &label->layout, colorMap);
 }
 
-void CommonObject::updateVertexes() {
+void CommonObject::updateVertexes(FrameInfo &frame) {
 	_vertexes.clear();
 
 	switch (_object->type) {
@@ -212,7 +212,7 @@ void CommonObject::updateVertexes() {
 		break;
 	case document::Object::Type::Background:
 		if (_vertexesVisible) {
-			Sprite::updateVertexes();
+			Sprite::updateVertexes(frame);
 		}
 		break;
 	case document::Object::Type::Path:
