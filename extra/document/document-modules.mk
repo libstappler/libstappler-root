@@ -21,8 +21,9 @@
 # current dir
 DOCUMENT_MODULE_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-include $(DOCUMENT_MODULE_DIR)/document/document.mk
-include $(DOCUMENT_MODULE_DIR)/layout/layout.mk
-include $(DOCUMENT_MODULE_DIR)/mmd/mmd.mk
-include $(DOCUMENT_MODULE_DIR)/mmd_document/mmd_document.mk
-include $(DOCUMENT_MODULE_DIR)/richtext/richtext.mk
+TOOLKIT_MODULE_LIST += \
+	$(DOCUMENT_MODULE_DIR)/document/document.mk \
+	$(DOCUMENT_MODULE_DIR)/layout/layout.mk \
+	$(DOCUMENT_MODULE_DIR)/mmd/mmd.mk \
+	$(DOCUMENT_MODULE_DIR)/mmd_document/mmd_document.mk \
+	$(DOCUMENT_MODULE_DIR)/richtext/richtext.mk
