@@ -18,13 +18,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-MODULE_DOCUMENT_MMD_DEFINED_IN := $(TOOLKIT_MODULE_PATH)
-MODULE_DOCUMENT_MMD_PRECOMPILED_HEADERS :=
-MODULE_DOCUMENT_MMD_SRCS_DIRS := $(DOCUMENT_MODULE_DIR)/mmd
-MODULE_DOCUMENT_MMD_SRCS_OBJS :=
-MODULE_DOCUMENT_MMD_INCLUDES_DIRS := $(DOCUMENT_MODULE_DIR)/mmd
-MODULE_DOCUMENT_MMD_INCLUDES_OBJS :=
-MODULE_DOCUMENT_MMD_DEPENDS_ON := stappler_core
+STAPPLER_ROOT ?= .
 
-# module name resolution
-MODULE_stappler_document_mmd := MODULE_DOCUMENT_MMD
+# force to rebuild if this makefile changed
+LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
+
+LOCAL_OUTDIR := stappler-build
+
+LOCAL_MODULES_PATHS = \
+	$(STAPPLER_ROOT)/core/stappler-modules.mk \
+	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk \
+	$(STAPPLER_ROOT)/extra/document/document-modules.mk \
+	$(STAPPLER_ROOT)/extra/webserver/webserver-modules.mk
+
+LOCAL_MODULES ?= \
+	stappler_core \
+	stappler_brotli_lib \
+	stappler_data \
+	stappler_bitmap \
+	stappler_crypto
+
+include $(STAPPLER_ROOT)/build/make/shared.mk
