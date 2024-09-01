@@ -29,6 +29,8 @@
 // Для функций генерации пароля
 #include "SPValid.h"
 
+#include "SPCrypto.h"
+
 namespace stappler::app {
 
 // Выбираем стандартную подсистему памяти для текущего пространства имён
@@ -137,6 +139,12 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	perform_temporary([&] {
 		// генерируем и выводим пароль
 		std::cout << valid::generatePassword<Interface>(length) << "\n";
+
+		crypto::PrivateKey pkey;
+		pkey.generate(crypto::KeyType::GOST3410_2012_512);
+		pkey.exportPem([] (BytesView data) {
+			std::cout << data.toStringView() << "\n";
+		});
 	});
 
 	return 0;

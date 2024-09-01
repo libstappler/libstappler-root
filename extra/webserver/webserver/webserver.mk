@@ -33,8 +33,8 @@ MODULE_STAPPLER_WEBSERVER_WEBSERVER_DEPENDS_ON := \
 	stappler_filesystem stappler_data stappler_db stappler_crypto stappler_webserver_pug stappler_brotli_lib stappler_bitmap stappler_wasm
 
 MODULE_STAPPLER_WEBSERVER_WEBSERVER_FLAGS := \
-	-DWEBSERVER_VERSION_NUMBER=$(STAPPLER_VERSION_NUMBER) \
-	-DWEBSERVER_VERSION_BUILD=$(STAPPLER_VERSION_BUILD)
+	-DWEBSERVER_VERSION_API=$(WEBSERVER_VERSION_API) \
+	-DWEBSERVER_VERSION_REV=$(WEBSERVER_VERSION_REV)
 
 
 # module name resolution

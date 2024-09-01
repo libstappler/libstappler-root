@@ -30,6 +30,7 @@ THE SOFTWARE.
 #if MODULE_STAPPLER_DATA
 
 #include "SPData.h"
+#include "SPIdn.h"
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
@@ -119,6 +120,8 @@ struct ValidTest : MemPoolTest {
 			}
 		}
 
+		emails.addString(" (test comment) user(test comment)@(test comment)localserver(test comment) ");
+		emails.addString("аяклешня@xn--80aegcbuie0bo.xn--p1ai");
 		emails.addString("аяклешня@йакреведко.рф");
 		emails.addString("prettyandsimple@example.com");
 		emails.addString("йакреведко@упячка.рф");
@@ -137,11 +140,10 @@ struct ValidTest : MemPoolTest {
 		emails.addString("user@com");
 		emails.addString("user@localserver");
 		emails.addString("user@[IPv6:2001:db8::1]");
-		emails.addString(" (test comment) user(test comment)@(test comment)localserver(test comment) ");
 
 		for (auto &it : emails.asArray()) {
 			memory::string str(it.getString());
-			if (!valid::validateEmail(str) || !valid::validateEmailWithoutNormalization(str)) {
+			if (!valid::validateEmail(str) || !valid::validateEmailWithoutNormalization(it.getString())) {
 				stream << "Email: [invalid] " << str << "\n";
 				++ failed;
 			} else {

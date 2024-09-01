@@ -36,6 +36,15 @@ LOCAL_MODULES ?= \
 	stappler_brotli_lib \
 	stappler_data \
 	stappler_bitmap \
-	stappler_crypto
+	stappler_crypto \
+	stappler_search \
+	stappler_db \
+	stappler_geom \
+	stappler_vg \
+	stappler_tess \
+	stappler_threads \
+	stappler_idn \
+	stappler_network \
+	stappler_font
 
 include $(STAPPLER_ROOT)/build/make/shared.mk
