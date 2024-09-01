@@ -407,12 +407,12 @@ struct SearchTest : MemPoolTest {
 		});
 
 		runTest(stream, "Common test", count, passed, [&] {
-			for (int l = toInt(search::Language::Unknown); l <= toInt(search::Language::Simple); ++ l) {
+			for (auto l = toInt(search::Language::Unknown); l <= toInt(search::Language::Simple); ++ l) {
 				search::isStopword("test", search::Language(l));
 				search::parseLanguage(search::getLanguageName(search::Language(l)));
 			}
 
-			for (int l = toInt(search::ParserToken::AsciiWord); l <= toInt(search::ParserToken::HyphenatedWord_AsciiPart); ++ l) {
+			for (auto l = toInt(search::ParserToken::AsciiWord); l <= toInt(search::ParserToken::HyphenatedWord_AsciiPart); ++ l) {
 				search::getParserTokenName(search::ParserToken(l));
 			}
 

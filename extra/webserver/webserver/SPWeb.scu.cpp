@@ -63,15 +63,15 @@ namespace STAPPLER_VERSIONIZED stappler::web::config {
 #define TOSTRING(x) STRINGIFY(x)
 
 const char * getWebserverVersionString() {
-	return TOSTRING(WEBSERVER_VERSION_NUMBER) "/" TOSTRING(WEBSERVER_VERSION_BUILD);
+	return TOSTRING(WEBSERVER_VERSION_API) "/" TOSTRING(WEBSERVER_VERSION_REV);
 }
 
-uint32_t getWebserverVersionNumber() {
-	return WEBSERVER_VERSION_NUMBER;
+uint32_t getWebserverVersionApi() {
+	return WEBSERVER_VERSION_API;
 }
 
-uint32_t getWebserverVersionBuild() {
-	return WEBSERVER_VERSION_BUILD;
+uint32_t getWebserverVersionRev() {
+	return WEBSERVER_VERSION_REV;
 }
 
 }

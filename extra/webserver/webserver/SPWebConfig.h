@@ -96,8 +96,8 @@ constexpr auto DIR_MIME_TYPE = "httpd/unix-directory";
 extern const char * MIME_TYPES;
 
 const char * getWebserverVersionString();
-uint32_t getWebserverVersionNumber();
-uint32_t getWebserverVersionBuild();
+uint32_t getWebserverVersionApi();
+uint32_t getWebserverVersionRev();
 
 }
 
