@@ -21,6 +21,9 @@
  **/
 
 #include "Test.h"
+
+#if MODULE_STAPPLER_WASM
+
 #include "SPWasm.h"
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
@@ -62,3 +65,5 @@ struct WesmTest : Test {
 } _WesmTest;
 
 }
+
+#endif

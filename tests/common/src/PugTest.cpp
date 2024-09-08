@@ -21,6 +21,9 @@
  **/
 
 #include "SPCommon.h"
+
+#if MODULE_STAPPLER_WEBSERVER_PUG
+
 #include "Test.h"
 #include "SPPugCache.h"
 #include "SPPugContext.h"
@@ -542,3 +545,5 @@ protected:
 } _PugTest;
 
 }
+
+#endif

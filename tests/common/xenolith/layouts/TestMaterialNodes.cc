@@ -24,6 +24,7 @@
 
 #include "MaterialLabel.h"
 #include "XLInputListener.h"
+#include "XLView.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
