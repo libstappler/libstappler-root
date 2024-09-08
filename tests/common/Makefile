@@ -19,6 +19,10 @@
 # THE SOFTWARE.
 
 STAPPLER_ROOT ?= ../..
+STAPPLER_BUILD_ROOT ?= $(STAPPLER_ROOT)/build/make
+
+# STAPPLER_BUILD_ROOT ?= $(STAPPLER_ROOT)/stappler-build/host/debug/gcc/share/libstappler
+
 # STAPPLER_VERSION_PREFIX := sp_test
 
 # force to rebuild if this makefile changed
@@ -26,14 +30,13 @@ LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 
 LOCAL_OUTDIR := stappler-build
 LOCAL_EXECUTABLE := testapp
-LOCAL_WASM_MODULE := app.wasm
 
 LOCAL_MODULES_PATHS = \
 	$(STAPPLER_ROOT)/core/stappler-modules.mk \
 	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk \
 	$(STAPPLER_ROOT)/extra/webserver/webserver-modules.mk
 
-LOCAL_MODULES ?= \
+LOCAL_MODULES := \
 	stappler_bitmap \
 	stappler_brotli_lib \
 	stappler_db \
@@ -44,31 +47,18 @@ LOCAL_MODULES ?= \
 	stappler_network \
 	stappler_backtrace \
 	stappler_crypto_openssl \
-	stappler_crypto_mbedtls \
-	stappler_font
-
-ifdef LINUX
-ifneq ($(STAPPLER_ARCH),e2k)
-ifneq ($(STAPPLER_ARCH),aarch64)
-LOCAL_MODULES += \
-	stappler_crypto_gnutls
-endif
-endif
-
-LOCAL_MODULES += \
-	stappler_webserver_unix
-
-endif
-
-ifndef WIN32
-LOCAL_MODULES += \
-	stappler_webserver_pug \
-	stappler_webserver_webserver \
+	stappler_font \
 	xenolith_font \
 	xenolith_backend_vkgui \
 	xenolith_resources_assets \
 	xenolith_renderer_material2d
-endif
+
+LOCAL_MODULES_OPTIONAL := \
+	stappler_crypto_gnutls \
+	stappler_crypto_mbedtls \
+	stappler_webserver_unix \
+	stappler_webserver_pug \
+	stappler_webserver_webserver
 
 LOCAL_ROOT = .
 
@@ -80,9 +70,15 @@ LOCAL_SRCS_OBJS := app.wit
 LOCAL_INCLUDES_DIRS := src xenolith $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests
 LOCAL_INCLUDES_OBJS :=
 
-LOCAL_WASM_DIRS := wasm
-
 LOCAL_MAIN := main.cpp
+
+ifdef SHARED_PREFIX
+$(info SHARED_ROOT: $(SHARED_PREFIX))
+LOCAL_LDFLAGS := -lpng
+else
+LOCAL_WASM_MODULE := app.wasm
+LOCAL_WASM_DIRS := wasm
+endif
 
 SHADER_WORK_GROUP_X = 4
 SHADER_WORK_GROUP_Y = 8
@@ -94,4 +90,4 @@ LOCAL_SHADERS_DIR := shaders \
 
 #ASAN := 1
 
-include $(STAPPLER_ROOT)/build/make/universal.mk
+include $(STAPPLER_BUILD_ROOT)/universal.mk

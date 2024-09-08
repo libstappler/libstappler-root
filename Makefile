@@ -45,6 +45,14 @@ LOCAL_MODULES ?= \
 	stappler_threads \
 	stappler_idn \
 	stappler_network \
-	stappler_font
+	stappler_font \
+	stappler_zip \
+	xenolith_core \
+	xenolith_font \
+	xenolith_backend_vk \
+	xenolith_backend_vkgui \
+	xenolith_renderer_basic2d \
+	xenolith_renderer_material2d \
+	xenolith_resources_assets
 
 include $(STAPPLER_ROOT)/build/make/shared.mk
