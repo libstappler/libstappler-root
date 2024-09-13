@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
-class Template : public memory::AllocPool {
+class SP_PUBLIC Template : public memory::AllocPool {
 public:
 	using OutStream = Callback<void(StringView)>;
 

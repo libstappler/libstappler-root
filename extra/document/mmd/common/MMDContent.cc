@@ -48,8 +48,8 @@
 
 namespace STAPPLER_VERSIONIZED stappler::mmd {
 
-Extensions DefaultExtensions = Extensions::Critic | Extensions::Notes | Extensions::Smart;
-Extensions StapplerExtensions = Extensions::Critic | Extensions::Notes | Extensions::Smart | Extensions::StapplerLayout;
+SP_PUBLIC Extensions DefaultExtensions = Extensions::Critic | Extensions::Notes | Extensions::Smart;
+SP_PUBLIC Extensions StapplerExtensions = Extensions::Critic | Extensions::Notes | Extensions::Smart | Extensions::StapplerLayout;
 
 static auto clean_inside_pair(const StringView & source, token * t, bool lowercase) -> Content::String {
 	auto pairText = text_inside_pair(source, t);

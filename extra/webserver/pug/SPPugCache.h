@@ -28,7 +28,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
-class FileRef : public RefBase<memory::PoolInterface> {
+class SP_PUBLIC FileRef : public RefBase<memory::PoolInterface> {
 public:
 	static Rc<FileRef> read(memory::pool_t *, FilePath path, Template::Options opts = Template::Options::getDefault(),
 			const Callback<void(const StringView &)> & = nullptr, int watch = -1, int wId = -1);
@@ -61,7 +61,7 @@ protected:
 	bool _valid = false;
 };
 
-class Cache : public memory::AllocPool {
+class SP_PUBLIC Cache : public memory::AllocPool {
 public:
 	using OutStream = Callback<void(StringView)>;
 	using RunCallback = Callback<bool(Context &, const Template &)>;

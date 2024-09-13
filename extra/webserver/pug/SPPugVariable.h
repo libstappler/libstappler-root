@@ -29,14 +29,14 @@ namespace STAPPLER_VERSIONIZED stappler::pug {
 
 struct VarStorage;
 
-struct VarClass : memory::AllocPool {
+struct SP_PUBLIC VarClass : memory::AllocPool {
 	using Callback = Function<Var (VarStorage &, Var *, size_t argc)>;
 
 	Map<String, Callback> staticFunctions;
 	Map<String, Callback> functions;
 };
 
-struct VarData {
+struct SP_PUBLIC VarData {
 	enum Type {
 		Null,
 		Inline,
@@ -73,7 +73,7 @@ struct VarData {
 	void assign(const VarData &);
 };
 
-struct VarStorage {
+struct SP_PUBLIC VarStorage {
 	using Callback = VarClass::Callback;
 
 	enum Type {
@@ -108,12 +108,12 @@ struct VarStorage {
 	Callback * getCallable() const;
 };
 
-struct VarWritable {
+struct SP_PUBLIC VarWritable {
 	Value *value;
 	StringView key;
 };
 
-struct Var {
+struct SP_PUBLIC Var {
 	using Callback = VarClass::Callback;
 
 	enum Type {

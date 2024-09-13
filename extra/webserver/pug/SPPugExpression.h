@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
-struct Expression : memory::AllocPool {
+struct SP_PUBLIC Expression : memory::AllocPool {
 	using OutStream = Callback<void(StringView)>;
 
 	enum Op : uint8_t {

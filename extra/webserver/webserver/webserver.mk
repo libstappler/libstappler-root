@@ -30,12 +30,31 @@ MODULE_STAPPLER_WEBSERVER_WEBSERVER_INCLUDES_DIRS := $(WEBSERVER_MODULE_DIR)/web
 MODULE_STAPPLER_WEBSERVER_WEBSERVER_INCLUDES_OBJS :=
 
 MODULE_STAPPLER_WEBSERVER_WEBSERVER_DEPENDS_ON := \
-	stappler_filesystem stappler_data stappler_db stappler_crypto stappler_webserver_pug stappler_brotli_lib stappler_bitmap stappler_wasm
+	stappler_filesystem	\
+	stappler_data \
+	stappler_db \
+	stappler_crypto \
+	stappler_webserver_pug \
+	stappler_brotli_lib \
+	stappler_bitmap
 
 MODULE_STAPPLER_WEBSERVER_WEBSERVER_FLAGS := \
 	-DWEBSERVER_VERSION_API=$(WEBSERVER_VERSION_API) \
 	-DWEBSERVER_VERSION_REV=$(WEBSERVER_VERSION_REV)
 
+
+#spec
+
+MODULE_STAPPLER_WEBSERVER_WEBSERVER_SHARED_SPEC_SUMMARY := libstappler webserver primitives
+
+define MODULE_STAPPLER_WEBSERVER_WEBSERVER_SHARED_SPEC_DESCRIPTION
+Module libstappler-webserver-webserver implements basic primitives to build HTTP web interfaces:
+- Request handling
+- Websocket handling
+- Async task
+- Database resource access
+- Server adminitrative interface
+endef
 
 # module name resolution
 MODULE_stappler_webserver_webserver := MODULE_STAPPLER_WEBSERVER_WEBSERVER

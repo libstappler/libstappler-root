@@ -35,7 +35,7 @@ class InputFilter;
 class WebsocketHandler;
 class WebsocketConnection;
 
-class RequestController : public AllocBase {
+class SP_PUBLIC RequestController : public AllocBase {
 public:
 	virtual ~RequestController();
 

@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class RequestFilter : public AllocBase {
+class SP_PUBLIC RequestFilter : public AllocBase {
 public:
 	enum class RequestState {
 		None,
@@ -45,8 +45,6 @@ public:
 
 	static size_t readRequestLine(StringView &source, RequestInfo &);
 	static size_t readRequestHeader(BytesView &source, StringView &key, StringView &value);
-
-protected:
 };
 
 }

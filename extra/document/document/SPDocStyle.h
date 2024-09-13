@@ -286,7 +286,7 @@ enum class ParameterName : NameSize {
 using FontStyleParameters = font::FontParameters;
 using TextLayoutParameters = font::TextParameters;
 
-struct ParagraphLayoutParameters {
+struct SP_PUBLIC ParagraphLayoutParameters {
 	TextAlign textAlign = TextAlign::Left;
 	Metric textIndent;
 	Metric lineHeight;
@@ -296,7 +296,7 @@ struct ParagraphLayoutParameters {
 	inline bool operator != (const ParagraphLayoutParameters &other) const = default;
 };
 
-struct BlockModelParameters {
+struct SP_PUBLIC BlockModelParameters {
 	Display display = Display::Default;
 	Float floating = Float::None;
 	Clear clear = Clear::None;
@@ -330,7 +330,7 @@ struct BlockModelParameters {
 	inline bool operator != (const BlockModelParameters &other) const = default;
 };
 
-struct InlineModelParameters {
+struct SP_PUBLIC InlineModelParameters {
 	Metric marginRight;
 	Metric marginLeft;
 	Metric paddingRight;
@@ -340,7 +340,7 @@ struct InlineModelParameters {
 	inline bool operator != (const InlineModelParameters &other) const = default;
 };
 
-struct BackgroundParameters {
+struct SP_PUBLIC BackgroundParameters {
 	Display display = Display::Default;
 	Color4B backgroundColor;
 	BackgroundRepeat backgroundRepeat = BackgroundRepeat::NoRepeat;
@@ -358,7 +358,7 @@ struct BackgroundParameters {
 	inline bool operator != (const BackgroundParameters &other) const = default;
 };
 
-struct OutlineParameters {
+struct SP_PUBLIC OutlineParameters {
 	struct Params {
 		BorderStyle style = BorderStyle::None;
 		Metric width;
@@ -378,7 +378,7 @@ struct OutlineParameters {
 	inline bool operator != (const OutlineParameters &other) const = default;
 };
 
-class StyleInterface {
+class SP_PUBLIC StyleInterface {
 public:
 	virtual ~StyleInterface() = default;
 
@@ -389,7 +389,7 @@ public:
 	virtual float getFontScale() const = 0;
 };
 
-class SimpleStyleInterface : public StyleInterface {
+class SP_PUBLIC SimpleStyleInterface : public StyleInterface {
 public:
 	virtual ~SimpleStyleInterface() = default;
 
@@ -409,7 +409,7 @@ protected:
 	SpanView<StringView> _strings;
 };
 
-union StyleValue {
+union SP_PUBLIC StyleValue {
 	FontStyle fontStyle;
 	FontWeight fontWeight;
 	FontStretch fontStretch;
@@ -448,7 +448,7 @@ union StyleValue {
 	StyleValue();
 };
 
-struct StyleParameter {
+struct SP_PUBLIC StyleParameter {
 	ParameterName name = ParameterName::Unknown;
 	MediaQueryId mediaQuery = MediaQueryIdNone;
 	StyleValue value;
@@ -465,7 +465,7 @@ struct StyleParameter {
 	void set(const Value &);
 };
 
-struct StyleList : public memory::AllocPool {
+struct SP_PUBLIC StyleList : public memory::AllocPool {
 	template <typename T>
 	using Vector = memory::PoolInterface::VectorType<T>;
 
@@ -502,7 +502,7 @@ struct StyleList : public memory::AllocPool {
 	Vector<StyleParameter> data;
 };
 
-struct MediaQuery : public memory::AllocPool {
+struct SP_PUBLIC MediaQuery : public memory::AllocPool {
 	template <typename T, typename V>
 	using Map = memory::PoolInterface::MapType<T, V>;
 
@@ -530,7 +530,7 @@ struct MediaQuery : public memory::AllocPool {
 	explicit operator bool() const { return !list.empty(); }
 };
 
-struct MediaParameters {
+struct SP_PUBLIC MediaParameters {
 	template <typename T, typename V>
 	using Map = memory::StandartInterface::MapType<T, V>;
 
@@ -576,7 +576,7 @@ struct MediaParameters {
 	float computeValueAuto(Metric, float base, float fontSize = nan()) const;
 };
 
-struct FontFace {
+struct SP_PUBLIC FontFace {
 	template <typename T, typename V>
 	using Map = memory::PoolInterface::MapType<T, V>;
 
@@ -604,7 +604,7 @@ struct FontFace {
 	FontFace() = default;
 };
 
-void getStyleForTag(StyleList &list, const StringView &, const StringView &parent = StringView());
+SP_PUBLIC void getStyleForTag(StyleList &list, const StringView &, const StringView &parent = StringView());
 
 /*String getFontConfigName(const StringView &, FontSize, FontStyle, FontWeight, FontStretch, FontVariant, bool caps);*/
 
@@ -612,14 +612,16 @@ inline bool isStringCaseEqual(const StringView &l, const StringView &r) {
 	return string::caseCompare_c(l, r) == 0;
 }
 
-template<ParameterName Name, class Value> StyleParameter StyleParameter::create(const Value &v, MediaQueryId query, StyleRule r) {
+template<ParameterName Name, class Value> inline
+StyleParameter StyleParameter::create(const Value &v, MediaQueryId query, StyleRule r) {
 	static_assert(Name != ParameterName::CssFontSize || !std::is_same_v<Value, uint8_t>, "uint8_t as FontSize is deprecated");
 	StyleParameter p(Name, query, r);
 	p.set<Name>(v);
 	return p;
 }
 
-template<ParameterName Name, class Value> void StyleList::set(const Value &value, MediaQueryId mediaQuery) {
+template<ParameterName Name, class Value> inline
+void StyleList::set(const Value &value, MediaQueryId mediaQuery) {
 	for (auto &it : data) {
 		if (it.name == Name && it.mediaQuery == mediaQuery) {
 			it.set<Name>(value);

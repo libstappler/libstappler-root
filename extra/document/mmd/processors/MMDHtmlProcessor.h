@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 namespace STAPPLER_VERSIONIZED stappler::mmd {
 
-class HtmlProcessor : public Processor {
+class SP_PUBLIC HtmlProcessor : public Processor {
 public:
 	using InitList = std::initializer_list<Pair<StringView, StringView>>;
 	using VecList = Vector<Pair<StringView, StringView>>;

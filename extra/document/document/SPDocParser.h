@@ -32,33 +32,22 @@ using namespace mem_pool;
 
 using StringReader = StringViewUtf8;
 
-String readHtmlTagName(StringReader &);
-String readHtmlTagParamName(StringReader &);
-String readHtmlTagParamValue(StringReader &);
+SP_PUBLIC String readHtmlTagName(StringReader &);
+SP_PUBLIC String readHtmlTagParamName(StringReader &);
+SP_PUBLIC String readHtmlTagParamValue(StringReader &);
 
-bool readStyleMargin(const StringView &, Metric &top, Metric &right, Metric &bottom, Metric &left);
-bool readStyleMargin(StringReader &, Metric &top, Metric &right, Metric &bottom, Metric &left);
-bool readStyleMetric(const StringView &, Metric &value, bool resolutionMetric = false, bool allowEmptyMetric = false);
-bool readStyleMetric(StringReader &, Metric &value, bool resolutionMetric = false, bool allowEmptyMetric = false);
+SP_PUBLIC bool readStyleMargin(const StringView &, Metric &top, Metric &right, Metric &bottom, Metric &left);
+SP_PUBLIC bool readStyleMargin(StringReader &, Metric &top, Metric &right, Metric &bottom, Metric &left);
+SP_PUBLIC bool readStyleMetric(const StringView &, Metric &value, bool resolutionMetric = false, bool allowEmptyMetric = false);
+SP_PUBLIC bool readStyleMetric(StringReader &, Metric &value, bool resolutionMetric = false, bool allowEmptyMetric = false);
 
-struct StyleReaderInfo {
+struct SP_PUBLIC StyleReaderInfo {
 	Callback<void(StringId, const StringView &)> addString;
 	Callback<MediaQueryId(MediaQuery &&)> addQuery;
 	Callback<void(StringView, const StyleList::StyleVec &, MediaQueryId)> addStyle;
 };
 
-void readStyle(StyleReaderInfo &, StringReader &);
-
-/*struct RefParser {
-	using Callback = Function<void(const String &, const String &)>;
-
-	RefParser(const String &content, const Callback &cb);
-	void readRef(const char *ref, size_t offset);
-
-	size_t idx = 0;
-	const char *ptr = nullptr;
-	Callback func;
-};*/
+SP_PUBLIC void readStyle(StyleReaderInfo &, StringReader &);
 
 }
 

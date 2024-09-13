@@ -27,29 +27,29 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web::output {
 
-void formatJsonAsHtml(const Callback<void(StringView)> &stream, const Value &, bool actionHandling = false);
+SP_PUBLIC void formatJsonAsHtml(const Callback<void(StringView)> &stream, const Value &, bool actionHandling = false);
 
-void writeData(Request &rctx, const Value &, bool allowJsonP = true);
-void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Callback<void(StringView)> &ct,
+SP_PUBLIC void writeData(Request &rctx, const Value &, bool allowJsonP = true);
+SP_PUBLIC void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Callback<void(StringView)> &ct,
 		const Value &, bool allowJsonP = true);
 
-Status writeResourceFileData(Request &rctx, Value &&);
-Status writeResourceData(Request &rctx, Value &&, Value && origin);
+SP_PUBLIC Status writeResourceFileData(Request &rctx, Value &&);
+SP_PUBLIC Status writeResourceData(Request &rctx, Value &&, Value && origin);
 
-Status writeResourceFileHeader(Request &rctx, const Value &);
+SP_PUBLIC Status writeResourceFileHeader(Request &rctx, const Value &);
 
 // write file headers with respect for cache headers (if-none-match, if-modified-since)
 // returns true if we should write file data or false if we should return HTTP_NOT_MODIFIED
-bool writeFileHeaders(Request &rctx, const Value &, StringView convertType = StringView());
+SP_PUBLIC bool writeFileHeaders(Request &rctx, const Value &, StringView convertType = StringView());
 
-String makeEtag(uint32_t idHash, Time mtime);
+SP_PUBLIC String makeEtag(uint32_t idHash, Time mtime);
 
 // returns true if requested entity is matched "if-none-match" and "if-modified-since"
 // suggest HTTP_NOT_MODIFIED if true
-bool checkCacheHeaders(Request &rctx, Time, const StringView &etag);
+SP_PUBLIC bool checkCacheHeaders(Request &rctx, Time, const StringView &etag);
 
 // shortcut for checkCacheHeaders + makeEtag;
-bool checkCacheHeaders(Request &rctx, Time, uint32_t idHash);
+SP_PUBLIC bool checkCacheHeaders(Request &rctx, Time, uint32_t idHash);
 
 }
 

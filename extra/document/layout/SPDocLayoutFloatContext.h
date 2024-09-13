@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::document {
 
-struct FloatContext {
+struct SP_PUBLIC FloatContext {
 	template <typename Value>
 	using Vector = typename memory::PoolInterface::VectorType<Value>;
 

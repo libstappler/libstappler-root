@@ -34,7 +34,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 class UnixRequestController;
 class ConnectionQueue;
 
-class ConnectionWorker : public thread::ThreadInterface<Interface> {
+class SP_PUBLIC ConnectionWorker : public thread::ThreadInterface<Interface> {
 public:
 	struct Buffer;
 	struct Client;

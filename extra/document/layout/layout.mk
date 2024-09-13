@@ -26,5 +26,14 @@ MODULE_DOCUMENT_LAYOUT_INCLUDES_DIRS := $(DOCUMENT_MODULE_DIR)/layout
 MODULE_DOCUMENT_LAYOUT_INCLUDES_OBJS :=
 MODULE_DOCUMENT_LAYOUT_DEPENDS_ON := stappler_document_document
 
+#spec
+
+MODULE_DOCUMENT_LAYOUT_SHARED_SPEC_SUMMARY := libstappler document layout engine
+
+define MODULE_DOCUMENT_LAYOUT_SHARED_SPEC_DESCRIPTION
+Module libstappler-document-layout implements simple layout engine for structured
+documents.
+endef
+
 # module name resolution
 MODULE_stappler_document_layout := MODULE_DOCUMENT_LAYOUT

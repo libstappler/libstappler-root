@@ -26,5 +26,14 @@ MODULE_DOCUMENT_DOCUMENT_INCLUDES_DIRS := $(DOCUMENT_MODULE_DIR)/document
 MODULE_DOCUMENT_DOCUMENT_INCLUDES_OBJS :=
 MODULE_DOCUMENT_DOCUMENT_DEPENDS_ON := stappler_filesystem stappler_vg stappler_font
 
+#spec
+
+MODULE_DOCUMENT_DOCUMENT_SHARED_SPEC_SUMMARY := libstappler extension for structured documents
+
+define MODULE_DOCUMENT_DOCUMENT_SHARED_SPEC_DESCRIPTION
+Module libstappler-document-document provides primitives to build
+structured document (like HTML, Markdown, ODT) renderer.
+endef
+
 # module name resolution
 MODULE_stappler_document_document := MODULE_DOCUMENT_DOCUMENT

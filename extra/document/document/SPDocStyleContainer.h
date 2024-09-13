@@ -29,7 +29,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::document {
 
-class StyleContainer : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
+class SP_PUBLIC StyleContainer : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
 public:
 	using HtmlIdentifier = chars::Compose<char32_t,
 			chars::Range<char32_t, u'0', u'9'>,

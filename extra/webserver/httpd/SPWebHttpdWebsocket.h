@@ -29,7 +29,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class HttpdWebsocketConnection : public WebsocketConnection {
+class SP_PUBLIC HttpdWebsocketConnection : public WebsocketConnection {
 public:
 	static constexpr auto WEBSOCKET_FILTER = "stappler::web::HttpdWebsocketFilter";
 	static constexpr auto WEBSOCKET_FILTER_IN = "stappler::web::HttpdWebsocketConnectionInput";

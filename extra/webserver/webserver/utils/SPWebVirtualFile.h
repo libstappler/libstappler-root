@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-struct VirtualFile {
+struct SP_PUBLIC VirtualFile {
 	static VirtualFile add(const StringView &, const StringView &);
 	static StringView get(const StringView &);
 

@@ -348,6 +348,7 @@ bool HostController::loadDsoComponent(const Host &serv, const HostComponentInfo 
 }
 
 bool HostController::loadWasmComponent(const Host &serv, const HostComponentInfo &info) {
+#if MODULE_STAPPLER_WASM
 	auto module = loadWasmModule(info.name, info.file);
 	if (!module) {
 		return false;
@@ -360,9 +361,13 @@ bool HostController::loadWasmComponent(const Host &serv, const HostComponentInfo
 	} else {
 		log::error("web::HostController", "Wasm: fail to load component: ", info.name, " from ", info.file);
 	}
+#else
+	log::error("web::HostController", "Wasm: compiled without WASM support");
+#endif
 	return false;
 }
 
+#if MODULE_STAPPLER_WASM
 wasm::Module *HostController::loadWasmModule(StringView name, StringView str) {
 	auto path = resolvePath(str);
 	if (path.empty()) {
@@ -381,6 +386,7 @@ wasm::Module *HostController::loadWasmModule(StringView name, StringView str) {
 	}
 	return nullptr;
 }
+#endif
 
 String HostController::resolvePath(StringView path) const {
 	for (auto &it : _sourceRoot) {

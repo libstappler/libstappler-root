@@ -31,7 +31,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 
 class HttpdHostController;
 
-class HttpdRequestController : public RequestController {
+class SP_PUBLIC HttpdRequestController : public RequestController {
 public:
 	static HttpdRequestController *get(request_rec *);
 

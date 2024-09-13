@@ -27,7 +27,10 @@
 #include "SPCrypto.h"
 #include "SPPugCache.h"
 #include "SPSqlDriver.h"
+
+#if MODULE_STAPPLER_WASM
 #include "SPWasm.h"
+#endif
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -38,7 +41,7 @@ class HostComponent;
 class Host;
 class DbdModule;
 
-class HostController : public AllocBase {
+class SP_PUBLIC HostController : public AllocBase {
 public:
 	virtual ~HostController();
 
@@ -95,8 +98,6 @@ protected:
 	virtual bool loadDsoComponent(const Host &serv, const HostComponentInfo &);
 	virtual bool loadWasmComponent(const Host &serv, const HostComponentInfo &);
 
-	virtual wasm::Module *loadWasmModule(StringView name, StringView path);
-
 	virtual String resolvePath(StringView path) const;
 
 	void handleTemplateError(const StringView &str);
@@ -146,7 +147,12 @@ protected:
 	DbdModule *_customDbd = nullptr;
 	db::sql::Driver *_dbDriver = nullptr;
 
+#if MODULE_STAPPLER_WASM
+protected:
+	virtual wasm::Module *loadWasmModule(StringView name, StringView path);
+
 	Map<StringView, Rc<wasm::Module>> _wasmModules;
+#endif
 };
 
 

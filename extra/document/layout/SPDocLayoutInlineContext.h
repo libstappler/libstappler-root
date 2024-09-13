@@ -31,7 +31,7 @@ namespace STAPPLER_VERSIONIZED stappler::document {
 
 class LayoutBlock;
 
-struct InlineContext : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
+struct SP_PUBLIC InlineContext : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
 	using NodeCallback = Function<void(InlineContext &ctx)>;
 
 	struct RefPosInfo {

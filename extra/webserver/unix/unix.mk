@@ -26,5 +26,13 @@ MODULE_STAPPLER_WEBSERVER_UNIX_INCLUDES_DIRS := $(WEBSERVER_MODULE_DIR)/unix
 MODULE_STAPPLER_WEBSERVER_UNIX_INCLUDES_OBJS :=
 MODULE_STAPPLER_WEBSERVER_UNIX_DEPENDS_ON := stappler_webserver_webserver
 
+#spec
+
+MODULE_STAPPLER_WEBSERVER_UNIX_SHARED_SPEC_SUMMARY := libstappler webserver implementation on unix sockets
+
+define MODULE_STAPPLER_WEBSERVER_UNIX_SHARED_SPEC_DESCRIPTION
+Module libstappler-webserver-unix implements simple webserver for debugging purpuses
+endef
+
 # module name resolution
 MODULE_stappler_webserver_unix := MODULE_STAPPLER_WEBSERVER_UNIX

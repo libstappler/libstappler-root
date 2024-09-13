@@ -38,7 +38,7 @@ using load_data_fn = Rc<Document> (*) (memory::pool_t *, BytesView , StringView 
 using check_file_fn = bool (*) (memory::pool_t *, FilePath path, StringView ct);
 using load_file_fn = Rc<Document> (*) (memory::pool_t *, FilePath path, StringView ct);
 
-struct Format {
+struct SP_PUBLIC Format {
 	check_data_fn check_data;
 	check_file_fn check_file;
 

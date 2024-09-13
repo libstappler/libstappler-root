@@ -28,7 +28,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::document {
 
-class PageContainer : public StyleContainer {
+class SP_PUBLIC PageContainer : public StyleContainer {
 public:
 	struct StyleLink {
 		String href;

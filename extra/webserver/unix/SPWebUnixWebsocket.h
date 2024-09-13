@@ -31,7 +31,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 class UnixRequestController;
 class UnixWebsocketConnectionSim;
 
-class UnixWebsocketSim {
+class SP_PUBLIC UnixWebsocketSim {
 public:
 	virtual ~UnixWebsocketSim();
 
@@ -53,7 +53,7 @@ protected:
 	UnixWebsocketConnectionSim *_socket = nullptr;
 };
 
-class UnixWebsocketConnectionSim : public WebsocketConnection {
+class SP_PUBLIC UnixWebsocketConnectionSim : public WebsocketConnection {
 public:
 	UnixWebsocketConnectionSim(allocator_t *, pool_t *, HostController *c, UnixWebsocketSim *sim);
 

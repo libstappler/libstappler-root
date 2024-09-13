@@ -33,7 +33,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class HttpdRoot : public Root {
+class SP_PUBLIC HttpdRoot : public Root {
 public:
 	virtual ~HttpdRoot();
 	HttpdRoot(pool_t *);

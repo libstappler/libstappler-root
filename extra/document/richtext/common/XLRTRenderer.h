@@ -25,10 +25,11 @@
 
 #include "XLRichText.h"
 #include "XLSubscriptionListener.h"
+#include "XLFontController.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
-struct RendererResource : public Ref {
+struct SP_PUBLIC RendererResource : public Ref {
 	~RendererResource();
 
 	Rc<ResourceCache> cache;
@@ -37,7 +38,7 @@ struct RendererResource : public Ref {
 	Rc<TemporaryResource> resource;
 };
 
-struct RendererResult : public Ref {
+struct SP_PUBLIC RendererResult : public Ref {
 	Rc<Application> app;
 	Rc<font::FontController> fc;
 	Rc<Document> document;
@@ -56,7 +57,7 @@ struct RendererResult : public Ref {
 	RendererResult& operator=(const RendererResult &);
 };
 
-class Renderer : public Component {
+class SP_PUBLIC Renderer : public Component {
 public:
 	using RenderingCallback = Function<void(RendererResult *, bool started)>;
 

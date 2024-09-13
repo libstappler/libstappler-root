@@ -20,6 +20,9 @@
 
 STAPPLER_ROOT ?= .
 
+LOCAL_LIBRARY := libstappler
+LOCAL_VERSION := 0.3
+
 # force to rebuild if this makefile changed
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 
@@ -53,6 +56,36 @@ LOCAL_MODULES ?= \
 	xenolith_backend_vkgui \
 	xenolith_renderer_basic2d \
 	xenolith_renderer_material2d \
-	xenolith_resources_assets
+	xenolith_resources_assets \
+	stappler_document_document \
+	stappler_document_richtext \
+	stappler_document_mmd_document \
+	stappler_webserver_unix
+
+LOCAL_ARCHIVE_FILES := \
+	$(STAPPLER_ROOT)/build/ \
+	$(STAPPLER_ROOT)/core/ \
+	$(STAPPLER_ROOT)/extra/ \
+	$(STAPPLER_ROOT)/xenolith/application/ \
+	$(STAPPLER_ROOT)/xenolith/backend/ \
+	$(STAPPLER_ROOT)/xenolith/core/ \
+	$(STAPPLER_ROOT)/xenolith/font/ \
+	$(STAPPLER_ROOT)/xenolith/platform/ \
+	$(STAPPLER_ROOT)/xenolith/renderer/ \
+	$(STAPPLER_ROOT)/xenolith/resources/ \
+	$(STAPPLER_ROOT)/xenolith/scene/ \
+	$(STAPPLER_ROOT)/xenolith/thirdparty/ \
+	$(STAPPLER_ROOT)/xenolith/LICENSE \
+	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk \
+	$(STAPPLER_ROOT)/LICENSE \
+	$(STAPPLER_ROOT)/Makefile \
+	$(STAPPLER_ROOT)/README.md
+
+$(LOCAL_LIBRARY)-$(LOCAL_VERSION).tar: $(LOCAL_MAKEFILE)
+	tar --transform 's,^\.,$(LOCAL_LIBRARY)-$(LOCAL_VERSION),' -cf $(LOCAL_LIBRARY)-$(LOCAL_VERSION).tar $(LOCAL_ARCHIVE_FILES)
+
+tar: $(LOCAL_LIBRARY)-$(LOCAL_VERSION).tar
+
+.PHONY: tar
 
 include $(STAPPLER_ROOT)/build/make/shared.mk

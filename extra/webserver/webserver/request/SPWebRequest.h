@@ -33,7 +33,7 @@ class Session;
 class RequestController;
 class InputFilter;
 
-class Request final : public std::basic_ostream<char, std::char_traits<char>>, public AllocBase {
+class SP_PUBLIC Request final : public std::basic_ostream<char, std::char_traits<char>>, public AllocBase {
 public:
 	using char_type = char;
 	using traits_type = std::char_traits<char>;

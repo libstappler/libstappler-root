@@ -29,7 +29,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Resource;
 
-class ResourceHandler : public RequestHandler {
+class SP_PUBLIC ResourceHandler : public RequestHandler {
 public:
 	using Scheme = db::Scheme;
 
@@ -59,7 +59,7 @@ protected:
 	db::Transaction _transaction = nullptr;
 };
 
-class ResourceMultiHandler : public RequestHandler {
+class SP_PUBLIC ResourceMultiHandler : public RequestHandler {
 public:
 	using Scheme = db::Scheme;
 

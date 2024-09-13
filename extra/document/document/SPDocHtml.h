@@ -28,7 +28,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::document {
 
-class DocumentHtml : public Document {
+class SP_PUBLIC DocumentHtml : public Document {
 public:
 	static bool isHtml(StringView);
 	static bool isHtml(FilePath);

@@ -45,7 +45,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::mmd {
 
-struct TokenPair {
+struct SP_PUBLIC TokenPair {
 	template <typename T>
 	using Vector = memory::PoolInterface::VectorType<T>;
 
@@ -77,7 +77,7 @@ struct TokenPair {
 
 SP_DEFINE_ENUM_AS_MASK(TokenPair::Options);
 
-struct TokenPairEngine {
+struct SP_PUBLIC TokenPairEngine {
 	static TokenPairEngine *engineForExtensions(Extensions::Value);
 
 	TokenPairEngine(Extensions::Value);

@@ -29,7 +29,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 
 class InputFilter;
 
-class RequestHandler : public AllocBase {
+class SP_PUBLIC RequestHandler : public AllocBase {
 public:
 	using HandlerCallback = Function<RequestHandler *()>;
 
@@ -106,12 +106,12 @@ protected:
 	db::Transaction _transaction = nullptr;
 };
 
-class DefaultHandler : public RequestHandler {
+class SP_PUBLIC DefaultHandler : public RequestHandler {
 public:
 	virtual bool isRequestPermitted(Request &) override { return true; }
 };
 
-class DataHandler : public RequestHandler {
+class SP_PUBLIC DataHandler : public RequestHandler {
 public:
 	enum class AllowMethod : uint8_t {
 		None = 0,
@@ -150,7 +150,7 @@ protected:
 
 SP_DEFINE_ENUM_AS_MASK(DataHandler::AllowMethod)
 
-class FilesystemHandler : public RequestHandler {
+class SP_PUBLIC FilesystemHandler : public RequestHandler {
 public:
 	FilesystemHandler(const String &path, size_t cacheTimeInSeconds = stappler::maxOf<size_t>());
 	FilesystemHandler(const String &path, const String &ct, size_t cacheTimeInSeconds = stappler::maxOf<size_t>());
@@ -164,7 +164,7 @@ protected:
 	size_t _cacheTime;
 };
 
-class RequestHandlerMap : public AllocBase {
+class SP_PUBLIC RequestHandlerMap : public AllocBase {
 public:
 	class HandlerInfo;
 	class Handler;

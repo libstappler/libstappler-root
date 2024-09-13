@@ -53,7 +53,7 @@ namespace STAPPLER_VERSIONIZED stappler::web::tools {
  *  - cancel session
  *
  */
-class AuthHandler : public DataHandler {
+class SP_PUBLIC AuthHandler : public DataHandler {
 public:
 	virtual bool isRequestPermitted(Request &) override;
 	virtual Status onTranslateName(Request &) override;
@@ -61,7 +61,7 @@ public:
 };
 
 /* WebSocket shell interface */
-class ShellSocket : public WebsocketManager {
+class SP_PUBLIC ShellSocket : public WebsocketManager {
 public:
 	SP_COVERAGE_TRIVIAL
 	virtual ~ShellSocket() = default;
@@ -73,7 +73,7 @@ public:
 };
 
 /* WebSocket shell interface GUI */
-class ShellGui : public RequestHandler {
+class SP_PUBLIC ShellGui : public RequestHandler {
 public:
 	SP_COVERAGE_TRIVIAL
 	virtual bool isRequestPermitted(Request &) override { return true; }
@@ -89,7 +89,7 @@ protected:
 };
 
 /* WebSocket shell interface GUI */
-class ServerGui : public DataHandler {
+class SP_PUBLIC ServerGui : public DataHandler {
 public:
 	static void defineBasics(pug::Context &exec, Request &req, db::User *u);
 
@@ -111,7 +111,7 @@ protected:
 	db::Transaction _transaction = nullptr;
 };
 
-class TestHandler : public DataHandler {
+class SP_PUBLIC TestHandler : public DataHandler {
 public:
 	TestHandler();
 	virtual bool isRequestPermitted(Request &) override;
@@ -124,25 +124,25 @@ protected:
 	bool processImageTest(Request &rctx, Value &ret, const Value &input, db::InputFile &);
 };
 
-class ErrorsGui : public RequestHandler {
+class SP_PUBLIC ErrorsGui : public RequestHandler {
 public:
 	virtual bool isRequestPermitted(Request &) override { return true; }
 	virtual Status onTranslateName(Request &) override;
 };
 
-class HandlersGui : public RequestHandler {
+class SP_PUBLIC HandlersGui : public RequestHandler {
 public:
 	virtual bool isRequestPermitted(Request &) override { return true; }
 	virtual Status onTranslateName(Request &) override;
 };
 
-class ReportsGui : public RequestHandler {
+class SP_PUBLIC ReportsGui : public RequestHandler {
 public:
 	virtual bool isRequestPermitted(Request &) override { return true; }
 	virtual Status onTranslateName(Request &) override;
 };
 
-class VirtualGui : public RequestHandler {
+class SP_PUBLIC VirtualGui : public RequestHandler {
 public:
 	virtual bool isRequestPermitted(Request &) override { return true; }
 	virtual Status onTranslateName(Request &) override;
@@ -169,13 +169,13 @@ protected:
 #endif
 };
 
-class VirtualFilesystem : public RequestHandler {
+class SP_PUBLIC VirtualFilesystem : public RequestHandler {
 public:
 	virtual bool isRequestPermitted(Request &) override { return true; }
 	virtual Status onTranslateName(Request &) override;
 };
 
-void registerTools(StringView prefix, Host &);
+SP_PUBLIC void registerTools(StringView prefix, Host &);
 
 }
 

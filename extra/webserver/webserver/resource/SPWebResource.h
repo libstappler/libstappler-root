@@ -31,7 +31,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 
 using ResolveOptions = db::Resolve;
 
-class Resource : public AllocBase {
+class SP_PUBLIC Resource : public AllocBase {
 public:
 	using Transaction = db::Transaction;
 	using Scheme = db::Scheme;
@@ -126,7 +126,7 @@ protected:
 	ResolveOptions _resolve = ResolveOptions::None;
 };
 
-class ResourceProperty : public Resource {
+class SP_PUBLIC ResourceProperty : public Resource {
 public:
 	ResourceProperty(const Transaction &h, QueryList &&q, const Field *prop);
 
@@ -138,7 +138,7 @@ protected:
 	const Field *_field = nullptr;
 };
 
-class ResourceFile : public ResourceProperty {
+class SP_PUBLIC ResourceFile : public ResourceProperty {
 public:
 	ResourceFile(const Transaction &h, QueryList &&q, const Field *prop);
 
@@ -156,7 +156,7 @@ protected:
 	Value getDatabaseObject();
 };
 
-class ResourceArray : public ResourceProperty {
+class SP_PUBLIC ResourceArray : public ResourceProperty {
 public:
 	ResourceArray(const Transaction &h, QueryList &&q, const Field *prop);
 
@@ -172,7 +172,7 @@ protected:
 	Value getDatabaseObject();
 };
 
-class ResourceObject : public Resource {
+class SP_PUBLIC ResourceObject : public Resource {
 public:
 	ResourceObject(const Transaction &a, QueryList &&q);
 
@@ -194,7 +194,7 @@ protected:
 	Vector<int64_t> getDatabaseId(const QueryList &q, size_t count = maxOf<size_t>());
 };
 
-class ResourceReslist : public ResourceObject {
+class SP_PUBLIC ResourceReslist : public ResourceObject {
 public:
 	ResourceReslist(const Transaction &a, QueryList &&q);
 
@@ -206,7 +206,7 @@ protected:
 	Value performCreateObject(Value &data, Vector<db::InputFile> &files, const Value &extra);
 };
 
-class ResourceSet : public ResourceReslist {
+class SP_PUBLIC ResourceSet : public ResourceReslist {
 public:
 	ResourceSet(const Transaction &a, QueryList &&q);
 
@@ -215,7 +215,7 @@ public:
 	virtual Value appendObject(Value &) override;
 };
 
-class ResourceRefSet : public ResourceSet {
+class SP_PUBLIC ResourceRefSet : public ResourceSet {
 public:
 	ResourceRefSet(const Transaction &a, QueryList &&q);
 
@@ -246,7 +246,7 @@ protected:
 	const Field *_field = nullptr;
 };
 
-class ResourceFieldObject : public ResourceObject {
+class SP_PUBLIC ResourceFieldObject : public ResourceObject {
 public:
 	ResourceFieldObject(const Transaction &a, QueryList &&q);
 
@@ -272,7 +272,7 @@ protected:
 	const Field *_field = nullptr;
 };
 
-class ResourceView : public ResourceSet {
+class SP_PUBLIC ResourceView : public ResourceSet {
 public:
 	ResourceView(const Transaction &h, QueryList &&q);
 
@@ -290,7 +290,7 @@ protected:
 	const Field *_field = nullptr;
 };
 
-class ResourceSearch : public ResourceObject {
+class SP_PUBLIC ResourceSearch : public ResourceObject {
 public:
 	ResourceSearch(const Transaction &h, QueryList &&q, const Field *prop);
 

@@ -28,7 +28,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class UnixHostController : public HostController {
+class SP_PUBLIC UnixHostController : public HostController {
 public:
 	virtual ~UnixHostController();
 

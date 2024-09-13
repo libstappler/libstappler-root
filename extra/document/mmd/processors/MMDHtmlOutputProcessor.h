@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 namespace STAPPLER_VERSIONIZED stappler::mmd {
 
-class HtmlOutputProcessor : public HtmlProcessor {
+class SP_PUBLIC HtmlOutputProcessor : public HtmlProcessor {
 public:
 	static void run(std::ostream *, const StringView &, const Extensions & = DefaultExtensions);
 	static void run(std::ostream *, memory::pool_t *, const StringView &, const Extensions & = DefaultExtensions);

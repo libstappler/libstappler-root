@@ -22,6 +22,7 @@
 
 #include "SPWebWasmComponent.h"
 
+#if MODULE_STAPPLER_WASM
 namespace STAPPLER_VERSIONIZED stappler::web {
 
 WasmComponent *WasmComponent::load(const Host &serv, const HostComponentInfo &info, wasm::Module *mod) {
@@ -113,3 +114,4 @@ void WasmComponent::handleHeartbeat(const Host &host) {
 
 
 }
+#endif
