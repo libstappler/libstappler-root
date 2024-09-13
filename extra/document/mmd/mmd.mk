@@ -26,5 +26,13 @@ MODULE_DOCUMENT_MMD_INCLUDES_DIRS := $(DOCUMENT_MODULE_DIR)/mmd
 MODULE_DOCUMENT_MMD_INCLUDES_OBJS :=
 MODULE_DOCUMENT_MMD_DEPENDS_ON := stappler_core
 
+#spec
+
+MODULE_DOCUMENT_MMD_SHARED_SPEC_SUMMARY := libstappler MMD document support
+
+define MODULE_DOCUMENT_MMD_SHARED_SPEC_DESCRIPTION
+Module libstappler-document-mmd implements support for MultiMarkdown structured format.
+endef
+
 # module name resolution
 MODULE_stappler_document_mmd := MODULE_DOCUMENT_MMD

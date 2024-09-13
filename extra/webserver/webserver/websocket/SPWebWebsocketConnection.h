@@ -31,7 +31,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 class Request;
 class WebserverHandler;
 
-class WebsocketConnection : public AllocBase {
+class SP_PUBLIC WebsocketConnection : public AllocBase {
 public:
 	static void destroy(WebsocketConnection *);
 

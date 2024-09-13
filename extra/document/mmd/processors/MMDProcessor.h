@@ -49,7 +49,7 @@ namespace STAPPLER_VERSIONIZED stappler::mmd {
 constexpr int kMaxExportRecursiveDepth = 1000; //!< Maximum recursion depth when exporting token tree -- to prevent stack overflow with "pathologic" input
 constexpr int kMaxTableColumns = 48; //!< Maximum number of table columns for specifying alignment
 
-class Processor : public memory::AllocPool {
+class SP_PUBLIC Processor : public memory::AllocPool {
 public:
 	template <typename T>
 	using Dict = Content::Dict<T>;

@@ -22,6 +22,8 @@
 
 #include "SPWebWasmComponent.h"
 
+#if MODULE_STAPPLER_WASM
+
 namespace STAPPLER_VERSIONIZED stappler::web {
 
 static uint32_t stappler_wasm_webserver_constructor_host_component(wasm_exec_env_t exec_env, uint32_t hostHandle, uint32_t infoHandle,
@@ -51,3 +53,5 @@ static NativeSymbol stapper_wen_symbols[] = {
 static wasm::NativeModule s_wasmModule("stappler:wasm/webserver", stapper_wen_symbols, sizeof(stapper_wen_symbols) / sizeof(NativeSymbol));
 
 }
+
+#endif

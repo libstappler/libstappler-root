@@ -32,7 +32,7 @@ namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 using SourceAsset = stappler::document::DocumentAsset;
 using SourceAssetLock = stappler::document::DocumentAssetLock;
 
-class SourceMemoryAsset : public SourceAsset {
+class SP_PUBLIC SourceMemoryAsset : public SourceAsset {
 public:
 	virtual ~SourceMemoryAsset() = default;
 
@@ -53,7 +53,7 @@ protected:
 	Bytes _data;
 };
 
-class SourceFileAsset : public SourceAsset {
+class SP_PUBLIC SourceFileAsset : public SourceAsset {
 public:
 	virtual ~SourceFileAsset() = default;
 
@@ -75,7 +75,7 @@ protected:
 	String _file;
 };
 
-class SourceNetworkAsset : public SourceAsset {
+class SP_PUBLIC SourceNetworkAsset : public SourceAsset {
 public:
 	using AssetCallback = Function<void(const Function<void(Asset *)> &)>;
 

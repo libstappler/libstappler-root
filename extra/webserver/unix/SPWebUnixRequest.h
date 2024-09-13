@@ -28,7 +28,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class UnixRequestController : public RequestController {
+class SP_PUBLIC UnixRequestController : public RequestController {
 public:
 	virtual ~UnixRequestController() = default;
 

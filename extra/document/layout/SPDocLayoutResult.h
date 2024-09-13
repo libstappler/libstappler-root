@@ -29,7 +29,7 @@ namespace STAPPLER_VERSIONIZED stappler::document {
 
 struct LayoutBlock;
 
-struct LayoutPageData {
+struct SP_PUBLIC LayoutPageData {
 	Margin margin;
 	Rect viewRect; // rectangle in scroll view
 	Rect texRect; // rectangle in prepared layout
@@ -37,7 +37,7 @@ struct LayoutPageData {
 	bool isSplit;
 };
 
-struct LayoutBoundIndex {
+struct SP_PUBLIC LayoutBoundIndex {
 	size_t idx = maxOf<size_t>();
 	size_t level = 0;
 	float start;
@@ -47,7 +47,7 @@ struct LayoutBoundIndex {
 	StringView href;
 };
 
-class LayoutResult : public RefBase<memory::StandartInterface> {
+class SP_PUBLIC LayoutResult : public RefBase<memory::StandartInterface> {
 public:
 	virtual ~LayoutResult();
 

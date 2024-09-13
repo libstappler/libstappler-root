@@ -29,7 +29,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 
 class WebsocketConnection;
 
-class WebsocketManager : public AllocBase {
+class SP_PUBLIC WebsocketManager : public AllocBase {
 public:
 	static String makeAcceptKey(StringView key);
 
@@ -59,7 +59,7 @@ protected:
 	Host _host;
 };
 
-class WebsocketHandler : public AllocBase {
+class SP_PUBLIC WebsocketHandler : public AllocBase {
 public:
 	WebsocketHandler(WebsocketManager *m, pool_t *p, StringView url,
 			TimeInterval ttl = config::WEBSOCKET_DEFAULT_TTL,

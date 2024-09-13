@@ -46,7 +46,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::mmd {
 
-class Token {
+class SP_PUBLIC Token {
 public:
 	Token();
 	Token(Token &&);

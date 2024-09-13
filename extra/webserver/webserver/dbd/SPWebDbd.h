@@ -32,7 +32,7 @@ class Root;
 
 struct DbConnList;
 
-class DbdModule : public AllocBase {
+class SP_PUBLIC DbdModule : public AllocBase {
 public:
 	struct Config {
 		uint32_t nmin = 1;

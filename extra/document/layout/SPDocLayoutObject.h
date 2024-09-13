@@ -46,7 +46,7 @@ static constexpr ZOrder ZOrderBorder = ZOrder(128);
 static constexpr ZOrder ZOrderOutline = ZOrder(192);
 static constexpr ZOrder ZOrderForeground = ZOrder(256);
 
-struct Object : memory::AllocPool {
+struct SP_PUBLIC Object : memory::AllocPool {
 	enum class Type : uint8_t {
 		Empty,
 		Background,
@@ -80,14 +80,14 @@ struct Object : memory::AllocPool {
 	const Background *asBackground() const;
 };
 
-struct Link : Object {
+struct SP_PUBLIC Link : Object {
 	StringView target;
 	StringView mode;
 	WideStringView text;
 	Background *source = nullptr;
 };
 
-struct BorderParams {
+struct SP_PUBLIC BorderParams {
 	BorderStyle style = BorderStyle::None;
 	float width = 0.0f;
 	Color4B color;
@@ -97,7 +97,7 @@ struct BorderParams {
 	bool isVisible() const;
 };
 
-struct PathObject : Object {
+struct SP_PUBLIC PathObject : Object {
 	vg::PathData<memory::PoolInterface> path;
 
 	static void makeBorder(LayoutResult *, LayoutBlock &, const Rect &, const OutlineParameters &, float w, ZOrder zOrder, const MediaParameters &);
@@ -111,7 +111,7 @@ struct PathObject : Object {
 			float wLeftBottom, float wLeft, float wLeftTop, float wRightTop, float wRight, float wRightBottom);
 };
 
-struct Label : Object {
+struct SP_PUBLIC Label : Object {
 	font::TextLayoutData<memory::PoolInterface> layout;
 	float height = 0.0f;
 	bool preview = false;
@@ -119,7 +119,7 @@ struct Label : Object {
 	size_t sourceIndex = 0;
 };
 
-struct Background : Object {
+struct SP_PUBLIC Background : Object {
 	BackgroundParameters background;
 	Link *link = nullptr;
 };

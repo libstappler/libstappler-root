@@ -65,7 +65,7 @@ enum class WebsocketStatusCode : uint16_t {
 };
 
 
-struct WebsocketFrameReader : AllocBase {
+struct SP_PUBLIC WebsocketFrameReader : AllocBase {
 	enum class Status : uint8_t {
 		Head,
 		Size16,
@@ -136,7 +136,7 @@ struct WebsocketFrameReader : AllocBase {
 	bool updateState();
 };
 
-struct WebsocketFrameWriter : AllocBase {
+struct SP_PUBLIC WebsocketFrameWriter : AllocBase {
 	static uint8_t getOpcodeFromType(WebsocketFrameType opcode);
 
 	static size_t getFrameSize(size_t dataSize, bool masked = false);

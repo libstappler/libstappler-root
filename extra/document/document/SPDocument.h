@@ -42,7 +42,7 @@ using StringDocument = ValueWrapper<StringView, class StringDocumentTag>;
 
 class Document;
 
-struct DocumentImage : public memory::AllocPool {
+struct SP_PUBLIC DocumentImage : public memory::AllocPool {
 	enum Type {
 		Embed,
 		Local,
@@ -68,7 +68,7 @@ struct DocumentImage : public memory::AllocPool {
 	: width(w), height(h), length(size), path(p.pdup()), ref(r.pdup()) { }
 };
 
-struct DocumentContentRecord {
+struct SP_PUBLIC DocumentContentRecord {
 	template <typename Value>
 	using Vector = typename memory::PoolInterface::VectorType<Value>;
 
@@ -77,7 +77,7 @@ struct DocumentContentRecord {
 	Vector<DocumentContentRecord> childs;
 };
 
-struct DocumentData : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
+struct SP_PUBLIC DocumentData : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
 	memory::pool_t *pool = nullptr;
 	StringView name;
 	Vector<StringView> spine;
@@ -95,7 +95,7 @@ struct DocumentData : public memory::AllocPool, public InterfaceObject<memory::P
 	MediaQueryId addQuery(MediaQuery &&);
 };
 
-class Document : public RefBase<memory::StandartInterface> {
+class SP_PUBLIC Document : public RefBase<memory::StandartInterface> {
 public:
 	static bool canOpen(FilePath path, StringView ct = StringView());
 	static bool canOpen(BytesView data, StringView ct = StringView());

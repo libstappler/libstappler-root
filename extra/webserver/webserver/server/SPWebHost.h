@@ -38,7 +38,7 @@ class HostController;
 class HostComponent;
 class WebsocketManager;
 
-class Host final : public AllocBase {
+class SP_PUBLIC Host final : public AllocBase {
 public:
 	using HandlerCallback = Function<RequestHandler *()>;
 

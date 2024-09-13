@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class HostComponent : public AllocBase {
+class SP_PUBLIC HostComponent : public AllocBase {
 public:
 	using Symbol = HostComponent * (*) (const Host &serv, const HostComponentInfo &dict);
 	using Scheme = db::Scheme;

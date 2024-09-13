@@ -28,5 +28,13 @@ MODULE_DOCUMENT_MMD_DOCUMENT_DEPENDS_ON := \
 	stappler_document_mmd \
 	stappler_document_document
 
+#spec
+
+MODULE_DOCUMENT_MMD_DOCUMENT_SHARED_SPEC_SUMMARY := libstappler MMD document rendering support
+
+define MODULE_DOCUMENT_MMD_DOCUMENT_SHARED_SPEC_DESCRIPTION
+Module libstappler-document-mmd-document implements MultiMarkdown rendering support.
+endef
+
 # module name resolution
 MODULE_stappler_document_mmd_document := MODULE_DOCUMENT_MMD_DOCUMENT

@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web::httpd {
 
-class table : public AllocBase {
+class SP_PUBLIC table : public AllocBase {
 public:
 	using size_type = size_t;
 	using table_type = apr_table_t *;

@@ -34,7 +34,7 @@ class Host;
 class InputFilter;
 class RequestController;
 
-class Root : public db::ApplicationInterface, public AllocBase {
+class SP_PUBLIC Root : public db::ApplicationInterface, public AllocBase {
 public:
 	struct Stat {
 		uint64_t requestsReceived = 0;

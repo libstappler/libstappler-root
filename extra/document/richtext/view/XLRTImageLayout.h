@@ -31,7 +31,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
-class ImageLayout : public material2d::DecoratedLayout {
+class SP_PUBLIC ImageLayout : public material2d::DecoratedLayout {
 public:
 	virtual ~ImageLayout();
 

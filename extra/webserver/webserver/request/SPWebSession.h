@@ -28,7 +28,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class Session : public data::WrapperTemplate<Interface> {
+class SP_PUBLIC Session : public data::WrapperTemplate<Interface> {
 public:
 	using Token = stappler::string::Sha512::Buf;
 

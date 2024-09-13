@@ -32,7 +32,7 @@ namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
 class Renderer;
 
-class CommonObject : public basic2d::Sprite {
+class SP_PUBLIC CommonObject : public basic2d::Sprite {
 public:
 	virtual ~CommonObject() = default;
 
@@ -61,7 +61,7 @@ protected:
 	bool _vertexesVisible = true;
 };
 
-class CommonView : public basic2d::ScrollView {
+class SP_PUBLIC CommonView : public basic2d::ScrollView {
 public:
 	using ResultCallback = Function<void(RendererResult *)>;
 

@@ -30,7 +30,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class HttpdInputFilter : public InputFilter {
+class SP_PUBLIC HttpdInputFilter : public InputFilter {
 public:
 	static constexpr auto Name = "stappler::web::HttpdInputFilter";
 
@@ -48,7 +48,7 @@ protected:
 			ap_input_mode_t mode, apr_read_type_e block, apr_off_t readbytes);
 };
 
-class HttpdOutputFilter : public AllocBase {
+class SP_PUBLIC HttpdOutputFilter : public AllocBase {
 public:
 	static constexpr auto Name = "stappler::web::HttpdOutputFilter";
 

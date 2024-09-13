@@ -26,5 +26,13 @@ MODULE_STAPPLER_WEBSERVER_PUG_INCLUDES_DIRS := $(WEBSERVER_MODULE_DIR)/pug
 MODULE_STAPPLER_WEBSERVER_PUG_INCLUDES_OBJS :=
 MODULE_STAPPLER_WEBSERVER_PUG_DEPENDS_ON := stappler_filesystem stappler_data
 
+#spec
+
+MODULE_STAPPLER_WEBSERVER_PUG_SHARED_SPEC_SUMMARY := libstappler pug template engine
+
+define MODULE_STAPPLER_WEBSERVER_PUG_SHARED_SPEC_DESCRIPTION
+Module libstappler-webserver-pug provides interface to PUG template engine
+endef
+
 # module name resolution
 MODULE_stappler_webserver_pug := MODULE_STAPPLER_WEBSERVER_PUG

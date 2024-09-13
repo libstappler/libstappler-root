@@ -28,7 +28,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::document {
 
-class Node : public memory::PoolInterface::AllocPool {
+class SP_PUBLIC Node : public memory::PoolInterface::AllocPool {
 public:
 	using Interface = memory::PoolInterface;
 

@@ -30,7 +30,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 class Host;
 class AsyncTask;
 
-class AsyncTaskGroup : public AllocBase {
+class SP_PUBLIC AsyncTaskGroup : public AllocBase {
 public:
 	static AsyncTaskGroup *getCurrent();
 
@@ -65,7 +65,7 @@ protected:
 	std::function<void()> _notifyFn = nullptr;
 };
 
-class AsyncTask : public AllocBase {
+class SP_PUBLIC AsyncTask : public AllocBase {
 public:
 	static constexpr uint8_t PriorityLowest = config::PriorityLowest;
 	static constexpr uint8_t PriorityLow = config::PriorityLow;
@@ -147,7 +147,7 @@ enum class SharedMode {
 };
 
 template <typename T>
-class Shared : public RefBase<memory::PoolInterface> {
+class SP_PUBLIC Shared : public RefBase<memory::PoolInterface> {
 public:
 	template <typename ...Args>
 	static Shared *create(Args && ...);
@@ -188,7 +188,7 @@ protected:
 
 
 template <typename _Base>
-class SharedRc {
+class SP_PUBLIC SharedRc {
 public:
 	using Base = typename std::remove_cv<_Base>::type;
 	using Type = Shared<Base>;

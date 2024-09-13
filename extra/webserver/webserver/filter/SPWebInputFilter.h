@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class InputParser : public AllocBase {
+class SP_PUBLIC InputParser : public AllocBase {
 public:
 	InputParser(const db::InputConfig &, size_t);
 
@@ -56,7 +56,7 @@ protected:
 	Vector<db::InputFile> files;
 };
 
-class InputFilter : public AllocBase {
+class SP_PUBLIC InputFilter : public AllocBase {
 public:
 	using FilterFunc = Function<void(InputFilter *filter)>;
 	using Accept = InputFilterAccept;

@@ -21,7 +21,7 @@
 STAPPLER_ROOT ?= ../..
 STAPPLER_BUILD_ROOT ?= $(STAPPLER_ROOT)/build/make
 
-# STAPPLER_BUILD_ROOT ?= $(STAPPLER_ROOT)/stappler-build/host/debug/gcc/share/libstappler
+#STAPPLER_BUILD_ROOT ?= $(STAPPLER_ROOT)/stappler-build/host/debug/gcc/share/libstappler
 
 # STAPPLER_VERSION_PREFIX := sp_test
 

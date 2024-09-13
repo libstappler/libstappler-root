@@ -32,7 +32,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 
 class ConnectionWorker;
 
-class ConnectionQueue : public AllocBase {
+class SP_PUBLIC ConnectionQueue : public AllocBase {
 public:
 	static bool setNonblocking(int fd);
 

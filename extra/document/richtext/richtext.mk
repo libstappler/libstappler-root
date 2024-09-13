@@ -27,7 +27,17 @@ MODULE_DOCUMENT_RICHTEXT_INCLUDES_OBJS :=
 MODULE_DOCUMENT_RICHTEXT_DEPENDS_ON := \
 	stappler_document_layout \
 	xenolith_renderer_material2d \
-	xenolith_resources_assets
+	xenolith_resources_assets \
+	xenolith_font
+
+#spec
+
+MODULE_DOCUMENT_RICHTEXT_SHARED_SPEC_SUMMARY := libstappler richtext renderer for Xenolith
+
+define MODULE_DOCUMENT_RICHTEXT_SHARED_SPEC_DESCRIPTION
+Module libstappler-document-richtext implements richtext view for Xenolith engine,
+that capable to render structured documents.
+endef
 
 # module name resolution
 MODULE_stappler_document_richtext := MODULE_DOCUMENT_RICHTEXT

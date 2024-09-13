@@ -33,7 +33,7 @@ class ConnectionQueue;
 class UnixHostController;
 class UnixWebsocketSim;
 
-struct UnixHostConfig {
+struct SP_PUBLIC UnixHostConfig {
 	StringView hastname;
 	StringView admin;
 	StringView root;
@@ -42,7 +42,7 @@ struct UnixHostConfig {
 	Value db;
 };
 
-class UnixRoot : public Root {
+class SP_PUBLIC UnixRoot : public Root {
 public:
 	struct Config {
 		StringView listen;

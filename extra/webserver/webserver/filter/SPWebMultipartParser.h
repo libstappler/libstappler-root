@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class MultipartParser : public InputParser {
+class SP_PUBLIC MultipartParser : public InputParser {
 public:
 	MultipartParser(const db::InputConfig &, size_t, const StringView &);
 

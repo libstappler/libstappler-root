@@ -29,7 +29,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
-class Context : public memory::AllocPool {
+class SP_PUBLIC Context : public memory::AllocPool {
 public:
 	static constexpr size_t StackSize = 256;
 

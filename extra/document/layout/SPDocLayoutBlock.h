@@ -34,7 +34,7 @@ namespace STAPPLER_VERSIONIZED stappler::document {
 class LayoutEngine;
 class Object;
 
-struct LayoutBlock : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
+struct SP_PUBLIC LayoutBlock : public memory::AllocPool, public InterfaceObject<memory::PoolInterface> {
 	using ContentRequest = font::Formatter::ContentRequest;
 
 	struct NodeInfo {

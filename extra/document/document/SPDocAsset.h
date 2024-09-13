@@ -31,7 +31,7 @@ namespace STAPPLER_VERSIONIZED stappler::document {
 class DocumentAsset;
 class DocumentAssetLock;
 
-struct DocumentAssetMeta {
+struct SP_PUBLIC DocumentAssetMeta {
 	using String = memory::StandartInterface::StringType;
 	using Ref = RefBase<memory::StandartInterface>;
 
@@ -47,7 +47,7 @@ struct DocumentAssetMeta {
 	bool isImage() const;
 };
 
-class DocumentAssetLock : public RefBase<memory::StandartInterface> {
+class SP_PUBLIC DocumentAssetLock : public RefBase<memory::StandartInterface> {
 public:
 	using Ref = RefBase<memory::StandartInterface>;
 	using Bytes = memory::StandartInterface::BytesType;
@@ -78,7 +78,7 @@ protected:
 	Rc<Ref> _lock;
 };
 
-class DocumentAsset : public SubscriptionTemplate<memory::StandartInterface> {
+class SP_PUBLIC DocumentAsset : public SubscriptionTemplate<memory::StandartInterface> {
 public:
 	using Ref = RefBase<memory::StandartInterface>;
 	using Value = data::ValueTemplate<memory::StandartInterface>;

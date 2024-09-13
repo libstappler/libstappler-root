@@ -46,7 +46,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::mmd {
 
-class Trie : public memory::PoolInterface {
+class SP_PUBLIC Trie : public memory::PoolInterface {
 public:
 	struct Node {
 		char c; // Character for this node

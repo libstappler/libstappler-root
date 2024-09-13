@@ -24,11 +24,13 @@
 #define EXTRA_WEBSERVER_WEBSERVER_SERVER_SPWEBWASMCOMPONENT_H_
 
 #include "SPWebHostComponent.h"
+
+#if MODULE_STAPPLER_WASM
 #include "SPWasm.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-class WasmComponent : public HostComponent {
+class SP_PUBLIC WasmComponent : public HostComponent {
 public:
 	struct WasmData {
 		uint32_t childInitCallback;
@@ -53,5 +55,7 @@ protected:
 };
 
 }
+
+#endif
 
 #endif /* EXTRA_WEBSERVER_WEBSERVER_SERVER_SPWEBWASMCOMPONENT_H_ */

@@ -46,7 +46,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::mmd {
 
-class Content : public memory::PoolInterface {
+class SP_PUBLIC Content : public memory::PoolInterface {
 public:
 	using String = StringType;
 	using StringStream = StringStreamType;
@@ -170,12 +170,12 @@ protected:
 	DictView<Content::Footnote *> glossaryView;
 };
 
-StringView text_inside_pair(const StringView & s, token * pair);
-auto url_accept(const char * source, size_t start, size_t max_len, size_t * end_pos, bool validate) -> Content::String;
-auto label_from_token(const StringView & s, token * t) -> Content::String;
-auto clean_string_from_range(const StringView & s, size_t start, size_t len, bool lowercase) -> Content::String;
-token * manual_label_from_header(token * h, const char * source);
-bool table_has_caption(token * t);
+SP_PUBLIC StringView text_inside_pair(const StringView & s, token * pair);
+SP_PUBLIC auto url_accept(const char * source, size_t start, size_t max_len, size_t * end_pos, bool validate) -> Content::String;
+SP_PUBLIC auto label_from_token(const StringView & s, token * t) -> Content::String;
+SP_PUBLIC auto clean_string_from_range(const StringView & s, size_t start, size_t len, bool lowercase) -> Content::String;
+SP_PUBLIC token * manual_label_from_header(token * h, const char * source);
+SP_PUBLIC bool table_has_caption(token * t);
 
 }
 

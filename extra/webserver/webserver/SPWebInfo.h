@@ -178,7 +178,7 @@ enum class HostComponentType {
 
 // brotli compression configuration
 // based on mod_brotli defaults
-struct CompressionInfo {
+struct SP_PUBLIC CompressionInfo {
 	bool enabled = true;
 	int quality = 5;
 	int lgwin = 18;
@@ -189,7 +189,7 @@ struct CompressionInfo {
 	const char *note_ratio_name = nullptr;
 };
 
-struct SessionInfo {
+struct SP_PUBLIC SessionInfo {
 	String name = config::DEFAULT_SESSION_NAME;
 	String key = config::DEFAULT_SESSION_KEY;
 	TimeInterval maxAge;
@@ -199,7 +199,7 @@ struct SessionInfo {
 	void setParam(StringView, StringView);
 };
 
-struct WebhookInfo {
+struct SP_PUBLIC WebhookInfo {
 	String url;
 	String name;
 	String format;
@@ -209,12 +209,12 @@ struct WebhookInfo {
 	void setParam(StringView, StringView);
 };
 
-struct ResourceSchemeInfo {
+struct SP_PUBLIC ResourceSchemeInfo {
 	StringView path;
 	Value data;
 };
 
-struct RequestSchemeInfo {
+struct SP_PUBLIC RequestSchemeInfo {
 	using HandlerCallback = Function<RequestHandler *()>;
 
 	StringView component;
@@ -224,7 +224,7 @@ struct RequestSchemeInfo {
 	const RequestHandlerMap *map = nullptr;
 };
 
-struct HostInfo {
+struct SP_PUBLIC HostInfo {
 	StringView hostname;
 	StringView documentRoot;
 	StringView scheme;
@@ -238,13 +238,13 @@ struct HostInfo {
 	bool isVirtual = true;
 };
 
-struct CookieStorageInfo {
+struct SP_PUBLIC CookieStorageInfo {
 	String data;
 	CookieFlags flags;
 	TimeInterval maxAge;
 };
 
-struct HostComponentInfo {
+struct SP_PUBLIC HostComponentInfo {
 	HostComponentType type = HostComponentType::Dso;
 	StringView name;
 	StringView version;
@@ -254,7 +254,7 @@ struct HostComponentInfo {
 	Value data;
 };
 
-struct RequestInfo {
+struct SP_PUBLIC RequestInfo {
 	RequestMethod method = RequestMethod::Invalid;
 	Time requestTime;
 	uint32_t protocolVersion = 0;
@@ -288,11 +288,11 @@ struct RequestInfo {
 	RequestInfo clone(pool_t *);
 };
 
-RequestMethod getRequestMethod(StringView);
-uint32_t getProtocolVersionNumber(StringView);
-StringView extractCharset(StringView s);
+SP_PUBLIC RequestMethod getRequestMethod(StringView);
+SP_PUBLIC uint32_t getProtocolVersionNumber(StringView);
+SP_PUBLIC StringView extractCharset(StringView s);
 
-StringView getStatusLine(Status);
+SP_PUBLIC StringView getStatusLine(Status);
 
 }
 

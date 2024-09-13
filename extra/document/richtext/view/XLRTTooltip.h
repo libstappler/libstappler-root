@@ -31,7 +31,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
-class Tooltip : public material2d::FlexibleLayout {
+class SP_PUBLIC Tooltip : public material2d::FlexibleLayout {
 public:
 	using Result = document::LayoutResult;
 	using CloseCallback = std::function<void()>;

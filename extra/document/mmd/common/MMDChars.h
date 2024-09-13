@@ -61,7 +61,7 @@ enum class Type : uint8_t {
 
 SP_DEFINE_ENUM_AS_MASK(Type);
 
-bool isType(char, Type);
+SP_PUBLIC bool isType(char, Type);
 
 // Is character whitespace?
 inline bool isWhitespace(char c) { return isType(c, Type::Whitespace); }

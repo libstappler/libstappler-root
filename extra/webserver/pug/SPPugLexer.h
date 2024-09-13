@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
-struct Lexer {
+struct SP_PUBLIC Lexer {
 	using OutStream = Callback<void(StringView)>;
 
 	Lexer(const StringView &, const OutStream & = nullptr);

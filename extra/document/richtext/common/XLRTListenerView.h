@@ -31,7 +31,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
-class ListenerView : public CommonView {
+class SP_PUBLIC ListenerView : public CommonView {
 public:
 	static EventHeader onSelection;
 	static EventHeader onExternalLink;

@@ -29,7 +29,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
-class CommonSource : public Ref, protected EventHandler {
+class SP_PUBLIC CommonSource : public Ref, protected EventHandler {
 public:
 	using StringDocument = document::StringDocument;
 	using AssetCallback = Function<void(const Function<void(SourceAsset *)> &)>;

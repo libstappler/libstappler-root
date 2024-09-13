@@ -28,7 +28,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::document {
 
-struct LayoutTable : public InterfaceObject<memory::PoolInterface> {
+struct SP_PUBLIC LayoutTable : public InterfaceObject<memory::PoolInterface> {
 	struct LayoutInfo : public memory::AllocPool {
 		LayoutBlock::PositionInfo pos;
 		LayoutBlock::NodeInfo node;

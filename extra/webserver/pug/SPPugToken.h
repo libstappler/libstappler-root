@@ -27,7 +27,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
-struct Token : memory::AllocPool {
+struct SP_PUBLIC Token : memory::AllocPool {
 	using OutStream = Callback<void(StringView)>;
 
 	enum Type : uint16_t {

@@ -31,7 +31,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 
 class Resource;
 
-class ResourceResolver : public AllocBase {
+class SP_PUBLIC ResourceResolver : public AllocBase {
 public:
 	ResourceResolver(const db::Transaction &a, const db::Scheme &scheme);
 

@@ -34,7 +34,7 @@ class LayoutBlock;
 
 using ExternalAssetsMap = memory::StandartInterface::MapType<memory::StandartInterface::StringType, DocumentAssetMeta>;
 
-class LayoutEngine : public StyleInterface, public InterfaceObject<memory::PoolInterface> {
+class SP_PUBLIC LayoutEngine : public StyleInterface, public InterfaceObject<memory::PoolInterface> {
 public:
 	LayoutEngine(Document *, std::function<Rc<font::FontFaceSet>(const FontStyleParameters &)> &&, const MediaParameters &, SpanView<StringView> spine = SpanView<StringView>());
 	virtual ~LayoutEngine();
