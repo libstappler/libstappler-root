@@ -1,0 +1,6 @@
+web/stappler-build
+web/www/.reports
+web/www/sqlite.*
+web/conf/localhost.crt
+web/conf/localhost.key
+.container_id

@@ -61,7 +61,7 @@ SSLPassPhraseDialog  builtin
 SSLSessionCache "shmcb:/home/apache/server/logs/ssl_scache(512000)"
 SSLSessionCacheTimeout 300
 
-LoadModule stappler_web_module $(abspath $(BUILD_SHARED_LIBRARY))
+LoadModule stappler_web_module $(abspath $(BUILD_INSTALL_SHARED_LIBRARY))
 StapplerRootThreadsCount 1 2
 
 ServerRoot "$(LOCAL_DIR)"

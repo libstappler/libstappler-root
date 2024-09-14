@@ -231,10 +231,14 @@ InputFilter *Request::getInputFilter() const {
 void Request::setUser(db::User *u) {
 	if (u) {
 		_config->_user = u;
+		auto newRole = _config->_accessRole;
 		if (_config->_user->isAdmin()) {
-			_config->_accessRole = std::max(db::AccessRoleId::Admin, _config->_accessRole);
+			newRole = std::max(db::AccessRoleId::Admin, _config->_accessRole);
 		} else {
-			_config->_accessRole = std::max(db::AccessRoleId::Authorized, _config->_accessRole);
+			newRole = std::max(db::AccessRoleId::Authorized, _config->_accessRole);
+		}
+		if (newRole != _config->_accessRole) {
+			setAccessRole(newRole);
 		}
 		_config->_userId = u->getObjectId();
 	}
