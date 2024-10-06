@@ -202,7 +202,7 @@ void VkComponent::handleChildInit(const Host &serv) {
 }
 
 // Функция загрузки компонента
-SP_EXTERN_C HostComponent * CreateVkComponent(const Host &serv, const HostComponentInfo &info) {
+SP_EXTERN_C SP_PUBLIC HostComponent * CreateVkComponent(const Host &serv, const HostComponentInfo &info) {
 	return new VkComponent(serv, info);
 }
 

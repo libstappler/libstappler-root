@@ -299,11 +299,11 @@ public:
 	inline Base * operator->() const { return _ptr ? _ptr->get() : nullptr; }
 
 	template <typename Target>
-	inline RcBase<Target> cast() const {
+	inline SharedRc<Target> cast() const {
 		if (auto v = dynamic_cast<Target *>(_ptr)) {
-			return RcBase<Target>(v);
+			return SharedRc<Target>(v);
 		}
-		return RcBase<Target>(nullptr);
+		return SharedRc<Target>(nullptr);
 	}
 
 	inline bool operator == (const Self & other) const { return _ptr == other._ptr; }

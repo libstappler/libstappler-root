@@ -31,7 +31,7 @@ class GuiScene : public basic2d::Scene2d {
 public:
 	virtual ~GuiScene();
 
-	virtual bool init(Application *loop, const core::FrameContraints &);
+	virtual bool init(Application *loop, const core::FrameContraints &) override;
 
 	virtual void onEnter(Scene *) override;
 

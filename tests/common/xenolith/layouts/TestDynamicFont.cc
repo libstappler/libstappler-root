@@ -34,9 +34,6 @@ public:
 
 	virtual bool init(bool);
 
-	virtual void pushShadowCommands(FrameInfo &, NodeFlags flags, const Mat4 &,
-			SpanView<TransformVertexData>) override;
-
 protected:
 	bool _sdfShadow = false;
 };
@@ -46,9 +43,6 @@ public:
 	virtual ~VgSdfTestRect() { }
 
 	virtual bool init(bool, float radius = 0.0f);
-
-	virtual void pushShadowCommands(FrameInfo &, NodeFlags flags, const Mat4 &,
-			SpanView<TransformVertexData>) override;
 
 protected:
 	bool _sdfShadow = false;
@@ -61,9 +55,6 @@ public:
 
 	virtual bool init(bool);
 
-	virtual void pushShadowCommands(FrameInfo &, NodeFlags flags, const Mat4 &,
-			SpanView<TransformVertexData>) override;
-
 protected:
 	bool _sdfShadow = false;
 };
@@ -73,9 +64,6 @@ public:
 	virtual ~VgSdfTestPolygon() { }
 
 	virtual bool init(bool);
-
-	virtual void pushShadowCommands(FrameInfo &, NodeFlags flags, const Mat4 &,
-			SpanView<TransformVertexData>) override;
 
 protected:
 	bool _sdfShadow = false;
@@ -94,17 +82,6 @@ bool VgSdfTestCircle::init(bool value) {
 	setAnchorPoint(Anchor::Middle);
 
 	return true;
-}
-
-void VgSdfTestCircle::pushShadowCommands(FrameInfo &frame, NodeFlags flags, const Mat4 &t, SpanView<TransformVertexData> data) {
-	if (_sdfShadow) {
-		auto ctx = static_cast<FrameContextHandle2d *>(frame.currentContext);
-		ctx->shadows->pushSdfGroup(t, ctx->getCurrentState(), frame.depthStack.back(), [&] (CmdSdfGroup2D &cmd) {
-			cmd.addCircle2D(_contentSize / 2.0f, min(_contentSize.width, _contentSize.height) / 2.0f);
-		});
-	} else {
-		VectorSprite::pushShadowCommands(frame, flags, t, data);
-	}
 }
 
 bool VgSdfTestRect::init(bool value, float radius) {
@@ -128,21 +105,6 @@ bool VgSdfTestRect::init(bool value, float radius) {
 	return true;
 }
 
-void VgSdfTestRect::pushShadowCommands(FrameInfo &frame, NodeFlags flags, const Mat4 &t, SpanView<TransformVertexData> data) {
-	if (_sdfShadow) {
-		auto ctx = static_cast<FrameContextHandle2d *>(frame.currentContext);
-		ctx->shadows->pushSdfGroup(t, ctx->getCurrentState(), frame.depthStack.back(), [&] (CmdSdfGroup2D &cmd) {
-			if (_radius > 0.0f) {
-				cmd.addRoundedRect2D(Rect(Vec2(0, 0), _contentSize), _radius * (_contentSize.width / 16.0f));
-			} else {
-				cmd.addRect2D(Rect(Vec2(0, 0), _contentSize));
-			}
-		});
-	} else {
-		VectorSprite::pushShadowCommands(frame, flags, t, data);
-	}
-}
-
 bool VgSdfTestPolygon::init(bool value) {
 	if (!VectorSprite::init(Size2(16, 20))) {
 		return false;
@@ -160,23 +122,6 @@ bool VgSdfTestPolygon::init(bool value) {
 	return true;
 }
 
-void VgSdfTestPolygon::pushShadowCommands(FrameInfo &frame, NodeFlags flags, const Mat4 &t, SpanView<TransformVertexData> data) {
-	if (_sdfShadow) {
-		auto ctx = static_cast<FrameContextHandle2d *>(frame.currentContext);
-		ctx->shadows->pushSdfGroup(t, ctx->getCurrentState(), frame.depthStack.back(), [&] (CmdSdfGroup2D &cmd) {
-			Vec2 points[4] = {
-				Vec2(0, 0),
-				Vec2(_contentSize),
-				Vec2(0, _contentSize.height),
-				Vec2(_contentSize.width, 0),
-			};
-			cmd.addPolygon2D(points);
-		});
-	} else {
-		VectorSprite::pushShadowCommands(frame, flags, t, data);
-	}
-}
-
 bool VgSdfTestTriangle::init(bool value) {
 	if (!VectorSprite::init(Size2(16, 16))) {
 		return false;
@@ -192,17 +137,6 @@ bool VgSdfTestTriangle::init(bool value) {
 	setAnchorPoint(Anchor::Middle);
 
 	return true;
-}
-
-void VgSdfTestTriangle::pushShadowCommands(FrameInfo &frame, NodeFlags flags, const Mat4 &t, SpanView<TransformVertexData> data) {
-	if (_sdfShadow) {
-		auto ctx = static_cast<FrameContextHandle2d *>(frame.currentContext);
-		ctx->shadows->pushSdfGroup(t, ctx->getCurrentState(), frame.depthStack.back(), [&] (CmdSdfGroup2D &cmd) {
-			cmd.addTriangle2D(Vec2(0, 0), Vec2(0, 0), Vec2(_contentSize.width / 2.0f, _contentSize.height), Vec2(_contentSize.width, 0));
-		});
-	} else {
-		VectorSprite::pushShadowCommands(frame, flags, t, data);
-	}
 }
 
 bool TestDynamicFont::init() {

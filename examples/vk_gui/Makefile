@@ -20,6 +20,9 @@
 
 # Путь к SDK
 STAPPLER_ROOT ?= ../..
+STAPPLER_BUILD_ROOT ?= $(STAPPLER_ROOT)/build/make
+
+#STAPPLER_BUILD_ROOT := $(STAPPLER_ROOT)/stappler-build/host/release/gcc/share/libstappler
 
 # Указание перестаривать проект, если этот файл изменился
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
@@ -61,4 +64,4 @@ LOCAL_ANDROID_TARGET := application # target to build
 LOCAL_ANDROID_PLATFORM := android-24 # android platform version
 
 # Подключения системы сборки
-include $(STAPPLER_ROOT)/build/make/universal.mk
+include $(STAPPLER_BUILD_ROOT)/universal.mk

@@ -79,7 +79,7 @@ void TestComponent::initTransaction(db::Transaction &t) {
 }
 
 // Функция загрузки компонента
-SP_EXTERN_C HostComponent * CreateTestComponent(const Host &serv, const HostComponentInfo &info) {
+SP_EXTERN_C SP_PUBLIC HostComponent * CreateTestComponent(const Host &serv, const HostComponentInfo &info) {
 	return new TestComponent(serv, info);
 }
 

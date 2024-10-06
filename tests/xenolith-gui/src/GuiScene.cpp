@@ -44,7 +44,7 @@ bool GuiScene::init(Application *loop, const core::FrameContraints &constraints)
 		loop, Extent2(constraints.extent.width, constraints.extent.height), basic2d::vk::ShadowPass::Flags::None
 	};
 
-	basic2d::vk::ShadowPass::makeDefaultRenderQueue(builder, info);
+	basic2d::vk::ShadowPass::makeRenderQueue(builder, info);
 
 	if (!Scene2d::init(move(builder), constraints)) {
 		return false;

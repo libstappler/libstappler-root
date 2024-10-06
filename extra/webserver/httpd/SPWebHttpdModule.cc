@@ -33,7 +33,7 @@
 
 static stappler::web::HttpdRoot *s_sharedRoot;
 
-extern module AP_MODULE_DECLARE_DATA stappler_web_module;
+SP_PUBLIC extern module AP_MODULE_DECLARE_DATA stappler_web_module;
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 

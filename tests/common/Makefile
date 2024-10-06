@@ -58,7 +58,8 @@ LOCAL_MODULES_OPTIONAL := \
 	stappler_crypto_mbedtls \
 	stappler_webserver_unix \
 	stappler_webserver_pug \
-	stappler_webserver_webserver
+	stappler_webserver_webserver \
+	stappler_wasm
 
 LOCAL_ROOT = .
 

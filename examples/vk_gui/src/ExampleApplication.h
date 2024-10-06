@@ -23,13 +23,13 @@
 #ifndef EXAMPLES_VK_HEADLESS_SRC_EXAMPLEAPPLICATION_H_
 #define EXAMPLES_VK_HEADLESS_SRC_EXAMPLEAPPLICATION_H_
 
-#include "XLVkGuiApplication.h"
+#include "XL2dBootstrapApplication.h"
 #include "XLViewCommandLine.h"
 
 namespace stappler::xenolith::app {
 
 // Класс использует базовую основу для приложения в виде vk::BootstrapApplication
-class ExampleApplication : public vk::BootstrapApplication {
+class ExampleApplication : public basic2d::BootstrapApplication {
 public:
 	virtual ~ExampleApplication();
 

@@ -53,14 +53,14 @@ struct TessTest : Test {
 
 		auto res = canvas->draw(image.popData(), xenolith::Size2(1024, 1024));
 		if (res->data.size() == 0) {
-			auto pIt = paths.find(i);
+			//auto pIt = paths.find(i);
 
 			stream << "\tFailed ("
 					<< (style == vg::DrawStyle::Stroke ? "Stroke" : "Fill")
-					<< ", " << (antialiased ? "aa" : "non-aa") << "): " << name;
-			for (auto &iit : pIt->second) {
+					<< ", " << (antialiased ? "aa" : "non-aa") << "): mode: " << toInt(canvas->getConfig().relocateRule) << ": " << name;
+			/*for (auto &iit : pIt->second) {
 				stream << "\n\t\tPath: " << iit.str;
-			}
+			}*/
 
 			stream << "\n";
 
@@ -71,6 +71,7 @@ struct TessTest : Test {
 	virtual bool run() override {
 		StringStream stream; stream << "\n";
 		size_t failed = 0;
+		size_t failedStrokes = 0;
 		auto mempool = memory::pool::create();
 		memory::pool::push(mempool);
 
@@ -99,7 +100,7 @@ struct TessTest : Test {
 
 		i = toInt(xenolith::IconName::Dynamic_Loader);
 		for (; i < max; ++ i) {
-			drawIcon(stream, canvas, i, failed, vg::DrawStyle::Stroke, false);
+			drawIcon(stream, canvas, i, failedStrokes, vg::DrawStyle::Stroke, false);
 		}
 
 		for (size_t j = 0; j <= size_t(toInt(geom::Tesselator::RelocateRule::Monotonize)); ++ j) {
@@ -120,6 +121,9 @@ struct TessTest : Test {
 		}
 
 		memory::pool::pop();
+
+		stream << "\tFailed total: " << failed << "\n";
+		stream << "\tFailed strokes: " << failedStrokes << "\n";
 
 		_desc = stream.str();
 		return failed == 0;
