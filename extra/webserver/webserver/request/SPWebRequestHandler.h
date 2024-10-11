@@ -270,8 +270,8 @@ public:
 	RequestHandlerMap();
 	virtual ~RequestHandlerMap();
 
-	RequestHandlerMap(RequestHandlerMap &&) = default;
-	RequestHandlerMap &operator=(RequestHandlerMap &&) = default;
+	RequestHandlerMap(RequestHandlerMap &&) = delete;
+	RequestHandlerMap &operator=(RequestHandlerMap &&) = delete;
 
 	RequestHandlerMap(const RequestHandlerMap &) = delete;
 	RequestHandlerMap &operator=(const RequestHandlerMap &) = delete;

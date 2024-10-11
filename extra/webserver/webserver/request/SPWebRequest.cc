@@ -52,9 +52,9 @@ Request Request::getCurrent() {
 	return Request(ret);
 }
 
-Request::Request() : _buffer(nullptr), _config(nullptr) { }
+Request::Request() : basic_ostream(&_buffer), _buffer(nullptr), _config(nullptr) { }
 
-Request::Request(RequestController *cfg) : _buffer(cfg), _config(cfg) {
+Request::Request(RequestController *cfg) : basic_ostream(&_buffer), _buffer(cfg), _config(cfg) {
 	this->init(&_buffer);
 }
 
@@ -65,7 +65,7 @@ Request & Request::operator =(RequestController *cfg) {
 	return *this;
 }
 
-Request::Request(Request &&other) : _buffer(other._config), _config(other._config) {
+Request::Request(Request &&other) : basic_ostream(&_buffer), _buffer(other._config), _config(other._config) {
 	this->init(&_buffer);
 }
 Request & Request::operator =(Request &&other) {
@@ -75,7 +75,7 @@ Request & Request::operator =(Request &&other) {
 	return *this;
 }
 
-Request::Request(const Request &other) :_buffer(other._config), _config(other._config) {
+Request::Request(const Request &other) : basic_ostream(&_buffer), _buffer(other._config), _config(other._config) {
 	this->init(&_buffer);
 }
 

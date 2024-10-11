@@ -48,28 +48,40 @@ LOCAL_MODULES := \
 	stappler_backtrace \
 	stappler_crypto_openssl \
 	stappler_font \
+	xenolith_core
+
+LOCAL_MODULES_OPTIONAL := \
+	stappler_crypto_gnutls \
+	stappler_crypto_mbedtls \
+	stappler_webserver_pug \
+	stappler_webserver_webserver \
+	stappler_wasm
+
+ifndef XWIN
+LOCAL_MODULES += \
 	xenolith_font \
 	xenolith_backend_vkgui \
 	xenolith_resources_assets \
 	xenolith_renderer_material2d
 
-LOCAL_MODULES_OPTIONAL := \
-	stappler_crypto_gnutls \
-	stappler_crypto_mbedtls \
-	stappler_webserver_unix \
-	stappler_webserver_pug \
-	stappler_webserver_webserver \
-	stappler_wasm
+LOCAL_MODULES_OPTIONAL += \
+	stappler_webserver_unix
+endif
 
 LOCAL_ROOT = .
 
 SHADERNN_DIR := $(STAPPLER_ROOT)/xenolith/utils/shadernn
 
-LOCAL_SRCS_DIRS :=  src xenolith web $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests
+LOCAL_SRCS_DIRS :=  src
 LOCAL_SRCS_OBJS := app.wit
 
-LOCAL_INCLUDES_DIRS := src xenolith $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests
+LOCAL_INCLUDES_DIRS := src
 LOCAL_INCLUDES_OBJS :=
+
+ifndef XWIN
+LOCAL_SRCS_DIRS += $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests xenolith web
+LOCAL_INCLUDES_DIRS += $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests xenolith
+endif
 
 LOCAL_MAIN := main.cpp
 

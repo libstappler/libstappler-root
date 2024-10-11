@@ -31,7 +31,6 @@ void registerTools(StringView prefix, Host &host) {
 	host.addHandler(prefix, RequestHandler::Make<tools::ServerGui>());
 	host.addHandler(toString(prefix, config::TOOLS_SHELL), RequestHandler::Make<tools::ShellGui>());
 	host.addHandler(toString(prefix, config::TOOLS_ERRORS), RequestHandler::Make<tools::ErrorsGui>());
-	//host.addHandler(toString(prefix, config::TOOLS_DOCS), RequestHandler::Handler<tools::VirtualGui>());
 	host.addHandler(toString(prefix, config::TOOLS_HANDLERS), RequestHandler::Make<tools::HandlersGui>());
 	host.addHandler(toString(prefix, config::TOOLS_REPORTS), RequestHandler::Make<tools::ReportsGui>());
 	host.addWebsocket(toString(prefix, config::TOOLS_SHELL_SOCKET), new tools::ShellSocket(host));

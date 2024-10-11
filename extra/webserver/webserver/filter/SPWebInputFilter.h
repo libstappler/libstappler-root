@@ -31,6 +31,9 @@ class SP_PUBLIC InputParser : public AllocBase {
 public:
 	InputParser(const db::InputConfig &, size_t);
 
+	InputParser(const InputParser &) noexcept = delete;
+	InputParser(InputParser &&) noexcept = delete;
+
 	SP_COVERAGE_TRIVIAL
 	virtual ~InputParser() { }
 

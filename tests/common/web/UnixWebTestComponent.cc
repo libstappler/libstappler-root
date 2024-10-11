@@ -177,7 +177,7 @@ TestHandler::TestHandler(const Host &serv, const HostComponentInfo &info)
 		Field::Text("alias", Transform::Alias),
 		Field::Integer("mtime", Flags::AutoMTime | Flags::Indexed),
 		Field::Integer("index", Flags::Indexed),
-		Field::View("refs", _refs, ViewFn([this] (const Scheme &objScheme, const Value &obj) -> bool {
+		Field::View("refs", _refs, ViewFn([] (const Scheme &objScheme, const Value &obj) -> bool {
 			return true;
 		}), FieldView::Delta),
 
@@ -270,7 +270,7 @@ TestHandler::TestHandler(const Host &serv, const HostComponentInfo &info)
 			Vector<AutoFieldScheme>({
 				AutoFieldScheme{ _test, {"text", "key"} }
 			}),
-			DefaultFn([this] (const Value &data) -> Value {
+			DefaultFn([] (const Value &data) -> Value {
 				StringStream html;
 				StringStream text;
 				text << data.getString("key") << " ";

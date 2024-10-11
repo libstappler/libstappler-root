@@ -165,9 +165,8 @@ Cache::~Cache() {
 				inotify_rm_watch(_inotify, fd);
 			}
 		}
-#endif
-
 		close(_inotify);
+#endif
 	}
 }
 

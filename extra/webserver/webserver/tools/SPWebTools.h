@@ -111,19 +111,6 @@ protected:
 	db::Transaction _transaction = nullptr;
 };
 
-class SP_PUBLIC TestHandler : public DataHandler {
-public:
-	TestHandler();
-	virtual bool isRequestPermitted(Request &) override;
-	virtual bool processDataHandler(Request &, Value &, Value &) override;
-
-protected:
-	bool processEmailTest(Request &rctx, Value &ret, const Value &input);
-	bool processUrlTest(Request &rctx, Value &ret, const Value &input);
-	bool processUserTest(Request &rctx, Value &ret, const Value &input);
-	bool processImageTest(Request &rctx, Value &ret, const Value &input, db::InputFile &);
-};
-
 class SP_PUBLIC ErrorsGui : public RequestHandler {
 public:
 	virtual bool isRequestPermitted(Request &) override { return true; }
@@ -140,33 +127,6 @@ class SP_PUBLIC ReportsGui : public RequestHandler {
 public:
 	virtual bool isRequestPermitted(Request &) override { return true; }
 	virtual Status onTranslateName(Request &) override;
-};
-
-class SP_PUBLIC VirtualGui : public RequestHandler {
-public:
-	virtual bool isRequestPermitted(Request &) override { return true; }
-	virtual Status onTranslateName(Request &) override;
-	virtual Status onHandler(Request &) override;
-
-	virtual void onInsertFilter(Request &) override;
-	virtual void onFilterComplete(InputFilter *filter) override;
-
-protected:
-	Value readMeta(StringView) const;
-	void writeData(Value &) const;
-
-	bool createArticle(const Value &);
-	bool createCategory(const Value &);
-
-	void makeMdContents(Request &req, pug::Context &exec, StringView path) const;
-	Value makeDirInfo(StringView path, bool forFile = false) const;
-
-	bool _virtual = true;
-#if DEBUG
-	bool _editable = true;
-#else
-	bool _editable = false;
-#endif
 };
 
 class SP_PUBLIC VirtualFilesystem : public RequestHandler {
