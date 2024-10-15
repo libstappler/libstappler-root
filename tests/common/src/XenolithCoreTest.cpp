@@ -1117,21 +1117,21 @@ static bool XenolithCoreTest_queue() {
 		ProgramEntryPointBlock{0, "name", 1, 1, 1}
 	};
 
-	builder.addProgram("program0", [vertData] (const ProgramData::DataCallback &cb) {
+	builder.addProgram("program0", [vertData] (xenolith::core::Device &, const ProgramData::DataCallback &cb) {
 		cb(SpanView<uint32_t>((const uint32_t *)vertData.data(), vertData.size() / sizeof(uint32_t)));
 	}, &info1);
 
 	builder.setDefaultSyncPassState(FrameRenderPassState::Submitted);
 	builder.addProgram("program1", SpanView<uint32_t>(), &info1);
 	builder.addProgramByRef("program2", SpanView<uint32_t>(), &info1);
-	builder.addProgram("program3", [] (const ProgramData::DataCallback &) { }, &info1);
+	builder.addProgram("program3", [] (xenolith::core::Device &, const ProgramData::DataCallback &) { }, &info1);
 	builder.addProgram("program1", SpanView<uint32_t>(), &info1);
 	builder.addProgramByRef("program2", SpanView<uint32_t>(), &info1);
-	builder.addProgram("program3", [] (const ProgramData::DataCallback &) { }, &info1);
+	builder.addProgram("program3", [] (xenolith::core::Device &, const ProgramData::DataCallback &) { }, &info1);
 
 	auto fragProgram = builder.addProgram("program4", SpanView<uint32_t>((const uint32_t *)fragData.data(), fragData.size() / sizeof(uint32_t)), &info1);
 	builder.addProgramByRef("program5", SpanView<uint32_t>((const uint32_t *)fragData.data(), fragData.size() / sizeof(uint32_t)), &info1);
-	auto vertProgram = builder.addProgram("program6", [vertData] (const ProgramData::DataCallback &cb) {
+	auto vertProgram = builder.addProgram("program6", [vertData] (xenolith::core::Device &, const ProgramData::DataCallback &cb) {
 		cb(SpanView<uint32_t>((const uint32_t *)vertData.data(), vertData.size() / sizeof(uint32_t)));
 	});
 
