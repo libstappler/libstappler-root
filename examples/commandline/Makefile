@@ -40,6 +40,8 @@ LOCAL_MODULES_PATHS = \
 # Используемые модули
 LOCAL_MODULES := \
 	stappler_brotli_lib \
+	stappler_filesystem \
+	stappler_crypto \
 	stappler_data
 
 # Файл исходного кода, содержащий функцию main
