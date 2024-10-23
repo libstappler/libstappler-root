@@ -66,7 +66,7 @@ static int parseOptionSwitch(Value &ret, char c, const char *str) {
 		});
 
 		// возвращаем число прочитанных символов включая исходный
-		return r.data() - str + 1;
+		return int(r.data() - str + 1);
 	}
 
 	// прочитан только один символ

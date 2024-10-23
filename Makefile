@@ -62,6 +62,9 @@ LOCAL_MODULES ?= \
 	stappler_document_mmd_document \
 	stappler_webserver_unix
 
+# Force macOS make to detect shaders module
+LOCAL_MODULES += xenolith_renderer_basic2d_shaders
+
 LOCAL_ARCHIVE_FILES := \
 	$(STAPPLER_ROOT)/build/ \
 	$(STAPPLER_ROOT)/core/ \
