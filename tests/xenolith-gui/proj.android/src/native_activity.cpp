@@ -26,7 +26,8 @@
 
 #include "android/XLPlatformAndroidActivity.h"
 #include "android/XLPlatformAndroidMessageInterface.h"
-#include "GuiApplication.h"
+
+#include "XL2dBootstrapApplication.h"
 
 namespace stappler::xenolith::test {
 
@@ -38,17 +39,10 @@ void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_
 	auto info = a->getActivityInfo();
 
 	a->addComponent(Rc<platform::MessagingActivityAdapter>::create(a, 1));
-	a->run([info = move(info)] (platform::Activity *a, Function<void()> &&initCb) {
-		Application::CommonInfo appInfo({
-			.bundleName = move(info.bundleName),
-			.applicationName = move(info.applicationName),
-			.applicationVersion = move(info.applicationVersion),
-			.userAgent = move(info.systemAgent),
-			.locale = move(info.locale),
-			.nativeHandle = a,
-		});
-		runApplication(move(appInfo), info.density, move(initCb));
-	});
+
+	auto applicationInfo = a->makeApplicationInfo();
+
+	a->runApplication(Rc<basic2d::BootstrapApplication>::create(move(applicationInfo)));
 }
 
 }

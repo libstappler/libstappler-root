@@ -46,7 +46,7 @@ namespace STAPPLER_VERSIONIZED stappler::xenolith::test::detail {
 
 #include "noise.comp.h"
 
-SpanView<uint32_t> NoiseComp((const uint32_t *)noise_comp, noise_comp_len / sizeof(uint32_t));
+SpanView<uint32_t> NoiseComp(noise_comp);
 
 struct NoiseData {
 	uint32_t seedX;

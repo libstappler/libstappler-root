@@ -30,12 +30,7 @@ THE SOFTWARE.
 #include "SPData.h"
 #endif
 
-#include "XLVkGuiApplication.h"
-#include "XLCoreFrameRequest.h"
-#include "XLCoreFrameQueue.h"
-#include "XLView.h"
-
-#include "GuiApplication.h"
+#include "XL2dBootstrapApplication.h"
 
 static constexpr auto HELP_STRING(
 R"HelpString(sptest <options> <test-name|all>
@@ -68,48 +63,40 @@ int parseOptionString(Value &ret, const StringView &str, int argc, const char * 
 }
 #endif
 
-static void run() {
-	// create graphics instance
+SP_EXTERN_C int main(int argc, const char **argv) {
+	ApplicationInfo data;
+	Vector<String> args;
 
-	auto info = vk::GuiApplication::CommonInfo {
-		.bundleName = "org.stappler.xenolith.gui",
-		.applicationName = "xenolith-gui",
-		.applicationVersion = "1.0.0",
-	};
+	// читаем данные командной строки в структуру данных о приложении
+	data::parseCommandLineOptions<Interface, ApplicationInfo>(data, argc, argv,
+		[&] (ApplicationInfo &, StringView str) {
+			args.emplace_back(str.str<Interface>());
+		},
+		&ApplicationInfo::parseCmdSwitch, &ApplicationInfo::parseCmdString);
 
-	runApplication(move(info), 1.0f, [] {});
-}
-
-SP_EXTERN_C int _spMain(argc, argv) {
-#if MODULE_STAPPLER_DATA
-	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv,
-			&parseOptionSwitch, &parseOptionString);
-	if (opts.first.getBool("help")) {
+	if (data.help) {
 		std::cout << HELP_STRING << "\n";
 		return 0;
 	}
 
-	if (opts.first.getBool("verbose")) {
-#if MODULE_STAPPLER_FILESYSTEM
+	if (data.verbose) {
 		std::cout << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
 		std::cout << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
 		std::cout << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
 		std::cout << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
-#endif
-		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts.first << "\n";
+		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << data.encode() << "\n";
 		std::cout << " Arguments: \n";
-		for (auto &it : opts.second) {
+		for (auto &it : args) {
 			std::cout << "\t" << it << "\n";
 		}
 	}
-#endif
 
-	auto mempool = memory::pool::create();
-	memory::pool::push(mempool);
+	memory::pool::perform_temporary([&] {
+		auto app = Rc<basic2d::BootstrapApplication>::create(move(data));
 
-	run();
-
-	memory::pool::pop();
+		app->run();
+		app->waitFinalized();
+	});
 
 	return 0;
 }

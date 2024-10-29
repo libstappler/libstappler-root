@@ -27,8 +27,6 @@
 
 namespace stappler::xenolith::test {
 
-void runApplication(Application::CommonInfo &&, float density, Function<void()> &&initCb);
-
 }
 
 #endif /* TESTS_XENOLITH_GUI_SRC_GUIAPPLICATION_H_ */

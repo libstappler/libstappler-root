@@ -3,9 +3,16 @@ plugins {
     id 'com.google.gms.google-services'
 }
 
+tasks.register('prepareAndroidMk', Exec) {
+    workingDir "${buildDir}/../../.."
+    commandLine 'make', 'android-export', 'RELEASE=1'
+}
+
+preBuild.dependsOn prepareAndroidMk
+
 android {
-    compileSdk 33
-    ndkVersion '25.1.8937393'
+    compileSdk 34
+    ndkVersion '27.2.12479018'
 
     defaultConfig {
         applicationId = 'org.stappler.xenolith.gui'
