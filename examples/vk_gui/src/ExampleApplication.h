@@ -24,7 +24,6 @@
 #define EXAMPLES_VK_HEADLESS_SRC_EXAMPLEAPPLICATION_H_
 
 #include "XL2dBootstrapApplication.h"
-#include "XLViewCommandLine.h"
 
 namespace stappler::xenolith::app {
 
@@ -34,7 +33,7 @@ public:
 	virtual ~ExampleApplication();
 
 	// Переопределяем функцию создания приложения
-	virtual bool init(ViewCommandLineData &&, void *native = nullptr) override;
+	virtual bool init(ApplicationInfo &&) override;
 
 protected:
 	// Переопределяем функцию создания сцены для окна

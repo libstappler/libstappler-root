@@ -27,8 +27,8 @@ namespace stappler::xenolith::app {
 
 ExampleApplication::~ExampleApplication() { }
 
-bool ExampleApplication::init(ViewCommandLineData &&data, void *native) {
-	if (!BootstrapApplication::init(move(data), native)) {
+bool ExampleApplication::init(ApplicationInfo &&data) {
+	if (!BootstrapApplication::init(move(data))) {
 		return false;
 	}
 

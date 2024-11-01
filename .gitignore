@@ -1,4 +1,6 @@
 .settings
+.project
+.cproject
 stappler-build
 .DS_Store
 xcuserdata

@@ -41,16 +41,14 @@ Options are one of:
 	-h (--help))HelpString");
 
 SP_EXTERN_C int main(int argc, const char *argv[]) {
-	ViewCommandLineData data;
+	ApplicationInfo data;
 	Vector<String> args;
 
 	// читаем данные командной строки в структуру данных о приложении
-	data::parseCommandLineOptions<Interface, ViewCommandLineData>(data, argc, argv,
-		[&] (ViewCommandLineData &, StringView str) {
-			args.emplace_back(str.str<Interface>());
-		},
-		&parseViewCommandLineSwitch, &parseViewCommandLineString);
-
+	data::parseCommandLineOptions<Interface, ApplicationInfo>(data, argc, argv,
+			[&] (ApplicationInfo &, StringView str) {
+		args.emplace_back(str.str<Interface>());
+	}, &ApplicationInfo::parseCmdSwitch, &ApplicationInfo::parseCmdString);
 	if (data.help) {
 		std::cout << HELP_STRING << "\n";
 		return 0;
@@ -68,9 +66,19 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		}
 	}
 
-	// создаём и запускаем приложение
-	auto app = Rc<ExampleApplication>::create(move(data));
-	app->run();
+	// Выполняем все действия во временном пуле памяти
+	memory::pool::perform_temporary([&] {
+		// Создаём приложение на основании данных командной строки
+		auto app = Rc<ExampleApplication>::create(move(data));
+
+		// Инициализируем приложение
+		app->run();
+
+		// Здесь может располагаться инициализация дополнительных инструментов ОС
+
+		// Ожидаем завершения работы приложения
+		app->waitFinalized();
+	});
 	return 0;
 }
 
