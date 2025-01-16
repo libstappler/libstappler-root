@@ -104,7 +104,7 @@ public:
 	virtual ~ListenerView();
 	virtual bool init(Layout, CommonSource * = nullptr, const Vector<String> &ids = {}) override;
 
-	virtual void onExit() override;
+	virtual void handleExit() override;
 
 	virtual void setLayout(Layout l) override;
 	virtual void setUseSelection(bool);

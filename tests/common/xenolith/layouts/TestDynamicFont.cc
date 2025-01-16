@@ -210,8 +210,8 @@ void TestDynamicFont::onContentSizeDirty() {
 	_label->setWidth(_contentSize.width);
 }
 
-void TestDynamicFont::onEnter(xenolith::Scene *scene) {
-	TestLayout::onEnter(scene);
+void TestDynamicFont::handleEnter(xenolith::Scene *scene) {
+	TestLayout::handleEnter(scene);
 
 	_circleSprite->setPosition(Vec2(_contentSize / 2.0f) + Vec2(_contentSize.width / 3.0f, 100.0f));
 	_circleTestSprite->setPosition(Vec2(_contentSize / 2.0f) + Vec2(-_contentSize.width / 3.0f, 100.0f));

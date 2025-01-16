@@ -23,7 +23,6 @@
 #ifndef TESTS_COMMON_XENOLITH_TESTAPPDELEGATE_H_
 #define TESTS_COMMON_XENOLITH_TESTAPPDELEGATE_H_
 
-#include "XLViewCommandLine.h"
 #include "XLVkGuiApplication.h"
 #include "XLStorageServer.h"
 #include "XLNetworkController.h"
@@ -37,9 +36,9 @@ public:
 
 	virtual ~TestAppDelegate();
 
-	virtual bool init(ViewCommandLineData &&, void *native = nullptr);
+	virtual bool init(ApplicationInfo &&);
 
-	virtual void run(Function<void()> &&initCb = nullptr);
+	virtual void run();
 
 	using mem_std::AllocBase::operator new;
 	using mem_std::AllocBase::operator delete;
@@ -56,12 +55,13 @@ public:
 protected:
 	core::SwapchainConfig selectConfig(const core::SurfaceInfo &info);
 
+	virtual void loadExtensions() override;
+	virtual void finalizeExtensions() override;
+
 	Value _storageParams;
 	Rc<xenolith::storage::Server> _storageServer;
 	Rc<xenolith::network::Controller> _networkController;
 	Rc<xenolith::storage::AssetLibrary> _assetLibrary;
-
-	ViewCommandLineData _data;
 
 	Mutex _configMutex;
 	bool _tripleBuffering = false;

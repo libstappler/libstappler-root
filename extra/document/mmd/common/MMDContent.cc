@@ -558,7 +558,7 @@ auto Content::explicitLink(const StringView &s, const Extensions &ext, token * b
 	}
 
 	if (attributes.empty() && !attrs.empty() && !ext.hasFlag(Extensions::Compatibility)) {
-		l->attributes = std::move(attrs);
+		l->attributes = sp::move(attrs);
 	}
 
 	return l;

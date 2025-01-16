@@ -153,7 +153,7 @@ void TestMaterialMenu::onContentSizeDirty() {
 		}));
 
 		auto v = _director->getView();
-		v->handleInputEvents(move(events));
+		v->handleInputEvents(sp::move(events));
 	}, 0.1f, [this] {
 		auto events = makeEscKeyInput();
 
@@ -183,7 +183,7 @@ void TestMaterialMenu::onContentSizeDirty() {
 		}));
 
 		auto v = _director->getView();
-		v->handleInputEvents(move(events));
+		v->handleInputEvents(sp::move(events));
 	}));
 }
 

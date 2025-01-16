@@ -98,7 +98,7 @@ void TestMaterialInput::onContentSizeDirty() {
 	};
 
 	auto v = _director->getView();
-	v->handleInputEvents(move(events));
+	v->handleInputEvents(sp::move(events));
 
 	auto a = Rc<Sequence>::create(0.03f, [this] {
 		_director->getView()->handleInputEvents(makeKeyInput(InputKeyCode::T, 'T'));
@@ -155,7 +155,7 @@ void TestMaterialInput::onContentSizeDirty() {
 			core::InputEventData::BoolEvent(core::InputEventName::PointerEnter, false),
 			core::InputEventData::BoolEvent(core::InputEventName::FocusGain, true)
 		});
-		_director->getView()->handleInputEvents(move(events));
+		_director->getView()->handleInputEvents(sp::move(events));
 	});
 
 	runAction(a);

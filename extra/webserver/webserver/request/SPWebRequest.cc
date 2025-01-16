@@ -292,7 +292,7 @@ void Request::setInputConfig(const db::InputConfig &cfg) {
 }
 
 void Request::storeObject(void *ptr, const StringView &key, Function<void()> &&cb) const {
-	pool::store(pool(), ptr, key, std::move(cb));
+	pool::store(pool(), ptr, key, sp::move(cb));
 }
 
 bool Request::performWithStorage(const Callback<bool(const db::Transaction &)> &cb) const {
@@ -329,18 +329,18 @@ const Vector<Value> & Request::getErrorMessages() const {
 
 void Request::addErrorMessage(Value &&val) const {
 	if (_config) {
-		_config->_host->getRoot()->pushErrorMessage(std::move(val));
+		_config->_host->getRoot()->pushErrorMessage(sp::move(val));
 	}
 }
 
 void Request::addDebugMessage(Value &&val) const {
 	if (_config) {
-		_config->_host->getRoot()->pushDebugMessage(std::move(val));
+		_config->_host->getRoot()->pushDebugMessage(sp::move(val));
 	}
 }
 
 void Request::addCleanup(Function<void()> &&cb) const {
-	pool::cleanup_register(pool(), std::move(cb));
+	pool::cleanup_register(pool(), sp::move(cb));
 }
 
 bool Request::isAdministrative() {
@@ -412,9 +412,9 @@ Status Request::sendFile(StringView file, size_t cacheTime) {
 
 Status Request::sendFile(StringView file, StringView contentType, size_t cacheTime) {
 	if (!contentType.empty()) {
-		setContentType(std::move(contentType));
+		setContentType(sp::move(contentType));
 	}
-	return sendFile(std::move(file), cacheTime);
+	return sendFile(sp::move(file), cacheTime);
 }
 
 String Request::getFullHostname(int port) const {
@@ -489,7 +489,7 @@ void Request::initScriptContext(pug::Context &ctx) {
 		}
 		return pug::Var();
 	});
-	ctx.set("serenity", std::move(serenityClass));
+	ctx.set("serenity", sp::move(serenityClass));
 	ctx.set("window", Value{
 		pair("location", Value({
 			pair("href", Value(toString(getFullHostname(), info.unparserUri))),

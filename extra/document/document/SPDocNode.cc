@@ -66,7 +66,7 @@ void Node::pushValue(StringView str) {
 }
 
 void Node::pushValue(WideString &&str) {
-	auto n = new (memory::pool::acquire()) Node(StringView("__value__"), std::move(str));
+	auto n = new (memory::pool::acquire()) Node(StringView("__value__"), sp::move(str));
 	_nodes.emplace_back(n);
 }
 
@@ -150,7 +150,7 @@ auto Node::getValueRecursive() const -> WideString {
 
 void Node::propagateValue() {
 	if (!_value.empty()) {
-		auto n = new (memory::pool::acquire()) Node(StringView("__value__"), std::move(_value));
+		auto n = new (memory::pool::acquire()) Node(StringView("__value__"), sp::move(_value));
 		_nodes.emplace_back(n);
 		_value.clear();
 	}

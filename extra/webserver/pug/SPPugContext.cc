@@ -669,13 +669,13 @@ Var ContextFn::performBinaryOp(Var &l, Var &r, Expression::Op op) {
 				for (auto &it : rV.asDict()) {
 					d.emplace(it.first, it.second);
 				}
-				return Var(false, new Value(std::move(d)));
+				return Var(false, new Value(sp::move(d)));
 			} else if (lV.isArray() && rV.isArray()) {
 				auto d = lV.asArray();
 				for (auto &it : rV.asArray()) {
 					d.emplace_back(it);
 				}
-				return Var(false, new Value(std::move(d)));
+				return Var(false, new Value(sp::move(d)));
 			} else {
 				return Var(Value(lV.asDouble() + rV.asDouble()));
 			}

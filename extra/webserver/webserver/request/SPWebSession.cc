@@ -97,7 +97,7 @@ bool Session::init(db::User *user, TimeInterval maxAge) {
 	_sessionToken = makeSessionToken(_request, _uuid, data.getString(SA_SESSION_USER_NAME_KEY));
 	_cookieToken = makeCookieToken(_request, _uuid, user->getName(), salt);
 
-	data.setBytes(std::move(salt), SA_SESSION_SALT_KEY);
+	data.setBytes(sp::move(salt), SA_SESSION_SALT_KEY);
 
 	setModified(false);
 
@@ -184,7 +184,7 @@ bool Session::init(bool silent) {
 		}
 	}
 
-	_data = std::move(sessionData);
+	_data = sp::move(sessionData);
 	return _user != nullptr;
 }
 

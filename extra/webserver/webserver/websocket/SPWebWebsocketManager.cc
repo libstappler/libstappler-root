@@ -172,7 +172,7 @@ void WebsocketHandler::sendBroadcast(Value &&val) const {
 	Value bcast {
 		std::make_pair("server", Value(_manager->host().getHostInfo().hostname)),
 		std::make_pair("url", Value(_url)),
-		std::make_pair("data", Value(std::move(val))),
+		std::make_pair("data", Value(sp::move(val))),
 	};
 
 	performWithStorage([&] (const db::Transaction &t) {
@@ -273,11 +273,11 @@ void WebsocketHandler::sendPendingNotifications(pool_t *pool) {
 	perform([&, this] {
 		_manager->host().getRoot()->setErrorNotification(pool, [this] (Value && data) {
 			send(Value({
-				std::make_pair("error", Value(std::move(data)))
+				std::make_pair("error", Value(sp::move(data)))
 			}));
 		}, [this] (Value && data) {
 			send(Value({
-				std::make_pair("debug", Value(std::move(data)))
+				std::make_pair("debug", Value(sp::move(data)))
 			}));
 		});
 	}, pool, config::TAG_WEBSOCKET, _conn);

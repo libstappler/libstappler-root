@@ -30,7 +30,7 @@
 namespace STAPPLER_VERSIONIZED stappler::web {
 
 SharedRc<UnixRoot> UnixRoot::create(Config &&cfg) {
-	return SharedRc<UnixRoot>::create(SharedMode::Allocator, move(cfg));
+	return SharedRc<UnixRoot>::create(SharedRefMode::Allocator, move(cfg));
 }
 
 UnixRoot::~UnixRoot() { }

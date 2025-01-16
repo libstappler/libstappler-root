@@ -221,7 +221,7 @@ void HostController::handleChildInit(const Host &host, pool_t *p) {
 	db::sql::Driver::Handle db;
 	if (!_dbParams.empty()) {
 		// run custom dbd
-		_customDbd = DbdModule::create(_rootPool, _root, move(_dbParams));
+		_customDbd = DbdModule::create(_rootPool, _root, sp::move(_dbParams));
 		_dbDriver = _customDbd->getDriver();
 		db = _customDbd->openConnection(pool);
 	} else {

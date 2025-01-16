@@ -98,8 +98,8 @@ static InputEventData makeScrollEvent(InputEventName name, Size2 size, float off
 	});
 }
 
-void TestScroll::onEnter(xenolith::Scene *scene) {
-	TestLayout::onEnter(scene);
+void TestScroll::handleEnter(xenolith::Scene *scene) {
+	TestLayout::handleEnter(scene);
 
 	runAction(Rc<Sequence>::create(0.05f, [this] {
 		_director->getView()->handleInputEvent(makeScrollEvent(InputEventName::Begin, _contentSize, TestScroll_step * 0));

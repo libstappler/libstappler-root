@@ -785,7 +785,7 @@ MediaQuery::Vector<MediaQuery::Query> StyleContainer::readMediaQueryList(StyleBu
 	while (!s.empty()) {
 		MediaQuery::Query q = readMediaQuery(buffers, s);
 		if (!q.params.empty()) {
-			query.push_back(std::move(q));
+			query.push_back(sp::move(q));
 		}
 
 		s.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();

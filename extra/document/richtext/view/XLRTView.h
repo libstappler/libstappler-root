@@ -80,7 +80,7 @@ public:
 
 	virtual bool init(CommonSource * = nullptr);
 	virtual bool init(Layout, CommonSource *);
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 	virtual void setLayout(Layout l) override;
 
 	virtual void setProgressColor(const Color &color);

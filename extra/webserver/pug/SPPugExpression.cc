@@ -123,7 +123,7 @@ Expression::~Expression() { }
 
 void Expression::set(Value && d) {
 	isToken = false;
-	value = std::move(d);
+	value = sp::move(d);
 }
 void Expression::set(const StringView & t) {
 	isToken = true;

@@ -303,7 +303,7 @@ void Host::addComponentByParams(StringView str) {
 		h.type = type;
 		h.symbol = args[0].pdup(_config->_rootPool);
 		h.name = h.symbol;
-		_config->_componentsToLoad.emplace_back(std::move(h));
+		_config->_componentsToLoad.emplace_back(sp::move(h));
 	} else if (idx >= 2) {
 		HostComponentInfo h;
 		h.type = type;
@@ -342,7 +342,7 @@ void Host::addComponentByParams(StringView str) {
 			}
 		}
 
-		_config->_componentsToLoad.emplace_back(std::move(h));
+		_config->_componentsToLoad.emplace_back(sp::move(h));
 	}
 }
 
@@ -372,7 +372,7 @@ void Host::addWasmComponentByParams(StringView path, StringView command) {
 	h.name = name.pdup();
 	h.symbol = c.pdup();
 
-	_config->_componentsToLoad.emplace_back(std::move(h));
+	_config->_componentsToLoad.emplace_back(sp::move(h));
 }
 
 void Host::addAllow(StringView ips) {
@@ -906,7 +906,7 @@ const Map<StringView, HostComponent *> &Host::getComponents() const {
 }
 
 void Host::addPreRequest(Function<Status(Request &)> &&req) const {
-	_config->_preRequest.emplace_back(std::move(req));
+	_config->_preRequest.emplace_back(sp::move(req));
 }
 
 void Host::addHandler(StringView path, const HandlerCallback &cb, const Value &d) const {
@@ -950,7 +950,7 @@ void Host::addMultiResourceHandler(StringView path, std::initializer_list<Pair<c
 		path = path.pdup(_config->_rootPool);
 		_config->_requests.emplace(path,
 				RequestSchemeInfo{_config->_currentComponent,
-				[s = Map<StringView, const db::Scheme *>(move(schemes))] () -> RequestHandler * {
+				[s = Map<StringView, const db::Scheme *>(sp::move(schemes))] () -> RequestHandler * {
 			return new ResourceMultiHandler(s);
 		}, Value()});
 	}

@@ -57,7 +57,7 @@ bool GuiSceneContent::init() {
 				", ", gesture.input->data.key.keysym, ",", getInputModifiersNames(gesture.input->data.modifiers),
 				", ", std::hex, uint32_t(gesture.input->data.key.keychar));
 		return true;
-	}, move(keys));
+	}, sp::move(keys));
 
 	GestureKeyRecognizer::ButtonMask buttons;
 	buttons.set();
@@ -65,7 +65,7 @@ bool GuiSceneContent::init() {
 		log::verbose("Scene", gesture.event, ": ", core::getInputButtonName(gesture.input->data.button),
 				",", getInputModifiersNames(gesture.input->data.modifiers), ", ", gesture.input->currentLocation);
 		return true;
-	}, move(buttons));
+	}, sp::move(buttons));
 
 	l->addScrollRecognizer([] (const GestureScroll &scroll) {
 		log::verbose("Scene", scroll.amount, " ", scroll.pos);
@@ -75,8 +75,8 @@ bool GuiSceneContent::init() {
 	return true;
 }
 
-void GuiSceneContent::onContentSizeDirty() {
-	SceneContent2d::onContentSizeDirty();
+void GuiSceneContent::handleContentSizeDirty() {
+	SceneContent2d::handleContentSizeDirty();
 
 	_layer->setPosition(_contentSize / 2.0f + Vec2(48.0f, 48.0f));
 	_layer2->setPosition(_contentSize / 2.0f + Vec2(-48.0f, 48.0f));

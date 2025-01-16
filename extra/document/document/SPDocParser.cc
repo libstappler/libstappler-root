@@ -387,7 +387,7 @@ void readFontFace(StringReader &s, ContentPage::FontMap &fonts) {
 			default: break;
 			}
 		}
-		it->second.push_back(std::move(face));
+		it->second.push_back(sp::move(face));
 	}
 }*/
 

@@ -177,7 +177,7 @@ bool RequestFilter::readHeaders(StringView &r) {
 				auto key = _nameBuffer.str(); string::trim(key);
 				auto value = _buffer.str(); string::trim(value);
 
-				_headers.emplace(std::move(key), std::move(value));
+				_headers.emplace(sp::move(key), sp::move(value));
 
 				_buffer.clear();
 				_nameBuffer.clear();

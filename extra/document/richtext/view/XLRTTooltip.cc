@@ -120,8 +120,8 @@ bool Tooltip::init(RendererResult *s, const Vector<String> &ids, WideStringView 
 	return true;
 }
 
-void Tooltip::onContentSizeDirty() {
-	FlexibleLayout::onContentSizeDirty();
+void Tooltip::handleContentSizeDirty() {
+	FlexibleLayout::handleContentSizeDirty();
 	if (_originPosition.y - 12.0f < _contentSize.height * _anchorPoint.y) {
 		setAnchorPoint(Vec2(_anchorPoint.x,
 				(_originPosition.y - 12.0f) / _contentSize.height));
@@ -136,8 +136,8 @@ void Tooltip::onContentSizeDirty() {
 	}
 }
 
-void Tooltip::onEnter(Scene *scene) {
-	FlexibleLayout::onEnter(scene);
+void Tooltip::handleEnter(Scene *scene) {
+	FlexibleLayout::handleEnter(scene);
 }
 
 void Tooltip::onResult(RendererResult *r) {

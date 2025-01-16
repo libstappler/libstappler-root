@@ -129,7 +129,7 @@ protected:
 
 		if (!_styleSet) {
 			setStyles(getStyles());
-			setStyles(move(_styles));
+			setStyles(sp::move(_styles));
 			_styleSet = true;
 		}
 
@@ -239,8 +239,8 @@ void TestZOrder::onContentSizeDirty() {
 	_label2->setPosition(_contentSize / 2.0f + Vec2(0.0f, 200.0f));
 }
 
-void TestZOrder::onEnter(xenolith::Scene *scene) {
-	TestLayout::onEnter(scene);
+void TestZOrder::handleEnter(xenolith::Scene *scene) {
+	TestLayout::handleEnter(scene);
 }
 
 }

@@ -534,7 +534,7 @@ struct BitmapTest : Test {
 
 		bmp.loadBitmap(bmpData.data(), bmp.width(), bmp.height(), bmp.format(), bmp.alpha());
 		bmp.loadBitmap(BytesView(bmpData), bmp.width(), bmp.height(), bmp.format(), bmp.alpha());
-		bmp.loadBitmap(move(bmpData), bmp.width(), bmp.height(), bmp.format(), bmp.alpha());
+		bmp.loadBitmap(sp::move(bmpData), bmp.width(), bmp.height(), bmp.format(), bmp.alpha());
 
 		bmp.convert(bitmap::PixelFormat::RGB888);
 		bmp.save(bitmap::FileFormat::Jpeg, jpeg1);

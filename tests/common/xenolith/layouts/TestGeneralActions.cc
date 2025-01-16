@@ -39,7 +39,7 @@ bool ActionEaseNode::init(StringView str, Function<Rc<ActionInterval>(Rc<ActionI
 	_layer->setAnchorPoint(Anchor::BottomLeft);
 	_layer->setContentSize(Size2(48.0f, 48.0f));
 
-	_callback = move(cb);
+	_callback = sp::move(cb);
 
 	return true;
 }
@@ -157,8 +157,8 @@ void TestGeneralAction::onContentSizeDirty() {
 	}
 }
 
-void TestGeneralAction::onEnter(xenolith::Scene *scene) {
-	TestLayout::onEnter(scene);
+void TestGeneralAction::handleEnter(xenolith::Scene *scene) {
+	TestLayout::handleEnter(scene);
 
 	runAction(Rc<Sequence>::create(0.01f, [this] {
 		for (auto &it : _nodes) {

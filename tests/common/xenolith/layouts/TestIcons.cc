@@ -62,14 +62,14 @@ bool VgIconListNode::init(IconName iconName, Function<void(IconName)> &&cb) {
 
 	_image = addChild(Rc<VectorSprite>::create(move(image)));
 	_image->setColor(Color::Black);
-	_image->setAutofit(Sprite::Autofit::Contain);
+	_image->setTextureAutofit(Autofit::Contain);
 	_image->setContentSize(Size2(64.0f, 64.0f));
 	_image->setAnchorPoint(Anchor::Middle);
 	_image->setWaitDeferred(false);
 	//_image->setDeferred(true);
 	_iconName = iconName;
 
-	_callback = move(cb);
+	_callback = sp::move(cb);
 
 	setTag(toInt(iconName));
 
@@ -113,8 +113,8 @@ void TestIcons::onContentSizeDirty() {
 	_scrollView->disableScissor();
 }
 
-void TestIcons::onEnter(xenolith::Scene *scene) {
-	TestLayout::onEnter(scene);
+void TestIcons::handleEnter(xenolith::Scene *scene) {
+	TestLayout::handleEnter(scene);
 
 	runAction(Rc<ActionProgress>::create(0.5f, [this] (float val) {
 		_scrollView->setScrollRelativePosition(val);

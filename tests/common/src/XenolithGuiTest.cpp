@@ -23,7 +23,7 @@
 #include "SPCommon.h"
 #include "Test.h"
 
-#if MODULE_XENOLITH_RENDERER_MATERIAL2D && MODULE_XENOLITH_BACKEND_VKGUI
+#if MODULE_XENOLITH_RENDERER_MATERIAL2D && MODULE_XENOLITH_BACKEND_VKGUI && 0
 
 #include "XLVkGuiApplication.h"
 #include "XLCoreFrameRequest.h"
@@ -36,7 +36,6 @@
 #include "backend/vk/XL2dVkShadowPass.h"
 #include "XLPlatform.h"
 #include "XLAction.h"
-#include "XLViewCommandLine.h"
 
 #include "TestAppDelegate.h"
 

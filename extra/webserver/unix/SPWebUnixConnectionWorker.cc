@@ -81,7 +81,7 @@ ConnectionWorker::ConnectionWorker(ConnectionQueue *queue, UnixRoot *h, int sock
 , _inputClient(socket, EPOLLIN | EPOLLEXCLUSIVE)
 , _cancelClient(pipe, EPOLLIN | EPOLLET)
 , _eventClient(event, EPOLLIN | EPOLLET | EPOLLEXCLUSIVE)
-,_thread(ConnectionWorker::workerThread, this, queue) {
+,_thread(ConnectionWorker::workerThread, this) {
 	_queue->retain();
 }
 

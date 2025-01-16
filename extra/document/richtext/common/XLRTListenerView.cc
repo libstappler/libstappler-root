@@ -589,11 +589,11 @@ void ListenerView::setUseSelection(bool value) {
 	_useSelection = value;
 }
 
-void ListenerView::onExit() {
+void ListenerView::handleExit() {
 	if (isSelectionEnabled()) {
 		disableSelection();
 	}
-	CommonView::onExit();
+	CommonView::handleExit();
 }
 
 void ListenerView::setLayout(Layout l) {

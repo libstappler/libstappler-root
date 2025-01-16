@@ -37,8 +37,8 @@ public:
 
 	virtual bool init(RendererResult *, const StringView &id, const StringView &src, const StringView &alt = StringView());
 
-	virtual void onContentSizeDirty() override;
-	virtual void onEnter(Scene *) override;
+	virtual void handleContentSizeDirty() override;
+	virtual void handleEnter(Scene *) override;
 
 	virtual void close();
 

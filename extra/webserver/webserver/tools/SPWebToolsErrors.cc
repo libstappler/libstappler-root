@@ -238,7 +238,7 @@ Status HandlersGui::onTranslateName(Request &req) {
 
 		req.runPug("virtual://html/handlers.pug", [&] (pug::Context &exec, const pug::Template &tpl) -> bool {
 			ServerGui::defineBasics(exec, req, u);
-			exec.set("handlers", std::move(ret));
+			exec.set("handlers", sp::move(ret));
 			return true;
 		});
 		return DONE;

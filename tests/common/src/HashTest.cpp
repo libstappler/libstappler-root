@@ -44,7 +44,7 @@ protected:
 	StringView _name;
 };
 
-class TestPoolRef : public RefBase<mem_pool::Interface> {
+class TestPoolRef : public Ref {
 public:
 	virtual ~TestPoolRef() { }
 	virtual StringView getName() const { return _name; }
@@ -59,7 +59,7 @@ protected:
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
-struct TestItem : public RefBase<memory::StandartInterface> {
+struct TestItem : public Ref {
 	virtual ~TestItem() {
 		// (*_out) << "Destroy: " << _tag << "\n";
 	}
@@ -429,7 +429,7 @@ struct HashMapTest : MemPoolTest {
 		});
 
 		runTest(stream, "RefContainer small-remove", count, passed, [&] () -> bool {
-			RefContainer<TestItem> container;
+			RefContainer<TestItem, Interface> container;
 
 			Vector<TestItem *> ptrs;
 
@@ -454,7 +454,7 @@ struct HashMapTest : MemPoolTest {
 		});
 
 		runTest(stream, "RefContainer large-remove", count, passed, [&] () -> bool {
-			RefContainer<TestItem> container;
+			RefContainer<TestItem, Interface> container;
 
 			Vector<TestItem *> ptrs;
 
@@ -481,7 +481,7 @@ struct HashMapTest : MemPoolTest {
 		});
 
 		runTest(stream, "RefContainer small-tag", count, passed, [&] () -> bool {
-			RefContainer<TestItem> container;
+			RefContainer<TestItem, Interface> container;
 			Vector<uint32_t> tags;
 
 			for (uint32_t i = 0; i < 4; ++ i) {
@@ -527,7 +527,7 @@ struct HashMapTest : MemPoolTest {
 		});
 
 		runTest(stream, "RefContainer small-tag-all", count, passed, [&] () -> bool {
-			RefContainer<TestItem> container;
+			RefContainer<TestItem, Interface> container;
 			Vector<uint32_t> tags;
 
 			for (uint32_t i = 0; i < 4; ++ i) {
@@ -568,7 +568,7 @@ struct HashMapTest : MemPoolTest {
 		});
 
 		runTest(stream, "RefContainer large-tag", count, passed, [&] () -> bool {
-			RefContainer<TestItem> container;
+			RefContainer<TestItem, Interface> container;
 			Vector<uint32_t> tags;
 
 			for (uint32_t i = 0; i < 6; ++ i) {
@@ -614,7 +614,7 @@ struct HashMapTest : MemPoolTest {
 		});
 
 		runTest(stream, "RefContainer large-tag-all", count, passed, [&] () -> bool {
-			RefContainer<TestItem> container;
+			RefContainer<TestItem, Interface> container;
 			Vector<uint32_t> tags;
 
 			for (uint32_t i = 0; i < 6; ++ i) {

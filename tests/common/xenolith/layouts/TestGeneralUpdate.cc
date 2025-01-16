@@ -35,11 +35,11 @@ bool TestGeneralUpdate::init() {
 
 	setIgnoreParentState(true);
 
-	setOnEnterCallback([] (xenolith::Scene *) { });
-	setOnExitCallback([] () { });
-	setOnContentSizeDirtyCallback([] () { });
-	setOnReorderChildDirtyCallback([] () { });
-	setOnTransformDirtyCallback([] (const Mat4 &) { });
+	setEnterCallback([] (xenolith::Scene *) { });
+	setExitCallback([] () { });
+	setContentSizeDirtyCallback([] () { });
+	setReorderChildDirtyCallback([] () { });
+	setTransformDirtyCallback([] (const Mat4 &) { });
 
 	_sprite = addChild(Rc<Sprite>::create("xenolith-1-480.png"), ZOrder(2));
 	//_sprite->setAutofit(Sprite::Autofit::Contain);
@@ -55,7 +55,7 @@ bool TestGeneralUpdate::init() {
 	}
 
 	_sprite2 = _sprite->addChild(Rc<Sprite>::create(), ZOrder(1), 123);
-	_sprite2->setAutofit(Sprite::Autofit::Contain);
+	_sprite2->setTextureAutofit(Autofit::Contain);
 	_sprite2->setAnchorPoint(Anchor::Middle);
 	_sprite2->enableScissor();
 	_sprite2->setStateApplyMode(StateApplyMode::ApplyForAll);
@@ -166,8 +166,8 @@ void TestGeneralUpdate::onContentSizeDirty() {
 	_spriteLayer->convertToNodeSpaceAR(_contentSize / 2.0f);
 }
 
-void TestGeneralUpdate::onEnter(xenolith::Scene *scene) {
-	TestLayout::onEnter(scene);
+void TestGeneralUpdate::handleEnter(xenolith::Scene *scene) {
+	TestLayout::handleEnter(scene);
 
 	auto cache = _director->getResourceCache();
 
@@ -182,7 +182,7 @@ void TestGeneralUpdate::onEnter(xenolith::Scene *scene) {
 		_sprite3->setTexture(_sprite2->getTexture()->getName());
 		_sprite3->setTextureRect(Rect(0.1f, 0.1f, 0.8f, 0.8f));
 		_sprite3->getLinearGradient();
-		_sprite3->setAutofitPosition(Anchor::TopRight);
+		_sprite3->setTextureAutofitPosition(Anchor::TopRight);
 
 		auto b = _sprite2->getBlendInfo();
 		auto b2 = b;

@@ -99,8 +99,8 @@ bool Renderer::init(const Vector<String> &ids) {
 	return true;
 }
 
-void Renderer::visit(FrameInfo &frame, NodeFlags parentFlags) {
-	Component::visit(frame, parentFlags);
+void Renderer::visitSelf(FrameInfo &frame, NodeFlags parentFlags) {
+	Component::visitSelf(frame, parentFlags);
 	if (_renderingDirty && !_renderingInProgress && _enabled && _source) {
 		requestRendering();
 	}
@@ -145,7 +145,7 @@ MediaParameters Renderer::getMedia() const {
 	return _media;
 }
 
-void Renderer::onContentSizeDirty() {
+void Renderer::handleContentSizeDirty() {
 	_isPageSplitted = false;
 	auto size = _owner->getContentSize();
 	auto scroll = dynamic_cast<basic2d::ScrollViewBase *>(_owner);

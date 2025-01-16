@@ -314,11 +314,11 @@ bool NoisePassHandle::prepare(FrameQueue &q, Function<void(bool)> &&cb) {
 		_image = (const vk::ImageAttachmentHandle *)imageAttachment->handle.get();
 	}
 
-	return vk::QueuePassHandle::prepare(q, move(cb));
+	return vk::QueuePassHandle::prepare(q, sp::move(cb));
 }
 
 Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle &handle) {
-	auto buf = _pool->recordBuffer(*_device, [&, this] (vk::CommandBuffer &buf) {
+	auto buf = _pool->recordBuffer(*_device, Vector<Rc<vk::DescriptorPool>>(_descriptors), [&, this] (vk::CommandBuffer &buf) {
 		auto pass = _data->impl.cast<vk::RenderPass>().get();
 		pass->perform(*this, buf, [&, this] {
 			auto extent = handle.getFrameConstraints().extent;
@@ -337,11 +337,45 @@ Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle
 }
 
 static void runTests() {
-	Application::CommonInfo commonInfo({
-		.bundleName = String("org.stappler.xenolith.cli"),
-		.applicationName = String("xenolith-cli"),
-		.applicationVersion = String("0.1.0")
-	});
+	ApplicationInfo commonInfo;
+	commonInfo.bundleName = String("org.stappler.xenolith.cli");
+	commonInfo.applicationName = String("xenolith-cli");
+	commonInfo.applicationVersion = String("0.1.0");
+	commonInfo.updateCallback = [] (const PlatformApplication &app, const UpdateTime &time) {
+		if (time.app == 0) {
+			auto noiseQueue = Rc<NoiseQueue>::create();
+
+			// then compile it on graphics device
+			app.getGlLoop()->compileQueue(noiseQueue, [app = &app, noiseQueue] (bool success) {
+				Application::getInstance()->performOnMainThread([app, noiseQueue] {
+					noiseQueue->run((Application *)app);
+				}, nullptr);
+			});
+
+			auto modelPath = filesystem::currentDir<Interface>("resources/mnist.json");
+			auto inputPath = toString("mnist:", filesystem::currentDir<Interface>("resources/mnist"));
+
+			auto modelQueue = Rc<shadernn::ModelQueue>::create(modelPath, shadernn::ModelFlags::None, inputPath);
+			if (modelQueue) {
+				modelQueue->retain();
+				app.getGlLoop()->compileQueue(modelQueue, [app = &app, modelQueue] (bool success) {
+					Application::getInstance()->performOnMainThread([app, modelQueue] {
+						modelQueue->run((Application *)app);
+					}, nullptr);
+				});
+			}
+		}
+	};
+	commonInfo.threadsCount = 2;
+	commonInfo.updateInterval = TimeInterval::microseconds(500000);
+
+	// define device selector/initializer
+	auto data = Rc<vk::LoopData>::alloc();
+	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
+		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
+	};
+
+	commonInfo.loopInfo.platformData = data;
 
 	auto instance = vk::platform::createInstance([&] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
 		data.applicationName = commonInfo.applicationName;
@@ -352,45 +386,9 @@ static void runTests() {
 	// create main looper
 	auto app = Rc<Application>::create(move(commonInfo), move(instance));
 
-	// define device selector/initializer
-	auto data = Rc<vk::LoopData>::alloc();
-	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
-		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
-	};
-
-	Application::CallbackInfo callbackInfo({
-		.updateCallback = [] (const Application &app, const UpdateTime &time) {
-			if (time.app == 0) {
-				auto noiseQueue = Rc<NoiseQueue>::create();
-
-				// then compile it on graphics device
-				app.getGlLoop()->compileQueue(noiseQueue, [app = &app, noiseQueue] (bool success) {
-					Application::getInstance()->performOnMainThread([app, noiseQueue] {
-						noiseQueue->run(const_cast<Application *>(app));
-					}, nullptr);
-				});
-
-				auto modelPath = filesystem::currentDir<Interface>("resources/mnist.json");
-				auto inputPath = toString("mnist:", filesystem::currentDir<Interface>("resources/mnist"));
-
-				auto modelQueue = Rc<shadernn::ModelQueue>::create(modelPath, shadernn::ModelFlags::None, inputPath);
-				if (modelQueue) {
-					modelQueue->retain();
-					app.getGlLoop()->compileQueue(modelQueue, [app = &app, modelQueue] (bool success) {
-						Application::getInstance()->performOnMainThread([app, modelQueue] {
-							modelQueue->run(const_cast<Application *>(app));
-						}, nullptr);
-					});
-				}
-			}
-		}
-	});
-
-	core::LoopInfo info;
-	info.platformData = data;
-
 	// run main loop with 2 additional threads and 0.5sec update interval
-	app->run(callbackInfo, move(info), 2, TimeInterval::microseconds(500000));
+	app->run();
+	app->waitStopped();
 }
 
 }

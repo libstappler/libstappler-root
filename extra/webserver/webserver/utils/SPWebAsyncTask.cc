@@ -36,7 +36,7 @@ AsyncTaskGroup::AsyncTaskGroup() : _host(Host::getCurrent()) { }
 AsyncTaskGroup::AsyncTaskGroup(const Host &serv) : _host(serv) { }
 
 AsyncTaskGroup::AsyncTaskGroup(const Host &serv, std::function<void()> &&fn)
-: _host(serv), _notifyFn(move(fn)) { }
+: _host(serv), _notifyFn(sp::move(fn)) { }
 
 void AsyncTaskGroup::onAdded(AsyncTask *task) {
 	++ _added;
@@ -173,7 +173,7 @@ void AsyncTask::addExecuteFn(const ExecuteCallback &cb) {
 
 void AsyncTask::addExecuteFn(ExecuteCallback &&cb) {
 	web::perform([&, this] {
-		_execute.push_back(std::move(cb));
+		_execute.push_back(sp::move(cb));
 	}, _pool);
 }
 
@@ -184,7 +184,7 @@ void AsyncTask::addCompleteFn(const CompleteCallback &cb) {
 }
 void AsyncTask::addCompleteFn(CompleteCallback &&cb) {
 	web::perform([&, this] {
-		_complete.push_back(std::move(cb));
+		_complete.push_back(sp::move(cb));
 	}, _pool);
 }
 

@@ -81,7 +81,7 @@ LayoutEngine::LayoutEngine(Document *doc, std::function<Rc<font::FontFaceSet>(co
 	memory::pool::push(pool);
 
 	_data = new (pool) Data(pool, this, doc, media, spine);
-	_data->fontCallback = move(fn);
+	_data->fontCallback = sp::move(fn);
 
 	memory::pool::pop();
 }
@@ -99,7 +99,7 @@ LayoutEngine::~LayoutEngine() {
 void LayoutEngine::setExternalAssetsMeta(ExternalAssetsMap &&external) {
 	memory::pool::push(_data->pool);
 
-	_data->externalAssets = move(external);
+	_data->externalAssets = sp::move(external);
 
 	for (auto &it : _data->externalAssets) {
 		const DocumentAssetMeta &a = it.second;
@@ -787,7 +787,7 @@ bool LayoutEngine::Data::processInlineBlockNode(LayoutBlock &l, LayoutBlock::Nod
 		return true;
 	}
 
-	LayoutBlock *newL = engine->makeLayout(std::move(node), true);
+	LayoutBlock *newL = engine->makeLayout(sp::move(node), true);
 	if (processNode(*newL, pos, l.pos.size, 0.0f)) {
 		auto bbox = newL->getBoundingBox();
 
@@ -945,7 +945,7 @@ bool LayoutEngine::Data::processTableNode(LayoutBlock &l, LayoutBlock::NodeInfo 
 		height += nodeHeight;
 		collapsableMarginTop = table.layout->pos.margin.bottom;
 
-		l.layouts.emplace_back(std::move(table.layout));
+		l.layouts.emplace_back(table.layout);
 		if (!std::isnan(l.pos.maxHeight) && height > l.pos.maxHeight) {
 			height = l.pos.maxHeight;
 			return false;

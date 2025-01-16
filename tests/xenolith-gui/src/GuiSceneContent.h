@@ -34,7 +34,7 @@ public:
 
 	virtual bool init() override;
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 protected:
 	basic2d::Layer *_layer = nullptr;

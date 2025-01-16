@@ -57,8 +57,8 @@ bool ImageLayout::init(RendererResult *res, const StringView &id, const StringVi
 	return true;
 }
 
-void ImageLayout::onContentSizeDirty() {
-	DecoratedLayout::onContentSizeDirty();
+void ImageLayout::handleContentSizeDirty() {
+	DecoratedLayout::handleContentSizeDirty();
 
 	_toolbar->setPosition(Vec2(_decorationPadding.left, _contentSize.height - _decorationPadding.top));
 	_toolbar->setContentSize(Size2(_contentSize.width - _decorationPadding.horizontal(), 32.0f));
@@ -67,8 +67,8 @@ void ImageLayout::onContentSizeDirty() {
 	_sprite->setPosition(Vec2(_decorationPadding.left, _decorationPadding.bottom));
 }
 
-void ImageLayout::onEnter(Scene *scene) {
-	DecoratedLayout::onEnter(scene);
+void ImageLayout::handleEnter(Scene *scene) {
+	DecoratedLayout::handleEnter(scene);
 }
 
 void ImageLayout::close() {

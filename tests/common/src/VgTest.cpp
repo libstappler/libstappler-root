@@ -200,7 +200,7 @@ struct VgTest : MemPoolTest {
 		img1->setDrawOrder(drawOrder);
 
 		auto data6 = img1->popData();
-		img1->setDrawOrder(move(drawOrder));
+		img1->setDrawOrder(sp::move(drawOrder));
 
 		auto data7 = img1->popData();
 		img1->resetDrawOrder();

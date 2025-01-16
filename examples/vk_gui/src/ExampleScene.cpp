@@ -70,8 +70,8 @@ bool ExampleScene::init(Application *app, const core::FrameContraints &constrain
 	return true;
 }
 
-void ExampleScene::onContentSizeDirty() {
-	Scene2d::onContentSizeDirty();
+void ExampleScene::handleContentSizeDirty() {
+	Scene2d::handleContentSizeDirty();
 
 	// Размещаем тексовое поле в нужном положении, в центре сцены
 	_helloWorldLabel->setPosition(_content->getContentSize() / 2.0f);

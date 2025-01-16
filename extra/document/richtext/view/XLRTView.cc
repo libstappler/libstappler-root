@@ -132,14 +132,14 @@ void View::onRenderer(RendererResult *res, bool status) {
 	}
 }
 
-void View::onContentSizeDirty() {
+void View::handleContentSizeDirty() {
 	if (_renderSize != Size2::ZERO && _renderSize != _contentSize) {
 		_savedPosition = getViewPosition();
 		_renderSize = Size2::ZERO;
 		_layoutChanged = true;
 	}
 
-	ListenerView::onContentSizeDirty();
+	ListenerView::handleContentSizeDirty();
 	if (getLayout() == Horizontal) {
 		_progress->setPosition(Vec2(0.0f, _contentSize.height));
 	}

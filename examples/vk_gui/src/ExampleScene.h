@@ -37,7 +37,7 @@ public:
 	virtual bool init(Application *, const core::FrameContraints &constraints) override;
 
 	// переопределяем размещение объектов на сцене при изменении размера
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 protected:
 	using Scene::init;

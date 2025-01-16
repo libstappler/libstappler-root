@@ -47,7 +47,7 @@ struct SP_PUBLIC LayoutBoundIndex {
 	StringView href;
 };
 
-class SP_PUBLIC LayoutResult : public RefBase<memory::StandartInterface> {
+class SP_PUBLIC LayoutResult : public Ref {
 public:
 	virtual ~LayoutResult();
 

@@ -64,8 +64,8 @@ bool DocumentLayout::init() {
 	return true;
 }
 
-void DocumentLayout::onEnter(Scene *scene) {
-	FlexibleLayout::onEnter(scene);
+void DocumentLayout::handleEnter(Scene *scene) {
+	FlexibleLayout::handleEnter(scene);
 
 	auto lib = scene->getDirector()->getApplication()->getExtension<AssetLibrary>();
 

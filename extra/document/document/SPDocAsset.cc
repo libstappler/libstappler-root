@@ -58,14 +58,14 @@ bool DocumentAssetLock::load(const Callback<void(BytesView)> &cb) const {
 }
 
 DocumentAssetLock::DocumentAssetLock(Rc<DocumentAsset> &&a, Function<void(const DocumentAsset &, Ref *)> &&fn, Rc<Ref> &&lock)
-: _asset(move(a)), _releaseFunction(move(fn)), _lock(move(lock)) { }
+: _asset(sp::move(a)), _releaseFunction(sp::move(fn)), _lock(sp::move(lock)) { }
 
 Rc<DocumentAssetLock> DocumentAsset::lock(int64_t mtime) {
 	auto lock = doLockAsset(mtime);
 	if (lock) {
 		auto ret = new DocumentAssetLock(this, [this] (const DocumentAsset &, Ref *lock) {
 			doReleaseLock(lock);
-		}, move(lock));
+		}, sp::move(lock));
 		auto ref = Rc<DocumentAssetLock>(ret);
 		ret->release(0);
 		return ref;

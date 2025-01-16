@@ -69,7 +69,7 @@ private:
 
 thread_local MemPoolHolder tl_pool;
 
-struct Engine::Internal : memory::PoolInterface {
+struct Engine::Internal : InterfaceObject<memory::PoolInterface> {
 	using mmd_engine = _sp_mmd_engine;
 	using token = _sp_mmd_token;
 
@@ -91,7 +91,7 @@ struct Engine::Internal : memory::PoolInterface {
 
 	bool _shouldDestroyPool = false;
 	bool isDebug = false;
-	StringStreamType debug;
+	StringStream debug;
 };
 
 Engine::Internal::Internal(memory::pool_t *p, StringView v, const Extensions & ext)

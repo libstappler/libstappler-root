@@ -95,7 +95,7 @@ struct SP_PUBLIC DocumentData : public memory::AllocPool, public InterfaceObject
 	MediaQueryId addQuery(MediaQuery &&);
 };
 
-class SP_PUBLIC Document : public RefBase<memory::StandartInterface> {
+class SP_PUBLIC Document : public Ref {
 public:
 	static bool canOpen(FilePath path, StringView ct = StringView());
 	static bool canOpen(BytesView data, StringView ct = StringView());

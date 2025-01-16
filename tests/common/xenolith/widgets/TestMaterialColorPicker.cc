@@ -35,7 +35,7 @@ bool MaterialColorPicker::init(Type type, const ColorHCT &color, Function<void(f
 
 	_type = type;
 	_targetColor = color;
-	_callback = move(cb);
+	_callback = sp::move(cb);
 	switch (_type) {
 	case Type::Hue: _value = _targetColor.data.hue / 360.0f; break;
 	case Type::Chroma: _value = _targetColor.data.chroma / 100.0f; break;
@@ -120,11 +120,6 @@ void MaterialColorPicker::initVertexes() {
 
 void MaterialColorPicker::updateVertexes(FrameInfo &frame) {
 	_vertexes.clear();
-
-	auto texExtent = _texture->getExtent();
-	auto texSize = Size2(texExtent.width, texExtent.height);
-
-	texSize = Size2(texSize.width * _textureRect.size.width, texSize.height * _textureRect.size.height);
 
 	Size2 size(_contentSize.width / QuadsCount, _contentSize.height);
 	Vec2 origin(0, 0);

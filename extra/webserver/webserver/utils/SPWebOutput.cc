@@ -376,13 +376,13 @@ Status writeResourceFileData(Request &rctx, Value &&result) {
 			return HTTP_NOT_MODIFIED;
 		}
 
-		rctx.setFilename(std::move(path));
+		rctx.setFilename(sp::move(path));
 		return OK;
 	}
 
 	if (!loc.empty()) {
 		rctx.setFilename(nullptr);
-		return rctx.redirectTo(std::move(loc));
+		return rctx.redirectTo(sp::move(loc));
 	}
 
 	return HTTP_NOT_FOUND;
@@ -411,7 +411,7 @@ Status writeResourceData(Request &rctx, Value &&result, Value && origin) {
 }
 
 Status writeResourceFileHeader(Request &rctx, const Value &result) {
-	Value file(result.isArray()?std::move(result.getValue(0)):std::move(result));
+	Value file(result.isArray()?sp::move(result.getValue(0)):sp::move(result));
 
 	if (!file) {
 		return HTTP_NOT_FOUND;

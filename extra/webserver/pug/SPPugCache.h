@@ -28,7 +28,11 @@
 
 namespace STAPPLER_VERSIONIZED stappler::pug {
 
-class SP_PUBLIC FileRef : public RefBase<memory::PoolInterface> {
+class CacheFile;
+
+using FileRef = SharedRef<CacheFile>;
+
+class SP_PUBLIC CacheFile : public memory::PoolInterface::AllocBaseType {
 public:
 	static Rc<FileRef> read(memory::pool_t *, FilePath path, Template::Options opts = Template::Options::getDefault(),
 			const Callback<void(const StringView &)> & = nullptr, int watch = -1, int wId = -1);
@@ -36,7 +40,7 @@ public:
 	static Rc<FileRef> read(memory::pool_t *, String && content, bool isTemplate, Template::Options opts = Template::Options::getDefault(),
 			const Callback<void(const StringView &)> & = nullptr);
 
-	const String &getContent() const;
+	StringView getContent() const;
 	const Template *getTemplate() const;
 	int getWatch() const;
 	Time getMtime() const;
@@ -46,10 +50,10 @@ public:
 
 	int regenerate(int notify, StringView);
 
-	FileRef(memory::pool_t *, const FilePath &path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId);
-	FileRef(memory::pool_t *, String && content, bool isTemplate, Template::Options opts, const Callback<void(const StringView &)> &cb);
+	CacheFile(memory::pool_t *, const FilePath &path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId);
+	CacheFile(memory::pool_t *, String && content, bool isTemplate, Template::Options opts, const Callback<void(const StringView &)> &cb);
 
-	virtual ~FileRef();
+	virtual ~CacheFile();
 
 protected:
 	int _watch = -1;

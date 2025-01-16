@@ -38,7 +38,7 @@ using namespace stappler::mem_pool;
 
 class Server;
 
-class ServerScheme : public RefBase<memory::StandartInterface> {
+class ServerScheme : public Ref {
 public:
 	ServerScheme(memory::pool_t *p, uint32_t version);
 

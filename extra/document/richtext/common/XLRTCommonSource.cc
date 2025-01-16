@@ -373,7 +373,7 @@ void CommonSource::removeAssetRequest(NetworkAssetData *data) {
 		_assetRequests.erase(data);
 		if (_assetRequests.empty()) {
 			if (!_assetWaiters.empty()) {
-				auto w = move(_assetWaiters);
+				auto w = sp::move(_assetWaiters);
 				_assetWaiters.clear();
 				for (auto &it : w) {
 					it();
@@ -384,7 +384,7 @@ void CommonSource::removeAssetRequest(NetworkAssetData *data) {
 }
 
 void CommonSource::waitForAssets(Function<void()> &&fn) {
-	_assetWaiters.emplace_back(move(fn));
+	_assetWaiters.emplace_back(sp::move(fn));
 }
 
 /*bool CommonSource::isFileExists(const StringView &url) const {

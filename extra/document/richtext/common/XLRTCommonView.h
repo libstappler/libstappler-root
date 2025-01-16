@@ -37,7 +37,7 @@ public:
 	virtual ~CommonObject() = default;
 
 	virtual bool init(RendererResult *, document::Object *obj);
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 protected:
 	virtual bool initAsLabel(document::Label *);
@@ -70,7 +70,7 @@ public:
 	virtual bool init(Layout = Vertical, CommonSource * = nullptr, const Vector<String> &ids = {});
 	virtual void setLayout(Layout l) override;
 
-    virtual void onContentSizeDirty() override;
+    virtual void handleContentSizeDirty() override;
 
 	virtual void setSource(CommonSource *);
 	virtual CommonSource *getSource() const;

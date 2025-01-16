@@ -104,7 +104,7 @@ static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path, 
 	}
 
 	if (valuesRequired == 1) {
-		StringView value(std::move(path.back())); path.pop_back();
+		StringView value(sp::move(path.back())); path.pop_back();
 		if (field->getType() == db::Type::Text) {
 			return resv->selectByQuery(db::Query::Select(field->getName(), cmp, value));
 		} else if (valid::validateNumber(value)) {
@@ -115,8 +115,8 @@ static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path, 
 	}
 
 	if (valuesRequired == 2) {
-		StringView value1(std::move(path.back())); path.pop_back();
-		StringView value2(std::move(path.back())); path.pop_back();
+		StringView value1(sp::move(path.back())); path.pop_back();
+		StringView value2(sp::move(path.back())); path.pop_back();
 		if (valid::validateNumber(value1) && valid::validateNumber(value2)) {
 			return resv->selectByQuery(db::Query::Select(field->getName(), cmp, value1.readInteger().get(), value2.readInteger().get()));
 		}
@@ -221,7 +221,7 @@ static bool getOffsetResource(ResourceResolver *resv, Vector<StringView> &path) 
 		return exitWithResolverError("invalid 'offset' query");
 	}
 
-	StringView value(std::move(path.back())); path.pop_back();
+	StringView value(sp::move(path.back())); path.pop_back();
 	if (valid::validateNumber(value)) {
 		return resv->offset(value.readInteger().get());
 	} else {
@@ -286,7 +286,7 @@ static bool getLastResource(ResourceResolver *resv, Vector<StringView> &path, bo
 static Resource *parseResource(ResourceResolver *resv, Vector<StringView> &path) {
 	bool isSingleObject = false;
 	while (!path.empty()) {
-		StringView filter(std::move(path.back()));
+		StringView filter(sp::move(path.back()));
 		path.pop_back();
 
 		if (!isSingleObject) {
@@ -630,15 +630,15 @@ const db::Scheme *ResourceResolver::getScheme() const {
 
 Resource *ResourceResolver::makeResource(ResourceType type, db::QueryList &&list, const db::Field *f) {
 	switch (type) {
-	case ResourceType::ResourceList: return new ResourceReslist(_storage, std::move(list));  break;
-	case ResourceType::ReferenceSet: return new ResourceRefSet(_storage, std::move(list)); break;
-	case ResourceType::ObjectField: return new ResourceFieldObject(_storage, std::move(list)); break;
-	case ResourceType::Object: return new ResourceObject(_storage, std::move(list)); break;
-	case ResourceType::Set: return new ResourceSet(_storage, std::move(list)); break;
-	case ResourceType::View: return new ResourceView(_storage, std::move(list)); break;
-	case ResourceType::File: return new ResourceFile(_storage, std::move(list), f); break;
-	case ResourceType::Array: return new ResourceArray(_storage, std::move(list), f); break;
-	case ResourceType::Search: return new ResourceSearch(_storage, std::move(list), f); break;
+	case ResourceType::ResourceList: return new ResourceReslist(_storage, sp::move(list));  break;
+	case ResourceType::ReferenceSet: return new ResourceRefSet(_storage, sp::move(list)); break;
+	case ResourceType::ObjectField: return new ResourceFieldObject(_storage, sp::move(list)); break;
+	case ResourceType::Object: return new ResourceObject(_storage, sp::move(list)); break;
+	case ResourceType::Set: return new ResourceSet(_storage, sp::move(list)); break;
+	case ResourceType::View: return new ResourceView(_storage, sp::move(list)); break;
+	case ResourceType::File: return new ResourceFile(_storage, sp::move(list), f); break;
+	case ResourceType::Array: return new ResourceArray(_storage, sp::move(list), f); break;
+	case ResourceType::Search: return new ResourceSearch(_storage, sp::move(list), f); break;
 	}
 	return nullptr;
 }

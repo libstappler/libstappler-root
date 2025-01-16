@@ -529,7 +529,7 @@ static bool XenolithCoreTest_input() {
 		GestureKeyRecognizer::KeyMask mask;
 		mask.set();
 
-		auto rec = Rc<GestureKeyRecognizer>::create([] (const GestureData &) { return true; }, move(mask));
+		auto rec = Rc<GestureKeyRecognizer>::create([] (const GestureData &) { return true; }, sp::move(mask));
 		auto ev = makeInputKeyEvent(InputEventName::KeyPressed, InputKeyCode::ENTER);
 		rec->canHandleEvent(ev);
 		rec->handleInputEvent(ev, 1.0f);
@@ -715,7 +715,7 @@ static bool XenolithCoreTest_input() {
 		}, makeButtonMask());
 		l1->addKeyRecognizer([] (const GestureData &) {
 			return true;
-		}, move(keyMask));
+		}, sp::move(keyMask));
 
 		auto l2 = Rc<InputListener>::create(-3);
 		l2->addTouchRecognizer([] (const GestureData &data) {
@@ -729,7 +729,7 @@ static bool XenolithCoreTest_input() {
 				l2->setExclusive();
 			}
 			return true;
-		}, move(keyMask));
+		}, sp::move(keyMask));
 
 		auto l3 = Rc<InputListener>::create(-2);
 		auto l4 = Rc<InputListener>::create(1);

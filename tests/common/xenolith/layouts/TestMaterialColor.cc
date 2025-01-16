@@ -206,8 +206,8 @@ bool TestMaterialColor::init() {
 	return true;
 }
 
-void TestMaterialColor::onEnter(Scene *scene) {
-	TestMaterial::onEnter(scene);
+void TestMaterialColor::handleEnter(Scene *scene) {
+	TestMaterial::handleEnter(scene);
 
 	scheduleUpdate();
 }
@@ -218,8 +218,8 @@ void TestMaterialColor::update(const UpdateTime &t) {
 	_huePicker->setValue(_initValue);
 }
 
-void TestMaterialColor::onExit() {
-	TestMaterial::onExit();
+void TestMaterialColor::handleExit() {
+	TestMaterial::handleExit();
 }
 
 void TestMaterialColor::onContentSizeDirty() {

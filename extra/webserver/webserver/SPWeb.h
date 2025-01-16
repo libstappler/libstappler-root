@@ -30,8 +30,6 @@
 
 #include "SPWebConfig.h"
 
-#include <typeindex>
-
 namespace STAPPLER_VERSIONIZED stappler::web {
 
 using namespace mem_pool;

@@ -232,15 +232,15 @@ void StorageTestComponentContainer::handleComponentsUnloaded(const storage::Serv
 }
 
 bool StorageTestComponentContainer::getAll(Function<void(Value &&)> &&cb, Ref *ref) {
-	return perform([this, cb = move(cb), ref] (const storage::Server &serv, const db::Transaction &t) mutable {
+	return perform([this, cb = sp::move(cb), ref] (const storage::Server &serv, const db::Transaction &t) mutable {
 		db::Value val;
 		auto users = _component->getUsers().select(t, db::Query());
 		for (auto &it : users.asArray()) {
 			val.addString(it.getString("name"));
 		}
 
-		serv.getApplication()->performOnMainThread([cb = move(cb), val = Value(val)] () mutable {
-			cb(move(val));
+		serv.getApplication()->performOnMainThread([cb = sp::move(cb), val = Value(val)] () mutable {
+			cb(sp::move(val));
 		}, ref);
 
 		return true;
@@ -248,7 +248,7 @@ bool StorageTestComponentContainer::getAll(Function<void(Value &&)> &&cb, Ref *r
 }
 
 bool StorageTestComponentContainer::createUser(StringView name, StringView password, Function<void(Value &&)> &&cb, Ref *ref) {
-	return perform([this, cb = move(cb), name = name.str<Interface>(), password = password.str<Interface>(), ref] (const storage::Server &serv, const db::Transaction &t) mutable {
+	return perform([this, cb = sp::move(cb), name = name.str<Interface>(), password = password.str<Interface>(), ref] (const storage::Server &serv, const db::Transaction &t) mutable {
 		db::Value val;
 		auto u = _component->getUsers().select(t, db::Query().select("name", db::Value(name))).getValue(0);
 		if (u) {
@@ -262,8 +262,8 @@ bool StorageTestComponentContainer::createUser(StringView name, StringView passw
 			}));
 		}
 
-		serv.getApplication()->performOnMainThread([cb = move(cb), val = Value(val)] () mutable {
-			cb(move(val));
+		serv.getApplication()->performOnMainThread([cb = sp::move(cb), val = Value(val)] () mutable {
+			cb(sp::move(val));
 		}, ref);
 
 		return true;
@@ -271,7 +271,7 @@ bool StorageTestComponentContainer::createUser(StringView name, StringView passw
 }
 
 bool StorageTestComponentContainer::checkUser(StringView name, StringView password, Function<void(Value &&)> &&cb, Ref *ref) {
-	return perform([this, cb = move(cb), name = name.str<Interface>(), password = password.str<Interface>(), ref] (const storage::Server &serv, const db::Transaction &t) mutable {
+	return perform([this, cb = sp::move(cb), name = name.str<Interface>(), password = password.str<Interface>(), ref] (const storage::Server &serv, const db::Transaction &t) mutable {
 		db::Value val;
 		auto u = _component->getUsers().select(t, db::Query().select("name", db::Value(name))).getValue(0);
 		if (u) {
@@ -282,8 +282,8 @@ bool StorageTestComponentContainer::checkUser(StringView name, StringView passwo
 			}
 		}
 
-		serv.getApplication()->performOnMainThread([cb = move(cb), val = Value(val)] () mutable {
-			cb(move(val));
+		serv.getApplication()->performOnMainThread([cb = sp::move(cb), val = Value(val)] () mutable {
+			cb(sp::move(val));
 		}, ref);
 
 		return true;

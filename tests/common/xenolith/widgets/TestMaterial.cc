@@ -55,8 +55,8 @@ void TestMaterial::onContentSizeDirty() {
 	_infoLabel->setWidth(_contentSize.width * 3.0f / 4.0f);
 }
 
-void TestMaterial::onEnter(xenolith::Scene *scene) {
-	FlexibleLayout::onEnter(scene);
+void TestMaterial::handleEnter(xenolith::Scene *scene) {
+	FlexibleLayout::handleEnter(scene);
 }
 
 void TestMaterial::setDataValue(Value &&val) {

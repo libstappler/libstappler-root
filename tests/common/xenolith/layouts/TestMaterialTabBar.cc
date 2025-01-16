@@ -49,8 +49,8 @@ void TestMaterialTabBar::onContentSizeDirty() {
 	_tabBar->setPosition(Vec2(_contentSize.width / 2.0f, _contentSize.height - 96.0f));
 }
 
-void TestMaterialTabBar::onEnter(Scene *scene) {
-	TestMaterial::onEnter(scene);
+void TestMaterialTabBar::handleEnter(Scene *scene) {
+	TestMaterial::handleEnter(scene);
 
 	runAction(Rc<Sequence>::create(0.1f, [this] {
 		sendEventForNode(Vec2(_contentSize.width / 2.0f, _contentSize.height - 120.0f), 0);
@@ -86,7 +86,7 @@ void TestMaterialTabBar::sendEventForNode(Vec2 pos, uint32_t id) {
 	};
 
 	auto v = _director->getView();
-	v->handleInputEvents(move(events));
+	v->handleInputEvents(sp::move(events));
 }
 
 }

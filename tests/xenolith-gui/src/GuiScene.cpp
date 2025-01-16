@@ -57,8 +57,8 @@ bool GuiScene::init(Application *loop, const core::FrameContraints &constraints)
 	return true;
 }
 
-void GuiScene::onEnter(Scene *scene) {
-	Scene2d::onEnter(scene);
+void GuiScene::handleEnter(Scene *scene) {
+	Scene2d::handleEnter(scene);
 
 	std::thread thread([] {
 		String testString("test String");

@@ -129,14 +129,14 @@ document::Node *DocumentProcessor::makeNode(const StringView &name, InitList &&a
 void DocumentProcessor::pushNode(token *, const StringView &name, InitList &&attr, VecList &&vec) {
 	memory::pool::context ctx(_data->pool);
 	flushBuffer();
-	auto node = makeNode(name, move(attr), move(vec));
+	auto node = makeNode(name, sp::move(attr), sp::move(vec));
 	_nodeStack.push_back(node);
 }
 
 void DocumentProcessor::pushInlineNode(token *, const StringView &name, InitList &&attr, VecList &&vec) {
 	memory::pool::context ctx(_data->pool);
 	flushBuffer();
-	makeNode(name, move(attr), move(vec));
+	makeNode(name, sp::move(attr), sp::move(vec));
 }
 
 void DocumentProcessor::popNode() {

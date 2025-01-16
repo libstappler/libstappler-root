@@ -37,7 +37,7 @@ public:
 
 	virtual bool init();
 
-	virtual void onEnter(Scene *);
+	virtual void handleEnter(Scene *);
 
 protected:
 	material2d::AppBar *_appBar = nullptr;

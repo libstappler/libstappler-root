@@ -48,8 +48,8 @@ public:
 	virtual void onFinished(Director *) override;
 
 	virtual void update(const UpdateTime &) override;
-	virtual void onEnter(xenolith::Scene *) override;
-	virtual void onExit() override;
+	virtual void handleEnter(xenolith::Scene *) override;
+	virtual void handleExit() override;
 
 	virtual void render(FrameInfo &info) override;
 

@@ -214,11 +214,11 @@ void TestMaterialNodes::sendEventForNode(material2d::Surface *surface, uint32_t 
 
 	if (d == 0.0f) {
 		auto v = _director->getView();
-		v->handleInputEvents(move(events));
+		v->handleInputEvents(sp::move(events));
 	} else {
-		runAction(Rc<Sequence>::create(d, [this, events = move(events)] () mutable {
+		runAction(Rc<Sequence>::create(d, [this, events = sp::move(events)] () mutable {
 			auto v = _director->getView();
-			v->handleInputEvents(move(events));
+			v->handleInputEvents(sp::move(events));
 		}));
 	}
 }

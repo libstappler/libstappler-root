@@ -708,7 +708,7 @@ void Root::pushErrorMessage(Value &&val) const {
 	ErrorNotificator *err = nullptr;
 	pool::userdata_get((void **)&err, ErrorNotificatorKey, pool);
 	if (err && err->error) {
-		err->error(std::move(val));
+		err->error(sp::move(val));
 	}
 
 	log::error("web::Root", "Unhandled error: ", data::EncodeFormat::Pretty, val);
@@ -743,7 +743,7 @@ void Root::pushDebugMessage(Value &&val) const {
 	ErrorNotificator *err = nullptr;
 	pool::userdata_get((void **)&err, ErrorNotificatorKey, pool);
 	if (err && err->debug) {
-		err->debug(std::move(val));
+		err->debug(sp::move(val));
 		return;
 	}
 
@@ -769,7 +769,7 @@ void Root::scheduleAyncDbTask(const Callback<Function<void(const db::Transaction
 	if (auto serv = Host::getCurrent()) {
 		AsyncTask::perform(serv, [&] (AsyncTask &task) {
 			auto cb = setupCb(task.pool());
-			task.addExecuteFn([cb = std::move(cb)] (const AsyncTask &task) -> bool {
+			task.addExecuteFn([cb = sp::move(cb)] (const AsyncTask &task) -> bool {
 				task.performWithStorage([&] (const db::Transaction &t) {
 					t.performAsSystem([&] () -> bool {
 						cb(t);

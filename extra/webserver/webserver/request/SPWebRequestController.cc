@@ -47,11 +47,11 @@ bool RequestController::init() {
 		}
 		auto d = UrlView::parseArgs<Interface>(str, 100_KiB);
 		if (_info.queryData.empty()) {
-			_info.queryData = std::move(d);
+			_info.queryData = sp::move(d);
 		} else {
 			for (auto &it : d.asDict()) {
 				if (!_info.queryData.hasValue(it.first)) {
-					_info.queryData.setValue(std::move(it.second), it.first);
+					_info.queryData.setValue(sp::move(it.second), it.first);
 				}
 			}
 		}
@@ -126,22 +126,22 @@ Value RequestController::getDefaultResult() {
 
 #if DEBUG
 	if (!_debug.empty()) {
-		ret.setArray(std::move(_debug), "debug");
+		ret.setArray(sp::move(_debug), "debug");
 	}
 #endif
 	if (!_errors.empty()) {
-		ret.setArray(std::move(_errors), "errors");
+		ret.setArray(sp::move(_errors), "errors");
 	}
 
 	return ret;
 }
 
 void RequestController::pushErrorMessage(Value &&val) {
-	_errors.emplace_back(std::move(val));
+	_errors.emplace_back(sp::move(val));
 }
 
 void RequestController::pushDebugMessage(Value &&val) {
-	_debug.emplace_back(std::move(val));
+	_debug.emplace_back(sp::move(val));
 }
 
 }

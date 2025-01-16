@@ -95,7 +95,7 @@ void InlineContext::initFormatter(LayoutBlock &l, float parentPosY, font::Format
 
 InlineContext::InlineContext(font::Formatter::FontCallback &&cb, float d) {
 	targetLabel = &phantomLabel;
-	reader.setFontCallback(move(cb));
+	reader.setFontCallback(sp::move(cb));
 	reader.reset(&targetLabel->layout);
 	density = d;
 

@@ -194,8 +194,8 @@ void TestAppScene::update(const UpdateTime &time) {
 	Scene2d::update(time);
 }
 
-void TestAppScene::onEnter(xenolith::Scene *scene) {
-	Scene2d::onEnter(scene);
+void TestAppScene::handleEnter(xenolith::Scene *scene) {
+	Scene2d::handleEnter(scene);
 
 	runAction(Rc<Sequence>::create(INIT_TIME, [this] {
 		runNext(INIT_LAYOUT);
@@ -237,9 +237,9 @@ void TestAppScene::onEnter(xenolith::Scene *scene) {
 	onCustomEvent(this, Value("AppScene::onEnter"));
 }
 
-void TestAppScene::onExit() {
+void TestAppScene::handleExit() {
 	std::cout << "AppScene::onExit\n";
-	Scene2d::onExit();
+	Scene2d::handleExit();
 }
 
 void TestAppScene::render(FrameInfo &info) {
@@ -255,7 +255,7 @@ void TestAppScene::runNext(LayoutName name) {
 	if (toInt(name) == 0) {
 		_actionManager->removeAllActions();
 		if (auto v = _director->getView()) {
-			v->close();
+			v->stop();
 		}
 	} else {
 		auto next = LayoutName(toInt(name) - 1);

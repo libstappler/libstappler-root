@@ -99,7 +99,7 @@ struct Extensions {
 	Extensions(Value f) : flags(f) { }
 
 	Extensions(const Extensions &v) : flags(v.flags), metaCallback(v.metaCallback) { }
-	Extensions(Extensions &&v) : flags(v.flags), metaCallback(move(v.metaCallback)) { }
+	Extensions(Extensions &&v) : flags(v.flags), metaCallback(sp::move(v.metaCallback)) { }
 
 	Extensions& operator=(const Extensions &v) {
 		flags = v.flags;
@@ -108,7 +108,7 @@ struct Extensions {
 	}
 	Extensions& operator=(Extensions &&v) {
 		flags = v.flags;
-		metaCallback = move(v.metaCallback);
+		metaCallback = sp::move(v.metaCallback);
 		return *this;
 	}
 

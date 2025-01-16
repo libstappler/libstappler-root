@@ -41,8 +41,8 @@ public:
 
 	virtual ~Tooltip();
 	virtual bool init(RendererResult *, const Vector<String> &ids, WideStringView text);
-	virtual void onContentSizeDirty() override;
-	virtual void onEnter(Scene *) override;
+	virtual void handleContentSizeDirty() override;
+	virtual void handleEnter(Scene *) override;
 
 	virtual void setMaxContentSize(const Size2 &);
 	virtual void setOriginPosition(const Vec2 &pos, const Size2 &parentSize, const Vec2 &);

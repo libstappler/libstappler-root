@@ -153,13 +153,13 @@ bool FilesystemHandler::isRequestPermitted(Request &) {
 Status FilesystemHandler::onTranslateName(Request &rctx) {
 	auto &info = rctx.getInfo();
 	if (info.url.path == "/") {
-		return rctx.sendFile(stappler::filesystem::writablePath<Interface>(_path), std::move(_contentType), _cacheTime);
+		return rctx.sendFile(stappler::filesystem::writablePath<Interface>(_path), sp::move(_contentType), _cacheTime);
 	} else {
 		auto npath = stappler::filesystem::writablePath<Interface>(info.url.path, true);
 		if (stappler::filesystem::exists(npath) && _subPath != "/") {
 			return DECLINED;
 		}
-		return rctx.sendFile(stappler::filesystem::writablePath<Interface>(_path), std::move(_contentType), _cacheTime);
+		return rctx.sendFile(stappler::filesystem::writablePath<Interface>(_path), sp::move(_contentType), _cacheTime);
 	}
 }
 
@@ -172,7 +172,7 @@ RequestHandlerMap::Handler::~Handler() { }
 
 void RequestHandlerMap::Handler::onParams(const HandlerInfo *info, Value &&val) {
 	_info = info;
-	_params = std::move(val);
+	_params = sp::move(val);
 }
 
 Status RequestHandlerMap::Handler::onTranslateName(Request &rctx) {
@@ -301,7 +301,7 @@ void RequestHandlerMap::Handler::onFilterComplete(InputFilter *filter) {
 }
 
 bool RequestHandlerMap::Handler::processQueryFields(Value &&args) {
-	_queryFields = std::move(args);
+	_queryFields = sp::move(args);
 	if (_info->getQueryScheme().getFields().empty()) {
 		return true;
 	}
@@ -321,7 +321,7 @@ bool RequestHandlerMap::Handler::processQueryFields(Value &&args) {
 }
 
 bool RequestHandlerMap::Handler::processInputFields(InputFilter *filter) {
-	_inputFields = std::move(filter->getData());
+	_inputFields = sp::move(filter->getData());
 
 	if (_info->getInputScheme().getFields().empty()) {
 		return true;
@@ -393,7 +393,7 @@ db::InputFile *RequestHandlerMap::Handler::getInputFile(const StringView &name) 
 
 RequestHandlerMap::HandlerInfo::HandlerInfo(const StringView &name, RequestMethod m, const StringView &pt,
 		Function<Handler *()> &&cb, Value &&opts)
-: name(name.str<Interface>()), method(m), pattern(pt.str<Interface>()), handler(std::move(cb)), options(std::move(opts))
+: name(name.str<Interface>()), method(m), pattern(pt.str<Interface>()), handler(sp::move(cb)), options(sp::move(opts))
 , queryFields(name), inputFields(name) {
 	StringView p(pattern);
 	while (!p.empty()) {
@@ -417,7 +417,7 @@ RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addQueryFields(s
 	return *this;
 }
 RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addQueryFields(Vector<db::Field> &&il) {
-	queryFields.define(std::move(il));
+	queryFields.define(sp::move(il));
 	return *this;
 }
 
@@ -426,7 +426,7 @@ RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addInputFields(s
 	return *this;
 }
 RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addInputFields(Vector<db::Field> &&il) {
-	inputFields.define(std::move(il));
+	inputFields.define(sp::move(il));
 	return *this;
 }
 
@@ -484,7 +484,7 @@ Value RequestHandlerMap::HandlerInfo::match(const StringView &path, size_t &matc
 
 RequestHandlerMap::Handler *RequestHandlerMap::HandlerInfo::onHandler(Value &&p) const {
 	if (auto h = handler()) {
-		h->onParams(this, std::move(p));
+		h->onParams(this, sp::move(p));
 		return h;
 	}
 	return nullptr;
@@ -529,7 +529,7 @@ RequestHandlerMap::Handler *RequestHandlerMap::onRequest(Request &req, const Str
 		size_t pscore = 0;
 		if (auto val = it.match(path, pscore)) {
 			if (pscore > score || (pscore == score && info && it.getMethod() == reqInfo.method && it.getMethod() != info->getMethod())) {
-				params = std::move(val);
+				params = sp::move(val);
 				if (it.getMethod() == reqInfo.method || !info) {
 					info = &it;
 					score = pscore;
@@ -539,7 +539,7 @@ RequestHandlerMap::Handler *RequestHandlerMap::onRequest(Request &req, const Str
 	}
 
 	if (info) {
-		return info->onHandler(std::move(params));
+		return info->onHandler(sp::move(params));
 	}
 
 	return nullptr;
@@ -551,7 +551,7 @@ const Vector<RequestHandlerMap::HandlerInfo> &RequestHandlerMap::getHandlers() c
 
 RequestHandlerMap::HandlerInfo &RequestHandlerMap::addHandler(const StringView &name, RequestMethod m, const StringView &pattern,
 		Function<Handler *()> &&cb, Value &&opts) {
-	_handlers.emplace_back(name, m, pattern, std::move(cb), std::move(opts));
+	_handlers.emplace_back(name, m, pattern, sp::move(cb), sp::move(opts));
 	return _handlers.back();
 }
 
@@ -587,9 +587,9 @@ public:
 
 RequestHandlerMap::HandlerInfo &RequestHandlerMap::addHandler(const StringView &name, RequestMethod m, const StringView &pattern,
 		Function<bool(Handler &)> &&accessControl, Function<Value(Handler &)> &&process, Value &&opts) {
-	return addHandler(name, m, pattern, [accessControl = std::move(accessControl), process = std::move(process)] () -> Handler * {
+	return addHandler(name, m, pattern, [accessControl = sp::move(accessControl), process = sp::move(process)] () -> Handler * {
 		return new HandlerCallback(accessControl, process);
-	}, std::move(opts));
+	}, sp::move(opts));
 }
 
 }

@@ -216,11 +216,11 @@ void Resource::resolveSet(const QueryFieldResolver &res, int64_t id, const db::F
 						if (_resolveObjects.insert(id).second == false) {
 							sit.setInteger(id);
 						}
-						arr.addValue(std::move(sit));
+						arr.addValue(sp::move(sit));
 					}
 				}
 			}
-			fobj = std::move(arr);
+			fobj = sp::move(arr);
 			return;
 		}
 	}
@@ -564,7 +564,7 @@ Value ResourceObject::processResultList(const QueryList &s, Value &ret) {
 				it ++;
 			}
 		}
-		return std::move(ret);
+		return sp::move(ret);
 	}
 	return Value();
 }
@@ -628,7 +628,7 @@ Value ResourceReslist::performCreateObject(Value &data, Vector<db::InputFile> &f
 		for (auto &obj : data.asArray()) {
 			Value n = doCreateObject(obj, empty, extra);
 			if (n) {
-				ret.addValue(std::move(n));
+				ret.addValue(sp::move(n));
 			}
 		}
 		return processResultList(_queries, ret);
@@ -701,9 +701,9 @@ Value ResourceSet::appendObject(Value &data) {
 	// collect object ids from input data
 	Value val;
 	if (data.isDictionary() && data.hasValue(item.ref->getName())) {
-		val = std::move(data.getValue(item.ref->getName()));
+		val = sp::move(data.getValue(item.ref->getName()));
 	} else {
-		val = std::move(data);
+		val = sp::move(data);
 	}
 	Vector<int64_t> ids;
 	Vector<db::InputFile> empty;
@@ -1024,7 +1024,7 @@ bool ResourceArray::prepareAppend() {
 static Value ResourceArray_extract(Value &data, StringView fieldName) {
 	Value arr;
 	if (data.isArray()) {
-		arr = std::move(data);
+		arr = sp::move(data);
 	} else {
 		arr.addValue(move(data));
 	}
@@ -1041,7 +1041,7 @@ Value ResourceArray::updateObject(Value &data, Vector<db::InputFile> &) {
 
 	// perform one-line update
 	if (auto id = getObjectId()) {
-		return Worker(getScheme(), _transaction).setField(id, *_field, std::move(arr));
+		return Worker(getScheme(), _transaction).setField(id, *_field, sp::move(arr));
 	}
 	return Value();
 }

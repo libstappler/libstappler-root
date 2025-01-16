@@ -47,7 +47,7 @@
 
 namespace STAPPLER_VERSIONIZED stappler::mmd {
 
-class SP_PUBLIC Engine : public RefBase<memory::StandartInterface> {
+class SP_PUBLIC Engine : public Ref {
 public:
 	using ProcessCallback = Callback<void(const Content &, StringView, const Token &)>;
 

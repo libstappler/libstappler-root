@@ -169,7 +169,7 @@ public:
 				_cond.wait(lock);
 			}
 
-			auto bytes = move(_bytes);
+			auto bytes = sp::move(_bytes);
 			_bytes.clear();
 			_mutex.unlock();
 

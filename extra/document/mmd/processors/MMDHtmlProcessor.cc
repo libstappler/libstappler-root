@@ -297,7 +297,7 @@ void HtmlProcessor::exportLink(std::ostream &out, token * text, Content::Link * 
 		}
 	}
 
-	pushNode(nullptr, "a", { }, move(attr));
+	pushNode(nullptr, "a", { }, sp::move(attr));
 
 	// If we're printing contents of bracket as text, then ensure we include it all
 	if (text && text->child && text->child->len > 1) {
@@ -394,12 +394,12 @@ void HtmlProcessor::exportImage(std::ostream &out, token * text, Content::Link *
 	if (spExt && !align.empty()) {
 		if (!is_figure && !idStr.empty()) {
 			auto idStr = string::toString<memory::PoolInterface>("figure_", figureId);
-			pushInlineNode(nullptr, "img", { pair("class", align), pair("id", idStr) }, move(attr));
+			pushInlineNode(nullptr, "img", { pair("class", align), pair("id", idStr) }, sp::move(attr));
 		} else {
-			pushInlineNode(nullptr, "img", { pair("class", align) }, move(attr));
+			pushInlineNode(nullptr, "img", { pair("class", align) }, sp::move(attr));
 		}
 	} else {
-		pushInlineNode(nullptr, "img", { }, move(attr));
+		pushInlineNode(nullptr, "img", { }, sp::move(attr));
 	}
 
 	if (is_figure) {
@@ -493,9 +493,9 @@ void HtmlProcessor::pushHtmlEntityText(std::ostream &out, StringView r, token *t
 
 			flushBuffer();
 			if (inlineTag) {
-				pushInlineNode(nullptr, name, { }, move(attrs));
+				pushInlineNode(nullptr, name, { }, sp::move(attrs));
 			} else {
-				pushNode(nullptr, name, { }, move(attrs));
+				pushNode(nullptr, name, { }, sp::move(attrs));
 			}
 
 			out << r.readUntil<StringView::Chars<'<'>>();

@@ -224,7 +224,7 @@ void MultipartParser::readHeaderBegin(StringView &r) {
 					data = Data::FileAsData;
 				} else if ((config.required & db::InputConfig::Require::Files) != 0
 						&& (size == 0 || size < getConfig().maxFileSize)) {
-					files.emplace_back(std::move(name), std::move(type), std::move(encoding), std::move(file), size, files.size());
+					files.emplace_back(sp::move(name), sp::move(type), sp::move(encoding), sp::move(file), size, files.size());
 					data = Data::File;
 				} else {
 					data = Data::Skip;
@@ -535,7 +535,7 @@ void MultipartParser::readData(BytesView &r) {
 				}
 				buf.clear();
 			} else if (data == Data::FileAsData) {
-				root.setValue(data::read<Interface>(streamBuf.weak()), std::move(name));
+				root.setValue(data::read<Interface>(streamBuf.weak()), sp::move(name));
 				streamBuf.clear();
 			}
 			match = 0;

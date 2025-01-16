@@ -34,18 +34,7 @@ XL_DECLARE_EVENT_CLASS(TestAppDelegate, onSwapchainConfig);
 
 TestAppDelegate::~TestAppDelegate() { }
 
-bool TestAppDelegate::init(ViewCommandLineData &&data, void *native) {
-	_data = move(data);
-
-	Application::CommonInfo info({
-		.bundleName = _data.bundleName,
-		.applicationName = _data.applicationName,
-		.applicationVersion = _data.applicationVersion,
-		.userAgent = _data.userAgent,
-		.locale = _data.userLanguage,
-		.nativeHandle = native
-	});
-
+bool TestAppDelegate::init(ApplicationInfo &&info) {
 	_storageParams = Value({
 		pair("driver", Value("sqlite")),
 		pair("dbname", Value(filesystem::cachesPath<Interface>("root.sqlite"))),
@@ -55,79 +44,31 @@ bool TestAppDelegate::init(ViewCommandLineData &&data, void *native) {
 	return GuiApplication::init(move(info));
 }
 
-void TestAppDelegate::run(Function<void()> &&initCb) {
-	if (_storageParams.getString("driver") == "sqlite") {
-		auto path = _storageParams.getString("dbname");
-		filesystem::mkdir(filepath::root(filepath::root(path)));
-		filesystem::mkdir(filepath::root(path));
-	}
-
-	_storageServer = Rc<storage::Server>::create(static_cast<Application *>(this), _storageParams);
-
-	if (!_storageServer) {
-		log::error("Application", "Fail to launch application: onBuildStorage failed");
-	}
-
-	_networkController = Rc<network::Controller>::alloc(static_cast<Application *>(this), "Root");
-
-	auto libpath = filesystem::writablePath<Interface>("library");
-	filesystem::mkdir(libpath);
-
-	_assetLibrary = Rc<storage::AssetLibrary>::create(static_cast<Application *>(this), _networkController, Value({
-		pair("driver", Value("sqlite")),
-		pair("dbname", Value(filesystem::cachesPath<Interface>("assets.sqlite"))),
-		pair("serverName", Value("AssetStorage"))
-	}));
-
-	addExtension(Rc<storage::Server>(_storageServer));
-	addExtension(Rc<network::Controller>(_networkController));
-	addExtension(Rc<storage::AssetLibrary>(_assetLibrary));
-
-	GuiApplication::CallbackInfo callbacks({
-		.initCallback = [&, this] (const Application &) {
-			GuiApplication::addView(ViewInfo{
-				.title = _data.applicationName,
-				.bundleId = _data.bundleName,
-				.rect = URect(UVec2{0, 0}, _data.screenSize),
-				.decoration = Padding(2),
-				.density = _data.density,
-				.selectConfig = [this] (View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
-					return selectConfig(info);
-				},
-				.onCreated = [this] (View &view, const core::FrameContraints &constraints) {
-					auto scene = Rc<TestAppScene>::create(static_cast<Application *>(this), constraints);
-
-					scene->runAction(Rc<Sequence>::create(0.3f, [this] {
-						setTripleBuffering(true);
-					}));
-
-					view.getDirector()->runScene(move(scene));
-
-					std::unique_lock<Mutex> lock(_configMutex);
-					_rootView = &view;
-					view.retainView();
-				},
-				.onClosed = [this] (View &view) {
-					view.releaseView(0);
-					std::unique_lock<Mutex> lock(_configMutex);
-					_rootView = nullptr;
-					lock.unlock();
-					end();
-				}
-			});
-			if (initCb) {
-				initCb();
+void TestAppDelegate::run() {
+	_info.initCallback = [&] (const PlatformApplication &) {
+		GuiApplication::addView(ViewInfo{
+			.title = _info.applicationName,
+			.bundleId = _info.bundleName,
+			.rect = URect(UVec2{0, 0}, _info.screenSize),
+			.density = _info.density,
+			.selectConfig = [this] (View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
+				return selectConfig(info);
+			},
+			.onCreated = [this] (View &view, const core::FrameContraints &constraints) {
+				auto scene = Rc<TestAppScene>::create(static_cast<Application *>(this), constraints);
+				view.getDirector()->runScene(move(scene));
+			},
+			.onClosed = [this] (View &view) {
+				end();
 			}
-		},
-		.updateCallback = [&] (const Application &, const UpdateTime &time) {
+		});
+	};
 
-		}
-	});
+	_info.updateCallback = [&] (const PlatformApplication &, const UpdateTime &time) {
 
-	GuiApplication::run(callbacks);
+	};
 
-	_storageServer = nullptr;
-	_networkController = nullptr;
+	GuiApplication::run();
 }
 
 void TestAppDelegate::setPreferredPresentMode(core::PresentMode mode) {
@@ -209,6 +150,45 @@ core::SwapchainConfig TestAppDelegate::selectConfig(const core::SurfaceInfo &inf
 	});
 
 	return ret;
+}
+
+void TestAppDelegate::loadExtensions() {
+	GuiApplication::loadExtensions();
+
+	if (_storageParams.getString("driver") == "sqlite") {
+		auto path = _storageParams.getString("dbname");
+		filesystem::mkdir(filepath::root(filepath::root(path)));
+		filesystem::mkdir(filepath::root(path));
+	}
+
+	_storageServer = Rc<storage::Server>::create(static_cast<Application *>(this), _storageParams);
+
+	if (!_storageServer) {
+		log::error("Application", "Fail to launch application: onBuildStorage failed");
+	}
+
+	_networkController = Rc<network::Controller>::alloc(static_cast<Application *>(this), "Application::Network");
+
+	auto libpath = filesystem::writablePath<Interface>("library");
+	filesystem::mkdir(libpath);
+
+	_assetLibrary = Rc<storage::AssetLibrary>::create(static_cast<Application *>(this), _networkController, Value({
+		pair("driver", Value("sqlite")),
+		pair("dbname", Value(filesystem::cachesPath<Interface>("assets.sqlite"))),
+		pair("serverName", Value("AssetStorage"))
+	}));
+
+	addExtension(Rc<storage::Server>(_storageServer));
+	addExtension(Rc<network::Controller>(_networkController));
+	addExtension(Rc<storage::AssetLibrary>(_assetLibrary));
+}
+
+void TestAppDelegate::finalizeExtensions() {
+	GuiApplication::finalizeExtensions();
+
+	_storageServer = nullptr;
+	_networkController = nullptr;
+	_assetLibrary = nullptr;
 }
 
 }

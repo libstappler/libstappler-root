@@ -37,7 +37,7 @@ public:
 	virtual bool init() override;
 
 	virtual void onContentSizeDirty() override;
-	virtual void onEnter(xenolith::Scene *) override;
+	virtual void handleEnter(xenolith::Scene *) override;
 
 protected:
 	ScrollController *_scrollController = nullptr;

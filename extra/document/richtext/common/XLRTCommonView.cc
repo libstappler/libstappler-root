@@ -88,8 +88,8 @@ bool CommonObject::init(RendererResult *res, document::Object *obj) {
 	return true;
 }
 
-void CommonObject::onContentSizeDirty() {
-	Sprite::onContentSizeDirty();
+void CommonObject::handleContentSizeDirty() {
+	Sprite::handleContentSizeDirty();
 
 	if (_pathSprite) {
 		_pathSprite->setPosition(Vec2::ZERO);
@@ -132,7 +132,7 @@ bool CommonObject::initAsBackground(document::Background *bg) {
 		auto img = _result->document->getImage(bg->background.backgroundImage);
 		if (img && img->ct == "image/svg") {
 			_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(img->data));
-			_pathSprite->setAutofit(Sprite::Autofit::Contain);
+			_pathSprite->setTextureAutofit(basic2d::Autofit::Contain);
 			_vertexesVisible = false;
 			return true;
 		}
@@ -150,19 +150,19 @@ bool CommonObject::initAsBackground(document::Background *bg) {
 				auto it = _result->resource->svgs.find(bg->background.backgroundImage);
 				if (it != _result->resource->svgs.end()) {
 					_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(StringView(it->second)));
-					_pathSprite->setAutofit(Sprite::Autofit::Contain);
+					_pathSprite->setTextureAutofit(basic2d::Autofit::Contain);
 					_vertexesVisible = false;
 				} else if (!tryLoadFromDocument()) {
 					// replace with filler
 					_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(StringView(ImageFillerData)));
-					_pathSprite->setAutofit(Sprite::Autofit::Contain);
+					_pathSprite->setTextureAutofit(basic2d::Autofit::Contain);
 				}
 			}
 		} else {
 			if (!tryLoadFromDocument()) {
 				// replace with filler
 				_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(StringView(ImageFillerData)));
-				_pathSprite->setAutofit(Sprite::Autofit::Contain);
+				_pathSprite->setTextureAutofit(basic2d::Autofit::Contain);
 			}
 		}
 	} else {
@@ -170,7 +170,7 @@ bool CommonObject::initAsBackground(document::Background *bg) {
 	}
 	if (bg->link && bg->link->mode == "video") {
 		_overlay = addChild(Rc<basic2d::VectorSprite>::create(StringView(ImageVideoData)), ZOrder(1));
-		_overlay->setAutofit(Sprite::Autofit::Contain);
+		_overlay->setTextureAutofit(basic2d::Autofit::Contain);
 		_overlay->setAnchorPoint(Anchor::Middle);
 		_overlay->setRenderingLevel(RenderingLevel::Transparent);
 	}
@@ -182,7 +182,7 @@ bool CommonObject::initAsPath(document::PathObject *path) {
 	vpath.init(path->path);
 
 	_pathSprite = addChild(Rc<basic2d::VectorSprite>::create(path->bbox.size, move(vpath)));
-	_pathSprite->setAutofit(Sprite::Autofit::Contain);
+	_pathSprite->setTextureAutofit(basic2d::Autofit::Contain);
 	_pathSprite->setRenderingLevel(RenderingLevel::Solid);
 
 	return true;
@@ -372,7 +372,7 @@ bool CommonView::onPressCancel(const Vec2 &vec, const TimeInterval &r) {
 	return false;
 }
 
-void CommonView::onContentSizeDirty() {
+void CommonView::handleContentSizeDirty() {
 	if (_layout == Layout::Horizontal) {
 		if (!_renderer->hasFlag(document::RenderFlags::PaginatedLayout)) {
 			_renderer->addFlag(document::RenderFlags::PaginatedLayout);
@@ -387,7 +387,7 @@ void CommonView::onContentSizeDirty() {
 	//m.top += (_paddingGlobal.top);
 	_renderer->setPageMargin(m);
 
-	ScrollView::onContentSizeDirty();
+	ScrollView::handleContentSizeDirty();
 	_background->setContentSize(getContentSize());
 
 	_gestureStart = nan();

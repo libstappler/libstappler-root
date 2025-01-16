@@ -33,7 +33,7 @@ public:
 
 	virtual bool init(Application *loop, const core::FrameContraints &) override;
 
-	virtual void onEnter(Scene *) override;
+	virtual void handleEnter(Scene *) override;
 
 protected:
 };

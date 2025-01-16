@@ -58,7 +58,7 @@ struct DbConnList : public AllocBase {
 };
 
 DbConnList::DbConnList(pool_t *p, db::sql::Driver *d, DbdModule::Config cfg, Map<StringView, StringView> &&pp)
-: pool(p), driver(d), config(cfg), params(move(pp)) { }
+: pool(p), driver(d), config(cfg), params(sp::move(pp)) { }
 
 DbConnList::~DbConnList() { }
 
@@ -275,7 +275,7 @@ DbdModule *DbdModule::create(pool_t *rootPool, Root *root, Map<StringView, Strin
 		}
 
 		if (driver) {
-			m = new (pool) DbdModule(pool, driver, cfg, move(params));
+			m = new (pool) DbdModule(pool, driver, cfg, sp::move(params));
 		} else {
 			log::error("DbdModule", "Driver not found: ", driverName);
 		}
@@ -328,7 +328,7 @@ db::sql::Driver *DbdModule::getDriver() const {
 
 DbdModule::DbdModule(pool_t *pool, db::sql::Driver *driver, Config cfg, Map<StringView, StringView> &&params)
 : _pool(pool) {
-	_reslist = new (pool) DbConnList(pool, driver, cfg, move(params));
+	_reslist = new (pool) DbConnList(pool, driver, cfg, sp::move(params));
 	auto handle = driver->connect(params);
 	if (handle.get()) {
 		driver->init(handle, Vector<StringView>());

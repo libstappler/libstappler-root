@@ -194,8 +194,8 @@ void TestLayout::onContentSizeDirty() {
 	_roundedProgress->setContentSize(Size2(_contentSize.width, 0.0f));
 }
 
-void TestLayout::onEnter(xenolith::Scene *scene) {
-	Node::onEnter(scene);
+void TestLayout::handleEnter(xenolith::Scene *scene) {
+	Node::handleEnter(scene);
 
 	runAction(Rc<ActionProgress>::create(0.6f, [this] (float progress) {
 		_roundedProgress->setBarScale(0.5f + 0.5f * progress);

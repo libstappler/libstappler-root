@@ -39,7 +39,7 @@ struct TessTest : Test {
 
 	TessTest() : Test("TessTest") { }
 
-	void drawIcon(StringStream &stream, xenolith::basic2d::VectorCanvas *canvas, size_t i, size_t &failed, vg::DrawStyle style, bool antialiased) {
+	void drawIcon(StringStream &stream, xenolith::basic2d::VectorCanvas *canvas, size_t i, size_t &failed, vg::DrawFlags style, bool antialiased) {
 		auto name = xenolith::getIconName(xenolith::IconName(i));
 		vg::VectorImage image;
 		image.init(xenolith::Size2(1024, 1024));
@@ -56,7 +56,7 @@ struct TessTest : Test {
 			//auto pIt = paths.find(i);
 
 			stream << "\tFailed ("
-					<< (style == vg::DrawStyle::Stroke ? "Stroke" : "Fill")
+					<< (style == vg::DrawFlags::Stroke ? "Stroke" : "Fill")
 					<< ", " << (antialiased ? "aa" : "non-aa") << "): mode: " << toInt(canvas->getConfig().relocateRule) << ": " << name;
 			/*for (auto &iit : pIt->second) {
 				stream << "\n\t\tPath: " << iit.str;
@@ -94,13 +94,13 @@ struct TessTest : Test {
 				auto data = path->encode();
 				auto str = path->toString(true);
 
-				pIt->second.emplace_back(PathData{name.str<Interface>(), move(str), move(data)});
+				pIt->second.emplace_back(PathData{name.str<Interface>(), sp::move(str), sp::move(data)});
 			}
 		}
 
 		i = toInt(xenolith::IconName::Dynamic_Loader);
 		for (; i < max; ++ i) {
-			drawIcon(stream, canvas, i, failedStrokes, vg::DrawStyle::Stroke, false);
+			drawIcon(stream, canvas, i, failedStrokes, vg::DrawFlags::Stroke, false);
 		}
 
 		for (size_t j = 0; j <= size_t(toInt(geom::Tesselator::RelocateRule::Monotonize)); ++ j) {
@@ -111,13 +111,13 @@ struct TessTest : Test {
 			canvas->setConfig(config);
 
 			for (; i < max; ++ i) {
-				drawIcon(stream, canvas, i, failed, vg::DrawStyle::Fill, true);
+				drawIcon(stream, canvas, i, failed, vg::DrawFlags::Fill, true);
 			}
 		}
 
 		i = toInt(xenolith::IconName::Dynamic_Loader);
 		for (; i < max; ++ i) {
-			drawIcon(stream, canvas, i, failed, vg::DrawStyle::Fill, false);
+			drawIcon(stream, canvas, i, failed, vg::DrawFlags::Fill, false);
 		}
 
 		memory::pool::pop();

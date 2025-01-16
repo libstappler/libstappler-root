@@ -135,7 +135,7 @@ void PathObject::drawOutline(const Rect &bb, const Color4B &color, float width, 
 	Rect rect(bb.origin.x - width, bb.origin.y - width, bb.size.width + width * 2.0f, bb.size.height + width * 2.0f);
 	bbox = rect;
 	path.params.winding = vg::Winding::EvenOdd;
-	path.params.style = vg::DrawStyle::Fill;
+	path.params.style = vg::DrawFlags::Fill;
 	path.params.fillColor = color;
 
 	path.getWriter()
@@ -154,14 +154,14 @@ void PathObject::drawOutline(const Rect &bb, const Color4B &color, float width, 
 
 void PathObject::drawRect(const Rect &rect, const Color4B &color) {
 	bbox = rect;
-	path.params.style = vg::DrawStyle::Fill;
+	path.params.style = vg::DrawFlags::Fill;
 	path.params.fillColor = color;
 	path.getWriter().addRect(0.0f, 0.0f, rect.size.width, rect.size.height);
 }
 
 void PathObject::drawVerticalLineSegment(const Vec2 &origin, float height, const Color4B &color, float border, BorderStyle style,
 		float wTopLeft, float wTop, float wTopRight, float wBottomRight, float wBottom, float wBottomLeft) {
-	path.params.style = vg::DrawStyle::Fill;
+	path.params.style = vg::DrawFlags::Fill;
 	path.params.fillColor = color;
 
 	const float extraTopSize = (wTop == 0.0f && ((wTopLeft == 0.0f && wTopRight != 0.0f) || (wTopLeft != 0.0f && wTopRight == 0.0f)))
@@ -236,7 +236,7 @@ void PathObject::drawVerticalLineSegment(const Vec2 &origin, float height, const
 
 void PathObject::drawHorizontalLineSegment(const Vec2 &origin, float width, const Color4B &color, float border, BorderStyle style,
 		float wLeftBottom, float wLeft, float wLeftTop, float wRightTop, float wRight, float wRightBottom) {
-	path.params.style = vg::DrawStyle::Fill;
+	path.params.style = vg::DrawFlags::Fill;
 	path.params.fillColor = color;
 
 	const float extraLeftSize = (wLeft == 0.0f && ((wLeftBottom == 0.0f && wLeftTop != 0.0f) || (wLeftBottom != 0.0f && wLeftTop == 0.0f)))

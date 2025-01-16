@@ -46,24 +46,15 @@
 
 namespace STAPPLER_VERSIONIZED stappler::mmd {
 
-class SP_PUBLIC Content : public memory::PoolInterface {
+class SP_PUBLIC Content : public InterfaceObject<memory::PoolInterface> {
 public:
-	using String = StringType;
-	using StringStream = StringStreamType;
-
 	template <typename V>
-	using Vector = VectorType<V>;
-
-	template <typename K, typename V>
-	using Map = MapType<K, V, std::less<>>;
-
-	template <typename V>
-	using Dict =  DictionaryType<V>;
+	using Dict = typename Interface::DictionaryType<V>;
 
 	template <typename V>
 	using DictView = memory::dict<StringView, V>;
 
-	struct Link : AllocPool {
+	struct Link : memory::AllocPool {
 		using AttrVec = Vector<Pair<StringView, StringView>>;
 
 		Token label;
@@ -79,7 +70,7 @@ public:
 		static void parseAttributes(AttrVec &, const StringView &);
 	};
 
-	struct Footnote : AllocPool {
+	struct Footnote : memory::AllocPool {
 		enum Type {
 			Abbreviation,
 			Citation,
