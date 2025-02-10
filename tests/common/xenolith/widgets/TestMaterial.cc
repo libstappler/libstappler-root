@@ -48,8 +48,8 @@ bool TestMaterial::init(LayoutName layout, StringView text) {
 	return true;
 }
 
-void TestMaterial::onContentSizeDirty() {
-	FlexibleLayout::onContentSizeDirty();
+void TestMaterial::handleContentSizeDirty() {
+	FlexibleLayout::handleContentSizeDirty();
 
 	_infoLabel->setPosition(Vec2(_contentSize.width / 2.0f, _contentSize.height - _decorationPadding.top - 16.0f));
 	_infoLabel->setWidth(_contentSize.width * 3.0f / 4.0f);

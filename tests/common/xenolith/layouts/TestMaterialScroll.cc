@@ -127,8 +127,8 @@ static InputEventData makeEvent(InputEventName name, Size2 size, float offset) {
 static float TestMaterialScroll_pause = 0.02f;
 static float TestMaterialScroll_step = 30.0f;
 
-void TestMaterialScroll::onContentSizeDirty() {
-	TestMaterial::onContentSizeDirty();
+void TestMaterialScroll::handleContentSizeDirty() {
+	TestMaterial::handleContentSizeDirty();
 
 	auto a = Rc<Sequence>::create(0.15f, [this] {
 		_director->getView()->handleInputEvent(makeEvent(InputEventName::Begin, _contentSize, TestMaterialScroll_step * 0));

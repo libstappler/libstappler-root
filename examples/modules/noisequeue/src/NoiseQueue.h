@@ -54,7 +54,7 @@ public:
 	const AttachmentData *getImageAttachment() const { return _imageAttachment; }
 
 	// Запуск для записи в файл
-	void run(Application *, NoiseData data, Extent2 extent, StringView target);
+	void run(PlatformApplication *, NoiseData data, Extent2 extent, StringView target);
 
 	// Запуск для получения в функции результата
 	void run(core::Loop *, NoiseData data, Extent2 extent,

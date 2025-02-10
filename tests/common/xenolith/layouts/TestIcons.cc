@@ -32,7 +32,7 @@ public:
 
 	virtual bool init(IconName, Function<void(IconName)> &&);
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 protected:
 	using Node::init;
@@ -76,8 +76,8 @@ bool VgIconListNode::init(IconName iconName, Function<void(IconName)> &&cb) {
 	return true;
 }
 
-void VgIconListNode::onContentSizeDirty() {
-	Node::onContentSizeDirty();
+void VgIconListNode::handleContentSizeDirty() {
+	Node::handleContentSizeDirty();
 
 	_image->setPosition(_contentSize / 2.0f);
 }
@@ -105,12 +105,11 @@ bool TestIcons::init()  {
 	return true;
 }
 
-void TestIcons::onContentSizeDirty() {
-	TestLayout::onContentSizeDirty();
+void TestIcons::handleContentSizeDirty() {
+	TestLayout::handleContentSizeDirty();
 
 	_scrollView->setPosition(Vec2(_contentSize.width / 2.0f, _contentSize.height));
 	_scrollView->setContentSize(_contentSize);
-	_scrollView->disableScissor();
 }
 
 void TestIcons::handleEnter(xenolith::Scene *scene) {

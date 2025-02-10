@@ -55,11 +55,27 @@ protected:
 
 bool NoiseQueue::run(StringView target, NoiseData noiseData, Extent2 extent) {
 	// Устанавливаем параметры приложения
-	Application::CommonInfo commonInfo({
-		.bundleName = String("org.stappler.examples.noisegen"),
-		.applicationName = String("stappler-noisegen"),
-		.applicationVersion = String("0.1.0")
-	});
+	ApplicationInfo commonInfo;
+	commonInfo.bundleName = String("org.stappler.examples.noisegen");
+	commonInfo.applicationName = String("stappler-noisegen");
+	commonInfo.applicationVersion = String("0.1.0");
+	commonInfo.threadsCount = 2;
+	commonInfo.updateInterval = TimeInterval::microseconds(500000);
+	commonInfo.updateCallback = [target, noiseData, extent] (const PlatformApplication &app, const UpdateTime &time) {
+		// Рабочий цикл приложения
+		if (time.app == 0) {
+			// Вызывается при запуске (нулевое время)
+			auto queue = Rc<NoiseQueue>::create();
+
+			// собираем очередь на устройстве
+			app.getGlLoop()->compileQueue(queue, [app = &app, queue, extent, target, noiseData] (bool success) {
+				Application::getInstance()->performOnMainThread([app, queue, target, noiseData, extent] {
+					// Запускаем исполнение очереди
+					queue->run(const_cast<PlatformApplication *>(app), noiseData, extent, target);
+				}, nullptr);
+			});
+		}
+	};
 
 	// Загружаем графический API
 	auto instance = vk::platform::createInstance([&] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
@@ -77,30 +93,12 @@ bool NoiseQueue::run(StringView target, NoiseData noiseData, Extent2 extent) {
 		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
 	};
 
-	Application::CallbackInfo callbackInfo({
-		.updateCallback = [target, noiseData, extent] (const Application &app, const UpdateTime &time) {
-			// Рабочий цикл приложения
-			if (time.app == 0) {
-				// Вызывается при запуске (нулевое время)
-				auto queue = Rc<NoiseQueue>::create();
-
-				// собираем очередь на устройстве
-				app.getGlLoop()->compileQueue(queue, [app = &app, queue, extent, target, noiseData] (bool success) {
-					Application::getInstance()->performOnMainThread([app, queue, target, noiseData, extent] {
-						// Запускаем исполнение очереди
-						queue->run(const_cast<Application *>(app), noiseData, extent, target);
-					}, nullptr);
-				});
-			}
-		}
-	});
-
 	core::LoopInfo info;
 	info.platformData = data;
 
 	if (app) {
 		// запускаем основной цикл
-		app->run(callbackInfo, move(info), 2, TimeInterval::microseconds(500000));
+		app->run();
 
 		return true;
 	}
@@ -191,7 +189,7 @@ bool NoiseQueue::init() {
 	return false;
 }
 
-void NoiseQueue::run(Application *app, NoiseData data, Extent2 extent, StringView target) {
+void NoiseQueue::run(PlatformApplication *app, NoiseData data, Extent2 extent, StringView target) {
 	// запускаем очередь для записи в файл
 	run(app->getGlLoop(), data, extent, [app, target = target.str<Interface>()] (core::ImageInfoData info, BytesView view) {
 		if (!view.empty()) {
@@ -229,8 +227,8 @@ void NoiseQueue::run(core::Loop *loop, NoiseData data, Extent2 extent,
 	req->addInput(getDataAttachment(), move(inputData));
 
 	// устанавливаем функцию для получения результата
-	req->setOutput(getImageAttachment(), [loop, cb = move(cb)] (core::FrameAttachmentData &data, bool success, Ref *) mutable {
-		loop->captureImage([cb = move(cb)] (core::ImageInfoData info, BytesView view) {
+	req->setOutput(getImageAttachment(), [loop, cb = sp::move(cb)] (core::FrameAttachmentData &data, bool success, Ref *) mutable {
+		loop->captureImage([cb = sp::move(cb)] (core::ImageInfoData info, BytesView view) {
 			cb(info, view);
 		}, data.image->getImage(), core::AttachmentLayout::General);
 		return true;

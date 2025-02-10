@@ -41,7 +41,7 @@ public:
 
 	virtual bool init(Type, const ColorHCT &, Function<void(float)> &&cb);
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 	const ColorHCT &getTargetColor() const;
 	void setTargetColor(const ColorHCT &color);

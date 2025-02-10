@@ -36,7 +36,7 @@ public:
 
 	virtual bool init() override;
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 	virtual void handleEnter(xenolith::Scene *) override;
 
 protected:

@@ -67,8 +67,8 @@ bool MaterialColorPicker::init(Type type, const ColorHCT &color, Function<void(f
 	return true;
 }
 
-void MaterialColorPicker::onContentSizeDirty() {
-	Sprite::onContentSizeDirty();
+void MaterialColorPicker::handleContentSizeDirty() {
+	Sprite::handleContentSizeDirty();
 
 	_label->setPosition(Vec2(_contentSize.width + 16.0f, _contentSize.height / 2.0f));
 	_indicator->setContentSize(Size2(2.0f, _contentSize.height + 12.0f));

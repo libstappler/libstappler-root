@@ -203,8 +203,8 @@ bool TestDynamicFont::init() {
 	return true;
 }
 
-void TestDynamicFont::onContentSizeDirty() {
-	TestLayout::onContentSizeDirty();
+void TestDynamicFont::handleContentSizeDirty() {
+	TestLayout::handleContentSizeDirty();
 
 	_label->setPosition(_contentSize / 2.0f);
 	_label->setWidth(_contentSize.width);

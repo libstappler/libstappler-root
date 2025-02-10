@@ -216,8 +216,8 @@ bool TestZOrder::init() {
 	return true;
 }
 
-void TestZOrder::onContentSizeDirty() {
-	TestLayout::onContentSizeDirty();
+void TestZOrder::handleContentSizeDirty() {
+	TestLayout::handleContentSizeDirty();
 
 	Vec2 center = _contentSize / 2.0f;
 

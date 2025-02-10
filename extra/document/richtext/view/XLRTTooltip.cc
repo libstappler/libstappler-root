@@ -24,6 +24,7 @@
 #include "XLRTListenerView.h"
 #include "XLRTRenderer.h"
 #include "XLInputListener.h"
+#include "XLDynamicStateComponent.h"
 #include "MaterialEasing.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
@@ -39,22 +40,6 @@ bool Tooltip::init(RendererResult *s, const Vector<String> &ids, WideStringView 
 
 	setViewDecorationFlags(material2d::ViewDecorationFlags::None);
 	setDecorationMask(material2d::DecorationMask::None);
-
-	/*_listener = addInputListener(Rc<InputListener>::create());
-	_listener->addTouchRecognizer([this] (const GestureData &data) {
-		if (data.event == GestureEvent::Began && _toolbar->isTouched(data.location())) {
-			return false;
-		}
-		if (data.event == GestureEvent::Ended || data.event == GestureEvent::Cancelled) {
-			if (!_expanded) {
-				onDelayedFadeOut();
-			}
-		} else {
-			onFadeIn();
-		}
-		return true;
-	});*/
-	//_listener->setSwallowEvents(InputListener::EventMaskTouch);
 
 	_closeListener = addInputListener(Rc<InputListener>::create());
 	_closeListener->setTouchFilter([] (const InputEvent &ev, const InputListener::DefaultEventFilter &fn) {
@@ -115,7 +100,9 @@ bool Tooltip::init(RendererResult *s, const Vector<String> &ids, WideStringView 
 	_background->setColorRole(material2d::ColorRole::Background);
 	_background->setNodeStyle(material2d::NodeStyle::Elevated);
 	_background->setElevation(material2d::Elevation::Level2);
-	enableScissor(Padding());
+
+	auto comp = addComponent(Rc<DynamicStateComponent>::create());
+	comp->enableScissor(Padding());
 
 	return true;
 }

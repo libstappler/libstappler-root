@@ -67,7 +67,7 @@ public:
 
 	virtual bool init(const Vector<String> &ids = {});
 	virtual void handleContentSizeDirty() override;
-	virtual void visitSelf(FrameInfo &, NodeFlags parentFlags) override;
+	virtual void handleVisitSelf(FrameInfo &, Node *, NodeFlags flags) override;
 
 	virtual void update(const UpdateTime &time) override;
 

@@ -37,7 +37,7 @@ public:
 
 	bool init(StringView, Function<Rc<ActionInterval>(Rc<ActionInterval> &&)> &&);
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 	void run();
 
@@ -64,7 +64,7 @@ public:
 
 	virtual bool init() override;
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 	virtual void handleEnter(xenolith::Scene *) override;
 
 protected:

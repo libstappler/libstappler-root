@@ -40,7 +40,7 @@ public:
 
 	virtual bool init() override;
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 	virtual void update(const UpdateTime &) override;
 

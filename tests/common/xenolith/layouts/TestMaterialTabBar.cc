@@ -42,8 +42,8 @@ bool TestMaterialTabBar::init() {
 	return true;
 }
 
-void TestMaterialTabBar::onContentSizeDirty() {
-	TestMaterial::onContentSizeDirty();
+void TestMaterialTabBar::handleContentSizeDirty() {
+	TestMaterial::handleContentSizeDirty();
 
 	_tabBar->setContentSize(Size2(std::min(_contentSize.width - 32.0f, 400.0f), 72.0f));
 	_tabBar->setPosition(Vec2(_contentSize.width / 2.0f, _contentSize.height - 96.0f));

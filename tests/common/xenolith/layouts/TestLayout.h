@@ -62,7 +62,7 @@ public:
 
 	virtual bool init(LayoutName, StringView);
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 	virtual void handleEnter(xenolith::Scene *) override;
 	virtual void update(const UpdateTime &) override;

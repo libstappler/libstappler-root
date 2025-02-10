@@ -118,8 +118,8 @@ static Vector<InputEventData> makeEscKeyInput() {
 	return ret;
 }
 
-void TestMaterialMenu::onContentSizeDirty() {
-	TestMaterial::onContentSizeDirty();
+void TestMaterialMenu::handleContentSizeDirty() {
+	TestMaterial::handleContentSizeDirty();
 
 	_menu->getDataListener()->getCallback();
 	_menu->setContentSize(Size2(std::min(_contentSize.width - 32.0f, 400.0f), _contentSize.height - 120.0f));

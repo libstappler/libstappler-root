@@ -80,7 +80,7 @@ HttpdHostController * HttpdHostController::merge(HttpdHostController *base, Http
 		if (add->_components.empty()) {
 			add->_components = base->_components;
 		} else {
-			auto tmp = move(add->_components);
+			auto tmp = sp::move(add->_components);
 			add->_components = base->_components;
 
 			for (auto &it : tmp) {
@@ -93,11 +93,11 @@ HttpdHostController * HttpdHostController::merge(HttpdHostController *base, Http
 		if (add->_allowedIps.empty()) {
 			add->_allowedIps = base->_allowedIps;
 		} else {
-			auto tmp = move(add->_allowedIps);
+			auto tmp = sp::move(add->_allowedIps);
 			add->_allowedIps = base->_allowedIps;
 
 			for (auto &it : tmp) {
-				add->_allowedIps.emplace_back(move(it));
+				add->_allowedIps.emplace_back(sp::move(it));
 			}
 		}
 	}

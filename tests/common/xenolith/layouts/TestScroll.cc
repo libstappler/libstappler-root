@@ -78,8 +78,8 @@ bool TestScroll::init() {
 	return true;
 }
 
-void TestScroll::onContentSizeDirty() {
-	TestLayout::onContentSizeDirty();
+void TestScroll::handleContentSizeDirty() {
+	TestLayout::handleContentSizeDirty();
 
 	_scrollView->setContentSize(_contentSize);
 }

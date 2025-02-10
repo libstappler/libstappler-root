@@ -62,7 +62,7 @@ public:
 
 	virtual bool init(StringView, bool, Function<void(bool)> &&);
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 	void setLabelColor(const Color4F &);
 

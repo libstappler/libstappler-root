@@ -26,6 +26,6 @@ namespace stappler::xenolith::app {
 
 #include "noise.comp.h"
 
-SpanView<uint32_t> NoiseComp((const uint32_t *)noise_comp, noise_comp_len / sizeof(uint32_t));
+SpanView<uint32_t> NoiseComp(reinterpret_cast<const uint32_t *>(noise_comp), sizeof(noise_comp) / sizeof(uint32_t));
 
 }

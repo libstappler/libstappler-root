@@ -109,7 +109,7 @@ bool CommonObject::initAsLabel(document::Label *label) {
 	setNormalized(true);
 	setColorMode(core::ColorMode::AlphaChannel);
 	setRenderingLevel(RenderingLevel::Surface);
-	setSamplerIndex(0);
+	setSamplerIndex(core::SamplerIndex::DefaultFilterNearest);
 
 	auto el = Rc<EventListener>::create();
 	el->onEventWithObject(font::FontController::onFontSourceUpdated, source, [this] (const Event &) {
@@ -144,7 +144,7 @@ bool CommonObject::initAsBackground(document::Background *bg) {
 			if (_result->resource->textures.find(bg->background.backgroundImage) != _result->resource->textures.end()) {
 				if (auto tex = _result->resource->resource->acquireTexture(bg->background.backgroundImage)) {
 					setTexture(move(tex));
-					setSamplerIndex(1);
+					setSamplerIndex(core::SamplerIndex::DefaultFilterLinear);
 				}
 			} else {
 				auto it = _result->resource->svgs.find(bg->background.backgroundImage);

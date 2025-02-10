@@ -184,7 +184,7 @@ VkComponent::VkComponent(const Host &serv, const HostComponentInfo &info)
 
 	// между запуском и ожиданием инициализации разумно размещать другую инициализацию
 
-	_loop->waitRinning();
+	_loop->waitRunning();
 }
 
 void VkComponent::handleChildInit(const Host &serv) {

@@ -48,8 +48,8 @@ bool TestMaterialColorSchemeNode::init(material2d::ColorRole name) {
 	return true;
 }
 
-void TestMaterialColorSchemeNode::onContentSizeDirty() {
-	Layer::onContentSizeDirty();
+void TestMaterialColorSchemeNode::handleContentSizeDirty() {
+	Layer::handleContentSizeDirty();
 	_labelName->setPosition(Vec2(4.0f, _contentSize.height - 2.0f));
 	_labelDesc->setPosition(Vec2(_contentSize.width - 4.0f, 4.0f));
 }
@@ -222,8 +222,8 @@ void TestMaterialColor::handleExit() {
 	TestMaterial::handleExit();
 }
 
-void TestMaterialColor::onContentSizeDirty() {
-	TestMaterial::onContentSizeDirty();
+void TestMaterialColor::handleContentSizeDirty() {
+	TestMaterial::handleContentSizeDirty();
 
 	_background->setContentSize(_contentSize);
 	_background->setPosition(_contentSize / 2.0f);

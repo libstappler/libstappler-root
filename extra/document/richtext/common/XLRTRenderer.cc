@@ -99,8 +99,8 @@ bool Renderer::init(const Vector<String> &ids) {
 	return true;
 }
 
-void Renderer::visitSelf(FrameInfo &frame, NodeFlags parentFlags) {
-	Component::visitSelf(frame, parentFlags);
+void Renderer::handleVisitSelf(FrameInfo &info, Node *node, NodeFlags flags) {
+	Component::handleVisitSelf(info, node, flags);
 	if (_renderingDirty && !_renderingInProgress && _enabled && _source) {
 		requestRendering();
 	}

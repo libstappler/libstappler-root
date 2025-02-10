@@ -73,8 +73,8 @@ static Vector<InputEventData> makeKeyInput(InputKeyCode code, char32_t ch) {
 	return ret;
 }
 
-void TestMaterialInput::onContentSizeDirty() {
-	TestMaterial::onContentSizeDirty();
+void TestMaterialInput::handleContentSizeDirty() {
+	TestMaterial::handleContentSizeDirty();
 
 	_field->setPosition(Vec2(_contentSize / 2.0f) - Vec2(0.0f, 100.0f));
 

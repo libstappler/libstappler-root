@@ -33,8 +33,6 @@ bool TestGeneralUpdate::init() {
 		return false;
 	}
 
-	setIgnoreParentState(true);
-
 	setEnterCallback([] (xenolith::Scene *) { });
 	setExitCallback([] () { });
 	setContentSizeDirtyCallback([] () { });
@@ -43,28 +41,15 @@ bool TestGeneralUpdate::init() {
 
 	_sprite = addChild(Rc<Sprite>::create("xenolith-1-480.png"), ZOrder(2));
 	//_sprite->setAutofit(Sprite::Autofit::Contain);
-	_sprite->setSamplerIndex(Sprite::SamplerIndexDefaultFilterLinear);
+	_sprite->setSamplerIndex(SamplerIndex::DefaultFilterLinear);
 	_sprite->setAnchorPoint(Anchor::Middle);
-	_sprite->disableScissor();
-	_sprite->enableScissor();
 	_sprite->setCascadeOpacityEnabled(true);
 	_sprite->setCascadeColorEnabled(true);
 	_sprite->setOpacity(0.8f);
-	if (_sprite->getStateApplyMode() != StateApplyMode::ApplyForNodesAbove) {
-		_sprite->setStateApplyMode(StateApplyMode::ApplyForNodesAbove);
-	}
 
 	_sprite2 = _sprite->addChild(Rc<Sprite>::create(), ZOrder(1), 123);
 	_sprite2->setTextureAutofit(Autofit::Contain);
 	_sprite2->setAnchorPoint(Anchor::Middle);
-	_sprite2->enableScissor();
-	_sprite2->setStateApplyMode(StateApplyMode::ApplyForAll);
-	if (_sprite2->isIgnoreParentState()) {
-		_sprite2->setIgnoreParentState(false);
-	}
-	if (_sprite2->isScissorEnabled()) {
-		_sprite2->setScissorOutlone(_sprite2->getScissorOutline());
-	}
 
 	_spriteLayer = _sprite2->addChild(Rc<Layer>::create(Color::White));
 	_spriteLayer->setAnchorPoint(Anchor::Middle);
@@ -92,8 +77,8 @@ bool TestGeneralUpdate::init() {
 	return true;
 }
 
-void TestGeneralUpdate::onContentSizeDirty() {
-	TestLayout::onContentSizeDirty();
+void TestGeneralUpdate::handleContentSizeDirty() {
+	TestLayout::handleContentSizeDirty();
 
 	_background->setContentSize(_contentSize);
 	_background->setPosition(_contentSize / 2.0f);

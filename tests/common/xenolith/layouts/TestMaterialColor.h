@@ -38,7 +38,7 @@ public:
 
 	virtual bool init(material2d::ColorRole);
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 	virtual void setSchemeColor(material2d::ThemeType, Color4F background, Color4F label);
 
@@ -61,7 +61,7 @@ public:
 	virtual void update(const UpdateTime &) override;
 	virtual void handleExit() override;
 
-	virtual void onContentSizeDirty() override;
+	virtual void handleContentSizeDirty() override;
 
 protected:
 	using TestMaterial::init;

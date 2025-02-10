@@ -51,7 +51,10 @@ struct TessTest : Test {
 		path->setStyle(style);
 		path->setStrokeWidth(0.5f);
 
-		auto res = canvas->draw(image.popData(), xenolith::Size2(1024, 1024));
+		xenolith::basic2d::VectorCanvasConfig config;
+		config.targetSize = xenolith::Size2(1024, 1024);
+
+		auto res = canvas->draw(config, image.popData());
 		if (res->data.size() == 0) {
 			//auto pIt = paths.find(i);
 

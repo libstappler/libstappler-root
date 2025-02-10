@@ -181,8 +181,8 @@ bool TestEmpty::init() {
 	return true;
 }
 
-void TestLayout::onContentSizeDirty() {
-	Node::onContentSizeDirty();
+void TestLayout::handleContentSizeDirty() {
+	Node::handleContentSizeDirty();
 
 	_infoLabel->setPosition(Vec2(_contentSize.width / 2.0f, _contentSize.height - 16.0f));
 	_infoLabel->setWidth(_contentSize.width * 3.0f / 4.0f);

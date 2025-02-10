@@ -100,7 +100,7 @@ Status WebsocketManager::accept(Request &req) {
 	};
 
 	alloc = allocator::create();
-	pool = pool::create(alloc, memory::PoolFlags::None);
+	pool = pool::create(alloc);
 
 	allocator::max_free_set(alloc, 20_MiB);
 

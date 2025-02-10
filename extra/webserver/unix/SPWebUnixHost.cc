@@ -66,7 +66,7 @@ bool UnixHostController::simulateWebsocket(UnixWebsocketSim *sim, StringView url
 	pool_t *pool = nullptr;
 
 	alloc = allocator::create();
-	pool = pool::create(alloc, memory::PoolFlags::None);
+	pool = pool::create(alloc);
 
 	return perform([&] {
 		auto key = base64::encode<Interface>(valid::makeRandomBytes<Interface>(16));

@@ -24,6 +24,7 @@
 #include "SPDocLayoutResult.h"
 #include "MaterialStyleMonitor.h"
 #include "XLInputListener.h"
+#include "XLDynamicStateComponent.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::richtext {
 
@@ -36,7 +37,7 @@ bool ListenerView::Selection::init(ListenerView *view) {
 	}
 
 	_markerStart = addChild(Rc<basic2d::VectorSprite>::create(Size2(48, 48)), ZOrder(1));
-	_markerStart->addPath(vg::VectorPath().openForWriting([] (vg::PathWriter &writer) {
+	(void)_markerStart->addPath(vg::VectorPath().openForWriting([] (vg::PathWriter &writer) {
 		writer
 			.moveTo(48, 48)
 			.lineTo(24, 48)
@@ -48,11 +49,13 @@ bool ListenerView::Selection::init(ListenerView *view) {
 	_markerStart->setColor(Color::Blue_500);
 	_markerStart->setOpacity(192);
 	_markerStart->setVisible(false);
-	_markerStart->setIgnoreParentState(true);
-	_markerStart->setStateApplyMode(ApplyForAll);
+
+	auto markerStartComp = _markerStart->addComponent(Rc<DynamicStateComponent>::create());
+	markerStartComp->setIgnoreParentState(true);
+	markerStartComp->setStateApplyMode(DynamicStateApplyMode::ApplyForAll);
 
 	_markerEnd = addChild(Rc<basic2d::VectorSprite>::create(Size2(48, 48)), ZOrder(1));
-	_markerEnd->addPath(vg::VectorPath().openForWriting([] (vg::PathWriter &writer) {
+	(void)_markerEnd->addPath(vg::VectorPath().openForWriting([] (vg::PathWriter &writer) {
 		writer
 			.moveTo(0, 48)
 			.lineTo(0, 24)
@@ -64,8 +67,10 @@ bool ListenerView::Selection::init(ListenerView *view) {
 	_markerEnd->setColor(Color::Blue_500);
 	_markerEnd->setOpacity(192);
 	_markerEnd->setVisible(false);
-	_markerEnd->setIgnoreParentState(true);
-	_markerEnd->setStateApplyMode(ApplyForAll);
+
+	auto markerEndComp = _markerEnd->addComponent(Rc<DynamicStateComponent>::create());
+	markerEndComp->setIgnoreParentState(true);
+	markerEndComp->setStateApplyMode(DynamicStateApplyMode::ApplyForAll);
 
 	_view = view;
 
