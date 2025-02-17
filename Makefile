@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 LOCAL_LIBRARY := libstappler
-LOCAL_VERSION := 0.3
+LOCAL_VERSION := 0.4
 
 # force to rebuild if this makefile changed
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
