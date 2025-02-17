@@ -33,6 +33,7 @@
 #include "SPDso.h"
 #include "SPWebVirtualFile.h"
 #include "SPPugCache.h"
+#include "SPSharedModule.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -317,6 +318,11 @@ db::sql::Driver *HostController::openInternalDriver(db::sql::Driver::Handle) {
 bool HostController::loadDsoComponent(const Host &serv, const HostComponentInfo &info) {
 	Dso h;
 	if (info.file.empty()) {
+		// try shared module first
+		if (loadModuleComponent(serv, info)) {
+			return true;
+		}
+
 		h = Dso(StringView(), DsoFlags::Self);
 	} else {
 		auto path = resolvePath(info.file);
@@ -343,6 +349,19 @@ bool HostController::loadDsoComponent(const Host &serv, const HostComponentInfo 
 		}
 	} else {
 		log::error("web::HostController", "DSO: ", h.getError());
+	}
+	return false;
+}
+
+bool HostController::loadModuleComponent(const Host &serv, const HostComponentInfo &info) {
+	auto sym = SharedModule::acquireTypedSymbol<HostComponent::Symbol>(info.name.data(), info.symbol.data());
+	if (sym) {
+		auto comp = sym(serv, info);
+		if (comp) {
+			_components.emplace(comp->getName(), comp);
+			_typedComponents.emplace(std::type_index(typeid(*comp)), comp);
+			return true;
+		}
 	}
 	return false;
 }

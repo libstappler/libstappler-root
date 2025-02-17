@@ -25,6 +25,7 @@
 #include "SPDbFieldExtensions.h"
 #include "SPWebRequestHandler.h"
 #include "SPWebInputFilter.h"
+#include "SPSharedModule.h"
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -455,5 +456,12 @@ void TestHandler::initTransaction(db::Transaction &t) {
 extern "C" HostComponent * CreateTestComponent(const Host &serv, const HostComponentInfo &info) {
 	return new TestHandler(serv, info);
 }
+
+static SharedSymbol s_testComponentSymbols[] = {
+	SharedSymbol{"CreateTestComponent",
+		(void *)static_cast<HostComponent::Symbol>(CreateTestComponent)},
+};
+
+static SharedModule s_testComponentModule("TestComonent", s_testComponentSymbols, sizeof(s_testComponentSymbols) / sizeof(SharedSymbol));
 
 }

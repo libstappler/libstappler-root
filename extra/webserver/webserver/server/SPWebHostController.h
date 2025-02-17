@@ -96,6 +96,7 @@ protected:
 	virtual db::sql::Driver * openInternalDriver(db::sql::Driver::Handle);
 
 	virtual bool loadDsoComponent(const Host &serv, const HostComponentInfo &);
+	virtual bool loadModuleComponent(const Host &serv, const HostComponentInfo &);
 	virtual bool loadWasmComponent(const Host &serv, const HostComponentInfo &);
 
 	virtual String resolvePath(StringView path) const;

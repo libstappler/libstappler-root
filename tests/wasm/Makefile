@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+# Copyright (c) 2023-2025 Stappler LLC <admin@stappler.dev>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-STAPPLER_ROOT ?= ../..
+STAPPLER_BUILD_ROOT ?= ../../build/make
 
 # force to rebuild if this makefile changed
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
@@ -55,4 +55,4 @@ LOCAL_ANDROID_PLATFORM := android-24 # android platform version
 # You should define WASM_DEBUG env var to actually bind lldb to application
 # GLOBAL_WASM_DEBUG := 1
 
-include $(STAPPLER_ROOT)/build/make/universal.mk
+include $(STAPPLER_BUILD_ROOT)/universal.mk

@@ -32,7 +32,7 @@ class SP_PUBLIC Session : public data::WrapperTemplate<Interface> {
 public:
 	using Token = stappler::string::Sha512::Buf;
 
-	static Session *create(const Request &);
+	static bool hasCredentials(const Request &);
 
 	Session(const Request &, bool silent = false);
 	Session(const Request &, db::User *user, TimeInterval maxAge);

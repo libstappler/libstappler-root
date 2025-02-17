@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2023-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -27,23 +27,16 @@
 namespace stappler::xenolith::richtext {
 
 static constexpr auto HELP_STRING(
-R"HelpString(testapp <options>
-Options are one of:
-	-v (--verbose)
-	-h (--help))HelpString");
+R"HelpString(testapp <options>)HelpString");
 
 SP_EXTERN_C int main(int argc, const char *argv[]) {
-	ViewCommandLineData data;
-	Vector<String> args;
-
-	data::parseCommandLineOptions<Interface, ViewCommandLineData>(data, argc, argv,
-		[&] (ViewCommandLineData &, StringView str) {
-			args.emplace_back(str.str<Interface>());
-		},
-		&parseViewCommandLineSwitch, &parseViewCommandLineString);
+	ApplicationInfo data = ApplicationInfo::readFromCommandLine(argc, argv);
 
 	if (data.help) {
 		std::cout << HELP_STRING << "\n";
+		ApplicationInfo::CommandLine.describe([&] (StringView str) {
+			std::cout << str;
+		});
 		return 0;
 	}
 
@@ -53,15 +46,14 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		std::cout << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
 		std::cout << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
 		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << data.encode() << "\n";
-		std::cout << " Arguments: \n";
-		for (auto &it : args) {
-			std::cout << "\t" << it << "\n";
-		}
 	}
 
-	auto app = Rc<DocumentApplication>::create(move(data));
-	app->run();
-	return 0;
+	memory::pool::perform_temporary([&] {
+		auto app = Rc<DocumentApplication>::create(move(data));
+
+		app->run();
+		app->waitStopped();
+	});
 }
 
 }

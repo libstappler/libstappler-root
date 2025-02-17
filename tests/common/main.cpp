@@ -227,6 +227,9 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			&parseOptionSwitch, &parseOptionString);
 	if (opts.first.getBool("help")) {
 		std::cout << HELP_STRING << "\n";
+
+		Test::List();
+
 		return 0;
 	}
 

@@ -93,6 +93,8 @@ cd libstappler-root
 git submodule update --init
 ```
 
+*[Для Linux может потребоваться пересборка предсобранных зависимостей при несоотвествии версии glibc. Для Linux также возможна установка SDK в виде динамических библиотек](https://github.com/libstappler/libstappler-doc/blob/master/docs-ru/basics/installation.md)*
+
 Запуск первого примера
 
 ```sh

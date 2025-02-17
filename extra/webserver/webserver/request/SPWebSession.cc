@@ -72,6 +72,25 @@ Session::~Session() {
 	}
 }
 
+bool Session::hasCredentials(const Request &req) {
+	auto host = req.host();
+	auto &info = req.getInfo();
+
+	auto &sessionTokenString = info.queryData.getString(SA_SESSION_TOKEN_NAME);
+
+	/* token is a base64url encoded hash from sha512, so, it must have 86 bytes */
+	if (sessionTokenString.size() != 86) {
+		return false;
+	}
+
+	Bytes cookieToken(stappler::base64url::decode<Interface>(req.getCookie(host.getSessionInfo().name)));
+	if (cookieToken.empty() || cookieToken.size() != 64) {
+		return false;
+	}
+
+	return true;
+}
+
 Session::Session(const Request &rctx, bool silent) : _request(rctx) {
 	_valid = init(silent);
 }
@@ -108,9 +127,13 @@ bool Session::init(bool silent) {
 	auto host = _request.host();
 	auto &info = _request.getInfo();
 
+	if (!hasCredentials(_request)) {
+		return false;
+	}
+
 	auto &sessionTokenString = info.queryData.getString(SA_SESSION_TOKEN_NAME);
 
-	/* token is a base64 encoded hash from sha512, so, it must have 88 bytes */
+	/* token is a base64url encoded hash from sha512, so, it must have 86 bytes */
 	if (sessionTokenString.size() != 86) {
 		if (!silent) {
 			_request.addDebug("Session", "Session token format is invalid");

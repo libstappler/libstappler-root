@@ -40,11 +40,13 @@ public:
 
 	virtual void run();
 
-	using mem_std::AllocBase::operator new;
-	using mem_std::AllocBase::operator delete;
+	using RefAlloc::operator new;
+	using RefAlloc::operator delete;
 
 	using Ref::release;
 	using Ref::retain;
+
+	using GuiApplication::waitStopped;
 
 	const core::SurfaceInfo &getSurfaceInfo() const { return _surfaceInfo; }
 	const core::SwapchainConfig &getSwapchainConfig() const { return _swapchainConfig; }

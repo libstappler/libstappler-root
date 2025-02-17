@@ -23,7 +23,7 @@
 #include "SPCommon.h"
 #include "Test.h"
 
-#if MODULE_XENOLITH_RENDERER_MATERIAL2D && MODULE_XENOLITH_BACKEND_VKGUI && 0
+#if MODULE_XENOLITH_RENDERER_MATERIAL2D && MODULE_XENOLITH_BACKEND_VKGUI
 
 #include "XLVkGuiApplication.h"
 #include "XLCoreFrameRequest.h"
@@ -54,10 +54,11 @@ struct XenolithGuiTest : Test {
 		filesystem::remove(caches, true, true);
 		filesystem::mkdir(caches);
 
-		xenolith::ViewCommandLineData data;
+		xenolith::ApplicationInfo data;
 
 		auto app = Rc<TestAppDelegate>::create(move(data));
 		app->run();
+		app->waitStopped();
 
 		memory::pool::pop();
 

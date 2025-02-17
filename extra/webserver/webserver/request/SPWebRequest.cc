@@ -356,14 +356,16 @@ db::AccessRoleId Request::getAccessRole() const {
 				_config->_accessRole = db::AccessRoleId::Authorized;
 			}
 		} else {
-			Session s(*this, true);
-			if (s.isValid()) {
-				auto u = s.getUser();
-				if (u) {
-					if (u->isAdmin()) {
-						_config->_accessRole = db::AccessRoleId::Admin;
-					} else {
-						_config->_accessRole = db::AccessRoleId::Authorized;
+			if (Session::hasCredentials(*this)) {
+				Session s(*this, true);
+				if (s.isValid()) {
+					auto u = s.getUser();
+					if (u) {
+						if (u->isAdmin()) {
+							_config->_accessRole = db::AccessRoleId::Admin;
+						} else {
+							_config->_accessRole = db::AccessRoleId::Authorized;
+						}
 					}
 				}
 			}
