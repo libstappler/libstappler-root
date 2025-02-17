@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -167,7 +167,9 @@ bool ConnectionWorker::poll(int epollFd) {
 						if (value > 1) {
 							value -= 1;
 							// forward event to another worker
-							write(_eventClient.fd, &value, sizeof(uint64_t));
+							if (write(_eventClient.fd, &value, sizeof(uint64_t)) == 0) {
+								log::error("ConnectionWorker", "Fail to forward next event to eventfd");
+							}
 						}
 						if (ev) {
 							runTask(ev);

@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -22,88 +22,138 @@
 
 #include "ExampleDb.h"
 
+// Парсер опций командной строки
+#include "SPCommandLineParser.h"
+
 namespace stappler::app {
 
 // Строка при запросе помощи по команде
 static constexpr auto HELP_STRING(
-R"HelpString(dbconnect <options> - generates password
-Options are one of:
-	--dbname <name> - DB name or path
-	--user <name> - username for postgresql
-	--password <name> - password for postgresql
-	--host <name> - hostname for postgresql
-	-S (--sqlite) - force to use sqlite driver
-	-P (--pgsql) - force to use postgresql driver
-	-v (--verbose)
-	-h (--help))HelpString");
+R"HelpString(dbconnect <options> [query] - opens simple connection with database and execute query
 
-// Разбор коротких переключателей (-h, -v)
-static int parseOptionSwitch(Value &ret, char c, const char *str) {
-	if (c == 'h') {
-		ret.setBool(true, "help");
-	} else if (c == 'v') {
-		ret.setBool(true, "verbose");
-	} else if (c == 'S') {
-		ret.setString("sqlite", "driver");
-	} else if (c == 'P') {
-		ret.setString("pgsql", "driver");
-	}
+Example:
+	dbconnect -P --user=stappler --password=stappler --dbname=stappler --host=localhost "SELECT version();"
+)HelpString");
 
-	// прочитан только один символ
-	return 1;
-}
+// Опции для аргументов командной строки
+static CommandLineParser<Value> CommandLine({
+	CommandLineOption<Value> {
+		.patterns = {
+			"-v", "--verbose"
+		},
+		.description = "Produce more verbose output",
+		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
+			target.setBool(true, "verbose");
+			return true;
+		}
+	},
+	CommandLineOption<Value> {
+		.patterns = {
+			"-h", "--help"
+		},
+		.description = StringView("Show help message and exit"),
+		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
+			target.setBool(true, "help");
+			return true;
+		}
+	},
+	CommandLineOption<Value> {
+		.patterns = {
+			"-S", "--sqlite"
+		},
+		.description = StringView("Use SQLite driver"),
+		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
+			target.setString("sqlite", "driver");
+			return true;
+		}
+	},
+	CommandLineOption<Value> {
+		.patterns = {
+			"-P", "--pgsql"
+		},
+		.description = StringView("Use PostgreSQL driver (libpq)"),
+		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
+			target.setString("pgsql", "driver");
+			return true;
+		}
+	},
+	CommandLineOption<Value> {
+		.patterns = {
+			"-D<name>", "--dbname <name>"
+		},
+		.description = StringView("Target database name or path for SQLite"),
+		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
+			target.setString(args[0], "dbname");
+			return true;
+		}
+	},
+	CommandLineOption<Value> {
+		.patterns = {
+			"-U<username>", "--user <username>"
+		},
+		.description = StringView("Username for database connection"),
+		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
+			target.setString(args[0], "user");
+			return true;
+		}
+	},
+	CommandLineOption<Value> {
+		.patterns = {
+			"-W<password>", "--password <password>"
+		},
+		.description = StringView("Password for database connection"),
+		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
+			target.setString(args[0], "password");
+			return true;
+		}
+	},
+	CommandLineOption<Value> {
+		.patterns = {
+			"-H<hostname>", "--host <hostname>"
+		},
+		.description = StringView("Database host for connection"),
+		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
+			target.setString(args[0], "host");
+			return true;
+		}
+	},
+});
 
-// Разбор строковых переключателей (--help, -verbose)
-static int parseOptionString(Value &ret, const StringView &str, int argc, const char * argv[]) {
-	if (str == "help") {
-		ret.setBool(true, "help");
-	} else if (str == "verbose") {
-		ret.setBool(true, "verbose");
-	} else if (str == "sqlite") {
-		ret.setBool("sqlite", "driver");
-	} else if (str == "pgsql") {
-		ret.setString("pgsql", "driver");
-	} else if (str == "dbname" && argc > 0) {
-		ret.setString(StringView(argv[0]), "dbname");
-		return 2;
-	} else if (str == "user" && argc > 0) {
-		ret.setString(StringView(argv[0]), "user");
-		return 2;
-	} else if (str == "password" && argc > 0) {
-		ret.setString(StringView(argv[0]), "password");
-		return 2;
-	} else if (str == "host" && argc > 0) {
-		ret.setString(StringView(argv[0]), "host");
-		return 2;
-	}
-
-	// прочитан один параметр
-	return 1;
-}
 
 SP_EXTERN_C int main(int argc, const char *argv[]) {
-	// читаем параметры командной строки
+	Value opts;
+	Vector<StringView> args;
 
-	// возвращает дополнительные параметры и список основных аргументов
-	Pair<Value, Vector<String>> opts = data::parseCommandLineOptions<Interface, Value>(
-			argc, argv, &parseOptionSwitch, &parseOptionString);
+	// читаем параметры командной строки
+	if (!CommandLine.parse(opts, argc, argv, [&] (Value &, StringView arg) {
+		// записываем аргумент в список
+		args.emplace_back(arg);
+	})) {
+		std::cerr << "Fail to parse command line arguments\n";
+		return -1;
+	}
 
 	// проверяем, запрошена ли помощь
-	if (opts.first.getBool("help")) {
+	if (opts.getBool("help")) {
 		std::cout << HELP_STRING << "\n";
+		CommandLine.describe([&] (StringView str) {
+			std::cout << str;
+		});
 		return 0;
 	}
 
 	// выводим подробности об окружении, если запрошен флаг подробностей
-	if (opts.first.getBool("verbose")) {
+	if (opts.getBool("verbose")) {
 		std::cerr << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
 		std::cerr << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
 		std::cerr << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
 		std::cerr << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
-		std::cerr << " Options: " << stappler::data::EncodeFormat::Pretty << opts.first << "\n";
-		std::cerr << " Arguments: \n";
-		for (auto &it : opts.second) {
-			std::cerr << "\t" << it << "\n";
+		std::cerr << " Options: " << stappler::data::EncodeFormat::Pretty << opts << "\n";
+		if (!args.empty()) {
+			std::cerr << " Arguments: \n";
+			for (auto &it : args) {
+				std::cerr << "\t" << it << "\n";
+			}
 		}
 	}
 
@@ -112,9 +162,9 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	// выполняем в контексте временного пула памяти
 	perform_temporary([&] {
 		// соединяемся с БД
-		success = ExampleDb::run(opts.first,
+		success = ExampleDb::run(opts,
 				// Так можно передать команду на исполнение серверу аргументом, сейчас не используется
-				opts.second.size() > 1 ? opts.second.at(1) : StringView());
+				args.size() > 1 ? args.at(1) : StringView());
 	});
 
 	return success ? 0 : -1;

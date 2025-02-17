@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -110,7 +110,9 @@ bool ConnectionQueue::run() {
 
 void ConnectionQueue::cancel() {
 	_finalized = true;
-	write(_pipe[1], "END!", 4);
+	if (::write(_pipe[1], "END!", 4) == 0) {
+		log::error("ConnectionQueue", "Fail to send finalization signal");
+	}
 
 	for (auto &it : _workers) {
 		if (it->thread().joinable()) {
@@ -170,7 +172,9 @@ void ConnectionQueue::pushTask(AsyncTask *task) {
 	_inputQueue.push(task->getPriority(), false, task);
 
 	++ _taskCounter;
-	write(_eventFd, &value, sizeof(uint64_t));
+	if (::write(_eventFd, &value, sizeof(uint64_t)) == 0) {
+		log::error("ConnectionQueue", "Fail to push event to eventfd");
+	}
 }
 
 AsyncTask * ConnectionQueue::popTask() {

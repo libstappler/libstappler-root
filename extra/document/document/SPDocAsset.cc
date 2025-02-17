@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -63,7 +63,7 @@ DocumentAssetLock::DocumentAssetLock(Rc<DocumentAsset> &&a, Function<void(const 
 Rc<DocumentAssetLock> DocumentAsset::lock(int64_t mtime) {
 	auto lock = doLockAsset(mtime);
 	if (lock) {
-		auto ret = new DocumentAssetLock(this, [this] (const DocumentAsset &, Ref *lock) {
+		auto ret = new (std::nothrow_t()) DocumentAssetLock(this, [this] (const DocumentAsset &, Ref *lock) {
 			doReleaseLock(lock);
 		}, sp::move(lock));
 		auto ref = Rc<DocumentAssetLock>(ret);

@@ -18,8 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-STAPPLER_ROOT ?= .
-
 LOCAL_LIBRARY := libstappler
 LOCAL_VERSION := 0.3
 
@@ -29,10 +27,10 @@ LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 LOCAL_OUTDIR := stappler-build
 
 LOCAL_MODULES_PATHS = \
-	$(STAPPLER_ROOT)/core/stappler-modules.mk \
-	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk \
-	$(STAPPLER_ROOT)/extra/document/document-modules.mk \
-	$(STAPPLER_ROOT)/extra/webserver/webserver-modules.mk
+	core/stappler-modules.mk \
+	xenolith/xenolith-modules.mk \
+	extra/document/document-modules.mk \
+	extra/webserver/webserver-modules.mk
 
 LOCAL_MODULES ?= \
 	stappler_core \
@@ -66,23 +64,23 @@ LOCAL_MODULES ?= \
 LOCAL_MODULES += xenolith_renderer_basic2d_shaders
 
 LOCAL_ARCHIVE_FILES := \
-	$(STAPPLER_ROOT)/build/ \
-	$(STAPPLER_ROOT)/core/ \
-	$(STAPPLER_ROOT)/extra/ \
-	$(STAPPLER_ROOT)/xenolith/application/ \
-	$(STAPPLER_ROOT)/xenolith/backend/ \
-	$(STAPPLER_ROOT)/xenolith/core/ \
-	$(STAPPLER_ROOT)/xenolith/font/ \
-	$(STAPPLER_ROOT)/xenolith/platform/ \
-	$(STAPPLER_ROOT)/xenolith/renderer/ \
-	$(STAPPLER_ROOT)/xenolith/resources/ \
-	$(STAPPLER_ROOT)/xenolith/scene/ \
-	$(STAPPLER_ROOT)/xenolith/thirdparty/ \
-	$(STAPPLER_ROOT)/xenolith/LICENSE \
-	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk \
-	$(STAPPLER_ROOT)/LICENSE \
-	$(STAPPLER_ROOT)/Makefile \
-	$(STAPPLER_ROOT)/README.md
+	build/ \
+	core/ \
+	extra/ \
+	xenolith/application/ \
+	xenolith/backend/ \
+	xenolith/core/ \
+	xenolith/font/ \
+	xenolith/platform/ \
+	xenolith/renderer/ \
+	xenolith/resources/ \
+	xenolith/scene/ \
+	xenolith/thirdparty/ \
+	xenolith/LICENSE \
+	xenolith/xenolith-modules.mk \
+	LICENSE \
+	Makefile \
+	README.md
 
 $(LOCAL_LIBRARY)-$(LOCAL_VERSION).tar: $(LOCAL_MAKEFILE)
 	tar --transform 's,^\.,$(LOCAL_LIBRARY)-$(LOCAL_VERSION),' -cf $(LOCAL_LIBRARY)-$(LOCAL_VERSION).tar $(LOCAL_ARCHIVE_FILES)
@@ -91,4 +89,4 @@ tar: $(LOCAL_LIBRARY)-$(LOCAL_VERSION).tar
 
 .PHONY: tar
 
-include $(STAPPLER_ROOT)/build/make/shared.mk
+include build/make/shared.mk

@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2023-2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2023-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -609,7 +609,7 @@ SP_PUBLIC void getStyleForTag(StyleList &list, const StringView &, const StringV
 /*String getFontConfigName(const StringView &, FontSize, FontStyle, FontWeight, FontStretch, FontVariant, bool caps);*/
 
 inline bool isStringCaseEqual(const StringView &l, const StringView &r) {
-	return string::caseCompare_c(l, r) == 0;
+	return string::detail::caseCompare_c(l, r) == 0;
 }
 
 template<ParameterName Name, class Value> inline

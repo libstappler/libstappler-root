@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+# Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,10 +19,7 @@
 # THE SOFTWARE.
 
 # Путь к SDK
-STAPPLER_ROOT ?= ../..
-STAPPLER_BUILD_ROOT ?= $(STAPPLER_ROOT)/build/make
-
-#STAPPLER_BUILD_ROOT := $(STAPPLER_ROOT)/stappler-build/host/release/gcc/share/libstappler
+STAPPLER_BUILD_ROOT ?= ../../build/make
 
 # Указание перестаривать проект, если этот файл изменился
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
@@ -38,8 +35,8 @@ LOCAL_EXECUTABLE := testapp
 
 # Пути к наборам модулей
 LOCAL_MODULES_PATHS = \
-	$(STAPPLER_ROOT)/core/stappler-modules.mk \
-	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk
+	core/stappler-modules.mk \
+	xenolith/xenolith-modules.mk
 
 # Используемые модули
 LOCAL_MODULES := \

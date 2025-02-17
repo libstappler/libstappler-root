@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,58 @@
 
 #include "SPCommon.h"
 #include "SPDbSimpleServer.h"
+#include "SPSqlHandle.h"
 
 #include "ExampleDb.h"
 
 namespace STAPPLER_VERSIONIZED stappler::app {
+
+static void ExampleDb_performQuery(db::sql::SqlHandle *iface, StringView query) {
+	iface->performSimpleSelect(query, [] (db::Result &res) {
+		if (res.success()) {
+			std::cout << "Query: success;"
+					" rows affected: " << res.getAffectedRows() << ";";
+			if (!res.empty()) {
+				// Обратите внимание, что для драйвера с последовательным чтением курсора (sqlite) значение будет некорректным
+				std::cout << " rows in result: " << res.nrows() << ";";
+			}
+			std::cout << "\n";
+
+			if (!res.empty()) {
+				// Обходим имена полей
+				std::cout << "Fields: ";
+				for (size_t i = 0; i < res.nfields(); ++ i) {
+					if (i != 0) {
+						std::cout << "\t";
+					}
+					std::cout << "\"" << res.name(i) << "\"";
+				}
+				std::cout << "\n";
+
+				size_t rowNumber = 0;
+				// Обходим результат по курсору
+				for (auto row : res) {
+					std::cout << "[" << rowNumber << "]";
+					for (size_t i = 0; i < res.nfields(); ++ i) {
+						// Вместо выяснения типа поля и затем чтения типизированного значения
+						// можно сразу извлечь нетипизированное значение
+
+						// row.toTypedData использует аннотации, переданные драйвером БД, для декодирования значения
+						// row.toData в свою очередь использует схему данных на стороне приложения для декодирования
+						std::cout << "\t" << data::EncodeFormat::Json << row.toTypedData(i);
+					}
+					std::cout << "\n";
+					++ rowNumber;
+				}
+			}
+
+		} else {
+			std::cout << "Query: failed\n";
+		}
+	}, [] (const Value &err) {
+		log::error("ExampleDb", "Query error: ", data::EncodeFormat::Pretty, err);
+	});
+}
 
 bool ExampleDb::run(const Value &val, StringView command) {
 	bool isSqlite = true;
@@ -52,7 +100,11 @@ bool ExampleDb::run(const Value &val, StringView command) {
 			if (isSqlite) {
 				// для sqlite - конвертируем путь в зависимый от текущей директории
 				// абсолютные пути корректно обрабатываются автоматически
-				data.setString(filesystem::currentDir<Interface>(it.second.getString()), "dbname");
+				if (it.second.isString()) {
+					data.setString(filesystem::currentDir<Interface>(it.second.getString()), "dbname");
+				} else {
+					data.setString(filesystem::currentDir<Interface>("db.sqlite"), "dbname");
+				}
 			} else {
 				data.setString(it.second.getString(), "dbname");
 			}
@@ -73,6 +125,25 @@ bool ExampleDb::run(const Value &val, StringView command) {
 			);
 	if (serv) {
 		std::cout << "Connected!\n";
+		std::cout << "Server DocumentRoot: " << serv->getDocumentRoot() << "\n";
+		std::cout << "Database name: " << serv->getDatabaseName() << "\n";
+
+		if (!command.empty()) {
+			std::cout << "Query: \"" << command << "\"\n";
+
+			// выполняем команду с помощью сервера
+			serv->perform([&] (const db::Transaction &t) -> bool {
+				// Получаем прямой доступ к SQL интерфейсу
+				// Интерфейс может использовать не-SQL базу данных или объектный архив, потому используем dynamic_cast
+				if (auto iface = dynamic_cast<db::sql::SqlHandle *>(t.getAdapter().getBackendInterface())) {
+					ExampleDb_performQuery(iface, command);
+				} else {
+					log::error("ExampleDb", "Non-sql backing connection");
+				}
+				return true;
+			});
+
+		}
 		return true;
 	}
 

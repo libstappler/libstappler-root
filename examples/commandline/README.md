@@ -41,17 +41,38 @@ cp -f stappler-build/host/debug/gcc/genpasswd stappler-build/host/genpasswd
 
 Приложение генерирует пароль, содержащий, как минимум, одну цифру, один строчный и один заглавный символ. По умолчанию длина пароля - 6 символов.
 
+Также, может генерировать закрытые ключи по алгоритму ГОСТ Р 2012.
+
 ```
 $ stappler-build/host/genpasswd --help
-genpasswd <options> - generates password, at least one number, uppercase and lowercase char
-Options are one of:
-	-l<n> (--length <n>) - length for password in [6-256] (default: 6)
-	-v (--verbose)
-	-h (--help)
->$ stappler-build/host/genpasswd
+genpasswd <options> [<action>]
+Actions:
+	genpassword (default) - generates password, at least one number, uppercase and lowercase char
+	genkey - generates private key with GOST3410_2012 algorithm
+
+Options:
+  -v, --verbose
+     - Produce more verbose output
+  -h, --help
+     - Show help message and exit
+  -l<#>, --length <#>
+     - Length for password or key
+
+$ stappler-build/host/genpasswd
 A6d9Q3
->$ stappler-build/host/genpasswd -l12
+
+$ stappler-build/host/genpasswd -l12
 7UE1JjKgYVC6
->$ stappler-build/host/genpasswd --length 10
+
+$ stappler-build/host/genpasswd --length 10
 xY6WgpNP97
+
+$ stappler-build/host/genpasswd genkey -l512
+-----BEGIN PRIVATE KEY-----
+MGgCAQAwIQYIKoUDBwEBAQIwFQYJKoUDBwECAQIBBggqhQMHAQECAwRAA+iz8gYO
+KPNaasmETVwa5EC1SEzlhy2yGk5ZrMTWshStchIirp3PUQLzDZq20Llm+gUwmCgw
+TVDTPnLoWFXbFw==
+-----END PRIVATE KEY-----
+
+
 ```

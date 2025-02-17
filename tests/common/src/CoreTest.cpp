@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2023-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -295,7 +295,7 @@ struct CoreTest : Test {
 
 			});
 
-			string::_strncasecmp(u"ТЕСТ", u"ТЕСТ", 4);
+			string::detail::compare(u"ТЕСТ", u"ТЕСТ", 4);
 
 			string::toUtf8<Interface>(char16_t('A'));
 			string::toUtf8<Interface>(char32_t('A'));
@@ -354,7 +354,7 @@ struct CoreTest : Test {
 			auto s2 = string::toupper<memory::StandartInterface>(str);
 			auto s3 = string::totitle<memory::StandartInterface>(str);
 
-			string::tolower(char32_t(0x00'945F));
+			string::detail::tolower(char32_t(0x00'945F));
 
 			if (s1 == StringViewUtf8("тестовая строка") &&  s2 == StringViewUtf8("ТЕСТОВАЯ СТРОКА")) {
 				return true;

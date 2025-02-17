@@ -43,19 +43,44 @@ Modules was updated
 
 ```
 $ stappler-build/host/dbconnect --help
-dbconnect <options> - generates password
-Options are one of:
-	--dbname <name> - DB name or path
-	--user <name> - username for postgresql
-	--password <name> - password for postgresql
-	--host <name> - hostname for postgresql
-	-S (--sqlite) - force to use sqlite driver
-	-P (--pgsql) - force to use postgresql driver
-	-v (--verbose)
-	-h (--help)
+dbconnect <options> [query] - opens simple connection with database and execute query
 
+Example:
+	dbconnect -P --user=stappler --password=stappler --dbname=stappler --host=localhost "SELECT version();"
+
+Options:
+  -v, --verbose
+     - Produce more verbose output
+  -h, --help
+     - Show help message and exit
+  -S, --sqlite
+     - Use SQLite driver
+  -P, --pgsql
+     - Use PostgreSQL driver (libpq)
+  -D<name>, --dbname <name>
+     - Target database name or path for SQLite
+  -U<username>, --user <username>
+     - Username for database connection
+  -P<password>, --password <password>
+     - Password for database connection
+  -H<hostname>, --host <hostname>
+     - Database host for connection
+
+# Соединение с PostgreSQL
+$ stappler-build/host/dbconnect -P --user=stappler --password=stappler --dbname=stappler --host=localhost "SELECT version();"
+Connected!
+Server DocumentRoot: examples/db/stappler-build/host/AppData
+Database name: stappler
+Query: "SELECT version();"
+Query: success; rows affected: 1; rows in result: 1;
+Fields: "version"
+[0]	"PostgreSQL 16.6"
+
+# Соединение с SQLite, создаёт файл БД, если его не существует
 $ stappler-build/host/dbconnect --dbname test.sqlite
 Connected!
+Server DocumentRoot: examples/db/stappler-build/host/AppData
+Database name: examples/db/test.sqlite
 
 # Проверяем, что команда сработала, просматривая таблицы в новой БД
 $ sqlite3 test.sqlite -cmd "SELECT name FROM sqlite_schema WHERE type ='table';" ".exit"

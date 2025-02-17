@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Stappler LLC <admin@stappler.dev>
+# Copyright (c) 2023-2025 Stappler LLC <admin@stappler.dev>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,10 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-STAPPLER_ROOT ?= ../..
-STAPPLER_BUILD_ROOT ?= $(STAPPLER_ROOT)/build/make
-
-#STAPPLER_BUILD_ROOT ?= $(STAPPLER_ROOT)/stappler-build/host/debug/gcc/share/libstappler
+STAPPLER_BUILD_ROOT ?= ../../build/make
 
 # STAPPLER_VERSION_PREFIX := sp_test
 
@@ -32,9 +29,9 @@ LOCAL_OUTDIR := stappler-build
 LOCAL_EXECUTABLE := testapp
 
 LOCAL_MODULES_PATHS = \
-	$(STAPPLER_ROOT)/core/stappler-modules.mk \
-	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk \
-	$(STAPPLER_ROOT)/extra/webserver/webserver-modules.mk
+	core/stappler-modules.mk \
+	xenolith/xenolith-modules.mk \
+	extra/webserver/webserver-modules.mk
 
 LOCAL_MODULES := \
 	stappler_bitmap \
@@ -70,7 +67,7 @@ endif
 
 LOCAL_ROOT = .
 
-SHADERNN_DIR := $(STAPPLER_ROOT)/xenolith/utils/shadernn
+SHADERNN_DIR := ../../xenolith/utils/shadernn
 
 LOCAL_SRCS_DIRS :=  src
 LOCAL_SRCS_OBJS := app.wit

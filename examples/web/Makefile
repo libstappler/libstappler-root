@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+# Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-STAPPLER_ROOT ?= ../..
+STAPPLER_BUILD_ROOT ?= ../../build/make
 
 # force to rebuild if this makefile changed
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
@@ -33,10 +33,10 @@ LOCAL_BUILD_STATIC := 0
 LOCAL_BUILD_SHARED := 2
 
 LOCAL_MODULES_PATHS = \
-	$(STAPPLER_ROOT)/core/stappler-modules.mk \
-	$(STAPPLER_ROOT)/extra/webserver/webserver-modules.mk \
-	$(STAPPLER_ROOT)/xenolith/xenolith-modules.mk \
-	../modules/example-modules.mk
+	core/stappler-modules.mk \
+	extra/webserver/webserver-modules.mk \
+	xenolith/xenolith-modules.mk \
+	$(realpath ../modules/example-modules.mk)
 
 LOCAL_MODULES ?= \
 	stappler_webserver_httpd \
@@ -53,7 +53,7 @@ LOCAL_INCLUDES_OBJS :=
 
 LOCAL_WASM_DIRS := wasm
 
-include $(STAPPLER_ROOT)/build/make/universal.mk
+include $(STAPPLER_BUILD_ROOT)/universal.mk
 
 # Автогенерированная конфигурация для запуска Apache HTTPD
 define HTTPD_DEFAULT_CONFIG

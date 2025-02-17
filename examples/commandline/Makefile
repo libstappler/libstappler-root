@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+# Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 # Путь к SDK
-STAPPLER_ROOT ?= ../..
+STAPPLER_BUILD_ROOT ?= ../../build/make
 
 # Указание перестаривать проект, если этот файл изменился
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
@@ -35,7 +35,7 @@ LOCAL_EXECUTABLE := genpasswd
 
 # Пути к наборам модулей
 LOCAL_MODULES_PATHS = \
-	$(STAPPLER_ROOT)/core/stappler-modules.mk
+	core/stappler-modules.mk
 
 # Используемые модули
 LOCAL_MODULES := \
@@ -47,5 +47,10 @@ LOCAL_MODULES := \
 # Файл исходного кода, содержащий функцию main
 LOCAL_MAIN := main.cpp
 
+# Отключаем вывод отладочных сообщений при отладочной сборке для приложения
+# Возможные значения: none,errors,all
+# Не имеет эффекта при сборке с динамическими библиотеками
+LOCAL_LOG_LEVEL := errors
+
 # Подключения системы сборки
-include $(STAPPLER_ROOT)/build/make/universal.mk
+include $(STAPPLER_BUILD_ROOT)/universal.mk

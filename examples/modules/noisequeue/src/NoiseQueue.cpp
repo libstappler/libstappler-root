@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -77,6 +77,14 @@ bool NoiseQueue::run(StringView target, NoiseData noiseData, Extent2 extent) {
 		}
 	};
 
+	// Создаём графический цикл и находим подходящее устройство исполнения
+	auto data = Rc<vk::LoopData>::alloc();
+	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
+		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
+	};
+
+	commonInfo.loopInfo.platformData = data;
+
 	// Загружаем графический API
 	auto instance = vk::platform::createInstance([&] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
 		data.applicationName = commonInfo.applicationName;
@@ -87,19 +95,10 @@ bool NoiseQueue::run(StringView target, NoiseData noiseData, Extent2 extent) {
 	// Создаём главный цикл приложения
 	auto app = Rc<Application>::create(move(commonInfo), move(instance));
 
-	// Создаём графический цикл и находим подходящее устройство исполнения
-	auto data = Rc<vk::LoopData>::alloc();
-	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
-		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
-	};
-
-	core::LoopInfo info;
-	info.platformData = data;
-
 	if (app) {
 		// запускаем основной цикл
 		app->run();
-
+		app->waitStopped();
 		return true;
 	}
 	return false;
@@ -203,9 +202,11 @@ void NoiseQueue::run(PlatformApplication *app, NoiseData data, Extent2 extent, S
 			case core::PixelFormat::RGBA: pixelFormat = bitmap::PixelFormat::RGBA8888; break;
 			default: break;
 			}
+
 			if (pixelFormat != bitmap::PixelFormat::Auto) {
 				Bitmap bmp(view.data(), info.extent.width, info.extent.height, pixelFormat);
 				bmp.save(target);
+				std::cout << "Written: " << target << "\n";
 			}
 		}
 
