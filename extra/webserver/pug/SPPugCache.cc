@@ -41,7 +41,8 @@ namespace STAPPLER_VERSIONIZED stappler::pug {
 static int s_FileNotifyMask = IN_CLOSE_WRITE;
 #endif
 
-Rc<FileRef> CacheFile::read(memory::pool_t *p, FilePath path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId) {
+Rc<FileRef> CacheFile::read(memory::pool_t *p, FilePath path, Template::Options opts,
+		const Callback<void(const StringView &)> &cb, int watch, int wId) {
 	auto fpath = path.get();
 	if (filesystem::exists(fpath)) {
 		return Rc<FileRef>::alloc(p, path, opts, cb, watch, wId);
@@ -50,12 +51,14 @@ Rc<FileRef> CacheFile::read(memory::pool_t *p, FilePath path, Template::Options 
 	return nullptr;
 }
 
-Rc<FileRef> CacheFile::read(memory::pool_t *p, String && content, bool isTemplate, Template::Options opts, const Callback<void(const StringView &)> &cb) {
+Rc<FileRef> CacheFile::read(memory::pool_t *p, String && content, bool isTemplate, Template::Options opts,
+		const Callback<void(const StringView &)> &cb) {
 	return Rc<FileRef>::alloc(p, move(content), isTemplate, opts, cb);
 }
 
-CacheFile::CacheFile(memory::pool_t *pool, const FilePath &path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId)
-: _pool(pool), _opts(opts) {
+CacheFile::CacheFile(Ref *ref, memory::pool_t *pool, const FilePath &path, Template::Options opts,
+		const Callback<void(const StringView &)> &cb, int watch, int wId)
+: PoolObject(ref, pool), _opts(opts) {
 	auto fpath = path.get();
 
 	filesystem::Stat stat;
@@ -86,8 +89,9 @@ CacheFile::CacheFile(memory::pool_t *pool, const FilePath &path, Template::Optio
 	}
 }
 
-CacheFile::CacheFile(memory::pool_t *pool, String &&src, bool isTemplate, Template::Options opts, const Callback<void(const StringView &)> &cb)
-: _pool(pool), _content(move(src)), _opts(opts) {
+CacheFile::CacheFile(Ref *ref, memory::pool_t *pool, String &&src, bool isTemplate, Template::Options opts,
+		const Callback<void(const StringView &)> &cb)
+: PoolObject(ref, pool), _content(move(src)), _opts(opts) {
 	if (_content.size() > 0) {
 		_valid = true;
 	}

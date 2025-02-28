@@ -590,13 +590,13 @@ static bool XenolithCoreTest_input() {
 		updateInputEvent(it1->second, InputEventName::Move, Vec2(11.0f, 11.0f));
 		rec->handleInputEvent(it1->second, 1.0f);
 
-		xenolith::platform::sleep(51'000);
+		sp::platform::sleep(51'000);
 		rec->update(ival += 51'000);
-		xenolith::platform::sleep(51'000);
+		sp::platform::sleep(51'000);
 		rec->update(ival += 51'000);
-		xenolith::platform::sleep(51'000);
+		sp::platform::sleep(51'000);
 		rec->update(ival += 51'000);
-		xenolith::platform::sleep(51'000);
+		sp::platform::sleep(51'000);
 		rec->update(ival += 51'000);
 
 		updateInputEvent(it1->second, InputEventName::End, Vec2(11.0f, 11.0f));
@@ -631,7 +631,7 @@ static bool XenolithCoreTest_input() {
 		updateInputEvent(it1->second, InputEventName::End, Vec2(11.0f, 11.0f));
 		rec->handleInputEvent(it1->second, 1.0f);
 
-		xenolith::platform::sleep(500'000);
+		sp::platform::sleep(500'000);
 
 		inputs.clear();
 		it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f))).first;
@@ -666,7 +666,7 @@ static bool XenolithCoreTest_input() {
 		updateInputEvent(it1->second, InputEventName::End, Vec2(11.0f, 11.0f));
 		rec->handleInputEvent(it1->second, 1.0f);
 
-		xenolith::platform::sleep(500'000);
+		sp::platform::sleep(500'000);
 
 		inputs.clear();
 		it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f))).first;

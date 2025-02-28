@@ -160,7 +160,7 @@ Root::~Root() {
 	pool::destroy(_workerPool);
 }
 
-Root::Root(pool_t *p) : _rootPool(p) {
+Root::Root(Ref *ret, pool_t *p) : _self(ret), _rootPool(p) {
 	_workerPool = pool::create(p);
 
 	_serverNameLine = StringView(

@@ -69,7 +69,7 @@ private:
 
 thread_local MemPoolHolder tl_pool;
 
-struct Engine::Internal : InterfaceObject<memory::PoolInterface> {
+struct Engine::Internal : memory::AllocPool, InterfaceObject<memory::PoolInterface> {
 	using mmd_engine = _sp_mmd_engine;
 	using token = _sp_mmd_token;
 
@@ -422,9 +422,10 @@ Engine::~Engine() {
 bool Engine::init(memory::pool_t *pool, StringView source, const Extensions & ext) {
 	clear();
 
-	memory::pool::push(pool);
-	_internal = new (pool) Internal(pool, source, ext);
-	memory::pool::pop();
+	memory::pool::perform([&] {
+		_internal = new (pool) Internal(pool, source, ext);
+	}, pool);
+
 	return true;
 }
 

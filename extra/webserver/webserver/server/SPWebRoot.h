@@ -60,7 +60,7 @@ public:
 
 	virtual ~Root();
 
-	Root(pool_t *);
+	Root(Ref *, pool_t *);
 
 	Stat getStat() const;
 
@@ -140,6 +140,7 @@ protected:
 
 	db::sql::Driver *createDbDriver(StringView driverName);
 
+	Ref *_self = nullptr;
 	pool_t *_workerPool = nullptr;
 	pool_t *_configPool = nullptr;
 	pool_t *_rootPool = nullptr;

@@ -32,7 +32,7 @@ class CacheFile;
 
 using FileRef = SharedRef<CacheFile>;
 
-class SP_PUBLIC CacheFile : public memory::PoolInterface::AllocBaseType {
+class SP_PUBLIC CacheFile : public memory::PoolObject {
 public:
 	static Rc<FileRef> read(memory::pool_t *, FilePath path, Template::Options opts = Template::Options::getDefault(),
 			const Callback<void(const StringView &)> & = nullptr, int watch = -1, int wId = -1);
@@ -50,14 +50,13 @@ public:
 
 	int regenerate(int notify, StringView);
 
-	CacheFile(memory::pool_t *, const FilePath &path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId);
-	CacheFile(memory::pool_t *, String && content, bool isTemplate, Template::Options opts, const Callback<void(const StringView &)> &cb);
+	CacheFile(Ref *, memory::pool_t *, const FilePath &path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId);
+	CacheFile(Ref *, memory::pool_t *, String && content, bool isTemplate, Template::Options opts, const Callback<void(const StringView &)> &cb);
 
 	virtual ~CacheFile();
 
 protected:
 	int _watch = -1;
-	memory::pool_t *_pool = nullptr;
 	Time _mtime = Time();
 	String _content;
 	Template * _template = nullptr;

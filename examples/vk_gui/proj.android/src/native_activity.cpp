@@ -37,19 +37,9 @@ void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_
 	auto a = Rc<platform::Activity>::create(activity, platform::ActivityFlags::CaptureInput);
 	auto info = a->getActivityInfo();
 
-	a->run([info = move(info)] (platform::Activity *a, Function<void()> &&initCb) {
-		ViewCommandLineData appInfo({
-			.bundleName = move(info.bundleName),
-			.applicationName = move(info.applicationName),
-			.applicationVersion = move(info.applicationVersion),
-			.userLanguage = move(info.locale),
-			.userAgent = move(info.systemAgent),
-			.density = info.density
-		});
+	auto applicationInfo = a->makeApplicationInfo();
 
-		auto app = Rc<ExampleApplication>::create(move(appInfo), a);
-		app->run(move(initCb));
-	});
+	a->runApplication(Rc<app::ExampleApplication>::create(move(applicationInfo)));
 }
 
 }

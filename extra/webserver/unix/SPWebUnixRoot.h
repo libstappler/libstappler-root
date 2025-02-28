@@ -55,7 +55,7 @@ public:
 
 	virtual ~UnixRoot();
 
-	UnixRoot(pool_t *);
+	UnixRoot(Ref *, pool_t *);
 
 	// spawn thread to listen on unix socket
 	bool init(Config &&);

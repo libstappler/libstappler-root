@@ -35,7 +35,7 @@ SharedRc<UnixRoot> UnixRoot::create(Config &&cfg) {
 
 UnixRoot::~UnixRoot() { }
 
-UnixRoot::UnixRoot(pool_t *p) : Root(p) { }
+UnixRoot::UnixRoot(Ref *ref, pool_t *p) : Root(ref, p) { }
 
 bool UnixRoot::init(Config &&config) {
 	return perform([&, this] {
