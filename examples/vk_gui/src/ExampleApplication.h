@@ -37,7 +37,7 @@ public:
 
 protected:
 	// Переопределяем функцию создания сцены для окна
-	virtual Rc<Scene> createSceneForView(vk::View &view, const core::FrameContraints &constraints) override;
+	virtual Rc<Scene> createSceneForView(vk::View &view, const core::FrameConstraints &constraints) override;
 };
 
 }

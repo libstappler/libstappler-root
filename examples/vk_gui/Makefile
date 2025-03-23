@@ -42,6 +42,7 @@ LOCAL_MODULES_PATHS = \
 LOCAL_MODULES := \
 	xenolith_backend_vkgui \
 	xenolith_renderer_material2d \
+	stappler_backtrace
 
 LOCAL_SRCS_DIRS :=  src proj.android/src
 LOCAL_SRCS_OBJS :=
@@ -59,6 +60,8 @@ LOCAL_ANDROID_MK := proj.android/app/Android.mk # path to root Android.mk
 LOCAL_APPLICATION_MK := proj.android/app/Application.mk # path to Application.mk
 LOCAL_ANDROID_TARGET := application # target to build
 LOCAL_ANDROID_PLATFORM := android-24 # android platform version
+
+# ASAN := 1
 
 # Подключения системы сборки
 include $(STAPPLER_BUILD_ROOT)/universal.mk

@@ -37,7 +37,7 @@ bool ExampleApplication::init(ApplicationInfo &&data) {
 	return true;
 }
 
-Rc<Scene> ExampleApplication::createSceneForView(vk::View &view, const core::FrameContraints &constraints) {
+Rc<Scene> ExampleApplication::createSceneForView(vk::View &view, const core::FrameConstraints &constraints) {
 	// Создаём сцену с примером
 	return Rc<ExampleScene>::create(this, constraints);
 }

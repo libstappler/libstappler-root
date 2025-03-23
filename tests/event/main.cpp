@@ -24,8 +24,11 @@ THE SOFTWARE.
 #include "SPTime.h"
 #include "SPData.h"
 #include "SPCommandLineParser.h"
-#include "SPEventQueue.h"
+#include "SPEventLooper.h"
 #include "SPEventHandle.h"
+#include "SPEventFileHandle.h"
+#include "SPEventTimerHandle.h"
+#include "SPEventThreadHandle.h"
 
 namespace STAPPLER_VERSIONIZED stappler::app {
 
@@ -108,17 +111,67 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		}
 	}
 
+	auto looper = event::Looper::acquire();
+	if (!looper) {
+		return -1;
+	}
+
+	auto handle = looper->schedule(TimeInterval::milliseconds(1000), [] (event::Handle *, bool success) {
+		log::debug("App", "Fn timer: ", success);
+	});
+
+	/*(void)looper->scheduleTimer(event::TimerInfo{
+		.completion = event::TimerInfo::Completion::create<void>(handle.get(),
+				[] (void *data, event::TimerHandle *self, uint32_t value, Status status) {
+			log::debug("App", "Timer1: ", value, " ", status);
+			if (status != Status::Ok) {
+				log::debug("App", "Timer1 ended: ", value, " ", status);
+			}
+
+			if (value == 2) {
+				//((event::Handle *)data)->cancel();
+			}
+
+			if (value == 3) {
+				event::Looper::acquire()->wakeup(event::QueueWakeupInfo{
+					event::WakeupFlags::Graceful
+				});
+			}
+		}),
+		.interval = TimeInterval::seconds(1),
+		.count = 100,
+	});
+
+	(void)looper->scheduleTimer(event::TimerInfo{
+		.completion = event::TimerInfo::Completion::create<void>(handle.get(),
+				[] (void *data, event::TimerHandle *self, uint32_t value, Status status) {
+			log::debug("App", "Timer2: ", value, " ", status);
+		}),
+		.interval = TimeInterval::seconds(2),
+		.count = event::TimerInfo::Infinite,
+	});*/
+
+	auto status = looper->run();
+
+	std::cout << "Wakeup: " << status << "\n";
+
+	status = looper->run();
+
 	struct AppData {
 		uint32_t timerTicks = 0;
 		Rc<event::TimerHandle> timer1;
 		Rc<event::TimerHandle> timer2;
 		Rc<event::QueueRef> queue;
+		Rc<event::DirHandle> dir;
+		Rc<event::DirHandle> dir2;
+		Rc<event::StatHandle> stat;
+		Rc<event::ThreadHandle> thread;
 	};
 
 	auto ret = perform_temporary([&] () -> int {
 		AppData data;
 
-		data.queue = Rc<event::QueueRef>::create(event::QueueInfo(), event::QueueFlags::None);
+		//data.queue = Rc<event::QueueRef>::create(event::QueueInfo(), event::QueueFlags::Protected);
 
 		/*data.timer2 = data.queue->scheduleTimer(event::TimerInfo{
 			.completion = event::TimerInfo::Completion::create<AppData>(&data,
@@ -133,28 +186,79 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			.count = uint32_t(10),
 		});*/
 
-		data.timer1 = data.queue->scheduleTimer(event::TimerInfo{
-			.completion = event::TimerInfo::Completion::create<AppData>(&data,
-					[] (AppData *data, event::TimerHandle *self, uint32_t value, event::Status err) {
-				log::debug("App", "Timer1: ", value);
-				data->timerTicks += value;
-				/*if (data->timerTicks == 2) {
-					data->timer2->cancel(event::Status::Done);
-				}*/
 
-				if (data->timerTicks == 1) {
-					data->queue->wakeup(event::QueueWakeupFlags::Graceful, TimeInterval::seconds(1));
-				}
+
+		/*data.dir = data.queue->openDir(event::OpenDirInfo{
+			.completion = event::OpenDirInfo::Completion::create<AppData>(&data,
+					[] (AppData *data, event::DirHandle *self, uint32_t value, event::Status err) {
+				log::debug("App", "OpenDir: ", self->getPath(), ": ", err);
+				self->scan([] (event::FileType type, StringView name) {
+					log::debug("App", "scan: (", type, ") ", name);
+				});
 			}),
-			.timeout = TimeInterval::seconds(5),
-			.interval = TimeInterval::seconds(5),
-			.count = maxOf<uint32_t>(),
+			.file = event::FileOpInfo{
+				.path = StringView("/home/sbkarr")
+			}
 		});
 
-		if (data.queue->run() == event::Status::Suspended) {
+		data.dir2 = data.queue->openDir(event::OpenDirInfo{
+			.completion = event::OpenDirInfo::Completion::create<AppData>(&data,
+					[] (AppData *data, event::DirHandle *self, uint32_t value, event::Status err) {
+				log::debug("App", "OpenDir2: ", self->getPath(), ": ", err);
+				self->scan([] (event::FileType type, StringView name) {
+					log::debug("App", "scan2: (", type, ") ", name);
+				});
+			}),
+			.file = event::FileOpInfo{
+				.root = data.dir,
+				.path = StringView("videos")
+			}
+		});
+
+		data.stat = data.queue->stat(event::StatOpInfo{
+			.completion = event::StatOpInfo::Completion::create<AppData>(&data,
+					[] (AppData *data, event::StatHandle *self, uint32_t value, event::Status err) {
+				log::debug("App", "Stat: ", self->getPath(), ": ", self->getStat());
+			}),
+			.file = event::FileOpInfo{
+				.path = StringView("/home/sbkarr/image1076.png")
+			}
+		});*/
+
+		/*data.thread = data.queue->addThreadHandle();
+
+		std::thread thread([] (AppData *data) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			data->thread->perform([] {
+				log::debug("App", "From thread");
+			}, nullptr);
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			data->thread->perform([] {
+				log::debug("App", "From thread");
+			}, nullptr);
+		}, &data);
+
+		std::thread thread2([] (AppData *data) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			data->thread->perform([] {
+				log::debug("App", "From thread2");
+			}, nullptr);
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			data->thread->perform([] {
+				log::debug("App", "From thread2");
+			}, nullptr);
+		}, &data);
+
+		auto status = data.queue->run(TimeInterval::seconds(300), event::QueueWakeupInfo{event::QueueWakeupFlags::Graceful});
+		if (status == Status::Ok) {
 			log::debug("App", "Suspend");
-			data.queue->run();
+			data.queue->run(TimeInterval::seconds(20));
+		} else {
+			log::debug("App", "Cancel: ", status);
 		}
+
+		thread.join();
+		thread2.join();*/
 
 		return 0;
 	});

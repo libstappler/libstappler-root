@@ -59,7 +59,8 @@ bool NoiseQueue::run(StringView target, NoiseData noiseData, Extent2 extent) {
 	commonInfo.bundleName = String("org.stappler.examples.noisegen");
 	commonInfo.applicationName = String("stappler-noisegen");
 	commonInfo.applicationVersion = String("0.1.0");
-	commonInfo.threadsCount = 2;
+	commonInfo.mainThreadsCount = 2;
+	commonInfo.appThreadsCount = 2;
 	commonInfo.updateInterval = TimeInterval::microseconds(500000);
 	commonInfo.updateCallback = [target, noiseData, extent] (const PlatformApplication &app, const UpdateTime &time) {
 		// Рабочий цикл приложения
@@ -69,7 +70,7 @@ bool NoiseQueue::run(StringView target, NoiseData noiseData, Extent2 extent) {
 
 			// собираем очередь на устройстве
 			app.getGlLoop()->compileQueue(queue, [app = &app, queue, extent, target, noiseData] (bool success) {
-				Application::getInstance()->performOnMainThread([app, queue, target, noiseData, extent] {
+				Application::getInstance()->performOnAppThread([app, queue, target, noiseData, extent] {
 					// Запускаем исполнение очереди
 					queue->run(const_cast<PlatformApplication *>(app), noiseData, extent, target);
 				}, nullptr);
@@ -218,7 +219,7 @@ void NoiseQueue::run(PlatformApplication *app, NoiseData data, Extent2 extent, S
 void NoiseQueue::run(core::Loop *loop, NoiseData data, Extent2 extent,
 		Function<void(core::ImageInfoData info, BytesView view)> &&cb) {
 	// создаём запрос на кадр
-	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this), core::FrameContraints{extent});
+	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this), core::FrameConstraints{extent});
 
 	// создаём входящие данные
 	auto inputData = Rc<NoiseDataInput>::alloc();

@@ -3,20 +3,20 @@ plugins {
 }
 
 tasks.register('prepareAndroidMk', Exec) {
-    workingDir "${buildDir}/../../.."
+    workingDir rootProject.getRootDir().getPath() + "/.."
     commandLine 'make', 'android-export', 'RELEASE=1'
 }
 
 preBuild.dependsOn prepareAndroidMk
 
 android {
-    compileSdk 33
-    ndkVersion '25.1.8937393'
+    compileSdk 35
+    ndkVersion '28.0.13004108'
 
     defaultConfig {
         applicationId = 'org.stappler.xenolith.gui'
         minSdkVersion 24
-        targetSdkVersion 33
+        targetSdkVersion 36
 	    externalNativeBuild {
 			ndkBuild {
 				arguments "NDK_APPLICATION_MK:=Application.mk"

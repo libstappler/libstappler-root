@@ -34,7 +34,7 @@ public:
 	virtual ~ExampleScene() = default;
 
 	// переопределяем создание сцены
-	virtual bool init(Application *, const core::FrameContraints &constraints) override;
+	virtual bool init(Application *, const core::FrameConstraints &constraints) override;
 
 	// переопределяем размещение объектов на сцене при изменении размера
 	virtual void handleContentSizeDirty() override;
