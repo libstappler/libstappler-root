@@ -21,6 +21,7 @@ THE SOFTWARE.
 **/
 
 #include "SPCommon.h"
+#include "SPPlatform.h"
 #include "SPTime.h"
 #include "SPData.h"
 #include "SPCommandLineParser.h"
@@ -116,7 +117,11 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		return -1;
 	}
 
-	auto handle = looper->schedule(TimeInterval::milliseconds(1000), [] (event::Handle *, bool success) {
+	auto c = platform::clock();
+
+	auto handle = looper->schedule(TimeInterval::seconds(10), [c] (event::Handle *, bool success) {
+		auto t = platform::clock() - c;
+		std::cout << platform::clock(ClockType::Realtime) - c << " " << t / 1000000 << "\n";
 		log::debug("App", "Fn timer: ", success);
 	});
 
@@ -140,22 +145,47 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		}),
 		.interval = TimeInterval::seconds(1),
 		.count = 100,
-	});
+	});*/
 
 	(void)looper->scheduleTimer(event::TimerInfo{
-		.completion = event::TimerInfo::Completion::create<void>(handle.get(),
+		.completion = event::TimerInfo::Completion::create<void>(nullptr,
 				[] (void *data, event::TimerHandle *self, uint32_t value, Status status) {
 			log::debug("App", "Timer2: ", value, " ", status);
 		}),
-		.interval = TimeInterval::seconds(2),
-		.count = event::TimerInfo::Infinite,
-	});*/
+		.interval = TimeInterval::seconds(1),
+		.count = 50,
+	});
+
+	std::thread thread([] (event::Looper *looper) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		looper->performOnThread([] {
+			log::debug("App", "From thread");
+		}, nullptr);
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		looper->performOnThread([] {
+			log::debug("App", "From thread");
+		}, nullptr);
+	}, looper);
+
+	std::thread thread2([] (event::Looper *looper) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		looper->performOnThread([] {
+			log::debug("App", "From thread2");
+		}, nullptr);
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		looper->performOnThread([] {
+			log::debug("App", "From thread2");
+		}, nullptr);
+	}, looper);
 
 	auto status = looper->run();
 
 	std::cout << "Wakeup: " << status << "\n";
 
 	status = looper->run();
+
+	thread.join();
+	thread2.join();
 
 	struct AppData {
 		uint32_t timerTicks = 0;
@@ -225,40 +255,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			}
 		});*/
 
-		/*data.thread = data.queue->addThreadHandle();
-
-		std::thread thread([] (AppData *data) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			data->thread->perform([] {
-				log::debug("App", "From thread");
-			}, nullptr);
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
-			data->thread->perform([] {
-				log::debug("App", "From thread");
-			}, nullptr);
-		}, &data);
-
-		std::thread thread2([] (AppData *data) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			data->thread->perform([] {
-				log::debug("App", "From thread2");
-			}, nullptr);
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
-			data->thread->perform([] {
-				log::debug("App", "From thread2");
-			}, nullptr);
-		}, &data);
-
-		auto status = data.queue->run(TimeInterval::seconds(300), event::QueueWakeupInfo{event::QueueWakeupFlags::Graceful});
-		if (status == Status::Ok) {
-			log::debug("App", "Suspend");
-			data.queue->run(TimeInterval::seconds(20));
-		} else {
-			log::debug("App", "Cancel: ", status);
-		}
-
-		thread.join();
-		thread2.join();*/
+		data.thread = data.queue->addThreadHandle();
 
 		return 0;
 	});

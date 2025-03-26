@@ -20,6 +20,7 @@
  THE SOFTWARE.
  **/
 
+#include "SPMemPoolInterface.h"
 #include "XLCommon.h"
 #include "SPData.h"
 #include "ExampleApplication.h"
@@ -61,6 +62,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		// Ожидаем завершения работы приложения
 		app->waitStopped();
 	});
+
 	return 0;
 }
 
