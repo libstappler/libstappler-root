@@ -102,7 +102,7 @@ public:
 	virtual bool prepare(FrameQueue &q, Function<void(bool)> &&cb) override;
 
 protected:
-	virtual Vector<const vk::CommandBuffer *> doPrepareCommands(FrameHandle &) override;
+	virtual Vector<const core::CommandBuffer *> doPrepareCommands(FrameHandle &) override;
 
 	const vk::ImageAttachmentHandle *_image = nullptr;
 };
@@ -239,7 +239,7 @@ static void runBitmapTests(Bitmap &bmp) {
 }
 
 void NoiseQueue::run(Application *app) {
-	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this), core::FrameContraints{Extent2(64, 64)});
+	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this), core::FrameConstraints{Extent2(64, 64)});
 
 	auto inputData = Rc<NoiseDataInput>::alloc();
 	inputData->data = NoiseData{0, 0, 0.0f, 0.0f};
@@ -317,7 +317,7 @@ bool NoisePassHandle::prepare(FrameQueue &q, Function<void(bool)> &&cb) {
 	return vk::QueuePassHandle::prepare(q, sp::move(cb));
 }
 
-Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle &handle) {
+Vector<const core::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle &handle) {
 	auto buf = _pool->recordBuffer(*_device, Vector<Rc<vk::DescriptorPool>>(_descriptors), [&, this] (vk::CommandBuffer &buf) {
 		auto pass = _data->impl.cast<vk::RenderPass>().get();
 		pass->perform(*this, buf, [&, this] {
@@ -333,7 +333,7 @@ Vector<const vk::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle
 		}, true);
 		return true;
 	});
-	return Vector<const vk::CommandBuffer *>{buf};
+	return Vector<const core::CommandBuffer *>{buf};
 }
 
 static void runTests() {
@@ -347,7 +347,7 @@ static void runTests() {
 
 			// then compile it on graphics device
 			app.getGlLoop()->compileQueue(noiseQueue, [app = &app, noiseQueue] (bool success) {
-				Application::getInstance()->performOnMainThread([app, noiseQueue] {
+				Application::getInstance()->performOnAppThread([app, noiseQueue] {
 					noiseQueue->run((Application *)app);
 				}, nullptr);
 			});
@@ -359,14 +359,14 @@ static void runTests() {
 			if (modelQueue) {
 				modelQueue->retain();
 				app.getGlLoop()->compileQueue(modelQueue, [app = &app, modelQueue] (bool success) {
-					Application::getInstance()->performOnMainThread([app, modelQueue] {
+					Application::getInstance()->performOnAppThread([app, modelQueue] {
 						modelQueue->run((Application *)app);
 					}, nullptr);
 				});
 			}
 		}
 	};
-	commonInfo.threadsCount = 2;
+	commonInfo.appThreadsCount = 2;
 	commonInfo.updateInterval = TimeInterval::microseconds(500000);
 
 	// define device selector/initializer

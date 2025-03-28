@@ -21,6 +21,7 @@
  **/
 
 #include "SPWebUnixRoot.h"
+#include "SPFilesystem.h"
 #include "SPWebUnixHost.h"
 #include "SPWebUnixConnectionQueue.h"
 #include "SPWebUnixRequest.h"
@@ -233,7 +234,7 @@ Status UnixRoot::runDefaultProcessing(Request &rctx) {
 		rctx.setFilename(filepath::merge<Interface>(info.documentRoot, info.url.path), true);
 	}
 
-	if (info.filename.empty() || info.stat.isDir) {
+	if (info.filename.empty() || info.stat.type != filesystem::FileType::File) {
 		return HTTP_NOT_FOUND;
 	} else {
 		if (info.contentType.empty()) {

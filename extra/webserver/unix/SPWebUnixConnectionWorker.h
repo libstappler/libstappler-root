@@ -34,7 +34,7 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 class UnixRequestController;
 class ConnectionQueue;
 
-class SP_PUBLIC ConnectionWorker : public thread::ThreadInterface {
+class SP_PUBLIC ConnectionWorker : public thread::Thread {
 public:
 	struct Buffer;
 	struct Client;
@@ -209,7 +209,7 @@ public:
 
 	Root *getRoot() const { return _root; }
 
-	std::thread & thread() { return _thread; }
+	std::thread & thread() { return _thisThread; }
 
 	void runTask(AsyncTask *);
 
@@ -225,11 +225,8 @@ protected:
 	void removeClient(Client &);
 
 	ConnectionQueue *_queue;
-	std::thread::id _threadId;
 
 	UnixRoot *_root = nullptr;
-	allocator_t *_threadAlloc = nullptr;
-	pool_t *_threadPool = nullptr;
 
 	Client _inputClient;
 	Client _cancelClient;
@@ -242,8 +239,6 @@ protected:
 	size_t _fdCount = 0;
 
 	Generation *_generation = nullptr;
-
-	std::thread _thread;
 };
 
 SP_DEFINE_ENUM_AS_MASK(ConnectionWorker::Buffer::Flags)

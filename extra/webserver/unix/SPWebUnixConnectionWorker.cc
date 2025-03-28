@@ -20,6 +20,7 @@
  THE SOFTWARE.
  **/
 
+#include "SPThread.h"
 #include "SPWebUnixConfig.h"
 #include "SPWebUnixConnectionWorker.h"
 #include "SPWebUnixConnectionQueue.h"
@@ -80,8 +81,8 @@ ConnectionWorker::ConnectionWorker(ConnectionQueue *queue, UnixRoot *h, int sock
 : _queue(queue), _root(h)
 , _inputClient(socket, EPOLLIN | EPOLLEXCLUSIVE)
 , _cancelClient(pipe, EPOLLIN | EPOLLET)
-, _eventClient(event, EPOLLIN | EPOLLET | EPOLLEXCLUSIVE)
-,_thread(ConnectionWorker::workerThread, this) {
+, _eventClient(event, EPOLLIN | EPOLLET | EPOLLEXCLUSIVE) {
+	run(thread::ThreadFlags::Joinable);
 	_queue->retain();
 }
 
@@ -90,10 +91,7 @@ ConnectionWorker::~ConnectionWorker() {
 }
 
 void ConnectionWorker::threadInit() {
-	_threadAlloc = allocator::create();
-	_threadPool = pool::create(_threadAlloc);
-
-	_threadId = std::this_thread::get_id();
+	Thread::threadInit();
 
 	sigset_t sigset;
 	sigfillset(&sigset);
@@ -117,9 +115,6 @@ void ConnectionWorker::threadDispose() {
 		close(_epollFd);
 		_epollFd = -1;
 	}
-
-	pool::destroy(_threadPool);
-	allocator::destroy(_threadAlloc);
 }
 
 bool ConnectionWorker::worker() {
@@ -290,7 +285,7 @@ UnixRequestController *ConnectionWorker::readRequest(Client *client, BufferChain
 	}
 
 	UnixRequestController *cfg = nullptr;
-	auto p = pool::create(_threadPool);
+	auto p = pool::create(thread::ThreadInfo::getThreadInfo()->threadPool);
 	perform([&] {
 		cfg = new (p) UnixRequestController(p, info.clone(p), client);
 	}, p);
@@ -1298,7 +1293,7 @@ void ConnectionWorker::Generation::releaseAll() {
 }
 
 ConnectionWorker::Generation *ConnectionWorker::makeGeneration() {
-	auto p = pool::create(_threadPool);
+	auto p = pool::create(thread::ThreadInfo::getThreadInfo()->threadPool);
 	return new (p) Generation(this, p);
 }
 

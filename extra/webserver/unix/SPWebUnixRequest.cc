@@ -21,6 +21,7 @@
  **/
 
 #include "SPWebUnixRequest.h"
+#include "SPFilesystem.h"
 #include "SPWebInputFilter.h"
 #include "SPWebHostController.h"
 
@@ -301,7 +302,7 @@ void UnixRequestController::submitResponse(Status status) {
 		}
 	}
 
-	if (!_info.filename.empty() && !_info.stat.isDir) {
+	if (!_info.filename.empty() && _info.stat.type == filesystem::FileType::File) {
 		_client->writeFile(_client->response, _info.filename, 0, _info.stat.size, ConnectionWorker::Buffer::Eos);
 	}
 

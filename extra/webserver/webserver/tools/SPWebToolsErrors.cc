@@ -20,6 +20,7 @@
  THE SOFTWARE.
  **/
 
+#include "SPFilesystem.h"
 #include "SPWebTools.h"
 #include "SPWebRoot.h"
 #include "SPDbUser.h"
@@ -293,7 +294,7 @@ Status ReportsGui::onTranslateName(Request &req) {
 
 			filesystem::Stat stat;
 			auto exists = filesystem::stat(reportsAddress, stat);
-			if (exists && !stat.isDir) {
+			if (exists && stat.type == filesystem::FileType::File) {
 				if (req.getInfo().queryData.getBool("remove")) {
 					filesystem::remove(reportsAddress);
 					return req.redirectTo(StringView(_originPath, _originPath.size() - _subPath.size()));

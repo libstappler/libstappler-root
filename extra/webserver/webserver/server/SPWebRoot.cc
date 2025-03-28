@@ -21,6 +21,7 @@
  **/
 
 #include "SPWebRoot.h"
+#include "SPFilesystem.h"
 #include "SPWebInputFilter.h"
 #include "SPWebRequest.h"
 #include "SPWebRequestHandler.h"
@@ -393,7 +394,7 @@ void Root::handleChildInit(pool_t *p) {
 
 Status Root::runTypeChecker(Request &r) {
 	auto &info = r.getInfo();
-	if (info.stat.isDir) {
+	if (info.stat.type == filesystem::FileType::Dir) {
 		r.setContentType(config::DIR_MIME_TYPE);
 		return OK;
 	}

@@ -51,7 +51,7 @@ XL_DECLARE_EVENT_CLASS(TestAppScene, onCustomEvent)
 
 TestAppScene::~TestAppScene() { }
 
-bool TestAppScene::init(Application *app, const core::FrameContraints &constraints) {
+bool TestAppScene::init(Application *app, const core::FrameConstraints &constraints) {
 	// build presentation RenderQueue
 	core::Queue::Builder builder("Loader");
 
@@ -164,24 +164,11 @@ void TestAppScene::onPresented(Director *dir) {
 
 	dir->setFrameConstraints(c);
 	dir->getFps();
-	dir->getView()->getAvgFrameInterval();
-	dir->getView()->getAvgFrameTime();
 	dir->getView()->getFrameInterval();
 	dir->getView()->getBackButtonCounter();
 	dir->getView()->retainBackButton();
 	dir->getView()->releaseBackButton();
 	dir->getView()->setDecorationVisible(true);
-
-	auto image = dir->getView()->getSwapchainImageInfo();
-
-	image.imageType = core::ImageType::Image1D;
-	dir->getView()->getSwapchainImageViewInfo(image);
-
-	image.imageType = core::ImageType::Image2D;
-	dir->getView()->getSwapchainImageViewInfo(image);
-
-	image.imageType = core::ImageType::Image3D;
-	dir->getView()->getSwapchainImageViewInfo(image);
 
 	Scene2d::onPresented(dir);
 }
@@ -255,7 +242,7 @@ void TestAppScene::runNext(LayoutName name) {
 	if (toInt(name) == 0) {
 		_actionManager->removeAllActions();
 		if (auto v = _director->getView()) {
-			v->stop();
+			v->end();
 		}
 	} else {
 		auto next = LayoutName(toInt(name) - 1);

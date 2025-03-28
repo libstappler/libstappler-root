@@ -67,7 +67,6 @@ static bool XenolithCoreTest_core() {
 	out << getSampleCountDescription(SampleCount(0xFFFF));
 	out << getImageUsageDescription(ImageUsage(0xFFFF));
 	out << getInputModifiersNames(InputModifier(0xFFFF));
-	out << xenolith::vk::getQueueOperationsDesc(xenolith::vk::QueueOperations(0xFFFF));
 
 	for (size_t i = 0; i < 3; ++ i) {
 		out << getImageTypeName(ImageType(i));
@@ -1214,7 +1213,7 @@ static bool XenolithCoreTest_queue() {
 		auto p = Rc<QueuePass>::create(b);
 
 		auto l = b.addDescriptorLayout([] (PipelineLayoutBuilder &lb) {
-			lb.setUsesTextureSet(true);
+			
 		});
 
 		b.addSubpass([&] (SubpassBuilder &sb) {

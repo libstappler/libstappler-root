@@ -239,7 +239,7 @@ bool StorageTestComponentContainer::getAll(Function<void(Value &&)> &&cb, Ref *r
 			val.addString(it.getString("name"));
 		}
 
-		serv.getApplication()->performOnMainThread([cb = sp::move(cb), val = Value(val)] () mutable {
+		serv.getApplication()->performOnAppThread([cb = sp::move(cb), val = Value(val)] () mutable {
 			cb(sp::move(val));
 		}, ref);
 
@@ -262,7 +262,7 @@ bool StorageTestComponentContainer::createUser(StringView name, StringView passw
 			}));
 		}
 
-		serv.getApplication()->performOnMainThread([cb = sp::move(cb), val = Value(val)] () mutable {
+		serv.getApplication()->performOnAppThread([cb = sp::move(cb), val = Value(val)] () mutable {
 			cb(sp::move(val));
 		}, ref);
 
@@ -282,7 +282,7 @@ bool StorageTestComponentContainer::checkUser(StringView name, StringView passwo
 			}
 		}
 
-		serv.getApplication()->performOnMainThread([cb = sp::move(cb), val = Value(val)] () mutable {
+		serv.getApplication()->performOnAppThread([cb = sp::move(cb), val = Value(val)] () mutable {
 			cb(sp::move(val));
 		}, ref);
 

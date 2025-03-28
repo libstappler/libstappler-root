@@ -42,7 +42,7 @@ public:
 
 	virtual ~TestAppScene();
 
-	virtual bool init(Application *, const core::FrameContraints &constraints) override;
+	virtual bool init(Application *, const core::FrameConstraints &constraints) override;
 
 	virtual void onPresented(Director *) override;
 	virtual void onFinished(Director *) override;

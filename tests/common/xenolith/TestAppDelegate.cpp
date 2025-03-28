@@ -21,6 +21,7 @@
  **/
 
 #include "XLCommon.h"
+#include "XLPlatformViewInterface.h"
 
 #if MODULE_XENOLITH_SCENE
 
@@ -47,14 +48,16 @@ bool TestAppDelegate::init(ApplicationInfo &&info) {
 void TestAppDelegate::run() {
 	_info.initCallback = [&] (const PlatformApplication &) {
 		GuiApplication::addView(ViewInfo{
-			.title = _info.applicationName,
-			.bundleId = _info.bundleName,
-			.rect = URect(UVec2{0, 0}, _info.screenSize),
-			.density = _info.density,
-			.selectConfig = [this] (View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
+			.window = platform::WindowInfo{
+				.title = _info.applicationName,
+				.bundleId = _info.bundleName,
+				.rect = URect(UVec2{0, 0}, _info.screenSize),
+				.density = _info.density,
+			},
+			.selectConfig = [this] (const View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
 				return selectConfig(info);
 			},
-			.onCreated = [this] (View &view, const core::FrameContraints &constraints) {
+			.onCreated = [this] (View &view, const core::FrameConstraints &constraints) {
 				auto scene = Rc<TestAppScene>::create(static_cast<Application *>(this), constraints);
 				view.getDirector()->runScene(move(scene));
 			},
@@ -76,7 +79,7 @@ void TestAppDelegate::setPreferredPresentMode(core::PresentMode mode) {
 	if (_preferredPresentMode != mode) {
 		_preferredPresentMode = mode;
 		if (_rootView) {
-			_rootView->deprecateSwapchain(false);
+			_rootView->deprecateSwapchain();
 		}
 	}
 }
@@ -86,7 +89,7 @@ void TestAppDelegate::setTripleBuffering(bool value) {
 	if (_tripleBuffering != value) {
 		_tripleBuffering = value;
 		if (_rootView) {
-			_rootView->deprecateSwapchain(false);
+			_rootView->deprecateSwapchain();
 		}
 	}
 }
@@ -142,7 +145,7 @@ core::SwapchainConfig TestAppDelegate::selectConfig(const core::SurfaceInfo &inf
 
 	ret.transform = info.currentTransform;
 
-	performOnMainThread([this, info, ret] {
+	performOnAppThread([this, info, ret] {
 		_surfaceInfo = info;
 		_swapchainConfig = ret;
 
