@@ -33,11 +33,9 @@ class SP_PUBLIC RequestHandler : public AllocBase {
 public:
 	using HandlerCallback = Function<RequestHandler *()>;
 
-	template <typename T, typename ... Args>
-	static HandlerCallback Make(Args && ... args) {
-		return HandlerCallback([=] {
-			return new T(std::forward<Args>(args)...);
-		});
+	template <typename T, typename... Args>
+	static HandlerCallback Make(Args &&...args) {
+		return HandlerCallback([=] { return new T(std::forward<Args>(args)...); });
 	}
 
 	virtual ~RequestHandler() { }
@@ -55,7 +53,9 @@ public:
      * @return for forbidden CORS requests server will return "405 Method Not Allowed"
      */
 	virtual bool isCorsPermitted(Request &, const StringView &origin, bool isPreflight = false,
-		const StringView &method = "", const StringView &headers = "") { return true; }
+			const StringView &method = "", const StringView &headers = "") {
+		return true;
+	}
 
 	/**
 	 * Available method for CORS preflighted requests
@@ -67,9 +67,7 @@ public:
 	/**
 	 * Available extra headers for CORS preflighted requests
      */
-	virtual StringView getCorsAllowHeaders(Request &) {
-		return StringView();
-	}
+	virtual StringView getCorsAllowHeaders(Request &) { return StringView(); }
 
 	/**
 	 * Caching time for preflight response
@@ -139,12 +137,8 @@ protected:
 	Status writeResult(Value &);
 
 	AllowMethod _allow = AllowMethod::All;
-	db::InputConfig _config = db::InputConfig({
-		db::InputConfig::Require::Data | db::InputConfig::Require::FilesAsData,
-		0,
-		256,
-		0
-	});
+	db::InputConfig _config = db::InputConfig(
+			{db::InputConfig::Require::Data | db::InputConfig::Require::FilesAsData, 0, 256, 0});
 	InputFilter *_filter;
 };
 
@@ -152,8 +146,9 @@ SP_DEFINE_ENUM_AS_MASK(DataHandler::AllowMethod)
 
 class SP_PUBLIC FilesystemHandler : public RequestHandler {
 public:
-	FilesystemHandler(const String &path, size_t cacheTimeInSeconds = stappler::maxOf<size_t>());
-	FilesystemHandler(const String &path, const String &ct, size_t cacheTimeInSeconds = stappler::maxOf<size_t>());
+	FilesystemHandler(const FileInfo &path, size_t cacheTimeInSeconds = stappler::maxOf<size_t>());
+	FilesystemHandler(const FileInfo &path, const String &ct,
+			size_t cacheTimeInSeconds = stappler::maxOf<size_t>());
 
 	virtual bool isRequestPermitted(Request &) override;
 	virtual Status onTranslateName(Request &) override;
@@ -171,11 +166,9 @@ public:
 
 	class Handler : public RequestHandler {
 	public: // simplified interface
-		template <typename T, typename ... Args>
-		static Function<Handler *()> Make(Args && ... args) {
-			return Function<Handler *()>([=] {
-				return new T(std::forward<Args>(args)...);
-			});
+		template <typename T, typename... Args>
+		static Function<Handler *()> Make(Args &&...args) {
+			return Function<Handler *()>([=] { return new T(std::forward<Args>(args)...); });
 		}
 
 		virtual bool isPermitted();
@@ -290,6 +283,6 @@ protected:
 	Vector<HandlerInfo> _handlers;
 };
 
-}
+} // namespace stappler::web
 
 #endif /* EXTRA_WEBSERVER_WEBSERVER_REQUEST_SPWEBREQUESTHANDLER_H_ */

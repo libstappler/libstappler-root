@@ -22,6 +22,7 @@
 
 #include "SPCommon.h"
 #include "SPData.h"
+#include "SPFilepath.h"
 #include "SPMemory.h"
 #include "SPTime.h"
 
@@ -121,9 +122,6 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 
 	if (opts.first.getBool("verbose")) {
 		std::cout << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
-		std::cout << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
-		std::cout << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
-		std::cout << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
 		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts.first << "\n";
 		std::cout << " Arguments: \n";
 		for (auto &it : opts.second) {
@@ -141,13 +139,14 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 
 	Vector<Value> dataSource;
 
-	filesystem::ftw(dataDir, [&] (StringView path, bool isFile) {
-		if (isFile && filepath::lastExtension(path) == "json") {
+	filesystem::ftw(FileInfo{dataDir}, [&] (const FileInfo &path, FileType type) {
+		if (type == FileType::File && filepath::lastExtension(path) == "json") {
 			auto val = data::readFile<Interface>(path);
 			if (val) {
 				dataSource.emplace_back(move(val));
 			}
 		}
+		return true;
 	});
 
 	Vector<Vector<Bytes>> testSources;

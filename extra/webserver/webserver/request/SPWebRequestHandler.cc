@@ -21,6 +21,8 @@
  **/
 
 #include "SPWebRequestHandler.h"
+#include "SPFilepath.h"
+#include "SPFilesystem.h"
 #include "SPWebInputFilter.h"
 #include "SPWebHost.h"
 #include "SPWebRoot.h"
@@ -28,7 +30,8 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-Status RequestHandler::onRequestRecieved(Request & rctx, StringView originPath, StringView path, const Value &data) {
+Status RequestHandler::onRequestRecieved(Request &rctx, StringView originPath, StringView path,
+		const Value &data) {
 	_request = rctx;
 	_originPath = originPath;
 	_subPath = path;
@@ -90,8 +93,10 @@ Status DataHandler::onTranslateName(Request &rctx) {
 		return HTTP_METHOD_NOT_ALLOWED;
 	}
 
-	if ((rctx.getInfo().method == RequestMethod::Get && (_allow & AllowMethod::Get) != AllowMethod::None)
-			|| (rctx.getInfo().method == RequestMethod::Delete && (_allow & AllowMethod::Delete) != AllowMethod::None)) {
+	if ((rctx.getInfo().method == RequestMethod::Get
+				&& (_allow & AllowMethod::Get) != AllowMethod::None)
+			|| (rctx.getInfo().method == RequestMethod::Delete
+					&& (_allow & AllowMethod::Delete) != AllowMethod::None)) {
 		bool result = false;
 		Value data;
 
@@ -105,12 +110,15 @@ Status DataHandler::onTranslateName(Request &rctx) {
 }
 
 void DataHandler::onInsertFilter(Request &rctx) {
-	if ((rctx.getInfo().method == RequestMethod::Post && (_allow & AllowMethod::Post) != AllowMethod::None)
-			|| (rctx.getInfo().method == RequestMethod::Put && (_allow & AllowMethod::Put) != AllowMethod::None)) {
+	if ((rctx.getInfo().method == RequestMethod::Post
+				&& (_allow & AllowMethod::Post) != AllowMethod::None)
+			|| (rctx.getInfo().method == RequestMethod::Put
+					&& (_allow & AllowMethod::Put) != AllowMethod::None)) {
 		rctx.setInputConfig(_config);
 	}
 
-	if (rctx.getInfo().method == RequestMethod::Put || rctx.getInfo().method == RequestMethod::Post) {
+	if (rctx.getInfo().method == RequestMethod::Put
+			|| rctx.getInfo().method == RequestMethod::Post) {
 		auto ex = InputFilter::insert(rctx);
 		if (ex != InputFilter::Exception::None) {
 			if (ex == InputFilter::Exception::TooLarge) {
@@ -122,9 +130,7 @@ void DataHandler::onInsertFilter(Request &rctx) {
 	}
 }
 
-Status DataHandler::onHandler(Request &) {
-	return OK;
-}
+Status DataHandler::onHandler(Request &) { return OK; }
 
 void DataHandler::onFilterComplete(InputFilter *filter) {
 	bool result = false;
@@ -133,9 +139,7 @@ void DataHandler::onFilterComplete(InputFilter *filter) {
 	_filter = filter;
 
 	Value input(filter->getData());
-	for (auto &it : filter->getFiles()) {
-		input.setInteger(it.negativeId(), it.name);
-	}
+	for (auto &it : filter->getFiles()) { input.setInteger(it.negativeId(), it.name); }
 
 	result = processDataHandler(rctx, data, input);
 
@@ -143,31 +147,39 @@ void DataHandler::onFilterComplete(InputFilter *filter) {
 	writeResult(data);
 }
 
-FilesystemHandler::FilesystemHandler(const String &path, size_t cacheTime) : _path(path), _cacheTime(cacheTime) { }
-FilesystemHandler::FilesystemHandler(const String &path, const String &ct, size_t cacheTime)
-: _path(path), _contentType(ct), _cacheTime(cacheTime) { }
-
-bool FilesystemHandler::isRequestPermitted(Request &) {
-	return true;
+FilesystemHandler::FilesystemHandler(const FileInfo &path, size_t cacheTime)
+: _cacheTime(cacheTime) {
+	_path = filesystem::findPath<Interface>(path, filesystem::Access::Read);
 }
+
+FilesystemHandler::FilesystemHandler(const FileInfo &path, const String &ct, size_t cacheTime)
+: _contentType(ct), _cacheTime(cacheTime) {
+	_path = filesystem::findPath<Interface>(path, filesystem::Access::Read);
+}
+
+bool FilesystemHandler::isRequestPermitted(Request &) { return true; }
+
 Status FilesystemHandler::onTranslateName(Request &rctx) {
 	auto &info = rctx.getInfo();
 	if (info.url.path == "/") {
-		return rctx.sendFile(stappler::filesystem::writablePath<Interface>(_path), sp::move(_contentType), _cacheTime);
+		return rctx.sendFile(FileInfo(_path), sp::move(_contentType), _cacheTime);
 	} else {
-		auto npath = stappler::filesystem::writablePath<Interface>(info.url.path, true);
-		if (stappler::filesystem::exists(npath) && _subPath != "/") {
+		auto npath = filepath::merge<Interface>(rctx.host().getDocumentRootPath(info.url.path));
+		if (stappler::filesystem::exists(FileInfo{npath}) && _subPath != "/") {
 			return DECLINED;
 		}
-		return rctx.sendFile(stappler::filesystem::writablePath<Interface>(_path), sp::move(_contentType), _cacheTime);
+		return rctx.sendFile(FileInfo(_path), sp::move(_contentType), _cacheTime);
 	}
 }
 
 bool RequestHandlerMap::Handler::isPermitted() { return false; }
+
 Status RequestHandlerMap::Handler::onRequest() { return DECLINED; }
+
 Value RequestHandlerMap::Handler::onData() { return Value(); }
 
 RequestHandlerMap::Handler::Handler() { }
+
 RequestHandlerMap::Handler::~Handler() { }
 
 void RequestHandlerMap::Handler::onParams(const HandlerInfo *info, Value &&val) {
@@ -184,9 +196,7 @@ Status RequestHandlerMap::Handler::onTranslateName(Request &rctx) {
 	switch (info.method) {
 	case RequestMethod::Post:
 	case RequestMethod::Put:
-	case RequestMethod::Patch:
-		return OK;
-		break;
+	case RequestMethod::Patch: return OK; break;
 	default: {
 		if (!processQueryFields(Value(info.queryData))) {
 			return HTTP_BAD_REQUEST;
@@ -207,7 +217,7 @@ Status RequestHandlerMap::Handler::onTranslateName(Request &rctx) {
 				if (!loc.empty()) {
 					hasLocation = true;
 				} else {
-					Value retVal({ stappler::pair("OK", Value(false)) });
+					Value retVal({stappler::pair("OK", Value(false))});
 					return writeResult(retVal);
 				}
 			}
@@ -233,7 +243,8 @@ void RequestHandlerMap::Handler::onInsertFilter(Request &rctx) {
 			cfg.required |= db::InputConfig::Require::Data;
 		}
 		if ((cfg.required & db::InputConfig::Require::Files) == db::InputConfig::Require::None
-				&& (cfg.required & db::InputConfig::Require::FilesAsData) == db::InputConfig::Require::None) {
+				&& (cfg.required & db::InputConfig::Require::FilesAsData)
+						== db::InputConfig::Require::None) {
 			cfg.required |= db::InputConfig::Require::Files;
 		}
 		rctx.setInputConfig(cfg);
@@ -248,14 +259,11 @@ void RequestHandlerMap::Handler::onInsertFilter(Request &rctx) {
 		}
 		break;
 	}
-	default:
-		break;
+	default: break;
 	}
 }
 
-Status RequestHandlerMap::Handler::onHandler(Request &) {
-	return OK;
-}
+Status RequestHandlerMap::Handler::onHandler(Request &) { return OK; }
 
 void RequestHandlerMap::Handler::onFilterComplete(InputFilter *filter) {
 	auto &info = _request.getInfo();
@@ -287,7 +295,7 @@ void RequestHandlerMap::Handler::onFilterComplete(InputFilter *filter) {
 			if (!loc.empty()) {
 				hasLocation = true;
 			} else {
-				Value retVal({ stappler::pair("OK", Value(false)) });
+				Value retVal({stappler::pair("OK", Value(false))});
 				writeResult(retVal);
 				return;
 			}
@@ -313,7 +321,7 @@ bool RequestHandlerMap::Handler::processQueryFields(Value &&args) {
 		auto &val = _queryFields.getValue(it.first);
 		if (val.isNull() && it.second.hasFlag(db::Flags::Required)) {
 			_request.addError("HandlerMap", "No value for required field",
-					Value({ std::make_pair("field", Value(it.first)) }));
+					Value({std::make_pair("field", Value(it.first))}));
 			success = false;
 		}
 	}
@@ -332,7 +340,9 @@ bool RequestHandlerMap::Handler::processInputFields(InputFilter *filter) {
 	auto &cfg = _request.getInputConfig();
 	for (auto &it : filter->getFiles()) {
 		if (auto f = _info->getInputScheme().getField(it.name)) {
-			if ((cfg.required & db::InputConfig::Require::FilesAsData) != db::InputConfig::Require::None && db::InputConfig::isFileAsDataSupportedForType(it.type)) {
+			if ((cfg.required & db::InputConfig::Require::FilesAsData)
+							!= db::InputConfig::Require::None
+					&& db::InputConfig::isFileAsDataSupportedForType(it.type)) {
 				// do nothing
 			} else {
 				if (db::File::validateFileField(_request.host().getRoot(), *f, it)) {
@@ -347,7 +357,7 @@ bool RequestHandlerMap::Handler::processInputFields(InputFilter *filter) {
 		auto &val = _inputFields.getValue(it.first);
 		if (val.isNull() && it.second.hasFlag(db::Flags::Required)) {
 			_request.addError("HandlerMap", "No value for required field",
-					Value({ std::make_pair("field", Value(it.first)) }));
+					Value({std::make_pair("field", Value(it.first))}));
 			success = false;
 		}
 	}
@@ -391,10 +401,15 @@ db::InputFile *RequestHandlerMap::Handler::getInputFile(const StringView &name) 
 }
 
 
-RequestHandlerMap::HandlerInfo::HandlerInfo(const StringView &name, RequestMethod m, const StringView &pt,
-		Function<Handler *()> &&cb, Value &&opts)
-: name(name.str<Interface>()), method(m), pattern(pt.str<Interface>()), handler(sp::move(cb)), options(sp::move(opts))
-, queryFields(name), inputFields(name) {
+RequestHandlerMap::HandlerInfo::HandlerInfo(const StringView &name, RequestMethod m,
+		const StringView &pt, Function<Handler *()> &&cb, Value &&opts)
+: name(name.str<Interface>())
+, method(m)
+, pattern(pt.str<Interface>())
+, handler(sp::move(cb))
+, options(sp::move(opts))
+, queryFields(name)
+, inputFields(name) {
 	StringView p(pattern);
 	while (!p.empty()) {
 		auto tmp = p.readUntil<StringView::Chars<':'>>();
@@ -403,7 +418,7 @@ RequestHandlerMap::HandlerInfo::HandlerInfo(const StringView &name, RequestMetho
 		}
 		if (p.is(':')) {
 			auto tmp = p;
-			++ p;
+			++p;
 			auto ptrn = p.readUntil<StringView::Chars<'/', '.', ':', '#', '?', ','>>();
 			if (!ptrn.empty()) {
 				fragments.emplace_back(Fragment::Pattern, StringView(tmp.data(), ptrn.size() + 1));
@@ -412,32 +427,37 @@ RequestHandlerMap::HandlerInfo::HandlerInfo(const StringView &name, RequestMetho
 	}
 }
 
-RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addQueryFields(std::initializer_list<db::Field> il) {
+RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addQueryFields(
+		std::initializer_list<db::Field> il) {
 	queryFields.define(il);
 	return *this;
 }
-RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addQueryFields(Vector<db::Field> &&il) {
+RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addQueryFields(
+		Vector<db::Field> &&il) {
 	queryFields.define(sp::move(il));
 	return *this;
 }
 
-RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addInputFields(std::initializer_list<db::Field> il) {
+RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addInputFields(
+		std::initializer_list<db::Field> il) {
 	inputFields.define(il);
 	return *this;
 }
-RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addInputFields(Vector<db::Field> &&il) {
+RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::addInputFields(
+		Vector<db::Field> &&il) {
 	inputFields.define(sp::move(il));
 	return *this;
 }
 
-RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::setInputConfig(db::InputConfig cfg) {
+RequestHandlerMap::HandlerInfo &RequestHandlerMap::HandlerInfo::setInputConfig(
+		db::InputConfig cfg) {
 	inputFields.setConfig(cfg);
 	return *this;
 }
 
 Value RequestHandlerMap::HandlerInfo::match(const StringView &path, size_t &match) const {
 	size_t nmatch = 0;
-	Value ret({ stappler::pair("path", Value(path)) });
+	Value ret({stappler::pair("path", Value(path))});
 	auto it = fragments.begin();
 	StringView r(path);
 	while (!r.empty() && it != fragments.end()) {
@@ -446,7 +466,7 @@ Value RequestHandlerMap::HandlerInfo::match(const StringView &path, size_t &matc
 			if (r.starts_with(StringView(it->string))) {
 				r += it->string.size();
 				nmatch += it->string.size();
-				++ it;
+				++it;
 			} else {
 				return Value();
 			}
@@ -458,7 +478,7 @@ Value RequestHandlerMap::HandlerInfo::match(const StringView &path, size_t &matc
 					return Value();
 				}
 
-				++ it;
+				++it;
 				if (it != fragments.end()) {
 					auto tmp = r.readUntilString(it->string);
 					if (tmp.empty()) {
@@ -490,36 +510,25 @@ RequestHandlerMap::Handler *RequestHandlerMap::HandlerInfo::onHandler(Value &&p)
 	return nullptr;
 }
 
-RequestMethod RequestHandlerMap::HandlerInfo::getMethod() const {
-	return method;
-}
+RequestMethod RequestHandlerMap::HandlerInfo::getMethod() const { return method; }
 
 const db::InputConfig &RequestHandlerMap::HandlerInfo::getInputConfig() const {
 	return inputFields.getConfig();
 }
 
-StringView RequestHandlerMap::HandlerInfo::getName() const {
-	return name;
-}
-StringView RequestHandlerMap::HandlerInfo::getPattern() const {
-	return pattern;
-}
-const Value &RequestHandlerMap::HandlerInfo::getOptions() const {
-	return options;
-}
+StringView RequestHandlerMap::HandlerInfo::getName() const { return name; }
+StringView RequestHandlerMap::HandlerInfo::getPattern() const { return pattern; }
+const Value &RequestHandlerMap::HandlerInfo::getOptions() const { return options; }
 
-const db::Scheme &RequestHandlerMap::HandlerInfo::getQueryScheme() const {
-	return queryFields;
-}
-const db::Scheme &RequestHandlerMap::HandlerInfo::getInputScheme() const {
-	return inputFields;
-}
+const db::Scheme &RequestHandlerMap::HandlerInfo::getQueryScheme() const { return queryFields; }
+const db::Scheme &RequestHandlerMap::HandlerInfo::getInputScheme() const { return inputFields; }
 
 RequestHandlerMap::RequestHandlerMap() { }
 
 RequestHandlerMap::~RequestHandlerMap() { }
 
-RequestHandlerMap::Handler *RequestHandlerMap::onRequest(Request &req, const StringView &ipath) const {
+RequestHandlerMap::Handler *RequestHandlerMap::onRequest(Request &req,
+		const StringView &ipath) const {
 	auto &reqInfo = req.getInfo();
 	StringView path(ipath.empty() ? StringView("/") : ipath);
 	const HandlerInfo *info = nullptr;
@@ -528,7 +537,9 @@ RequestHandlerMap::Handler *RequestHandlerMap::onRequest(Request &req, const Str
 	for (auto &it : _handlers) {
 		size_t pscore = 0;
 		if (auto val = it.match(path, pscore)) {
-			if (pscore > score || (pscore == score && info && it.getMethod() == reqInfo.method && it.getMethod() != info->getMethod())) {
+			if (pscore > score
+					|| (pscore == score && info && it.getMethod() == reqInfo.method
+							&& it.getMethod() != info->getMethod())) {
 				params = sp::move(val);
 				if (it.getMethod() == reqInfo.method || !info) {
 					info = &it;
@@ -549,8 +560,8 @@ const Vector<RequestHandlerMap::HandlerInfo> &RequestHandlerMap::getHandlers() c
 	return _handlers;
 }
 
-RequestHandlerMap::HandlerInfo &RequestHandlerMap::addHandler(const StringView &name, RequestMethod m, const StringView &pattern,
-		Function<Handler *()> &&cb, Value &&opts) {
+RequestHandlerMap::HandlerInfo &RequestHandlerMap::addHandler(const StringView &name,
+		RequestMethod m, const StringView &pattern, Function<Handler *()> &&cb, Value &&opts) {
 	_handlers.emplace_back(name, m, pattern, sp::move(cb), sp::move(opts));
 	return _handlers.back();
 }
@@ -558,12 +569,15 @@ RequestHandlerMap::HandlerInfo &RequestHandlerMap::addHandler(const StringView &
 
 class HandlerCallback : public RequestHandlerMap::Handler {
 public: // simplified interface
-	HandlerCallback(const Function<bool(Handler &)> &accessControl, const Function<Value(Handler &)> &process)
+	HandlerCallback(const Function<bool(Handler &)> &accessControl,
+			const Function<Value(Handler &)> &process)
 	: _accessControl(accessControl), _process(process) { }
 
 	virtual ~HandlerCallback() { }
 
-	virtual bool isPermitted() override { return _process && _accessControl && _accessControl(*this); }
+	virtual bool isPermitted() override {
+		return _process && _accessControl && _accessControl(*this);
+	}
 	virtual Value onData() override {
 		auto ret = _process(*this);
 		if (ret) {
@@ -571,7 +585,8 @@ public: // simplified interface
 				auto locVar = _info->getOptions().getString("location");
 				auto loc = StringView(_request.getInfo().queryData.getString(locVar));
 				if (!loc.empty()) {
-					if (loc.starts_with("/") || loc.starts_with(StringView(_request.getFullHostname()))) {
+					if (loc.starts_with("/")
+							|| loc.starts_with(StringView(_request.getFullHostname()))) {
 						_request.redirectTo(loc);
 					}
 				}
@@ -585,11 +600,13 @@ public:
 	Function<Value(Handler &)> _process;
 };
 
-RequestHandlerMap::HandlerInfo &RequestHandlerMap::addHandler(const StringView &name, RequestMethod m, const StringView &pattern,
-		Function<bool(Handler &)> &&accessControl, Function<Value(Handler &)> &&process, Value &&opts) {
-	return addHandler(name, m, pattern, [accessControl = sp::move(accessControl), process = sp::move(process)] () -> Handler * {
+RequestHandlerMap::HandlerInfo &RequestHandlerMap::addHandler(const StringView &name,
+		RequestMethod m, const StringView &pattern, Function<bool(Handler &)> &&accessControl,
+		Function<Value(Handler &)> &&process, Value &&opts) {
+	return addHandler(name, m, pattern,
+			[accessControl = sp::move(accessControl), process = sp::move(process)]() -> Handler * {
 		return new HandlerCallback(accessControl, process);
 	}, sp::move(opts));
 }
 
-}
+} // namespace stappler::web

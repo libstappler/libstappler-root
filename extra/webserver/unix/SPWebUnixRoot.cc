@@ -65,15 +65,13 @@ bool UnixRoot::init(Config &&config) {
 			_running = true;
 
 			for (auto &it : _hosts) {
-				perform([&] {
-					it.second->init(Host(it.second));
-				}, _rootPool, config::TAG_HOST, it.second);
+				perform([&] { it.second->init(Host(it.second)); }, _rootPool, config::TAG_HOST,
+						it.second);
 			}
 
 			for (auto &it : _hosts) {
-				perform([&] {
-					Host(it.second).handleChildInit(_rootPool);
-				}, _rootPool, config::TAG_HOST, it.second);
+				perform([&] { Host(it.second).handleChildInit(_rootPool); }, _rootPool,
+						config::TAG_HOST, it.second);
 			}
 
 			return true;
@@ -138,12 +136,8 @@ Status UnixRoot::processRequest(RequestController *req) {
 	case OK:
 		// continue processing
 		break;
-	case DECLINED:
-		return runDefaultProcessing(rctx);
-		break;
-	default:
-		return ret;
-		break;
+	case DECLINED: return runDefaultProcessing(rctx); break;
+	default: return ret; break;
 	}
 
 	ret = runTranslateName(rctx);
@@ -151,12 +145,8 @@ Status UnixRoot::processRequest(RequestController *req) {
 	case OK:
 		// continue processing
 		break;
-	case DECLINED:
-		return runDefaultProcessing(rctx);
-		break;
-	default:
-		return ret;
-		break;
+	case DECLINED: return runDefaultProcessing(rctx); break;
+	default: return ret; break;
 	}
 
 	ret = runCheckAccess(rctx);
@@ -164,12 +154,8 @@ Status UnixRoot::processRequest(RequestController *req) {
 	case OK:
 		// continue processing
 		break;
-	case DECLINED:
-		return HTTP_FORBIDDEN;
-		break;
-	default:
-		return ret;
-		break;
+	case DECLINED: return HTTP_FORBIDDEN; break;
+	default: return ret; break;
 	}
 
 	ret = runQuickHandler(rctx, 0);
@@ -178,9 +164,7 @@ Status UnixRoot::processRequest(RequestController *req) {
 	case DECLINED:
 		// continue processing
 		break;
-	default:
-		return ret;
-		break;
+	default: return ret; break;
 	}
 
 	runInsertFilter(rctx);
@@ -191,9 +175,7 @@ Status UnixRoot::processRequest(RequestController *req) {
 	case SUSPENDED:
 		// continue processing
 		break;
-	default:
-		return ret;
-		break;
+	default: return ret; break;
 	}
 
 	ret = runHandler(rctx);
@@ -211,8 +193,7 @@ Status UnixRoot::processRequest(RequestController *req) {
 			return runDefaultProcessing(rctx);
 		}
 		break;
-	default:
-		break;
+	default: break;
 	}
 
 	return ret;
@@ -231,10 +212,11 @@ Status UnixRoot::runDefaultProcessing(Request &rctx) {
 	auto &info = rctx.getInfo();
 	auto filename = info.filename;
 	if (filename.empty()) {
-		rctx.setFilename(filepath::merge<Interface>(info.documentRoot, info.url.path), true);
+		rctx.setFilename(FileInfo{filepath::merge<Interface>(info.documentRoot, info.url.path)},
+				true);
 	}
 
-	if (info.filename.empty() || info.stat.type != filesystem::FileType::File) {
+	if (info.filename.empty() || info.stat.type != FileType::File) {
 		return HTTP_NOT_FOUND;
 	} else {
 		if (info.contentType.empty()) {
@@ -250,4 +232,4 @@ Status UnixRoot::runDefaultProcessing(Request &rctx) {
 	}
 }
 
-}
+} // namespace stappler::web

@@ -27,30 +27,24 @@
 
 namespace stappler::xenolith::app {
 
-static constexpr auto HELP_STRING(
-R"HelpString(testapp <options>)HelpString");
+static constexpr auto HELP_STRING(R"HelpString(testapp <options>)HelpString");
 
 SP_EXTERN_C int main(int argc, const char *argv[]) {
 	ApplicationInfo data = ApplicationInfo::readFromCommandLine(argc, argv);
 
 	if (data.help) {
 		std::cout << HELP_STRING << "\n";
-		ApplicationInfo::CommandLine.describe([&] (StringView str) {
-			std::cout << str;
-		});
+		ApplicationInfo::CommandLine.describe([&](StringView str) { std::cout << str; });
 		return 0;
 	}
 
 	if (data.verbose) {
-		std::cout << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
-		std::cout << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
-		std::cout << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
-		std::cout << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
-		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << data.encode() << "\n";
+		std::cerr << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
+		std::cerr << " Options: " << stappler::data::EncodeFormat::Pretty << data.encode() << "\n";
 	}
 
 	// Выполняем все действия во временном пуле памяти
-	memory::pool::perform_temporary([&] {
+	perform_main([&] {
 		// Создаём приложение на основании данных командной строки
 		auto app = Rc<ExampleApplication>::create(move(data));
 
@@ -66,4 +60,4 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	return 0;
 }
 
-}
+} // namespace stappler::xenolith::app

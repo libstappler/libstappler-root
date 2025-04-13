@@ -4,7 +4,7 @@ plugins {
 
 tasks.register('prepareAndroidMk', Exec) {
     workingDir rootProject.getRootDir().getPath() + "/.."
-    commandLine 'make', 'android-export', 'RELEASE=1'
+    commandLine 'make', 'android-export'
 }
 
 preBuild.dependsOn prepareAndroidMk

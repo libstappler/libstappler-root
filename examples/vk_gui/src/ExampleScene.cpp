@@ -51,10 +51,12 @@ bool ExampleScene::init(Application *app, const core::FrameConstraints &constrai
 	color.a = 0.5f;
 
 	// Свет сверху под углом, дающий удлиннение теней снизу
-	auto light = Rc<basic2d::SceneLight>::create(basic2d::SceneLightType::Ambient, Vec2(0.0f, 0.3f), 1.5f, color);
+	auto light = Rc<basic2d::SceneLight>::create(basic2d::SceneLightType::Ambient, Vec2(0.0f, 0.3f),
+			1.5f, color);
 
 	// Свет строго сверху, дающий базовые тени
-	auto ambient = Rc<basic2d::SceneLight>::create(basic2d::SceneLightType::Ambient, Vec2(0.0f, 0.0f), 1.5f, color);
+	auto ambient = Rc<basic2d::SceneLight>::create(basic2d::SceneLightType::Ambient,
+			Vec2(0.0f, 0.0f), 1.5f, color);
 
 	content->removeAllLights();
 
@@ -63,9 +65,6 @@ bool ExampleScene::init(Application *app, const core::FrameConstraints &constrai
 
 	content->addLight(move(light));
 	content->addLight(move(ambient));
-
-	// создаём директорию для хранения кешей
-	filesystem::mkdir(filesystem::cachesPath<Interface>());
 
 	return true;
 }
@@ -77,4 +76,4 @@ void ExampleScene::handleContentSizeDirty() {
 	_helloWorldLabel->setPosition(_content->getContentSize() / 2.0f);
 }
 
-}
+} // namespace stappler::xenolith::app

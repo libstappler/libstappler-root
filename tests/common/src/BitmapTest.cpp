@@ -22,6 +22,7 @@
 
 #include "SPCommon.h"
 #include "SPBitmap.h"
+#include "SPFilepath.h"
 #include "Test.h"
 
 #include "png.h"
@@ -331,7 +332,7 @@ static bool loadPng(const uint8_t *inputData, size_t size, BitmapWriter &outputD
 	return pngStruct.init(inputData, size) && pngStruct.load(outputData);
 }
 
-static bool savePng(StringView filename, const uint8_t *data, BitmapWriter &state, bool invert) {
+static bool savePng(const FileInfo &filename, const uint8_t *data, BitmapWriter &state, bool invert) {
 	struct WriteData {
 		uint32_t offset = 0;
 		Bytes data;
@@ -388,7 +389,7 @@ static bitmap::BitmapFormat s_custom = bitmap::BitmapFormat("PNG-Custom", "image
 struct BitmapTest : Test {
 	BitmapTest() : Test("BitmapTest") { }
 
-	virtual void testImage(StringView path) {
+	virtual void testImage(const FileInfo & path) {
 		auto data = filesystem::readIntoMemory<Interface>(path);
 
 		uint32_t w, h;
@@ -396,7 +397,7 @@ struct BitmapTest : Test {
 		bitmap::isImage(path, false);
 		bitmap::isImage(data.data(), data.size());
 		bitmap::isImage(data.data(), data.size(), false);
-		bitmap::getImageSize(StringView(path), w, h);
+		bitmap::getImageSize(path, w, h);
 
 		bitmap::ImageInfo info;
 		bitmap::getImageInfo(data, info);
@@ -465,9 +466,9 @@ struct BitmapTest : Test {
 	}
 
 	virtual void runPoolTest() {
-		auto png1 = filesystem::currentDir<Interface>("resources/1.png");
-		auto tiff1 = filesystem::currentDir<Interface>("resources/at3_1m4_01.tif");
-		auto png2custom = filesystem::currentDir<Interface>("resources/2.custom.png");
+		auto png1 = FileInfo("resources/1.png");
+		auto tiff1tmp = FileInfo("resources/at3_1m4_01.tif.tmp");
+		auto png2custom = FileInfo("resources/2.custom.png");
 
 		auto imageData = filesystem::readIntoMemory<mem_pool::Interface>(png1);
 
@@ -475,9 +476,9 @@ struct BitmapTest : Test {
 
 		bmp.save(bitmap::FileFormat::Png, png1);
 		bmp.save(s_custom.getName(), png2custom);
-		bmp.save(bitmap::FileFormat::Tiff, toString(tiff1, ".tmp"));
+		bmp.save(bitmap::FileFormat::Tiff,tiff1tmp);
 
-		filesystem::remove(toString(tiff1, ".tmp"));
+		filesystem::remove(tiff1tmp);
 
 		bmp.write(bitmap::FileFormat::Png);
 		bmp.write(bitmap::FileFormat::Tiff);
@@ -497,24 +498,24 @@ struct BitmapTest : Test {
 
 		bitmap::getBytesPerPixel(bitmap::PixelFormat::Auto);
 
-		auto png1 = filesystem::currentDir<Interface>("resources/1.png");
-		auto png1gray = filesystem::currentDir<Interface>("resources/1.gray.png");
-		auto png1alpha = filesystem::currentDir<Interface>("resources/1.alpha.png");
-		auto png2custom = filesystem::currentDir<Interface>("resources/2.custom.png");
-		auto webp1ll = filesystem::currentDir<Interface>("resources/1.lossless.webp");
-		auto webp1l = filesystem::currentDir<Interface>("resources/1.lossy.webp");
-		auto jpeg1 = filesystem::currentDir<Interface>("resources/1.jpeg");
-		auto jpeg1gray = filesystem::currentDir<Interface>("resources/1.gray.jpeg");
-		auto svg1 = filesystem::currentDir<Interface>("resources/24px.svg");
-		auto svg2 = filesystem::currentDir<Interface>("resources/24px.1.svg");
-		auto svg3 = filesystem::currentDir<Interface>("resources/24px.2.svg");
-		auto gif1 = filesystem::currentDir<Interface>("resources/SampleGIFImage_40kbmb.gif");
-		auto gif2 = filesystem::currentDir<Interface>("resources/bg-transparent.gif");
-		auto gif3 = filesystem::currentDir<Interface>("resources/rotating-rainbow-colors-grayscale.gif");
-		auto gif4 = filesystem::currentDir<Interface>("resources/fire-flames-transparent.gif");
-		auto tiff1 = filesystem::currentDir<Interface>("resources/at3_1m4_01.tif");
-		auto tiff2 = filesystem::currentDir<Interface>("resources/football_seal.tif");
-		auto jpeg2 = filesystem::currentDir<Interface>("resources/Channel_digital_image_CMYK_color.jpg");
+		auto png1 = FileInfo("resources/1.png");
+		auto png1gray = FileInfo("resources/1.gray.png");
+		auto png1alpha = FileInfo("resources/1.alpha.png");
+		auto png2custom = FileInfo("resources/2.custom.png");
+		auto webp1ll = FileInfo("resources/1.lossless.webp");
+		auto webp1l = FileInfo("resources/1.lossy.webp");
+		auto jpeg1 = FileInfo("resources/1.jpeg");
+		auto jpeg1gray = FileInfo("resources/1.gray.jpeg");
+		auto svg1 = FileInfo("resources/24px.svg");
+		auto svg2 = FileInfo("resources/24px.1.svg");
+		auto svg3 = FileInfo("resources/24px.2.svg");
+		auto gif1 = FileInfo("resources/SampleGIFImage_40kbmb.gif");
+		auto gif2 = FileInfo("resources/bg-transparent.gif");
+		auto gif3 = FileInfo("resources/rotating-rainbow-colors-grayscale.gif");
+		auto gif4 = FileInfo("resources/fire-flames-transparent.gif");
+		auto tiff1 = FileInfo("resources/at3_1m4_01.tif");
+		auto tiff2 = FileInfo("resources/football_seal.tif");
+		auto jpeg2 = FileInfo("resources/Channel_digital_image_CMYK_color.jpg");
 
 		auto imageData = filesystem::readIntoMemory<Interface>(png1);
 
@@ -632,11 +633,12 @@ struct BitmapTest : Test {
 		testImage(tiff1);
 		testImage(tiff2);
 
-		auto tiffs = filesystem::currentDir<Interface>("resources/tiff");
-		filesystem::ftw(tiffs, [] (StringView path, bool isFile) {
+		auto tiffs = FileInfo("resources/tiff");
+		filesystem::ftw(tiffs, [] (const FileInfo &path, FileType) {
 			std::cout << path << "\n";
 			uint32_t w, h;
 			bitmap::getImageSize(path, w, h);
+			return true;
 		});
 
 		auto p = memory::pool::create(memory::app_root_pool);

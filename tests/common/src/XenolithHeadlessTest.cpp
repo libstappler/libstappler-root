@@ -21,6 +21,7 @@
  **/
 
 #include "SPCommon.h"
+#include "SPFilepath.h"
 #include "Test.h"
 
 #if MODULE_XENOLITH_APPLICATION && MODULE_XENOLITH_BACKEND_VK
@@ -81,7 +82,8 @@ class NoisePass : public vk::QueuePass {
 public:
 	virtual ~NoisePass();
 
-	virtual bool init(Queue::Builder &queueBuilder, QueuePassBuilder &, const AttachmentData *, const AttachmentData *);
+	virtual bool init(Queue::Builder &queueBuilder, QueuePassBuilder &, const AttachmentData *,
+			const AttachmentData *);
 
 	virtual Rc<QueuePassHandle> makeFrameHandle(const FrameQueue &) override;
 
@@ -113,26 +115,28 @@ bool NoiseQueue::init() {
 	using namespace core;
 	Queue::Builder builder("Noise");
 
-	auto dataAttachment = builder.addAttachemnt("NoiseDataAttachment", [&] (AttachmentBuilder &attachmentBuilder) -> Rc<Attachment> {
+	auto dataAttachment = builder.addAttachemnt("NoiseDataAttachment",
+			[&](AttachmentBuilder &attachmentBuilder) -> Rc<Attachment> {
 		attachmentBuilder.defineAsInput();
-		auto a = Rc<vk::BufferAttachment>::create(attachmentBuilder, core::BufferInfo(
-			core::BufferUsage::UniformBuffer, sizeof(NoiseData)
-		));
+		auto a = Rc<vk::BufferAttachment>::create(attachmentBuilder,
+				core::BufferInfo(core::BufferUsage::UniformBuffer, sizeof(NoiseData)));
 
-		a->setValidateInputCallback([] (const Attachment &, const Rc<AttachmentInputData> &data) {
+		a->setValidateInputCallback([](const Attachment &, const Rc<AttachmentInputData> &data) {
 			return dynamic_cast<NoiseDataInput *>(data.get()) != nullptr;
 		});
 
-		a->setFrameHandleCallback([] (Attachment &a, const FrameQueue &queue) {
+		a->setFrameHandleCallback([](Attachment &a, const FrameQueue &queue) {
 			auto h = Rc<vk::BufferAttachmentHandle>::create(a, queue);
-			h->setInputCallback([] (AttachmentHandle &handle, FrameQueue &queue, AttachmentInputData *input, Function<void(bool)> &&cb) {
+			h->setInputCallback([](AttachmentHandle &handle, FrameQueue &queue,
+										AttachmentInputData *input, Function<void(bool)> &&cb) {
 				auto a = static_cast<vk::BufferAttachment *>(handle.getAttachment().get());
 				auto d = static_cast<NoiseDataInput *>(input);
 				auto devFrame = static_cast<vk::DeviceFrameHandle *>(queue.getFrame().get());
-				auto buf = devFrame->getMemPool(devFrame)->spawn(vk::AllocationUsage::DeviceLocalHostVisible, a->getInfo());
+				auto buf = devFrame->getMemPool(devFrame)->spawn(
+						vk::AllocationUsage::DeviceLocalHostVisible, a->getInfo());
 				auto b = static_cast<vk::BufferAttachmentHandle *>(&handle);
 
-				buf->map([&] (uint8_t *buf, VkDeviceSize) {
+				buf->map([&](uint8_t *buf, VkDeviceSize) {
 					memcpy(buf, &d->data, sizeof(NoiseData));
 				});
 
@@ -145,19 +149,20 @@ bool NoiseQueue::init() {
 		return a;
 	});
 
-	auto imageAttachment = builder.addAttachemnt("NoiseImageAttachment", [&] (AttachmentBuilder &attachmentBuilder) -> Rc<Attachment> {
+	auto imageAttachment = builder.addAttachemnt("NoiseImageAttachment",
+			[&](AttachmentBuilder &attachmentBuilder) -> Rc<Attachment> {
 		attachmentBuilder.defineAsOutput();
 		return Rc<vk::ImageAttachment>::create(attachmentBuilder,
-			ImageInfo(Extent2(64, 64), ImageUsage::Storage | ImageUsage::TransferSrc, ImageTiling::Optimal, ImageFormat::R8G8B8A8_UNORM),
-			ImageAttachment::AttachmentInfo{
-				.initialLayout = AttachmentLayout::General,
-				.finalLayout = AttachmentLayout::General,
-				.clearOnLoad = true,
-				.clearColor = Color4F(0.0f, 0.0f, 0.0f, 0.0f)}
-		);
+				ImageInfo(Extent2(64, 64), ImageUsage::Storage | ImageUsage::TransferSrc,
+						ImageTiling::Optimal, ImageFormat::R8G8B8A8_UNORM),
+				ImageAttachment::AttachmentInfo{.initialLayout = AttachmentLayout::General,
+					.finalLayout = AttachmentLayout::General,
+					.clearOnLoad = true,
+					.clearColor = Color4F(0.0f, 0.0f, 0.0f, 0.0f)});
 	});
 
-	builder.addPass("NoisePass", PassType::Compute, RenderOrdering(0), [&] (QueuePassBuilder &passBuilder) -> Rc<core::QueuePass> {
+	builder.addPass("NoisePass", PassType::Compute, RenderOrdering(0),
+			[&](QueuePassBuilder &passBuilder) -> Rc<core::QueuePass> {
 		return Rc<NoisePass>::create(builder, passBuilder, dataAttachment, imageAttachment);
 	});
 
@@ -172,18 +177,18 @@ bool NoiseQueue::init() {
 static void runBitmapTestsPool(bitmap::BitmapTemplate<memory::PoolInterface> &bmp) {
 	auto path = filesystem::currentDir<Interface>(toString(Time::now().toMicros()));
 
-	bmp.save(bitmap::FileFormat::Png, path);
-	filesystem::remove(path);
+	bmp.save(bitmap::FileFormat::Png, FileInfo{path});
+	filesystem::remove(FileInfo{path});
 
-	bmp.save(bitmap::FileFormat::WebpLossless, path);
-	filesystem::remove(path);
+	bmp.save(bitmap::FileFormat::WebpLossless, FileInfo{path});
+	filesystem::remove(FileInfo{path});
 
-	bmp.save(bitmap::FileFormat::WebpLossy, path);
-	filesystem::remove(path);
+	bmp.save(bitmap::FileFormat::WebpLossy, FileInfo{path});
+	filesystem::remove(FileInfo{path});
 
 	bmp.truncate(bitmap::PixelFormat::RGB888);
-	bmp.save(bitmap::FileFormat::Jpeg, path);
-	filesystem::remove(path);
+	bmp.save(bitmap::FileFormat::Jpeg, FileInfo{path});
+	filesystem::remove(FileInfo{path});
 }
 
 static void readBitmap(BytesView data) {
@@ -195,14 +200,14 @@ static void readBitmap(BytesView data) {
 
 static void runBitmapTests(Bitmap &bmp) {
 	auto path = filesystem::currentDir<Interface>(toString(Time::now().toMicros()));
-	bmp.save(bitmap::FileFormat::Png, path);
-	filesystem::remove(path);
+	bmp.save(bitmap::FileFormat::Png, FileInfo{path});
+	filesystem::remove(FileInfo{path});
 
-	bmp.save(bitmap::FileFormat::WebpLossless, path);
-	filesystem::remove(path);
+	bmp.save(bitmap::FileFormat::WebpLossless, FileInfo{path});
+	filesystem::remove(FileInfo{path});
 
-	bmp.save(bitmap::FileFormat::WebpLossy, path);
-	filesystem::remove(path);
+	bmp.save(bitmap::FileFormat::WebpLossy, FileInfo{path});
+	filesystem::remove(FileInfo{path});
 
 	auto upscale = bmp.resample(96, 96);
 	auto downscale = bmp.resample(48, 48);
@@ -212,8 +217,8 @@ static void runBitmapTests(Bitmap &bmp) {
 	readBitmap(downscale.write(bitmap::FileFormat::WebpLossy));
 
 	bmp.truncate(bitmap::PixelFormat::RGB888);
-	bmp.save(bitmap::FileFormat::Jpeg, path);
-	filesystem::remove(path);
+	bmp.save(bitmap::FileFormat::Jpeg, FileInfo{path});
+	filesystem::remove(FileInfo{path});
 
 	upscale.truncate(bitmap::PixelFormat::RGB888);
 	readBitmap(upscale.write(bitmap::FileFormat::Jpeg));
@@ -221,32 +226,33 @@ static void runBitmapTests(Bitmap &bmp) {
 	mem_pool::perform_temporary([&] {
 		bitmap::BitmapTemplate<memory::PoolInterface> d(upscale.write(bitmap::FileFormat::Png));
 
-		for (int i = 0; i <= toInt(bitmap::ResampleFilter::QuadMix); ++ i) {
+		for (int i = 0; i <= toInt(bitmap::ResampleFilter::QuadMix); ++i) {
 			auto path = filesystem::currentDir<Interface>(toString(Time::now().toMicros()));
 			auto tmp = d.resample(bitmap::ResampleFilter(i), 96, 96);
-			tmp.save(bitmap::FileFormat::Png, path);
-			filesystem::remove(path);
+			tmp.save(bitmap::FileFormat::Png, FileInfo{path});
+			filesystem::remove(FileInfo{path});
 		}
 
-		for (int i = 0; i <= toInt(bitmap::ResampleFilter::QuadMix); ++ i) {
+		for (int i = 0; i <= toInt(bitmap::ResampleFilter::QuadMix); ++i) {
 			auto path = filesystem::currentDir<Interface>(toString(Time::now().toMicros()));
 			auto tmp = d.resample(bitmap::ResampleFilter(i), 48, 48);
-			tmp.save(bitmap::FileFormat::Png, path);
-			filesystem::remove(path);
+			tmp.save(bitmap::FileFormat::Png, FileInfo{path});
+			filesystem::remove(FileInfo{path});
 		}
 	});
-
 }
 
 void NoiseQueue::run(Application *app) {
-	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this), core::FrameConstraints{Extent2(64, 64)});
+	auto req = Rc<core::FrameRequest>::create(Rc<core::Queue>(this),
+			core::FrameConstraints{Extent2(64, 64)});
 
 	auto inputData = Rc<NoiseDataInput>::alloc();
 	inputData->data = NoiseData{0, 0, 0.0f, 0.0f};
 
 	req->addInput(getDataAttachment(), move(inputData));
-	req->setOutput(getImageAttachment(), [app] (core::FrameAttachmentData &data, bool success, Ref *) {
-		app->getGlLoop()->captureImage([app] (core::ImageInfoData info, BytesView view) {
+	req->setOutput(getImageAttachment(),
+			[app](core::FrameAttachmentData &data, bool success, Ref *) {
+		app->getGlLoop()->captureImage([app](core::ImageInfoData info, BytesView view) {
 			if (!view.empty()) {
 				auto fmt = core::getImagePixelFormat(info.format);
 				bitmap::PixelFormat pixelFormat = bitmap::PixelFormat::Auto;
@@ -272,27 +278,31 @@ void NoiseQueue::run(Application *app) {
 
 NoisePass::~NoisePass() { }
 
-bool NoisePass::init(Queue::Builder &queueBuilder, QueuePassBuilder &builder, const AttachmentData *data, const AttachmentData *image) {
+bool NoisePass::init(Queue::Builder &queueBuilder, QueuePassBuilder &builder,
+		const AttachmentData *data, const AttachmentData *image) {
 	using namespace core;
 
-	auto passImage = builder.addAttachment(image, [] (AttachmentPassBuilder &builder) {
+	auto passImage = builder.addAttachment(image, [](AttachmentPassBuilder &builder) {
 		builder.setDependency(AttachmentDependencyInfo{
-			PipelineStage::ComputeShader, AccessType::ShaderWrite,
-			PipelineStage::ComputeShader, AccessType::ShaderWrite,
+			PipelineStage::ComputeShader,
+			AccessType::ShaderWrite,
+			PipelineStage::ComputeShader,
+			AccessType::ShaderWrite,
 			FrameRenderPassState::Submitted,
 		});
 	});
 
-	auto layout = builder.addDescriptorLayout([&] (PipelineLayoutBuilder &layoutBuilder) {
-		layoutBuilder.addSet([&] (DescriptorSetBuilder &setBuilder) {
+	auto layout = builder.addDescriptorLayout([&](PipelineLayoutBuilder &layoutBuilder) {
+		layoutBuilder.addSet([&](DescriptorSetBuilder &setBuilder) {
 			setBuilder.addDescriptor(builder.addAttachment(data));
-			setBuilder.addDescriptor(passImage, DescriptorType::StorageImage, AttachmentLayout::General);
+			setBuilder.addDescriptor(passImage, DescriptorType::StorageImage,
+					AttachmentLayout::General);
 		});
 	});
 
 	Shader::inspectShader(NoiseComp);
 
-	builder.addSubpass([&] (SubpassBuilder &subpassBuilder) {
+	builder.addSubpass([&](SubpassBuilder &subpassBuilder) {
 		subpassBuilder.addComputePipeline("NoisePipeline", layout,
 				queueBuilder.addProgramByRef("NoisePipelineComp", NoiseComp));
 	});
@@ -318,18 +328,22 @@ bool NoisePassHandle::prepare(FrameQueue &q, Function<void(bool)> &&cb) {
 }
 
 Vector<const core::CommandBuffer *> NoisePassHandle::doPrepareCommands(FrameHandle &handle) {
-	auto buf = _pool->recordBuffer(*_device, Vector<Rc<vk::DescriptorPool>>(_descriptors), [&, this] (vk::CommandBuffer &buf) {
+	auto buf = _pool->recordBuffer(*_device, Vector<Rc<vk::DescriptorPool>>(_descriptors),
+			[&, this](vk::CommandBuffer &buf) {
 		auto pass = _data->impl.cast<vk::RenderPass>().get();
 		pass->perform(*this, buf, [&, this] {
 			auto extent = handle.getFrameConstraints().extent;
 
 			buf.cmdBindDescriptorSets(pass, 0);
 
-			auto pipeline = (vk::ComputePipeline *)_data->subpasses[0]->computePipelines.get("NoisePipeline")->pipeline.get();
+			auto pipeline = (vk::ComputePipeline *)_data->subpasses[0]
+									->computePipelines.get("NoisePipeline")
+									->pipeline.get();
 
 			buf.cmdBindPipeline(pipeline);
 
-			buf.cmdDispatch((extent.width - 1) / pipeline->getLocalX() + 1, (extent.height - 1) / pipeline->getLocalY() + 1);
+			buf.cmdDispatch((extent.width - 1) / pipeline->getLocalX() + 1,
+					(extent.height - 1) / pipeline->getLocalY() + 1);
 		}, true);
 		return true;
 	});
@@ -341,43 +355,45 @@ static void runTests() {
 	commonInfo.bundleName = String("org.stappler.xenolith.cli");
 	commonInfo.applicationName = String("xenolith-cli");
 	commonInfo.applicationVersion = String("0.1.0");
-	commonInfo.updateCallback = [] (const PlatformApplication &app, const UpdateTime &time) {
+	commonInfo.updateCallback = [](const PlatformApplication &app, const UpdateTime &time) {
 		if (time.app == 0) {
 			auto noiseQueue = Rc<NoiseQueue>::create();
 
 			// then compile it on graphics device
-			app.getGlLoop()->compileQueue(noiseQueue, [app = &app, noiseQueue] (bool success) {
-				Application::getInstance()->performOnAppThread([app, noiseQueue] {
-					noiseQueue->run((Application *)app);
-				}, nullptr);
+			app.getGlLoop()->compileQueue(noiseQueue, [app = &app, noiseQueue](bool success) {
+				Application::getInstance()->performOnAppThread(
+						[app, noiseQueue] { noiseQueue->run((Application *)app); }, nullptr);
 			});
 
 			auto modelPath = filesystem::currentDir<Interface>("resources/mnist.json");
-			auto inputPath = toString("mnist:", filesystem::currentDir<Interface>("resources/mnist"));
+			auto inputPath =
+					toString("mnist:", filesystem::currentDir<Interface>("resources/mnist"));
 
-			auto modelQueue = Rc<shadernn::ModelQueue>::create(modelPath, shadernn::ModelFlags::None, inputPath);
+			auto modelQueue = Rc<shadernn::ModelQueue>::create(modelPath,
+					shadernn::ModelFlags::None, inputPath);
 			if (modelQueue) {
 				modelQueue->retain();
-				app.getGlLoop()->compileQueue(modelQueue, [app = &app, modelQueue] (bool success) {
-					Application::getInstance()->performOnAppThread([app, modelQueue] {
-						modelQueue->run((Application *)app);
-					}, nullptr);
+				app.getGlLoop()->compileQueue(modelQueue, [app = &app, modelQueue](bool success) {
+					Application::getInstance()->performOnAppThread(
+							[app, modelQueue] { modelQueue->run((Application *)app); }, nullptr);
 				});
 			}
 		}
 	};
 	commonInfo.appThreadsCount = 2;
-	commonInfo.updateInterval = TimeInterval::microseconds(500000);
+	commonInfo.updateInterval = TimeInterval::microseconds(500'000);
 
 	// define device selector/initializer
 	auto data = Rc<vk::LoopData>::alloc();
-	data->deviceSupportCallback = [] (const vk::DeviceInfo &dev) {
+	data->deviceSupportCallback = [](const vk::DeviceInfo &dev) {
 		return dev.requiredExtensionsExists && dev.requiredFeaturesExists;
 	};
 
 	commonInfo.loopInfo.platformData = data;
 
-	auto instance = vk::platform::createInstance([&] (vk::platform::VulkanInstanceData &data, const vk::platform::VulkanInstanceInfo &info) {
+	auto instance =
+			vk::platform::createInstance([&](vk::platform::VulkanInstanceData &data,
+												 const vk::platform::VulkanInstanceInfo &info) {
 		data.applicationName = commonInfo.applicationName;
 		data.applicationVersion = commonInfo.applicationVersion;
 		return true;
@@ -391,7 +407,7 @@ static void runTests() {
 	app->waitStopped();
 }
 
-}
+} // namespace stappler::xenolith::test::detail
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
@@ -413,6 +429,6 @@ struct XenolithHeadlessTest : Test {
 
 } XenolithHeadlessTest;
 
-}
+} // namespace stappler::app::test
 
 #endif

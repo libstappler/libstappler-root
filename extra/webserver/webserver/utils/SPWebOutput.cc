@@ -27,8 +27,8 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web::output {
 
-constexpr static const char * HTML_LOAD_BEGIN =
-R"Html(<!doctype html>
+constexpr static const char *HTML_LOAD_BEGIN =
+		R"Html(<!doctype html>
 <html><head><title>Serenity Pretty Data Dump</title>
 	<link rel="stylesheet" href="/__server/virtual/css/style.css" />
 	<link rel="stylesheet" href="/__server/virtual/css/kawaiJson.css" />
@@ -36,12 +36,12 @@ R"Html(<!doctype html>
 <script>function load(j) { KawaiJson(document.getElementById("content"), j); }
 function init() {load()Html";
 
-constexpr static const char * HTML_LOAD_END =
-R"Html()}</script>
+constexpr static const char *HTML_LOAD_END =
+		R"Html()}</script>
 </head>)Html";
 
-constexpr static const char * HTML_PRETTY =
-R"Html(<body onload="init();">
+constexpr static const char *HTML_PRETTY =
+		R"Html(<body onload="init();">
 	<div id="content" class="content"></div>
 </body></html>)Html";
 
@@ -86,7 +86,7 @@ struct HtmlJsonEncoder {
 	}
 
 	void write(bool value) {
-		(*stream) << "<span class=\"bool\">" << ((value)?"true":"false") << "</span>";
+		(*stream) << "<span class=\"bool\">" << ((value) ? "true" : "false") << "</span>";
 		offsetted = false;
 	}
 
@@ -111,9 +111,11 @@ struct HtmlJsonEncoder {
 				}
 			} else {
 				if (action == Delete) {
-					(*stream) << " <a class=\"delete\" href=\"" << str.substr(sep + 1) << "\">Remove: " << str.substr(0, sep) << "</a> ";
+					(*stream) << " <a class=\"delete\" href=\"" << str.substr(sep + 1)
+							  << "\">Remove: " << str.substr(0, sep) << "</a> ";
 				} else {
-					(*stream) << " <a class=\"edit\" href=\"" << str.substr(sep + 1) << "\">Edit: " << str.substr(0, sep) << "</a> ";
+					(*stream) << " <a class=\"edit\" href=\"" << str.substr(sep + 1)
+							  << "\">Edit: " << str.substr(0, sep) << "</a> ";
 				}
 			}
 		} else if (str.size() > 6 && str.compare(0, 2, "~~") == 0) {
@@ -123,7 +125,8 @@ struct HtmlJsonEncoder {
 				writeString(str);
 				(*stream) << "</span>";
 			} else {
-				(*stream) << "<a class=\"file\" target=\"_blank\" href=\"" << str.substr(sep + 1) << "\">file:" << str.substr(2, sep - 2) << "</a>";
+				(*stream) << "<a class=\"file\" target=\"_blank\" href=\"" << str.substr(sep + 1)
+						  << "\">file:" << str.substr(2, sep - 2) << "</a>";
 			}
 		} else {
 			(*stream) << "<span class=\"string\">";
@@ -133,7 +136,8 @@ struct HtmlJsonEncoder {
 	}
 
 	void write(const Bytes &data) {
-		(*stream) << "<span class=\"bytes\">\"" << "BASE64:" << base64::encode<Interface>(data) << "\"</span>";
+		(*stream) << "<span class=\"bytes\">\"" << "BASE64:" << base64::encode<Interface>(data)
+				  << "\"</span>";
 		offsetted = false;
 	}
 
@@ -149,7 +153,7 @@ struct HtmlJsonEncoder {
 	void onBeginArray(const Array &arr) {
 		(*stream) << '[';
 		if (!isObjectArray(arr)) {
-			++ depth;
+			++depth;
 			bstack.push_back(false);
 			offsetted = false;
 		} else {
@@ -160,19 +164,15 @@ struct HtmlJsonEncoder {
 	void onEndArray(const Array &arr) {
 		if (!bstack.empty()) {
 			if (!bstack.back()) {
-				-- depth;
+				--depth;
 				(*stream) << '\n';
-				for (size_t i = 0; i < depth; i++) {
-					(*stream) << '\t';
-				}
+				for (size_t i = 0; i < depth; i++) { (*stream) << '\t'; }
 			}
 			bstack.pop_back();
 		} else {
-			-- depth;
+			--depth;
 			(*stream) << '\n';
-			for (size_t i = 0; i < depth; i++) {
-				(*stream) << '\t';
-			}
+			for (size_t i = 0; i < depth; i++) { (*stream) << '\t'; }
 		}
 		(*stream) << ']';
 		popComplex = true;
@@ -184,7 +184,7 @@ struct HtmlJsonEncoder {
 			(*stream) << "<span class=\"actions\">";
 		} else {
 			(*stream) << '{';
-			++ depth;
+			++depth;
 		}
 	}
 
@@ -192,15 +192,11 @@ struct HtmlJsonEncoder {
 		if (actionsState == Dict) {
 			actionsState = None;
 			(*stream) << "</span>";
-			for (size_t i = 0; i < depth; i++) {
-				(*stream) << '\t';
-			}
+			for (size_t i = 0; i < depth; i++) { (*stream) << '\t'; }
 		} else {
-			-- depth;
+			--depth;
 			(*stream) << '\n';
-			for (size_t i = 0; i < depth; i++) {
-				(*stream) << '\t';
-			}
+			for (size_t i = 0; i < depth; i++) { (*stream) << '\t'; }
 			(*stream) << '}';
 			popComplex = true;
 		}
@@ -215,9 +211,7 @@ struct HtmlJsonEncoder {
 			}
 		} else {
 			(*stream) << '\n';
-			for (size_t i = 0; i < depth; i++) {
-				(*stream) << '\t';
-			}
+			for (size_t i = 0; i < depth; i++) { (*stream) << '\t'; }
 			if (trackActions && str == "~ACTIONS~") {
 				actionsState = Key;
 				//(*stream) << "<span class=\"key\">\"ACTIONS\"</span>";
@@ -230,12 +224,9 @@ struct HtmlJsonEncoder {
 			}
 			offsetted = true;
 		}
-
 	}
 
-	void onNextValue() {
-		(*stream) << ',';
-	}
+	void onNextValue() { (*stream) << ','; }
 
 	void onValue(const Value &val) {
 		if (depth > 0) {
@@ -244,9 +235,7 @@ struct HtmlJsonEncoder {
 			} else {
 				if (!offsetted) {
 					(*stream) << '\n';
-					for (size_t i = 0; i < depth; i++) {
-						(*stream) << '\t';
-					}
+					for (size_t i = 0; i < depth; i++) { (*stream) << '\t'; }
 					offsetted = true;
 				}
 			}
@@ -271,12 +260,14 @@ struct HtmlJsonEncoder {
 	} action = Delete;
 };
 
-void formatJsonAsHtml(const Callback<void(StringView)> &stream, const Value &data, bool actionHandling) {
+void formatJsonAsHtml(const Callback<void(StringView)> &stream, const Value &data,
+		bool actionHandling) {
 	HtmlJsonEncoder enc(stream, actionHandling);
 	data.encode(enc);
 }
 
-static void writeToRequest(Request &rctx, const Callback<void(StringView)> &stream, const Value &data, bool trackActions) {
+static void writeToRequest(Request &rctx, const Callback<void(StringView)> &stream,
+		const Value &data, bool trackActions) {
 	stream << HTML_LOAD_BEGIN;
 	data::write(stream, data, data::EncodeFormat::Json);
 	stream << HTML_LOAD_END;
@@ -288,8 +279,9 @@ static void writeToRequest(Request &rctx, const Callback<void(StringView)> &stre
 		stream << "<body class=\"api\" onload=\"init();\">";
 		if (!res.empty()) {
 			stream << "<div class=\"sidebar\"><h3>Resources</h3><ul>";
-			for (auto & it : res) {
-				stream << "<li><a href=\"" << it.second.path << "?pretty=api\">" << it.first->getName() << "</a></li>";
+			for (auto &it : res) {
+				stream << "<li><a href=\"" << it.second.path << "?pretty=api\">"
+					   << it.first->getName() << "</a></li>";
 			}
 			stream << "</ul></div>";
 		}
@@ -300,21 +292,17 @@ static void writeToRequest(Request &rctx, const Callback<void(StringView)> &stre
 			stream << " <span class=\"error\">" << info.statusLine << "</span>";
 		}
 		stream << "</h3><p id=\"content\"></p></div>";
-
 	}
 }
 
 void writeData(Request &rctx, const Value &data, bool allowJsonP) {
 	Request r = rctx;
-	writeData(rctx, [&] (StringView str) {
-		rctx << str;
-	}, [&] (StringView ct) {
-		r.setContentType(ct);
-	}, data, allowJsonP);
+	writeData(rctx, [&](StringView str) { rctx << str; },
+			[&](StringView ct) { r.setContentType(ct); }, data, allowJsonP);
 }
 
-void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Callback<void(StringView)> &ct,
-		const Value &data, bool allowJsonP) {
+void writeData(Request &rctx, const Callback<void(StringView)> &stream,
+		const Callback<void(StringView)> &ct, const Value &data, bool allowJsonP) {
 
 	auto &info = rctx.getInfo();
 	bool allowCbor = rctx.getController()->isAcceptable("application/cbor") > 0.0f;
@@ -336,8 +324,10 @@ void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Ca
 			}
 			if (!obj.empty()) {
 				ct("application/javascript;charset=UTF-8");
-				stream << obj <<  "(";;
-				data::write(stream, data, (pretty?data::EncodeFormat::Pretty:data::EncodeFormat::Json));
+				stream << obj << "(";
+				;
+				data::write(stream, data,
+						(pretty ? data::EncodeFormat::Pretty : data::EncodeFormat::Json));
 				stream << ");\r\n";
 				return;
 			}
@@ -354,41 +344,42 @@ void writeData(Request &rctx, const Callback<void(StringView)> &stream, const Ca
 			stream << "\r\n";
 		} else {
 			ct("application/json;charset=UTF-8");
-			data::write(stream, data, (pretty.asBool()?data::EncodeFormat::Pretty:data::EncodeFormat::Json));
+			data::write(stream, data,
+					(pretty.asBool() ? data::EncodeFormat::Pretty : data::EncodeFormat::Json));
 			stream << "\r\n";
 		}
 	}
 }
 
 Status writeResourceFileData(Request &rctx, Value &&result) {
-	Value file(result.isArray()?move(result.getValue(0)):move(result));
-	auto path = db::File::getFilesystemPath(rctx.host().getRoot(), uint64_t(file.getInteger("__oid")));
+	Value file(result.isArray() ? move(result.getValue(0)) : move(result));
+	auto path =
+			db::File::getFilesystemPath(rctx.host().getRoot(), uint64_t(file.getInteger("__oid")));
 
 	auto &info = rctx.getInfo();
 	if (info.queryData.getBool("stat")) {
-		file.setBool(filesystem::exists(path), "exists");
+		file.setBool(filesystem::exists(FileInfo{path}), "exists");
 		return writeResourceData(rctx, move(file), Value());
 	}
 
 	auto &loc = file.getString("location");
-	if (filesystem::exists(path) && loc.empty()) {
+	if (filesystem::exists(FileInfo{path}) && loc.empty()) {
 		if (!output::writeFileHeaders(rctx, file)) {
 			return HTTP_NOT_MODIFIED;
 		}
 
-		rctx.setFilename(sp::move(path));
+		rctx.setFilename(FileInfo(path));
 		return OK;
 	}
 
 	if (!loc.empty()) {
-		rctx.setFilename(nullptr);
 		return rctx.redirectTo(sp::move(loc));
 	}
 
 	return HTTP_NOT_FOUND;
 }
 
-Status writeResourceData(Request &rctx, Value &&result, Value && origin) {
+Status writeResourceData(Request &rctx, Value &&result, Value &&origin) {
 	Value data(move(origin));
 
 	data.setInteger(Time::now().toMicros(), "date");
@@ -411,16 +402,17 @@ Status writeResourceData(Request &rctx, Value &&result, Value && origin) {
 }
 
 Status writeResourceFileHeader(Request &rctx, const Value &result) {
-	Value file(result.isArray()?sp::move(result.getValue(0)):sp::move(result));
+	Value file(result.isArray() ? sp::move(result.getValue(0)) : sp::move(result));
 
 	if (!file) {
 		return HTTP_NOT_FOUND;
 	}
 
-	auto path = db::File::getFilesystemPath(rctx.host().getRoot(), uint64_t(file.getInteger("__oid")));
+	auto path =
+			db::File::getFilesystemPath(rctx.host().getRoot(), uint64_t(file.getInteger("__oid")));
 	auto &loc = file.getString("location");
 
-	if (!filesystem::exists(path) && loc.empty()) {
+	if (!filesystem::exists(FileInfo{path}) && loc.empty()) {
 		return HTTP_NOT_FOUND;
 	}
 
@@ -434,7 +426,7 @@ Status writeResourceFileHeader(Request &rctx, const Value &result) {
 bool writeFileHeaders(Request &rctx, const Value &file, StringView convertType) {
 	auto path = db::File::getFilesystemPath(rctx.host().getRoot(), file.getInteger("__oid"));
 
-	rctx.setFilename(path, true, file.getInteger("mtime"));
+	rctx.setFilename(FileInfo{path}, true, file.getInteger("mtime"));
 
 	auto &info = rctx.getInfo();
 	auto mtime = info.stat.mtime;
@@ -468,12 +460,12 @@ bool writeFileHeaders(Request &rctx, const Value &file, StringView convertType) 
 		rctx.setContentType(file.getString("type"));
 	}
 	return true;
-
 }
 
 String makeEtag(uint32_t idHash, Time mtime) {
 	auto time = mtime.toMicroseconds();
-	Bytes etagData; etagData.resize(12);
+	Bytes etagData;
+	etagData.resize(12);
 	memcpy(etagData.data(), (const void *)&idHash, sizeof(uint32_t));
 	memcpy(etagData.data() + 4, (const void *)&time, sizeof(int64_t));
 
@@ -503,4 +495,4 @@ bool checkCacheHeaders(Request &rctx, Time t, uint32_t idHash) {
 	return checkCacheHeaders(rctx, t, makeEtag(idHash, t));
 }
 
-}
+} // namespace stappler::web::output

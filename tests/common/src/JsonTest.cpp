@@ -49,14 +49,14 @@ struct PoolJsonTest : MemPoolTest {
 
 		runTest(stream, "StreamJsonTest", count, passed, [&] {
 			auto t = Time::now();
-			auto d = data::readFile<memory::PoolInterface>(filesystem::currentDir<memory::PoolInterface>("data/app.json"));
+			auto d = data::readFile<memory::PoolInterface>(FileInfo("data/app.json"));
 
 			stream << (Time::now() - t).toMicroseconds();
 			return d;
 		});
 
 		runTest(stream, "StdJsonTest", count, passed, [&] {
-			auto data = filesystem::readTextFile<memory::PoolInterface>(filesystem::currentDir<memory::PoolInterface>("data/app.json"));
+			auto data = filesystem::readTextFile<memory::PoolInterface>(FileInfo("data/app.json"));
 
 			uint64_t v = 0;
 			for (size_t i = 0; i < ntests; ++i) {
@@ -70,7 +70,7 @@ struct PoolJsonTest : MemPoolTest {
 
 		runTest(stream, "PoolJsonTest", count, passed, [&] {
 			memory::pool::clear(pool);
-			auto data = filesystem::readTextFile<memory::PoolInterface>(filesystem::currentDir<memory::PoolInterface>("data/app.json"));
+			auto data = filesystem::readTextFile<memory::PoolInterface>(FileInfo("data/app.json"));
 
 			auto tmp = memory::pool::create(pool);
 			uint64_t v = 0;
@@ -91,7 +91,7 @@ struct PoolJsonTest : MemPoolTest {
 		runTest(stream, "CompareJsonTest", count, passed, [&] {
 			memory::pool::clear(pool);
 			auto t = Time::now();
-			auto data = filesystem::readTextFile<memory::PoolInterface>(filesystem::currentDir<memory::PoolInterface>("data/app.json"));
+			auto data = filesystem::readTextFile<memory::PoolInterface>(FileInfo("data/app.json"));
 			stream << (Time::now() - t).toMicroseconds() << " ";
 
 			t = Time::now();

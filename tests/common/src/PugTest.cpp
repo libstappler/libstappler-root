@@ -277,10 +277,10 @@ struct PugTest : MemPoolTest {
 			onError(err);
 		});
 
-		auto testPath = filesystem::currentDir<Interface>("resources/test.pug");
-		auto test2Path = filesystem::currentDir<Interface>("resources/test2.pug");
-		auto test3Path = filesystem::currentDir<Interface>("resources/test3.pug");
-		auto cssPath = filesystem::currentDir<Interface>("resources/test.css");
+		auto testPath = FileInfo("resources/test.pug");
+		auto test2Path = FileInfo("resources/test2.pug");
+		auto test3Path = FileInfo("resources/test3.pug");
+		auto cssPath = FileInfo("resources/test.css");
 
 		auto opts = pug::Template::Options::getPretty();
 		if (!opts.hasFlag(pug::Template::Options::StopOnError)) {

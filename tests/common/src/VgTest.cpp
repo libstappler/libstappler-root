@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -102,9 +102,7 @@ struct VgTest : MemPoolTest {
 	void testPathData() {
 		vg::PathData<Interface> data;
 		data.getWriter().readFromFileContent(s_svg2);
-
-		auto filepath = filesystem::currentDir<Interface>("resources/24px.svg");
-		data.getWriter().readFromFile(filepath);
+		data.getWriter().readFromFile(FileInfo{"resources/24px.svg"});
 
 		auto str1 = data.toString<mem_pool::Interface>(true);
 		auto bytes1 = data.encode<mem_pool::Interface>();
@@ -128,7 +126,8 @@ struct VgTest : MemPoolTest {
 				.moveTo(geom::Vec2(0.0f, 0.0f))
 				.lineTo(geom::Vec2(10.0f, 10.0f))
 				.quadTo(geom::Vec2(0.0f, 10.0f), geom::Vec2(15.0f, 15.0f))
-				.cubicTo(geom::Vec2(10.0f, 0.0f), geom::Vec2(-15.0f, -15.0f), geom::Vec2(15.0f, 15.0f))
+				.cubicTo(geom::Vec2(10.0f, 0.0f), geom::Vec2(-15.0f, -15.0f),
+						geom::Vec2(15.0f, 15.0f))
 				.arcTo(geom::Vec2(10.0f, 10.0f), 10.0f, true, false, geom::Vec2(0.0f, 0.0f));
 
 		pdata.getWriter().reserve(100);
@@ -153,9 +152,8 @@ struct VgTest : MemPoolTest {
 	}
 
 	bool testImage() {
-		auto filepath = filesystem::currentDir<Interface>("resources/24px.svg");
-
-		vg::VectorImage::isSvg(FilePath(filepath));
+		auto file = FileInfo("resources/24px.svg");
+		vg::VectorImage::isSvg(file);
 		vg::VectorImage::isSvg(s_svg2);
 		vg::VectorImage::isSvg(BytesView((const uint8_t *)s_svg2.data(), s_svg2.size()));
 
@@ -165,14 +163,15 @@ struct VgTest : MemPoolTest {
 		auto pathData = data.encode<Interface>();
 
 		auto img1 = Rc<vg::VectorImage>::create(s_svg2);
-		auto img2 = Rc<vg::VectorImage>::create(BytesView((const uint8_t *)s_svg2.data(), s_svg2.size()));
+		auto img2 = Rc<vg::VectorImage>::create(
+				BytesView((const uint8_t *)s_svg2.data(), s_svg2.size()));
 		auto img3 = Rc<vg::VectorImage>::create(geom::Size2(100.0f, 100.0f), pathStr);
 
 		vg::VectorPath path;
 		path.init(BytesView(pathData));
 
 		auto img4 = Rc<vg::VectorImage>::create(geom::Size2(100.0f, 100.0f), vg::VectorPath(path));
-		auto img5 = Rc<vg::VectorImage>::create(FilePath(filepath));
+		auto img5 = Rc<vg::VectorImage>::create(file);
 
 		auto data1 = img1->popData();
 		img1->setImageSize(geom::Size2(100.0f, 100.0f));
@@ -258,8 +257,6 @@ struct VgTest : MemPoolTest {
 	}
 
 	void testPath() {
-		auto filepath = filesystem::currentDir<Interface>("resources/24px.svg");
-
 		vg::PathData<mem_std::Interface> data;
 		data.getWriter().readFromFileContent(s_svg2);
 		auto pathStr = data.toString<Interface>(false);
@@ -270,7 +267,7 @@ struct VgTest : MemPoolTest {
 
 		vg::VectorPath path(100);
 		path.init();
-		path.init(FilePath(filepath));
+		path.init(FileInfo("resources/24px.svg"));
 
 		vg::VectorPath path2(100);
 		path2 = path;
@@ -297,7 +294,8 @@ struct VgTest : MemPoolTest {
 	}
 
 	virtual bool run(pool_t *) override {
-		StringStream stream; stream << "\n";
+		StringStream stream;
+		stream << "\n";
 
 		vg::CommandData commandData;
 
@@ -312,4 +310,4 @@ struct VgTest : MemPoolTest {
 
 } _VgTest;
 
-}
+} // namespace stappler::app::test

@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ static RequestController *getRequestFromContext(pool_t *p, uint32_t tag, const v
 
 Request Request::getCurrent() {
 	RequestController *ret = nullptr;
-	pool::foreach_info(&ret, [] (void *ud, pool_t *p, uint32_t tag, const void *data) -> bool {
+	pool::foreach_info(&ret, [](void *ud, pool_t *p, uint32_t tag, const void *data) -> bool {
 		auto ptr = getRequestFromContext(p, tag, data);
 		if (ptr) {
 			*((RequestController **)ud) = ptr;
@@ -58,37 +58,38 @@ Request::Request(RequestController *cfg) : basic_ostream(&_buffer), _buffer(cfg)
 	this->init(&_buffer);
 }
 
-Request & Request::operator =(RequestController *cfg) {
+Request &Request::operator=(RequestController *cfg) {
 	_buffer = Buffer(cfg);
 	_config = cfg;
 	this->init(&_buffer);
 	return *this;
 }
 
-Request::Request(Request &&other) : basic_ostream(&_buffer), _buffer(other._config), _config(other._config) {
+Request::Request(Request &&other)
+: basic_ostream(&_buffer), _buffer(other._config), _config(other._config) {
 	this->init(&_buffer);
 }
-Request & Request::operator =(Request &&other) {
+
+Request &Request::operator=(Request &&other) {
 	_buffer = Buffer(other._config);
 	_config = other._config;
 	this->init(&_buffer);
 	return *this;
 }
 
-Request::Request(const Request &other) : basic_ostream(&_buffer), _buffer(other._config), _config(other._config) {
+Request::Request(const Request &other)
+: basic_ostream(&_buffer), _buffer(other._config), _config(other._config) {
 	this->init(&_buffer);
 }
 
-Request & Request::operator =(const Request &other) {
+Request &Request::operator=(const Request &other) {
 	_buffer = Buffer(other._config);
 	_config = other._config;
 	this->init(&_buffer);
 	return *this;
 }
 
-const RequestInfo &Request::getInfo() const {
-	return _config->getInfo();
-}
+const RequestInfo &Request::getInfo() const { return _config->getInfo(); }
 
 StringView Request::getRequestHeader(StringView key) const {
 	return _config->getRequestHeader(key);
@@ -110,13 +111,9 @@ void Request::setResponseHeader(StringView key, StringView value) const {
 	_config->setResponseHeader(key, value);
 }
 
-void Request::clearResponseHeaders() const {
-	_config->clearResponseHeaders();
-}
+void Request::clearResponseHeaders() const { _config->clearResponseHeaders(); }
 
-StringView Request::getErrorHeader(StringView key) const {
-	return _config->getErrorHeader(key);
-}
+StringView Request::getErrorHeader(StringView key) const { return _config->getErrorHeader(key); }
 
 void Request::foreachErrorHeaders(const Callback<void(StringView, StringView)> &cb) const {
 	_config->foreachErrorHeaders(cb);
@@ -126,23 +123,28 @@ void Request::setErrorHeader(StringView key, StringView value) const {
 	_config->setErrorHeader(key, value);
 }
 
-void Request::clearErrorHeaders() const {
-	_config->clearErrorHeaders();
-}
+void Request::clearErrorHeaders() const { _config->clearErrorHeaders(); }
 
 Request::Buffer::Buffer(RequestController *cfg) : _config(cfg) { }
 Request::Buffer::Buffer(Buffer &&other) : _config(other._config) { }
-Request::Buffer& Request::Buffer::operator=(Buffer &&other) { _config = other._config; return *this; }
+Request::Buffer &Request::Buffer::operator=(Buffer &&other) {
+	_config = other._config;
+	return *this;
+}
 
 Request::Buffer::Buffer(const Buffer &other) : _config(other._config) { }
-Request::Buffer& Request::Buffer::operator=(const Buffer &other) { _config = other._config; return *this; }
+Request::Buffer &Request::Buffer::operator=(const Buffer &other) {
+	_config = other._config;
+	return *this;
+}
 
 Request::Buffer::int_type Request::Buffer::overflow(int_type c) {
 	_config->putc(c);
 	return c;
 }
 
-Request::Buffer::pos_type Request::Buffer::seekoff(off_type off, ios_base::seekdir way, ios_base::openmode) {
+Request::Buffer::pos_type Request::Buffer::seekoff(off_type off, ios_base::seekdir way,
+		ios_base::openmode) {
 	return _config->getBytesSent();
 }
 
@@ -155,48 +157,38 @@ int Request::Buffer::sync() {
 	return 0;
 }
 
-Request::Buffer::streamsize Request::Buffer::xsputn(const char_type* s, streamsize n) {
+Request::Buffer::streamsize Request::Buffer::xsputn(const char_type *s, streamsize n) {
 	return _config->write((const uint8_t *)s, n);
 }
 
-void Request::setRequestHandler(RequestHandler *h) {
-	_config->_handler = h;
-}
-RequestHandler *Request::getRequestHandler() const {
-	return _config->_handler;
-}
+void Request::setRequestHandler(RequestHandler *h) { _config->_handler = h; }
+RequestHandler *Request::getRequestHandler() const { return _config->_handler; }
 
 void Request::writeData(const Value &data, bool allowJsonP) {
 	output::writeData(*this, data, allowJsonP);
 }
 
 /* request params setters */
-void Request::setDocumentRoot(StringView str) {
-	_config->setDocumentRoot(str);
-}
+void Request::setDocumentRoot(StringView str) { _config->setDocumentRoot(str); }
 
-void Request::setContentType(StringView str) {
-	_config->setContentType(str);
-}
+void Request::setContentType(StringView str) { _config->setContentType(str); }
 
-void Request::setHandler(StringView str) {
-	_config->setHandler(str);
-}
+void Request::setHandler(StringView str) { _config->setHandler(str); }
 
-void Request::setContentEncoding(StringView str) {
-	_config->setContentEncoding(str);
-}
+void Request::setContentEncoding(StringView str) { _config->setContentEncoding(str); }
 
-void Request::setFilename(StringView str, bool updateStat, Time mtime) {
+void Request::setFilename(const FileInfo &str, bool updateStat, Time mtime) {
 	_config->setFilename(str, updateStat, mtime);
 }
 
 void Request::setCookie(StringView name, StringView value, TimeInterval maxAge, CookieFlags flags) {
-	_config->_cookies.emplace(name.pdup(pool()), CookieStorageInfo{value.str<Interface>(), flags, maxAge});
+	_config->_cookies.emplace(name.pdup(pool()),
+			CookieStorageInfo{value.str<Interface>(), flags, maxAge});
 }
 
 void Request::removeCookie(StringView name, CookieFlags flags) {
-	_config->_cookies.emplace(name.pdup(pool()), CookieStorageInfo{String(), flags, TimeInterval::seconds(0)});
+	_config->_cookies.emplace(name.pdup(pool()),
+			CookieStorageInfo{String(), flags, TimeInterval::seconds(0)});
 }
 
 const Map<StringView, CookieStorageInfo> Request::getResponseCookies() const {
@@ -220,13 +212,9 @@ Session *Request::authorizeUser(db::User *user, TimeInterval maxAge) {
 	return nullptr;
 }
 
-void Request::setInputFilter(InputFilter *filter) {
-	_config->setInputFilter(filter);
-}
+void Request::setInputFilter(InputFilter *filter) { _config->setInputFilter(filter); }
 
-InputFilter *Request::getInputFilter() const {
-	return _config->_filter;
-}
+InputFilter *Request::getInputFilter() const { return _config->_filter; }
 
 void Request::setUser(db::User *u) {
 	if (u) {
@@ -244,9 +232,7 @@ void Request::setUser(db::User *u) {
 	}
 }
 
-void Request::setUser(int64_t id) {
-	_config->_userId = id;
-}
+void Request::setUser(int64_t id) { _config->_userId = id; }
 
 Session *Request::getSession() {
 	if (!_config->_session) {
@@ -271,25 +257,15 @@ db::User *Request::getUser() {
 	return _config->_user;
 }
 
-db::User *Request::getAuthorizedUser() const {
-	return _config->_user;
-}
+db::User *Request::getAuthorizedUser() const { return _config->_user; }
 
-int64_t Request::getUserId() const {
-	return _config->_userId;
-}
+int64_t Request::getUserId() const { return _config->_userId; }
 
-void Request::setStatus(Status status, StringView str) {
-	_config->setStatus(status, str);
-}
+void Request::setStatus(Status status, StringView str) { _config->setStatus(status, str); }
 
-const db::InputConfig & Request::getInputConfig() const {
-	return _config->_inputConfig;
-}
+const db::InputConfig &Request::getInputConfig() const { return _config->_inputConfig; }
 
-void Request::setInputConfig(const db::InputConfig &cfg) {
-	_config->_inputConfig = cfg;
-}
+void Request::setInputConfig(const db::InputConfig &cfg) { _config->_inputConfig = cfg; }
 
 void Request::storeObject(void *ptr, const StringView &key, Function<void()> &&cb) const {
 	pool::store(pool(), ptr, key, sp::move(cb));
@@ -297,35 +273,23 @@ void Request::storeObject(void *ptr, const StringView &key, Function<void()> &&c
 
 bool Request::performWithStorage(const Callback<bool(const db::Transaction &)> &cb) const {
 	auto ad = _config->acquireDatabase();
-	return ad.performWithTransaction([&, this] (const db::Transaction &t) {
+	return ad.performWithTransaction([&, this](const db::Transaction &t) {
 		t.setRole(_config->_accessRole);
 		return cb(t);
 	});
 }
 
-bool Request::isSecureConnection() const {
-	return _config->isSecureConnection();
-}
+bool Request::isSecureConnection() const { return _config->isSecureConnection(); }
 
-RequestController *Request::config() const {
-	return _config;
-}
+RequestController *Request::config() const { return _config; }
 
-Host Request::host() const {
-	return Host(_config->getHost());
-}
+Host Request::host() const { return Host(_config->getHost()); }
 
-pool_t *Request::pool() const {
-	return _config->getPool();
-}
+pool_t *Request::pool() const { return _config->getPool(); }
 
-const Vector<Value> & Request::getDebugMessages() const {
-	return _config->_debug;
-}
+const Vector<Value> &Request::getDebugMessages() const { return _config->_debug; }
 
-const Vector<Value> & Request::getErrorMessages() const {
-	return _config->_errors;
-}
+const Vector<Value> &Request::getErrorMessages() const { return _config->_errors; }
 
 void Request::addErrorMessage(Value &&val) const {
 	if (_config) {
@@ -343,9 +307,7 @@ void Request::addCleanup(Function<void()> &&cb) const {
 	pool::cleanup_register(pool(), sp::move(cb));
 }
 
-bool Request::isAdministrative() {
-	return getAccessRole() == db::AccessRoleId::Admin;
-}
+bool Request::isAdministrative() { return getAccessRole() == db::AccessRoleId::Admin; }
 
 db::AccessRoleId Request::getAccessRole() const {
 	if (_config->_accessRole == db::AccessRoleId::Nobody) {
@@ -371,14 +333,16 @@ db::AccessRoleId Request::getAccessRole() const {
 			}
 #ifdef DEBUG
 			auto userIp = _config->_info.useragentIp;
-			if ((strncmp(userIp.data(), "127.", 4) == 0 || userIp == "::1") && _config->_info.queryData.getBool("admin")) {
+			if ((strncmp(userIp.data(), "127.", 4) == 0 || userIp == "::1")
+					&& _config->_info.queryData.getBool("admin")) {
 				_config->_accessRole = db::AccessRoleId::Admin;
 			}
 #endif
 		}
 		if (auto t = db::Transaction::acquireIfExists(pool())) {
 			auto role = t.getRole();
-			if (role != db::AccessRoleId::System && toInt(t.getRole()) > toInt(_config->_accessRole)) {
+			if (role != db::AccessRoleId::System
+					&& toInt(t.getRole()) > toInt(_config->_accessRole)) {
 				_config->_accessRole = role;
 			}
 		}
@@ -402,21 +366,22 @@ Status Request::redirectTo(StringView location) {
 	return HTTP_SEE_OTHER;
 }
 
-Status Request::sendFile(StringView file, size_t cacheTime) {
-	setFilename(filesystem::writablePath<Interface>(file), true);
+Status Request::sendFile(const FileInfo &file, size_t cacheTime) {
+	setFilename(file, true);
 	if (cacheTime == 0) {
 		setResponseHeader("Cache-Control", "no-cache, must-revalidate");
 	} else if (cacheTime < SIZE_MAX) {
-		setResponseHeader("Cache-Control", toString("max-age=", cacheTime, ", must-revalidate", cacheTime));
+		setResponseHeader("Cache-Control",
+				toString("max-age=", cacheTime, ", must-revalidate", cacheTime));
 	}
 	return OK;
 }
 
-Status Request::sendFile(StringView file, StringView contentType, size_t cacheTime) {
+Status Request::sendFile(const FileInfo &file, StringView contentType, size_t cacheTime) {
 	if (!contentType.empty()) {
 		setContentType(sp::move(contentType));
 	}
-	return sendFile(sp::move(file), cacheTime);
+	return sendFile(file, cacheTime);
 }
 
 String Request::getFullHostname(int port) const {
@@ -431,7 +396,7 @@ String Request::getFullHostname(int port) const {
 	}
 
 	StringStream ret;
-	ret << (secure?"https":"http") << "://" << info.url.host;
+	ret << (secure ? "https" : "http") << "://" << info.url.host;
 	if (port && ((secure && port != 443) || (!secure && port != 80))) {
 		ret << ':' << port;
 	}
@@ -447,9 +412,10 @@ bool Request::checkCacheHeaders(Time t, uint32_t idHash) {
 	return output::checkCacheHeaders(*this, t, idHash);
 }
 
-Status Request::runPug(const StringView & path, const Function<bool(pug::Context &, const pug::Template &)> &cb) {
+Status Request::runPug(const FileInfo &path,
+		const Function<bool(pug::Context &, const pug::Template &)> &cb) {
 	auto cache = host().getPugCache();
-	if (cache->runTemplate(path, [&, this] (pug::Context &ctx, const pug::Template &tpl) -> bool {
+	if (cache->runTemplate(path, [&, this](pug::Context &ctx, const pug::Template &tpl) -> bool {
 		initScriptContext(ctx);
 
 		if (cb(ctx, tpl)) {
@@ -464,7 +430,31 @@ Status Request::runPug(const StringView & path, const Function<bool(pug::Context
 			return true;
 		}
 		return false;
-	}, [&] (StringView str) { *this << str; })) {
+	}, [&](StringView str) { *this << str; })) {
+		return DONE;
+	}
+	return HTTP_INTERNAL_SERVER_ERROR;
+}
+
+Status Request::runPug(StringView path,
+		const Function<bool(pug::Context &, const pug::Template &)> &cb) {
+	auto cache = host().getPugCache();
+	if (cache->runTemplate(path, [&, this](pug::Context &ctx, const pug::Template &tpl) -> bool {
+		initScriptContext(ctx);
+
+		if (cb(ctx, tpl)) {
+			auto lm = getResponseHeader("Last-Modified");
+			auto etag = getResponseHeader("ETag");
+			setResponseHeader("Content-Type", "text/html; charset=UTF-8");
+			if (lm.empty() && etag.empty()) {
+				setResponseHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+				setResponseHeader("Pragma", "no-cache");
+				setResponseHeader("Expires", Time::seconds(0).toHttp<Interface>());
+			}
+			return true;
+		}
+		return false;
+	}, [&](StringView str) { *this << str; })) {
 		return DONE;
 	}
 	return HTTP_INTERNAL_SERVER_ERROR;
@@ -473,33 +463,37 @@ Status Request::runPug(const StringView & path, const Function<bool(pug::Context
 void Request::initScriptContext(pug::Context &ctx) {
 	auto &info = getInfo();
 	pug::VarClass serenityClass;
-	serenityClass.staticFunctions.emplace("prettify", [] (pug::VarStorage &, pug::Var *var, size_t argc) -> pug::Var {
+	serenityClass.staticFunctions.emplace("prettify",
+			[](pug::VarStorage &, pug::Var *var, size_t argc) -> pug::Var {
 		if (var && argc == 1) {
 			return pug::Var(Value(data::toString(var->readValue(), true)));
 		}
 		return pug::Var();
 	});
-	serenityClass.staticFunctions.emplace("timeToHttp", [] (pug::VarStorage &, pug::Var *var, size_t argc) -> pug::Var {
+	serenityClass.staticFunctions.emplace("timeToHttp",
+			[](pug::VarStorage &, pug::Var *var, size_t argc) -> pug::Var {
 		if (var && argc == 1 && var->readValue().isInteger()) {
-			return pug::Var(Value(Time::microseconds(var->readValue().asInteger()).toHttp<Interface>()));
+			return pug::Var(
+					Value(Time::microseconds(var->readValue().asInteger()).toHttp<Interface>()));
 		}
 		return pug::Var();
 	});
-	serenityClass.staticFunctions.emplace("uuidToString", [] (pug::VarStorage &, pug::Var *var, size_t argc) -> pug::Var {
+	serenityClass.staticFunctions.emplace("uuidToString",
+			[](pug::VarStorage &, pug::Var *var, size_t argc) -> pug::Var {
 		if (var && argc == 1 && var->readValue().isBytes()) {
 			return pug::Var(Value(memory::uuid(var->readValue().getBytes()).str()));
 		}
 		return pug::Var();
 	});
 	ctx.set("serenity", sp::move(serenityClass));
-	ctx.set("window", Value{
-		pair("location", Value({
-			pair("href", Value(toString(getFullHostname(), info.unparserUri))),
-			pair("hostname", Value(info.url.host)),
-			pair("pathname", Value(info.url.path)),
-			pair("protocol", Value(_config->isSecureConnection() ? "https:" : "http:")),
-		}))
-	});
+	ctx.set("window",
+			Value{pair("location",
+					Value({
+						pair("href", Value(toString(getFullHostname(), info.unparserUri))),
+						pair("hostname", Value(info.url.host)),
+						pair("pathname", Value(info.url.path)),
+						pair("protocol", Value(_config->isSecureConnection() ? "https:" : "http:")),
+					}))});
 }
 
-}
+} // namespace stappler::web

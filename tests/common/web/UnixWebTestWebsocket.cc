@@ -133,7 +133,7 @@ public:
 				v.readUntilString("/__server/shell");
 				if (v.starts_with("/__server/shell")) {
 					auto val = v.readUntil<StringView::Chars<'\''>>();
-					auto cborFile = filesystem::currentDir<Interface>("data/app.cbor");
+					auto cborFile = FileInfo("data/app.cbor");
 					auto cborData = filesystem::readIntoMemory<Interface>(cborFile);
 
 					NetworkHandle h;

@@ -20,6 +20,7 @@
  THE SOFTWARE.
  **/
 
+#include "SPFilepath.h"
 #include "SPFilesystem.h"
 #include "SPWebTools.h"
 #include "SPWebRoot.h"
@@ -31,7 +32,8 @@
 namespace STAPPLER_VERSIONIZED stappler::web::tools {
 
 static Status makeUnavailablePage(Request &req) {
-	req.runPug("virtual://html/errors_unauthorized.pug", [&] (pug::Context &exec, const pug::Template &) -> bool {
+	req.runPug("virtual://html/errors_unauthorized.pug",
+			[&](pug::Context &exec, const pug::Template &) -> bool {
 		exec.set("version", Value(config::getWebserverVersionString()));
 		return true;
 	});
@@ -92,7 +94,8 @@ Status ErrorsGui::onTranslateName(Request &req) {
 		}
 
 		Value errorsData;
-		auto token = d.isString("c") ? db::ContinueToken(d.getString("c")) : db::ContinueToken("__oid", 25, true);
+		auto token = d.isString("c") ? db::ContinueToken(d.getString("c"))
+									 : db::ContinueToken("__oid", 25, true);
 
 		if (errorScheme) {
 			db::Query q;
@@ -102,30 +105,33 @@ Status ErrorsGui::onTranslateName(Request &req) {
 			errorsData = token.perform(*errorScheme, t, q);
 		}
 
-		req.runPug("virtual://html/errors.pug", [&] (pug::Context &exec, const pug::Template &tpl) -> bool {
+		req.runPug("virtual://html/errors.pug",
+				[&](pug::Context &exec, const pug::Template &tpl) -> bool {
 			ServerGui::defineBasics(exec, req, u);
 
 			if (!selectedTag.empty()) {
 				exec.set("selectedTag", Value(selectedTag));
 			}
 
-			if (auto iface = dynamic_cast<db::sql::SqlHandle *>(t.getAdapter().getBackendInterface())) {
+			if (auto iface = dynamic_cast<db::sql::SqlHandle *>(
+						t.getAdapter().getBackendInterface())) {
 				Value ret;
 
 				auto driver = iface->getDriver();
 
 				auto tagUnwrapQuery = (driver->getDriverName() == "sqlite")
-						? toString("SELECT __oid, __unwrap_value as tag FROM ", errorScheme->getName(), ", sp_unwrap(tags) as unwrap")
-						: toString("SELECT __oid, unnest(tags) as tag FROM ", errorScheme->getName());
+						? toString("SELECT __oid, __unwrap_value as tag FROM ",
+								  errorScheme->getName(), ", sp_unwrap(tags) as unwrap")
+						: toString("SELECT __oid, unnest(tags) as tag FROM ",
+								  errorScheme->getName());
 
-				auto query = toString("SELECT tag, COUNT(*) FROM (", tagUnwrapQuery, ") s GROUP BY tag;;");
-				iface->performSimpleSelect(query, [&] (db::Result &res) {
+				auto query = toString("SELECT tag, COUNT(*) FROM (", tagUnwrapQuery,
+						") s GROUP BY tag;;");
+				iface->performSimpleSelect(query, [&](db::Result &res) {
 					for (auto it : res) {
-						ret.addValue(Value({
-							pair("tag", Value(it.toString(0))),
+						ret.addValue(Value({pair("tag", Value(it.toString(0))),
 							pair("count", Value(it.toInteger(1))),
-							pair("selected", Value(it.toString(0) == selectedTag))
-						}));
+							pair("selected", Value(it.toString(0) == selectedTag))}));
 					}
 				});
 
@@ -233,11 +239,10 @@ Status HandlersGui::onTranslateName(Request &req) {
 			}
 		}
 
-		for (auto &it : servh.asArray()) {
-			ret.addValue(move(it));
-		}
+		for (auto &it : servh.asArray()) { ret.addValue(move(it)); }
 
-		req.runPug("virtual://html/handlers.pug", [&] (pug::Context &exec, const pug::Template &tpl) -> bool {
+		req.runPug("virtual://html/handlers.pug",
+				[&](pug::Context &exec, const pug::Template &tpl) -> bool {
 			ServerGui::defineBasics(exec, req, u);
 			exec.set("handlers", sp::move(ret));
 			return true;
@@ -255,7 +260,7 @@ Status ReportsGui::onTranslateName(Request &req) {
 	if (u && u->isAdmin()) {
 		auto reportsAddress = req.host().getDocumentRootPath(".reports");
 
-		auto readTime = [&] (StringView name) {
+		auto readTime = [&](StringView name) {
 			if (name.starts_with("crash.")) {
 				name.skipUntil<StringView::CharGroup<CharGroupId::Numbers>>();
 				return Time::microseconds(name.readInteger(10).get());
@@ -268,8 +273,8 @@ Status ReportsGui::onTranslateName(Request &req) {
 		Value paths;
 		Value file;
 		if (_subPath.empty() || _subPath == "/") {
-			filesystem::ftw(reportsAddress, [&] (StringView path, bool isFile) {
-				if (isFile) {
+			filesystem::ftw(FileInfo{reportsAddress}, [&](const FileInfo &path, FileType type) {
+				if (type == FileType::File) {
 					auto name = filepath::lastComponent(path);
 					if (name.starts_with("crash.") || name.starts_with("update.")) {
 						auto &info = paths.emplace();
@@ -280,26 +285,30 @@ Status ReportsGui::onTranslateName(Request &req) {
 						}
 					}
 				}
+				return true;
 			}, 1);
 
 			if (paths) {
-				std::sort(paths.asArray().begin(), paths.asArray().end(), [&] (const Value &l, const Value &r) {
+				std::sort(paths.asArray().begin(), paths.asArray().end(),
+						[&](const Value &l, const Value &r) {
 					return l.getInteger("time") > r.getInteger("time");
 				});
 			}
 		} else if (_subPathVec.size() == 1) {
 			auto name = _subPathVec.front();
 
-			auto reportsAddress = filepath::merge<Interface>(req.host().getDocumentRootPath(".reports"), name);
+			auto reportsAddress =
+					filepath::merge<Interface>(req.host().getDocumentRootPath(".reports"), name);
 
 			filesystem::Stat stat;
-			auto exists = filesystem::stat(reportsAddress, stat);
-			if (exists && stat.type == filesystem::FileType::File) {
+			auto exists = filesystem::stat(FileInfo{reportsAddress}, stat);
+			if (exists && stat.type == FileType::File) {
 				if (req.getInfo().queryData.getBool("remove")) {
-					filesystem::remove(reportsAddress);
-					return req.redirectTo(StringView(_originPath, _originPath.size() - _subPath.size()));
+					filesystem::remove(FileInfo{reportsAddress});
+					return req.redirectTo(
+							StringView(_originPath, _originPath.size() - _subPath.size()));
 				}
-				auto data = filesystem::readTextFile<Interface>(reportsAddress);
+				auto data = filesystem::readTextFile<Interface>(FileInfo{reportsAddress});
 				if (!data.empty()) {
 					file.setString(move(data), "data");
 					auto name = filepath::lastComponent(reportsAddress);
@@ -312,7 +321,8 @@ Status ReportsGui::onTranslateName(Request &req) {
 			}
 		}
 
-		req.runPug("virtual://html/reports.pug", [&] (pug::Context &exec, const pug::Template &tpl) -> bool {
+		req.runPug("virtual://html/reports.pug",
+				[&](pug::Context &exec, const pug::Template &tpl) -> bool {
 			ServerGui::defineBasics(exec, req, u);
 			if (paths) {
 				exec.set("files", move(paths));
@@ -328,4 +338,4 @@ Status ReportsGui::onTranslateName(Request &req) {
 	}
 }
 
-}
+} // namespace stappler::web::tools

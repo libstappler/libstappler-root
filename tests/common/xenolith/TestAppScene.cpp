@@ -56,14 +56,18 @@ bool TestAppScene::init(Application *app, const core::FrameConstraints &constrai
 	core::Queue::Builder builder("Loader");
 
 	builder.addImage("xenolith-1-480.png",
-		core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, core::ImageHints::Opaque),
-		FilePath("resources/xenolith-1-480.png"));
+			core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled,
+					core::ImageHints::Opaque),
+			FileInfo("resources/xenolith-1-480.png"));
 	builder.addImage("xenolith-2-480.png",
-		core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, core::ImageHints::Opaque),
-		FilePath("resources/xenolith-2-480.png"));
+			core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled,
+					core::ImageHints::Opaque),
+			FileInfo("resources/xenolith-2-480.png"));
 
 	basic2d::vk::ShadowPass::RenderQueueInfo info{
-		app, Extent2(constraints.extent.width, constraints.extent.height), basic2d::vk::ShadowPass::Flags::None,
+		app,
+		Extent2(constraints.extent.width, constraints.extent.height),
+		basic2d::vk::ShadowPass::Flags::None,
 	};
 
 	basic2d::vk::ShadowPass::makeRenderQueue(builder, info);
@@ -72,17 +76,16 @@ bool TestAppScene::init(Application *app, const core::FrameConstraints &constrai
 		return false;
 	}
 
-	_assetListener = addComponent(Rc<DataListener<storage::Asset>>::create([this] (SubscriptionFlags flags) {
-		handleAssetUpdate(flags);
-	}));
+	_assetListener = addComponent(Rc<DataListener<storage::Asset>>::create(
+			[this](SubscriptionFlags flags) { handleAssetUpdate(flags); }));
 
 	_container = Rc<StorageTestComponentContainer>::create();
 
 	auto content = Rc<material2d::SceneContent>::create();
 
 	auto el = content->addComponent(Rc<EventListener>::create());
-	el->onEvent(View::onBackground, [el] (const Event &ev) {
-		auto fn = [] (int id) {
+	el->onEvent(View::onBackground, [el](const Event &ev) {
+		auto fn = [](int id) {
 
 		};
 
@@ -103,8 +106,6 @@ bool TestAppScene::init(Application *app, const core::FrameConstraints &constrai
 
 	setContent(content);
 
-	filesystem::mkdir(filesystem::cachesPath<Interface>());
-
 	scheduleUpdate();
 
 	content->pushLayout(makeLayoutNode(INIT_LAYOUT));
@@ -122,10 +123,12 @@ bool TestAppScene::init(Application *app, const core::FrameConstraints &constrai
 	content->setNodeToParentTransform(Mat4::IDENTITY);
 
 	auto data = material2d::SnackbarData("Test text", Color::Red_500, 0.5f)
-					.withButton("BUTTON", [] () { }, Color::Blue_500, 0.5f)
-					.withButton(IconName::Action_accessibility_solid, [] () { }, Color::Blue_500, 0.5f)
-					.withButton("BUTTON", IconName::Action_accessibility_solid, [] () { }, Color::Blue_500, 0.5f)
-					.delayFor(1.0f);
+						.withButton("BUTTON", []() { }, Color::Blue_500, 0.5f)
+						.withButton(IconName::Action_accessibility_solid, []() { }, Color::Blue_500,
+								0.5f)
+						.withButton("BUTTON", IconName::Action_accessibility_solid, []() { },
+								Color::Blue_500, 0.5f)
+						.delayFor(1.0f);
 	content->showSnackbar(move(data));
 
 	if (!isClipContent()) {
@@ -144,22 +147,27 @@ void TestAppScene::onPresented(Director *dir) {
 	tmp.transform = core::SurfaceTransformFlags::Rotate90 | core::SurfaceTransformFlags::PreRotated;
 	dir->setFrameConstraints(tmp);
 
-	tmp.transform = core::SurfaceTransformFlags::Rotate180 | core::SurfaceTransformFlags::PreRotated;
+	tmp.transform =
+			core::SurfaceTransformFlags::Rotate180 | core::SurfaceTransformFlags::PreRotated;
 	dir->setFrameConstraints(tmp);
 
-	tmp.transform = core::SurfaceTransformFlags::Rotate270 | core::SurfaceTransformFlags::PreRotated;
+	tmp.transform =
+			core::SurfaceTransformFlags::Rotate270 | core::SurfaceTransformFlags::PreRotated;
 	dir->setFrameConstraints(tmp);
 
 	tmp.transform = core::SurfaceTransformFlags::Mirror | core::SurfaceTransformFlags::PreRotated;
 	dir->setFrameConstraints(tmp);
 
-	tmp.transform = core::SurfaceTransformFlags::MirrorRotate90 | core::SurfaceTransformFlags::PreRotated;
+	tmp.transform =
+			core::SurfaceTransformFlags::MirrorRotate90 | core::SurfaceTransformFlags::PreRotated;
 	dir->setFrameConstraints(tmp);
 
-	tmp.transform = core::SurfaceTransformFlags::MirrorRotate180 | core::SurfaceTransformFlags::PreRotated;
+	tmp.transform =
+			core::SurfaceTransformFlags::MirrorRotate180 | core::SurfaceTransformFlags::PreRotated;
 	dir->setFrameConstraints(tmp);
 
-	tmp.transform = core::SurfaceTransformFlags::MirrorRotate270 | core::SurfaceTransformFlags::PreRotated;
+	tmp.transform =
+			core::SurfaceTransformFlags::MirrorRotate270 | core::SurfaceTransformFlags::PreRotated;
 	dir->setFrameConstraints(tmp);
 
 	dir->setFrameConstraints(c);
@@ -173,20 +181,14 @@ void TestAppScene::onPresented(Director *dir) {
 	Scene2d::onPresented(dir);
 }
 
-void TestAppScene::onFinished(Director *dir) {
-	Scene2d::onFinished(dir);
-}
+void TestAppScene::onFinished(Director *dir) { Scene2d::onFinished(dir); }
 
-void TestAppScene::update(const UpdateTime &time) {
-	Scene2d::update(time);
-}
+void TestAppScene::update(const UpdateTime &time) { Scene2d::update(time); }
 
 void TestAppScene::handleEnter(xenolith::Scene *scene) {
 	Scene2d::handleEnter(scene);
 
-	runAction(Rc<Sequence>::create(INIT_TIME, [this] {
-		runNext(INIT_LAYOUT);
-	}));
+	runAction(Rc<Sequence>::create(INIT_TIME, [this] { runNext(INIT_LAYOUT); }));
 
 	_content->setHandlesViewDecoration(false);
 	_content->setHandlesViewDecoration(true);
@@ -202,10 +204,11 @@ void TestAppScene::handleEnter(xenolith::Scene *scene) {
 
 	serv->addComponentContainer(_container);
 
-	_container->getAll([] (Value &&val) { }, this);
+	_container->getAll([](Value &&val) { }, this);
 
 	auto lib = _director->getApplication()->getExtension<storage::AssetLibrary>();
-	lib->acquireAsset("https://finuch.ru/api/v1/pages/id8261/images/id8262/content", [this] (const Rc<storage::Asset> &asset) {
+	lib->acquireAsset("https://finuch.ru/api/v1/pages/id8261/images/id8262/content",
+			[this](const Rc<storage::Asset> &asset) {
 		if (_running) {
 			_assetListener->setSubscription(asset);
 			asset->download();
@@ -229,9 +232,7 @@ void TestAppScene::handleExit() {
 	Scene2d::handleExit();
 }
 
-void TestAppScene::render(FrameInfo &info) {
-	Scene2d::render(info);
-}
+void TestAppScene::render(FrameInfo &info) { Scene2d::render(info); }
 
 void TestAppScene::runLayout(LayoutName l, Rc<basic2d::SceneLayout2d> &&node) {
 	static_cast<basic2d::SceneContent2d *>(_content)->replaceLayout(node);
@@ -248,17 +249,13 @@ void TestAppScene::runNext(LayoutName name) {
 		auto next = LayoutName(toInt(name) - 1);
 		if (auto l = makeLayoutNode(next)) {
 			static_cast<basic2d::SceneContent2d *>(_content)->pushLayout(move(l));
-			runAction(Rc<Sequence>::create(INIT_TIME, [this, next] {
-				runNext(next);
-			}));
+			runAction(Rc<Sequence>::create(INIT_TIME, [this, next] { runNext(next); }));
 		}
 	}
 }
 
-void TestAppScene::handleAssetUpdate(SubscriptionFlags) {
+void TestAppScene::handleAssetUpdate(SubscriptionFlags) { }
 
-}
-
-}
+} // namespace stappler::xenolith::app
 
 #endif

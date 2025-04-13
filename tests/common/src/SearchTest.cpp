@@ -567,8 +567,8 @@ struct SearchTest : MemPoolTest {
 		});
 
 		runTest(stream, "Edit distance", count, passed, [&] {
-			auto path1 = filesystem::currentDir<Interface>("resources/Enterobacteria_phage_1.fasta");
-			auto path2 = filesystem::currentDir<Interface>("resources/mutated_99_perc.fasta");
+			auto path1 = FileInfo("resources/Enterobacteria_phage_1.fasta");
+			auto path2 = FileInfo("resources/mutated_99_perc.fasta");
 
 			auto data1 = filesystem::readTextFile<Interface>(path1);
 			auto data2 = filesystem::readTextFile<Interface>(path2);

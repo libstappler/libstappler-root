@@ -22,6 +22,7 @@ THE SOFTWARE.
 **/
 
 #include "SPCommon.h"
+#include "SPFilepath.h"
 
 #ifdef MODULE_STAPPLER_DATA
 
@@ -46,14 +47,14 @@ struct PoolCborTest : MemPoolTest {
 
 		runTest(stream, "StreamCborTest", count, passed, [&] {
 			auto t = Time::now();
-			auto d = data::readFile<memory::PoolInterface>(filesystem::currentDir<memory::PoolInterface>("app.cbor"));
+			auto d = data::readFile<memory::PoolInterface>( FileInfo("app.cbor"));
 
 			stream << (Time::now() - t).toMicroseconds();
 			return true;
 		});
 
 		runTest(stream, "StdCborTest", count, passed, [&] {
-			auto data = filesystem::readIntoMemory<Interface>(filesystem::currentDir<Interface>("app.cbor"));
+			auto data = filesystem::readIntoMemory<Interface>(FileInfo("app.cbor"));
 
 			uint64_t v = 0;
 			for (size_t i = 0; i < ntests; ++i) {
@@ -66,7 +67,7 @@ struct PoolCborTest : MemPoolTest {
 		});
 
 		runTest(stream, "PoolCborTest", count, passed, [&] {
-			auto data = filesystem::readIntoMemory<memory::PoolInterface>(filesystem::currentDir<memory::PoolInterface>("app.cbor"));
+			auto data = filesystem::readIntoMemory<memory::PoolInterface>(FileInfo("app.cbor"));
 
 			uint64_t v = 0;
 			for (size_t i = 0; i < ntests; ++i) {
@@ -84,7 +85,7 @@ struct PoolCborTest : MemPoolTest {
 		runTest(stream, "CompareCborTest", count, passed, [&] {
 			memory::pool::clear(pool);
 			auto t = Time::now();
-			auto data = filesystem::readIntoMemory<memory::PoolInterface>(filesystem::currentDir<memory::PoolInterface>("app.cbor"));
+			auto data = filesystem::readIntoMemory<memory::PoolInterface>(FileInfo("app.cbor"));
 			stream << (Time::now() - t).toMicroseconds() << " ";
 
 			t = Time::now();
@@ -117,26 +118,27 @@ struct CborDataTest : Test {
 		size_t passed = 0;
 		stream << "\n";
 
-		auto cborPath = filesystem::currentDir<Interface>("data");
+		auto cborPath = FileInfo("data");
 
 		Map<String, Value> cborData;
 		Map<String, Value> jsonData;
 		Map<String, String> diagData;
 
-		filesystem::ftw(cborPath, [&] (const StringView &path, bool isFile) {
-			if (isFile) {
-				auto ext = filepath::lastExtension(path);
+		filesystem::ftw(cborPath, [&] (const FileInfo &path, FileType type) {
+			if (type == FileType::File) {
+				auto ext = filepath::lastExtension(path.path);
 
 				auto fileData = filesystem::readIntoMemory<Interface>(path);
 
 				if (ext == "cbor") {
-					cborData.emplace(filepath::name(path).str<Interface>(), data::read<Interface>(fileData));
+					cborData.emplace(filepath::name(path.path).str<Interface>(), data::read<Interface>(fileData));
 				} else if (ext == "json") {
-					jsonData.emplace(filepath::name(path).str<Interface>(), data::read<Interface>(fileData));
+					jsonData.emplace(filepath::name(path.path).str<Interface>(), data::read<Interface>(fileData));
 				} else if (ext == "diag") {
-					diagData.emplace(filepath::name(path).str<Interface>(), filesystem::readTextFile<Interface>(path));
+					diagData.emplace(filepath::name(path.path).str<Interface>(), filesystem::readTextFile<Interface>(path));
 				}
 			}
+			return true;
 		});
 
 		for (auto &it : cborData) {
@@ -193,24 +195,25 @@ struct CborDataFileTest : Test {
 		size_t passed = 0;
 		stream << "\n";
 
-		auto cborPath = filesystem::currentDir<Interface>("data");
+		auto cborPath = FileInfo("data");
 
 		Map<String, Value> cborData;
 		Map<String, Value> jsonData;
 		Map<String, String> diagData;
 
-		filesystem::ftw(cborPath, [&] (const StringView &path, bool isFile) {
-			if (isFile) {
-				auto ext = filepath::lastExtension(path);
+		filesystem::ftw(cborPath, [&] (const FileInfo &path, FileType type) {
+			if (type == FileType::File) {
+				auto ext = filepath::lastExtension(path.path);
 
 				if (ext == "cbor") {
-					cborData.emplace(filepath::name(path).str<Interface>(), data::readFile<Interface>(path));
+					cborData.emplace(filepath::name(path.path).str<Interface>(), data::readFile<Interface>(path));
 				} else if (ext == "json") {
-					jsonData.emplace(filepath::name(path).str<Interface>(), data::readFile<Interface>(path));
+					jsonData.emplace(filepath::name(path.path).str<Interface>(), data::readFile<Interface>(path));
 				} else if (ext == "diag") {
-					diagData.emplace(filepath::name(path).str<Interface>(), filesystem::readTextFile<Interface>(path));
+					diagData.emplace(filepath::name(path.path).str<Interface>(), filesystem::readTextFile<Interface>(path));
 				}
 			}
+			return true;
 		});
 
 		for (auto &it : cborData) {

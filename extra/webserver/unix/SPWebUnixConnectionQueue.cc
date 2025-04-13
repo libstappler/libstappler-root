@@ -21,6 +21,7 @@
  **/
 
 #include "SPWebUnixConnectionQueue.h"
+#include "SPStatus.h"
 #include "SPWebUnixConnectionWorker.h"
 
 #include <sys/types.h>
@@ -201,9 +202,9 @@ bool ConnectionQueue::hasTasks() {
 }
 
 int ConnectionQueue::openUnixSocket(StringView addr) {
-	if (filesystem::native::access_fn(addr, filesystem::Access::Exists)) {
+	if (filesystem::native::access_fn(addr, filesystem::Access::Exists) == sp::Status::Ok) {
 		// try unlink;
-		if (!filesystem::native::unlink_fn(addr)) {
+		if (filesystem::native::unlink_fn(addr) != sp::Status::Ok) {
 			log::error("Root:Socket", "Socket file exists, fail to unlink: ", addr);
 			return -1;
 		}

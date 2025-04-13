@@ -364,7 +364,7 @@ struct CoreTest : Test {
 			}
 		});
 		runTest(stream, "IO", count, passed, [&] {
-			auto path = filesystem::currentDir<Interface>("resources/mnist/t10k-images.idx3-ubyte");
+			auto path = FileInfo("resources/mnist/t10k-images.idx3-ubyte");
 
 			do {
 				auto d = filesystem::readIntoMemory<Interface>(path);

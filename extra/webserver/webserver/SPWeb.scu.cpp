@@ -57,21 +57,27 @@
 
 #include "SPWebWasm.cc"
 
+#include "SPMetastring.h"
+
 namespace STAPPLER_VERSIONIZED stappler::web::config {
 
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
 const char * getWebserverVersionString() {
-	return TOSTRING(WEBSERVER_VERSION_API) "/" TOSTRING(WEBSERVER_VERSION_REV);
+	static auto versionString = metastring::merge(
+		metastring::numeric<size_t(buildconfig::WEBSERVER_VERSION_API)>(),
+		metastring::metastring<'.'>(),
+		metastring::numeric<size_t(buildconfig::WEBSERVER_VERSION_REV)>(),
+		metastring::metastring<char(0)>()
+		).to_array();
+
+	return versionString.data();
 }
 
 uint32_t getWebserverVersionApi() {
-	return WEBSERVER_VERSION_API;
+	return buildconfig::WEBSERVER_VERSION_API;
 }
 
 uint32_t getWebserverVersionRev() {
-	return WEBSERVER_VERSION_REV;
+	return buildconfig::WEBSERVER_VERSION_REV;
 }
 
 }

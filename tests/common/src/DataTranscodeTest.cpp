@@ -22,6 +22,7 @@ THE SOFTWARE.
 **/
 
 #include "SPCommon.h"
+#include "SPFilepath.h"
 #include "Test.h"
 
 #ifdef MODULE_STAPPLER_DATA
@@ -110,14 +111,14 @@ static void runTest(std::ostream &out, const Vector<Bytes> &bytes, data::EncodeF
 	out << accum1 << ", " << accum2 << ", " << float(uncompressed) / float(compressed) << "\n";
 }
 
-static void runTestForPath(StringView path) {
+static void runTestForPath(const FileInfo &path) {
 	auto mempool = memory::pool::create();
 	memory::pool::push(mempool);
 
 	Vector<Value> dataSource;
 
-	filesystem::ftw(path, [&] (StringView path, bool isFile) {
-		if (isFile && filepath::lastExtension(path) == "json") {
+	filesystem::ftw(path, [&] (const FileInfo &path, FileType type) {
+		if (type == FileType::File && filepath::lastExtension(path.path) == "json") {
 			auto val = data::readFile<Interface>(path);
 			if (val) {
 				if (dataSource.size() < 2) {
@@ -125,6 +126,7 @@ static void runTestForPath(StringView path) {
 				}
 			}
 		}
+		return true;
 	});
 
 	Vector<Vector<Bytes>> testSources;
@@ -228,7 +230,7 @@ struct DataTranscodeTest : MemPoolTest {
 			auto path = filepath::root(filepath::root(cwd));
 
 			auto d = filepath::merge<Interface>(path, "tests/data/json1");
-			runTestForPath(d);
+			runTestForPath(FileInfo{d});
 			return true;
 		});
 
@@ -237,7 +239,7 @@ struct DataTranscodeTest : MemPoolTest {
 			auto path = filepath::root(filepath::root(cwd));
 
 			auto d = filepath::merge<Interface>(path, "doc/json");
-			runTestForPath(d);
+			runTestForPath(FileInfo{d});
 			return true;
 		});
 

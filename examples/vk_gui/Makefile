@@ -42,6 +42,7 @@ LOCAL_MODULES_PATHS = \
 LOCAL_MODULES := \
 	xenolith_backend_vkgui \
 	xenolith_renderer_material2d \
+	xenolith_resources_assets \
 	stappler_backtrace
 
 LOCAL_SRCS_DIRS :=  src proj.android/src

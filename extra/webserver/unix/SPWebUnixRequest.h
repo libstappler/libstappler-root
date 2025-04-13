@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@
 namespace STAPPLER_VERSIONIZED stappler::web {
 
 class SP_PUBLIC UnixRequestController : public RequestController {
-public:
+	public:
 	virtual ~UnixRequestController() = default;
 
 	UnixRequestController(pool_t *, RequestInfo &&, ConnectionWorker::Client *);
@@ -52,14 +52,17 @@ public:
 
 	virtual StringView getCookie(StringView name, bool removeFromHeadersTable = true) override;
 
-	virtual void setFilename(StringView, bool updateStat = true, Time mtime = Time()) override;
+	virtual void setFilename(const FileInfo &, bool updateStat = true,
+			Time mtime = Time()) override;
 
 	virtual StringView getRequestHeader(StringView) const override;
-	virtual void foreachRequestHeaders(const Callback<void(StringView, StringView)> &) const override;
+	virtual void foreachRequestHeaders(
+			const Callback<void(StringView, StringView)> &) const override;
 	virtual void setRequestHeader(StringView, StringView);
 
 	virtual StringView getResponseHeader(StringView) const override;
-	virtual void foreachResponseHeaders(const Callback<void(StringView, StringView)> &) const override;
+	virtual void foreachResponseHeaders(
+			const Callback<void(StringView, StringView)> &) const override;
 	virtual void setResponseHeader(StringView, StringView) override;
 	virtual void clearResponseHeaders() override;
 
@@ -72,9 +75,10 @@ public:
 
 	virtual void submitResponse(Status);
 
-	virtual WebsocketConnection *convertToWebsocket(WebsocketHandler *, allocator_t *, pool_t *) override;
+	virtual WebsocketConnection *convertToWebsocket(WebsocketHandler *, allocator_t *,
+			pool_t *) override;
 
-protected:
+	protected:
 	Map<StringView, StringView> _requestHeaders;
 	Map<StringView, StringView> _responseHeaders;
 	Map<StringView, StringView> _errorHeaders;
@@ -84,6 +88,6 @@ protected:
 	UnixWebsocketSim *_websocket = nullptr;
 };
 
-}
+} // namespace stappler::web
 
 #endif /* EXTRA_WEBSERVER_UNIX_SPWEBUNIXREQUEST_H_ */

@@ -27,7 +27,8 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-UnixRequestController::UnixRequestController(pool_t *pool, RequestInfo &&info, ConnectionWorker::Client *client)
+UnixRequestController::UnixRequestController(pool_t *pool, RequestInfo &&info,
+		ConnectionWorker::Client *client)
 : RequestController(pool, move(info)) {
 	_client = client;
 
@@ -35,20 +36,17 @@ UnixRequestController::UnixRequestController(pool_t *pool, RequestInfo &&info, C
 	_info.useragentPort = client->port;
 }
 
-UnixRequestController::UnixRequestController(pool_t *pool, RequestInfo &&info, UnixWebsocketSim *sock)
+UnixRequestController::UnixRequestController(pool_t *pool, RequestInfo &&info,
+		UnixWebsocketSim *sock)
 : RequestController(pool, move(info)) {
 	_websocket = sock;
 	_info.useragentIp = StringView("127.0.0.1");
 	_info.useragentPort = 80;
 }
 
-void UnixRequestController::startResponseTransmission() {
+void UnixRequestController::startResponseTransmission() { }
 
-}
-
-size_t UnixRequestController::getBytesSent() const {
-	return _client->bytesSent;
-}
+size_t UnixRequestController::getBytesSent() const { return _client->bytesSent; }
 
 void UnixRequestController::putc(int c) {
 	uint8_t ch = c;
@@ -62,21 +60,15 @@ size_t UnixRequestController::write(const uint8_t *buf, size_t size) {
 
 void UnixRequestController::flush() { }
 
-bool UnixRequestController::isSecureConnection() const {
-	return false;
-}
+bool UnixRequestController::isSecureConnection() const { return false; }
 
 void UnixRequestController::setDocumentRoot(StringView val) {
 	_info.documentRoot = val.pdup(_pool);
 }
 
-void UnixRequestController::setContentType(StringView val) {
-	_info.contentType = val.pdup(_pool);
-}
+void UnixRequestController::setContentType(StringView val) { _info.contentType = val.pdup(_pool); }
 
-void UnixRequestController::setHandler(StringView val) {
-	_info.handler = val.pdup(_pool);
-}
+void UnixRequestController::setHandler(StringView val) { _info.handler = val.pdup(_pool); }
 
 void UnixRequestController::setContentEncoding(StringView val) {
 	_info.contentEncoding = val.pdup(_pool);
@@ -103,23 +95,24 @@ StringView UnixRequestController::getCookie(StringView name, bool removeFromHead
 	return StringView();
 }
 
-void UnixRequestController::setFilename(StringView val, bool updateStat, Time mtime) {
-	if (!val.starts_with(_info.documentRoot)) {
-		auto path = filepath::merge<Interface>(_info.documentRoot, val);
-		if (filesystem::exists(path)) {
-			val = StringView(path).pdup(_pool);
-		} else {
+void UnixRequestController::setFilename(const FileInfo &val, bool updateStat, Time mtime) {
+	if (!val.path.starts_with(_info.documentRoot)) {
+		_info.filename = StringView();
+		filesystem::enumeratePaths(val, filesystem::Access::Read, [&](StringView path, FileFlags) {
+			_info.filename = path.pdup(_pool);
+			return false;
+		});
+		if (_info.filename.empty()) {
 			return;
 		}
 	} else {
-		if (filesystem::exists(val)) {
-			val = val.pdup(_pool);
+		if (filesystem::exists(val.path)) {
+			_info.filename = val.path.pdup(_pool);
 		} else {
 			return;
 		}
 	}
 
-	_info.filename = val;
 	if (updateStat) {
 		filesystem::stat(_info.filename, _info.stat);
 		if (mtime != nullptr) {
@@ -139,10 +132,9 @@ StringView UnixRequestController::getRequestHeader(StringView key) const {
 	return StringView();
 }
 
-void UnixRequestController::foreachRequestHeaders(const Callback<void(StringView, StringView)> &cb) const {
-	for (auto &it : _requestHeaders) {
-		cb(it.first, it.second);
-	}
+void UnixRequestController::foreachRequestHeaders(
+		const Callback<void(StringView, StringView)> &cb) const {
+	for (auto &it : _requestHeaders) { cb(it.first, it.second); }
 }
 
 void UnixRequestController::setRequestHeader(StringView key, StringView val) {
@@ -161,7 +153,7 @@ void UnixRequestController::setRequestHeader(StringView key, StringView val) {
 		auto h = r.readUntil<StringView::Chars<':'>>();
 		_info.url.host = h;
 		if (r.is(':')) {
-			++ r;
+			++r;
 			_info.url.port = r;
 		}
 	} else if (it->first == "content-length") {
@@ -169,7 +161,8 @@ void UnixRequestController::setRequestHeader(StringView key, StringView val) {
 	} else if (it->first == "cookie") {
 		auto d = data::readUrlencoded<Interface>(it->second, maxOf<size_t>());
 		for (auto &iit : d.asDict()) {
-			_inputCookies.emplace(StringView(iit.first).pdup(_pool), StringView(iit.second.asString()).pdup(_pool));
+			_inputCookies.emplace(StringView(iit.first).pdup(_pool),
+					StringView(iit.second.asString()).pdup(_pool));
 		}
 	}
 }
@@ -185,10 +178,9 @@ StringView UnixRequestController::getResponseHeader(StringView key) const {
 	return StringView();
 }
 
-void UnixRequestController::foreachResponseHeaders(const Callback<void(StringView, StringView)> &cb) const {
-	for (auto &it : _responseHeaders) {
-		cb(it.first, it.second);
-	}
+void UnixRequestController::foreachResponseHeaders(
+		const Callback<void(StringView, StringView)> &cb) const {
+	for (auto &it : _responseHeaders) { cb(it.first, it.second); }
 }
 
 void UnixRequestController::setResponseHeader(StringView key, StringView val) {
@@ -203,9 +195,7 @@ void UnixRequestController::setResponseHeader(StringView key, StringView val) {
 	}
 }
 
-void UnixRequestController::clearResponseHeaders() {
-	_responseHeaders.clear();
-}
+void UnixRequestController::clearResponseHeaders() { _responseHeaders.clear(); }
 
 StringView UnixRequestController::getErrorHeader(StringView key) const {
 	auto tmp = key.str<memory::StandartInterface>();
@@ -218,10 +208,9 @@ StringView UnixRequestController::getErrorHeader(StringView key) const {
 	return StringView();
 }
 
-void UnixRequestController::foreachErrorHeaders(const Callback<void(StringView, StringView)> &cb) const {
-	for (auto &it : _errorHeaders) {
-		cb(it.first, it.second);
-	}
+void UnixRequestController::foreachErrorHeaders(
+		const Callback<void(StringView, StringView)> &cb) const {
+	for (auto &it : _errorHeaders) { cb(it.first, it.second); }
 }
 
 void UnixRequestController::setErrorHeader(StringView key, StringView val) {
@@ -236,16 +225,15 @@ void UnixRequestController::setErrorHeader(StringView key, StringView val) {
 	}
 }
 
-void UnixRequestController::clearErrorHeaders() {
-	_errorHeaders.clear();
-}
+void UnixRequestController::clearErrorHeaders() { _errorHeaders.clear(); }
 
 Status UnixRequestController::processInput(ConnectionWorker::BufferChain &chain) {
 	if (!_filter) {
 		return DECLINED;
 	}
 
-	auto ret = chain.read([&, this] (const ConnectionWorker::Buffer *, const uint8_t *data, size_t len) {
+	auto ret = chain.read(
+			[&, this](const ConnectionWorker::Buffer *, const uint8_t *data, size_t len) {
 		auto size = std::min(len, size_t(_info.contentLength));
 		BytesView r(data, size);
 
@@ -266,9 +254,7 @@ Status UnixRequestController::processInput(ConnectionWorker::BufferChain &chain)
 			return int(size);
 		}
 
-		perform([&] {
-			_filter->finalize();
-		}, _filter->getPool(), config::TAG_REQUEST, this);
+		perform([&] { _filter->finalize(); }, _filter->getPool(), config::TAG_REQUEST, this);
 		return int(DONE);
 	}, true);
 
@@ -287,23 +273,17 @@ void UnixRequestController::submitResponse(Status status) {
 
 	if (_info.status < HTTP_OK) {
 		switch (status) {
-		case DONE:
-			setStatus(HTTP_OK, StringView());
-			break;
-		case OK:
-			setStatus(HTTP_OK, StringView());
-			break;
+		case DONE: setStatus(HTTP_OK, StringView()); break;
+		case OK: setStatus(HTTP_OK, StringView()); break;
 		case SUSPENDED:
-		case DECLINED:
-			setStatus(HTTP_BAD_REQUEST, StringView());
-			break;
-		default:
-			break;
+		case DECLINED: setStatus(HTTP_BAD_REQUEST, StringView()); break;
+		default: break;
 		}
 	}
 
-	if (!_info.filename.empty() && _info.stat.type == filesystem::FileType::File) {
-		_client->writeFile(_client->response, _info.filename, 0, _info.stat.size, ConnectionWorker::Buffer::Eos);
+	if (!_info.filename.empty() && _info.stat.type == FileType::File) {
+		_client->writeFile(_client->response, _info.filename, 0, _info.stat.size,
+				ConnectionWorker::Buffer::Eos);
 	}
 
 	if (_client->response.empty() && !_info.headerRequest) {
@@ -311,11 +291,14 @@ void UnixRequestController::submitResponse(Status status) {
 		auto result = getDefaultResult();
 		bool allowCbor = isAcceptable("application/cbor") > 0.0f;
 
-		auto data = data::write<Interface>(result, allowCbor ? data::EncodeFormat::Cbor : data::EncodeFormat::Json);
+		auto data = data::write<Interface>(result,
+				allowCbor ? data::EncodeFormat::Cbor : data::EncodeFormat::Json);
 
-		_info.contentType = (allowCbor ? StringView("application/cbor") : StringView("application/json; charset=utf-8"));
+		_info.contentType = (allowCbor ? StringView("application/cbor")
+									   : StringView("application/json; charset=utf-8"));
 
-		_client->response.write(_client->pool, data.data(), data.size(), ConnectionWorker::Buffer::Eos);
+		_client->response.write(_client->pool, data.data(), data.size(),
+				ConnectionWorker::Buffer::Eos);
 	} else {
 		_client->response.write(_client->pool, nullptr, 0, ConnectionWorker::Buffer::Eos);
 	}
@@ -330,18 +313,16 @@ void UnixRequestController::submitResponse(Status status) {
 	}
 
 	sp_time_exp_t xt(date);
-	char dateBuf[30] = { 0 };
+	char dateBuf[30] = {0};
 	xt.encodeRfc822(dateBuf);
 
-	auto outFn = [&, this] (StringView str) {
-		_client->write(_client->output, str);
-	};
+	auto outFn = [&, this](StringView str) { _client->write(_client->output, str); };
 
 	auto out = Callback<void(StringView)>(outFn);
 
-	auto writeCookies = [&] (CookieFlags flags) {
+	auto writeCookies = [&](CookieFlags flags) {
 		for (auto &it : _cookies) {
-			if ((it.second.flags & flags) ==flags) {
+			if ((it.second.flags & flags) == flags) {
 				out << "set-cookie: " << it.first << "=" << it.second.data;
 				if (it.second.maxAge) {
 					out << ";Max-Age=" << it.second.maxAge.toSeconds();
@@ -373,9 +354,7 @@ void UnixRequestController::submitResponse(Status status) {
 			setErrorHeader("Content-Encoding", _info.contentEncoding);
 		}
 
-		for (auto &it : _errorHeaders) {
-			out << it.first << StringView(": ") << it.second << crlf;
-		}
+		for (auto &it : _errorHeaders) { out << it.first << StringView(": ") << it.second << crlf; }
 
 		writeCookies(CookieFlags::SetOnError);
 	} else {
@@ -408,11 +387,13 @@ void UnixRequestController::submitResponse(Status status) {
 		out << crlf;
 		_client->write(_client->output, _client->response);
 	} else {
-		_client->write(_client->output, (const uint8_t *)crlf.data(), crlf.size(), ConnectionWorker::Buffer::Eos);
+		_client->write(_client->output, (const uint8_t *)crlf.data(), crlf.size(),
+				ConnectionWorker::Buffer::Eos);
 	}
 }
 
-WebsocketConnection *UnixRequestController::convertToWebsocket(WebsocketHandler *handler, allocator_t *a, pool_t *p) {
+WebsocketConnection *UnixRequestController::convertToWebsocket(WebsocketHandler *handler,
+		allocator_t *a, pool_t *p) {
 	WebsocketConnection *ret = nullptr;
 	if (_websocket) {
 		perform([&] {
@@ -424,4 +405,4 @@ WebsocketConnection *UnixRequestController::convertToWebsocket(WebsocketHandler 
 	return ret;
 }
 
-}
+} // namespace stappler::web

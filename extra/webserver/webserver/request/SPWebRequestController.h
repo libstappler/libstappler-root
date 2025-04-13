@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,7 @@ class WebsocketHandler;
 class WebsocketConnection;
 
 class SP_PUBLIC RequestController : public AllocBase {
-public:
+	public:
 	virtual ~RequestController();
 
 	RequestController(pool_t *, RequestInfo &&);
@@ -72,7 +72,7 @@ public:
 
 	virtual StringView getCookie(StringView name, bool removeFromHeadersTable = true) = 0;
 
-	virtual void setFilename(StringView, bool updateStat = true, Time mtime = Time()) = 0;
+	virtual void setFilename(const FileInfo &, bool updateStat = true, Time mtime = Time()) = 0;
 
 	virtual StringView getRequestHeader(StringView) const = 0;
 	virtual void foreachRequestHeaders(const Callback<void(StringView, StringView)> &) const = 0;
@@ -95,12 +95,14 @@ public:
 
 	virtual Value getDefaultResult();
 
-	virtual WebsocketConnection *convertToWebsocket(WebsocketHandler *, allocator_t *, pool_t *) { return nullptr; }
+	virtual WebsocketConnection *convertToWebsocket(WebsocketHandler *, allocator_t *, pool_t *) {
+		return nullptr;
+	}
 
 	virtual void pushErrorMessage(Value &&);
 	virtual void pushDebugMessage(Value &&);
 
-protected:
+	protected:
 	friend class Request;
 
 	pool_t *_pool = nullptr;
@@ -123,6 +125,6 @@ protected:
 	Vector<Pair<StringView, float>> _acceptList;
 };
 
-}
+} // namespace stappler::web
 
 #endif /* EXTRA_WEBSERVER_WEBSERVER_REQUEST_SPWEBREQUESTCONFIG_H_ */

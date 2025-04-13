@@ -20,6 +20,8 @@
  THE SOFTWARE.
  **/
 
+#include "SPFilepath.h"
+#include "SPFilesystem.h"
 #include "XLCommon.h"
 #include "XLPlatformViewInterface.h"
 
@@ -36,38 +38,41 @@ XL_DECLARE_EVENT_CLASS(TestAppDelegate, onSwapchainConfig);
 TestAppDelegate::~TestAppDelegate() { }
 
 bool TestAppDelegate::init(ApplicationInfo &&info) {
-	_storageParams = Value({
+	// clang-format off
+	_storageParams = Value{
 		pair("driver", Value("sqlite")),
-		pair("dbname", Value(filesystem::cachesPath<Interface>("root.sqlite"))),
-		pair("serverName", Value("RootStorage"))
-	});
+		pair("dbname",
+				Value(filesystem::findWritablePath<Interface>("root.sqlite",
+						FileCategory::AppCache))),
+		pair("serverName", Value("RootStorage")
+	)};
+	// clang-format on
 
 	return GuiApplication::init(move(info));
 }
 
 void TestAppDelegate::run() {
-	_info.initCallback = [&] (const PlatformApplication &) {
+	// clang-format off
+	_info.initCallback = [&](const PlatformApplication &) {
 		GuiApplication::addView(ViewInfo{
 			.window = platform::WindowInfo{
-				.title = _info.applicationName,
-				.bundleId = _info.bundleName,
-				.rect = URect(UVec2{0, 0}, _info.screenSize),
-				.density = _info.density,
-			},
-			.selectConfig = [this] (const View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
+				 .title = _info.applicationName,
+				 .bundleId = _info.bundleName,
+				 .rect = URect(UVec2{0, 0}, _info.screenSize),
+				 .density = _info.density,
+			 },
+			.selectConfig = [this](const View &, const core::SurfaceInfo &info) -> core::SwapchainConfig {
 				return selectConfig(info);
 			},
-			.onCreated = [this] (View &view, const core::FrameConstraints &constraints) {
+			.onCreated = [this](View &view, const core::FrameConstraints &constraints) {
 				auto scene = Rc<TestAppScene>::create(static_cast<Application *>(this), constraints);
 				view.getDirector()->runScene(move(scene));
 			},
-			.onClosed = [this] (View &view) {
-				end();
-			}
-		});
+			.onClosed = [this](View &view) { end(); }});
 	};
+	// clang-format on
 
-	_info.updateCallback = [&] (const PlatformApplication &, const UpdateTime &time) {
+	_info.updateCallback = [&](const PlatformApplication &, const UpdateTime &time) {
 
 	};
 
@@ -110,14 +115,15 @@ core::SwapchainConfig TestAppDelegate::selectConfig(const core::SurfaceInfo &inf
 		}
 	}
 
-	if (std::find(info.presentModes.begin(), info.presentModes.end(), core::PresentMode::Immediate) != info.presentModes.end()) {
+	if (std::find(info.presentModes.begin(), info.presentModes.end(), core::PresentMode::Immediate)
+			!= info.presentModes.end()) {
 		ret.presentModeFast = core::PresentMode::Immediate;
 	}
 
 	auto it = info.formats.begin();
 	while (it != info.formats.end()) {
 		if (it->first != platform::getCommonFormat()) {
-			++ it;
+			++it;
 		} else {
 			break;
 		}
@@ -131,13 +137,16 @@ core::SwapchainConfig TestAppDelegate::selectConfig(const core::SurfaceInfo &inf
 		ret.colorSpace = it->second;
 	}
 
-	if ((info.supportedCompositeAlpha & core::CompositeAlphaFlags::Opaque) != core::CompositeAlphaFlags::None) {
+	if ((info.supportedCompositeAlpha & core::CompositeAlphaFlags::Opaque)
+			!= core::CompositeAlphaFlags::None) {
 		ret.alpha = core::CompositeAlphaFlags::Opaque;
-	} else if ((info.supportedCompositeAlpha & core::CompositeAlphaFlags::Inherit) != core::CompositeAlphaFlags::None) {
+	} else if ((info.supportedCompositeAlpha & core::CompositeAlphaFlags::Inherit)
+			!= core::CompositeAlphaFlags::None) {
 		ret.alpha = core::CompositeAlphaFlags::Inherit;
 	}
 
-	ret.transfer = (info.supportedUsageFlags & core::ImageUsage::TransferDst) != core::ImageUsage::None;
+	ret.transfer =
+			(info.supportedUsageFlags & core::ImageUsage::TransferDst) != core::ImageUsage::None;
 
 	if (ret.presentMode == core::PresentMode::Mailbox) {
 		ret.imageCount = std::max(uint32_t(3), ret.imageCount);
@@ -170,16 +179,11 @@ void TestAppDelegate::loadExtensions() {
 		log::error("Application", "Fail to launch application: onBuildStorage failed");
 	}
 
-	_networkController = Rc<network::Controller>::alloc(static_cast<Application *>(this), "Application::Network");
+	_networkController = Rc<network::Controller>::alloc(static_cast<Application *>(this),
+			"Application::Network");
 
-	auto libpath = filesystem::writablePath<Interface>("library");
-	filesystem::mkdir(libpath);
-
-	_assetLibrary = Rc<storage::AssetLibrary>::create(static_cast<Application *>(this), _networkController, Value({
-		pair("driver", Value("sqlite")),
-		pair("dbname", Value(filesystem::cachesPath<Interface>("assets.sqlite"))),
-		pair("serverName", Value("AssetStorage"))
-	}));
+	_assetLibrary = Rc<storage::AssetLibrary>::create(static_cast<Application *>(this),
+			_networkController, "AssetStorage", FileInfo{"assets", FileCategory::AppCache});
 
 	addExtension(Rc<storage::Server>(_storageServer));
 	addExtension(Rc<network::Controller>(_networkController));
@@ -194,6 +198,6 @@ void TestAppDelegate::finalizeExtensions() {
 	_assetLibrary = nullptr;
 }
 
-}
+} // namespace stappler::xenolith::app
 
 #endif

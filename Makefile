@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+# Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 LOCAL_LIBRARY := libstappler
-LOCAL_VERSION := 0.4
+LOCAL_VERSION := 0.5
 
 # force to rebuild if this makefile changed
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))

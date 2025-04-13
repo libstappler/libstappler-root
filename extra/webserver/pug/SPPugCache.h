@@ -23,6 +23,7 @@
 #ifndef EXTRA_WEBSERVER_PUG_SPPUGCACHE_H_
 #define EXTRA_WEBSERVER_PUG_SPPUGCACHE_H_
 
+#include "SPFilepath.h"
 #include "SPPug.h"
 #include "SPPugTemplate.h"
 
@@ -34,10 +35,10 @@ using FileRef = SharedRef<CacheFile>;
 
 class SP_PUBLIC CacheFile : public memory::PoolObject {
 public:
-	static Rc<FileRef> read(memory::pool_t *, FilePath path, Template::Options opts = Template::Options::getDefault(),
+	static Rc<FileRef> read(memory::pool_t *, const FileInfo &, Template::Options opts = Template::Options::getDefault(),
 			const Callback<void(const StringView &)> & = nullptr, int watch = -1, int wId = -1);
 
-	static Rc<FileRef> read(memory::pool_t *, String && content, bool isTemplate, Template::Options opts = Template::Options::getDefault(),
+	static Rc<FileRef> read(memory::pool_t *, StringView key, String && content, bool isTemplate, Template::Options opts = Template::Options::getDefault(),
 			const Callback<void(const StringView &)> & = nullptr);
 
 	StringView getContent() const;
@@ -50,8 +51,10 @@ public:
 
 	int regenerate(int notify, StringView);
 
-	CacheFile(Ref *, memory::pool_t *, const FilePath &path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId);
-	CacheFile(Ref *, memory::pool_t *, String && content, bool isTemplate, Template::Options opts, const Callback<void(const StringView &)> &cb);
+	StringView getKey() const;
+
+	CacheFile(Ref *, memory::pool_t *, const FileInfo &path, Template::Options opts, const Callback<void(const StringView &)> &cb, int watch, int wId);
+	CacheFile(Ref *, memory::pool_t *, StringView key, String && content, bool isTemplate, Template::Options opts, const Callback<void(const StringView &)> &cb);
 
 	virtual ~CacheFile();
 
@@ -62,6 +65,7 @@ protected:
 	Template * _template = nullptr;
 	Template::Options _opts;
 	bool _valid = false;
+	StringView _key;
 };
 
 class SP_PUBLIC Cache : public memory::AllocPool {
@@ -73,15 +77,23 @@ public:
 	Cache(Template::Options opts = Template::Options::getDefault(), const Function<void(const StringView &)> &err = nullptr);
 	~Cache();
 
-	bool runTemplate(const StringView &, const RunCallback &, const OutStream &);
-	bool runTemplate(const StringView &, const RunCallback &, const OutStream &, Template::Options opts);
+	// run with file
+	bool runTemplate(const FileInfo &, const RunCallback &, const OutStream &);
+	bool runTemplate(const FileInfo &, const RunCallback &, const OutStream &, Template::Options opts);
 
-	bool addFile(StringView);
+	// run by key
+	bool runTemplate(StringView, const RunCallback &, const OutStream &);
+	bool runTemplate(StringView, const RunCallback &, const OutStream &, Template::Options opts);
+
+	bool addFile(const FileInfo &);
+	
+	// add with preloaded data
 	bool addContent(StringView, String &&);
 	bool addTemplate(StringView, String &&);
 	bool addTemplate(StringView, String &&, Template::Options opts);
 
 	Rc<FileRef> get(StringView key) const;
+	Rc<FileRef> get(const FileInfo &) const;
 
 	void update(int watch, bool regenerate);
 	void update(memory::pool_t *, bool force = false);
@@ -90,20 +102,23 @@ public:
 	bool isNotifyAvailable();
 
 	void regenerate(StringView);
+	void regenerate(const FileInfo &);
+
 	void drop(StringView);
+	void drop(const FileInfo &);
 
 protected:
-	Rc<FileRef> acquireTemplate(StringView, bool readOnly, const Template::Options &);
-	Rc<FileRef> openTemplate(StringView, int wId, const Template::Options &);
+	Rc<FileRef> acquireTemplate(const FileInfo &, bool readOnly, const Template::Options &);
+	Rc<FileRef> openTemplate(const FileInfo &, int wId, const Template::Options &);
 
-	bool runTemplate(Rc<FileRef>, StringView ipath, const RunCallback &cb, const OutStream &out, Template::Options opts);
+	bool runTemplate(Rc<FileRef>, const RunCallback &cb, const OutStream &out, Template::Options opts);
 	void onError(const StringView &);
 
 	int _inotify = -1;
 	bool _inotifyAvailable = false;
 
 	memory::pool_t *_pool = nullptr;
-	Mutex _mutex;
+	mutable Mutex _mutex;
 	Map<StringView, Rc<FileRef>> _templates;
 	Map<int, StringView> _watches;
 	Template::Options _opts;

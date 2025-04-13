@@ -21,6 +21,8 @@
  **/
 
 #include "SPCommon.h"
+#include "SPFilepath.h"
+#include "SPFilesystem.h"
 #include "Test.h"
 
 #if MODULE_XENOLITH_RENDERER_MATERIAL2D && MODULE_XENOLITH_BACKEND_VKGUI
@@ -50,9 +52,9 @@ struct XenolithGuiTest : Test {
 		auto mempool = memory::pool::create();
 		memory::pool::push(mempool);
 
-		auto caches = filesystem::cachesPath<Interface>();
-		filesystem::remove(caches, true, true);
-		filesystem::mkdir(caches);
+		auto caches = filesystem::findPath<Interface>(FileCategory::AppCache);
+		filesystem::remove(FileInfo{caches}, true, true);
+		filesystem::mkdir(FileInfo{caches});
 
 		xenolith::ApplicationInfo data;
 
@@ -66,6 +68,6 @@ struct XenolithGuiTest : Test {
 	}
 } _XenolithGuiTest;
 
-}
+} // namespace stappler::app::test
 
 #endif

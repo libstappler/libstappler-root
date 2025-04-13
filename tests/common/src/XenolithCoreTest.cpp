@@ -46,8 +46,10 @@ namespace STAPPLER_VERSIONIZED stappler::app::test {
 class TextInterface : public xenolith::TextInputViewInterface {
 public:
 	virtual void updateTextCursor(uint32_t pos, uint32_t len) { }
-	virtual void updateTextInput(WideStringView str, uint32_t pos, uint32_t len, xenolith::TextInputType) { }
-	virtual void runTextInput(WideStringView str, uint32_t pos, uint32_t len, xenolith::TextInputType) { }
+	virtual void updateTextInput(WideStringView str, uint32_t pos, uint32_t len,
+			xenolith::TextInputType) { }
+	virtual void runTextInput(WideStringView str, uint32_t pos, uint32_t len,
+			xenolith::TextInputType) { }
 	virtual void cancelTextInput() { }
 };
 
@@ -68,44 +70,47 @@ static bool XenolithCoreTest_core() {
 	out << getImageUsageDescription(ImageUsage(0xFFFF));
 	out << getInputModifiersNames(InputModifier(0xFFFF));
 
-	for (size_t i = 0; i < 3; ++ i) {
-		out << getImageTypeName(ImageType(i));
-	}
-	for (size_t i = 0; i < 7; ++ i) {
-		out << getImageViewTypeName(ImageViewType(i));
-	}
-	for (size_t i = 0; i < toInt(ImageFormat::ASTC_12x12_SRGB_BLOCK) + 1; ++ i) {
+	for (size_t i = 0; i < 3; ++i) { out << getImageTypeName(ImageType(i)); }
+	for (size_t i = 0; i < 7; ++i) { out << getImageViewTypeName(ImageViewType(i)); }
+	for (size_t i = 0; i < toInt(ImageFormat::ASTC_12x12_SRGB_BLOCK) + 1; ++i) {
 		out << getImageFormatName(ImageFormat(i)) << ":" << getFormatBlockSize(ImageFormat(i));
 	}
-	for (size_t i = toInt(ImageFormat::G8B8G8R8_422_UNORM); i < toInt(ImageFormat::A4B4G4R4_UNORM_PACK16_EXT) + 1; ++ i) {
-		out << getImageFormatName(ImageFormat(i)) << ":" << getFormatBlockSize(ImageFormat(i));;
+	for (size_t i = toInt(ImageFormat::G8B8G8R8_422_UNORM);
+			i < toInt(ImageFormat::A4B4G4R4_UNORM_PACK16_EXT) + 1; ++i) {
+		out << getImageFormatName(ImageFormat(i)) << ":" << getFormatBlockSize(ImageFormat(i));
+		;
 	}
-	for (size_t i = toInt(ImageFormat::PVRTC1_2BPP_UNORM_BLOCK_IMG); i <= toInt(ImageFormat::PVRTC2_4BPP_SRGB_BLOCK_IMG) + 1; ++ i) {
-		out << getImageFormatName(ImageFormat(i)) << ":" << getFormatBlockSize(ImageFormat(i));;
+	for (size_t i = toInt(ImageFormat::PVRTC1_2BPP_UNORM_BLOCK_IMG);
+			i <= toInt(ImageFormat::PVRTC2_4BPP_SRGB_BLOCK_IMG) + 1; ++i) {
+		out << getImageFormatName(ImageFormat(i)) << ":" << getFormatBlockSize(ImageFormat(i));
+		;
 	}
-	for (size_t i = toInt(ImageFormat::ASTC_4x4_SFLOAT_BLOCK_EXT); i <= toInt(ImageFormat::ASTC_12x12_SFLOAT_BLOCK_EXT) + 1; ++ i) {
-		out << getImageFormatName(ImageFormat(i)) << ":" << getFormatBlockSize(ImageFormat(i));;
+	for (size_t i = toInt(ImageFormat::ASTC_4x4_SFLOAT_BLOCK_EXT);
+			i <= toInt(ImageFormat::ASTC_12x12_SFLOAT_BLOCK_EXT) + 1; ++i) {
+		out << getImageFormatName(ImageFormat(i)) << ":" << getFormatBlockSize(ImageFormat(i));
+		;
 	}
-	for (size_t i = 0; i < toInt(ImageTiling::Linear) + 1; ++ i) {
+	for (size_t i = 0; i < toInt(ImageTiling::Linear) + 1; ++i) {
 		out << getImageTilingName(ImageTiling(i));
 	}
-	for (size_t i = 0; i < toInt(ComponentMapping::A) + 1; ++ i) {
+	for (size_t i = 0; i < toInt(ComponentMapping::A) + 1; ++i) {
 		out << getComponentMappingName(ComponentMapping(i));
 	}
 	out << getColorSpaceName(ColorSpace(0));
-	for (size_t i = toInt(ColorSpace::DISPLAY_P3_NONLINEAR_EXT); i < toInt(ColorSpace::DISPLAY_NATIVE_AMD) + 1; ++ i) {
+	for (size_t i = toInt(ColorSpace::DISPLAY_P3_NONLINEAR_EXT);
+			i < toInt(ColorSpace::DISPLAY_NATIVE_AMD) + 1; ++i) {
 		out << getColorSpaceName(ColorSpace(i));
 	}
-	for (size_t i = 0; i < toInt(InputKeyCode::Max); ++ i) {
+	for (size_t i = 0; i < toInt(InputKeyCode::Max); ++i) {
 		out << getInputKeyCodeName(InputKeyCode(i));
 	}
-	for (size_t i = 0; i < toInt(InputKeyCode::Max); ++ i) {
+	for (size_t i = 0; i < toInt(InputKeyCode::Max); ++i) {
 		out << getInputKeyCodeKeyName(InputKeyCode(i));
 	}
-	for (size_t i = 0; i < toInt(InputEventName::Max); ++ i) {
+	for (size_t i = 0; i < toInt(InputEventName::Max); ++i) {
 		out << getInputEventName(InputEventName(i));
 	}
-	for (size_t i = 0; i < toInt(InputMouseButton::Max); ++ i) {
+	for (size_t i = 0; i < toInt(InputMouseButton::Max); ++i) {
 		out << getInputButtonName(InputMouseButton(i));
 	}
 
@@ -127,16 +132,21 @@ static bool XenolithCoreTest_core() {
 	bufferData.size = 12;
 	bufferData.writeData(nullptr, 10);
 
-	Bytes data; data.resize(16);
+	Bytes data;
+	data.resize(16);
 	BufferData bufferData2;
 	bufferData2.size = 16;
 	bufferData2.data = data;
 	bufferData2.writeData(data.data(), 16);
 	bufferData2.data = BytesView();
-	bufferData2.memCallback = [&] (uint8_t *, uint64_t, const BufferData::DataCallback &cb) { cb(BytesView(data.data(), 16)); };
+	bufferData2.memCallback = [&](uint8_t *, uint64_t, const BufferData::DataCallback &cb) {
+		cb(BytesView(data.data(), 16));
+	};
 	bufferData2.writeData(data.data(), 16);
 	bufferData2.memCallback = nullptr;
-	bufferData2.stdCallback = [&] (uint8_t *, uint64_t, const BufferData::DataCallback &cb) { cb(BytesView(data.data(), 16)); };
+	bufferData2.stdCallback = [&](uint8_t *, uint64_t, const BufferData::DataCallback &cb) {
+		cb(BytesView(data.data(), 16));
+	};
 	bufferData2.writeData(data.data(), 16);
 
 	ImageInfo imageInfo1;
@@ -147,7 +157,8 @@ static bool XenolithCoreTest_core() {
 	imageInfo2.flags = ImageFlags::Protected;
 	imageInfo2.description();
 
-	Bytes data2; data2.resize(64);
+	Bytes data2;
+	data2.resize(64);
 	ImageData imageData;
 	imageData.format = ImageFormat::R8_UNORM;
 	imageData.extent = geom::Extent3(4, 4, 4);
@@ -155,10 +166,14 @@ static bool XenolithCoreTest_core() {
 	imageData.writeData(nullptr, 10);
 	imageData.writeData(data2.data(), 64);
 	imageData.data = BytesView();
-	imageData.memCallback = [&] (uint8_t *, uint64_t, const BufferData::DataCallback &cb) { cb(BytesView(data2.data(), 64)); };
+	imageData.memCallback = [&](uint8_t *, uint64_t, const BufferData::DataCallback &cb) {
+		cb(BytesView(data2.data(), 64));
+	};
 	imageData.writeData(data2.data(), 64);
 	imageData.memCallback = nullptr;
-	imageData.stdCallback = [&] (uint8_t *, uint64_t, const BufferData::DataCallback &cb) { cb(BytesView(data2.data(), 64)); };
+	imageData.stdCallback = [&](uint8_t *, uint64_t, const BufferData::DataCallback &cb) {
+		cb(BytesView(data2.data(), 64));
+	};
 	imageData.writeData(data2.data(), 64);
 
 	ImageViewInfo imageViewInfo;
@@ -292,11 +307,11 @@ static bool XenolithCoreTest_core() {
 	cfg.imageCount = 2;
 	cfg.extent = geom::Extent2(768, 768);
 
-	info.minImageExtent = geom::Extent2(1024, 1024);
-	info.maxImageExtent = geom::Extent2(1024, 1024);
+	info.minImageExtent = geom::Extent2(1'024, 1'024);
+	info.maxImageExtent = geom::Extent2(1'024, 1'024);
 	info.isSupported(cfg);
 
-	cfg.extent = geom::Extent2(1024, 1024);
+	cfg.extent = geom::Extent2(1'024, 1'024);
 	cfg.transfer = true;
 	info.isSupported(cfg);
 	info.supportedUsageFlags = ImageUsage::TransferDst;
@@ -333,8 +348,9 @@ static bool XenolithCoreTest_core() {
 	out << InputKeyCode::A << "\n";
 	out << InputEventName::Background << "\n";
 
-	for (size_t i = 0; i < toInt(VkFormat::VK_FORMAT_ASTC_12x12_SRGB_BLOCK) + 1; ++ i) {
-		out << xenolith::vk::getVkFormatName(VkFormat(i)) << ":" << xenolith::vk::getFormatBlockSize(VkFormat(i));
+	for (size_t i = 0; i < toInt(VkFormat::VK_FORMAT_ASTC_12x12_SRGB_BLOCK) + 1; ++i) {
+		out << xenolith::vk::getVkFormatName(VkFormat(i)) << ":"
+			<< xenolith::vk::getFormatBlockSize(VkFormat(i));
 	}
 
 #ifdef VK_VERSION_1_3
@@ -344,13 +360,15 @@ static bool XenolithCoreTest_core() {
 #endif
 
 	out << getColorSpaceName(ColorSpace(0));
-	for (size_t i = toInt(VkColorSpaceKHR::VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT); i < toInt(VkColorSpaceKHR::VK_COLOR_SPACE_DISPLAY_NATIVE_AMD) + 1; ++ i) {
+	for (size_t i = toInt(VkColorSpaceKHR::VK_COLOR_SPACE_DISPLAY_P3_NONLINEAR_EXT);
+			i < toInt(VkColorSpaceKHR::VK_COLOR_SPACE_DISPLAY_NATIVE_AMD) + 1; ++i) {
 		out << xenolith::vk::getVkColorSpaceName(VkColorSpaceKHR(i));
 	}
-	for (size_t i = 0; i < -VK_ERROR_UNKNOWN + 1; ++ i) {
+	for (size_t i = 0; i < -VK_ERROR_UNKNOWN + 1; ++i) {
 		out << xenolith::vk::getVkResultName(VkResult(-i));
 	}
-	for (size_t i = -VK_ERROR_OUT_OF_POOL_MEMORY; i < -VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT + 1; ++ i) {
+	for (size_t i = -VK_ERROR_OUT_OF_POOL_MEMORY;
+			i < -VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT + 1; ++i) {
 		out << xenolith::vk::getVkResultName(VkResult(-i));
 	}
 
@@ -366,14 +384,14 @@ static bool XenolithCoreTest_core() {
 	atlas->getObjectByName("First");
 
 	auto atlas2 = Rc<DataAtlas>::create(DataAtlas::ImageAtlas, 2, 16);
-	atlas2->addObject(1234, atlasData1.data());
-	atlas2->addObject(5678, atlasData2.data());
-	atlas2->getObjectByName(1234);
-	atlas2->getObjectByName(5678);
+	atlas2->addObject(1'234, atlasData1.data());
+	atlas2->addObject(5'678, atlasData2.data());
+	atlas2->getObjectByName(1'234);
+	atlas2->getObjectByName(5'678);
 	atlas2->compile();
 
-	atlas2->getObjectByName(1234);
-	atlas2->getObjectByName(5678);
+	atlas2->getObjectByName(1'234);
+	atlas2->getObjectByName(5'678);
 
 	return true;
 }
@@ -390,7 +408,8 @@ static xenolith::GestureRecognizer::ButtonMask makeButtonMask() {
 	return ret;
 }
 
-static xenolith::InputEventData makeInputEventData(uint32_t id, xenolith::InputEventName name, geom::Vec2 loc) {
+static xenolith::InputEventData makeInputEventData(uint32_t id, xenolith::InputEventName name,
+		geom::Vec2 loc) {
 	using namespace xenolith;
 
 	InputEventData data;
@@ -402,7 +421,8 @@ static xenolith::InputEventData makeInputEventData(uint32_t id, xenolith::InputE
 	return data;
 }
 
-static xenolith::InputEventData makeInputKeyData(xenolith::InputEventName name, xenolith::InputKeyCode key, char32_t c,
+static xenolith::InputEventData makeInputKeyData(xenolith::InputEventName name,
+		xenolith::InputKeyCode key, char32_t c,
 		xenolith::InputKeyComposeState state = xenolith::InputKeyComposeState::Nothing) {
 	using namespace xenolith;
 
@@ -435,20 +455,24 @@ static xenolith::InputEventData makeInputKeyData(xenolith::InputEventName name, 
 	return data;
 }
 
-static xenolith::InputEvent makeInputEvent(uint32_t id, xenolith::InputEventName name, geom::Vec2 loc) {
+static xenolith::InputEvent makeInputEvent(uint32_t id, xenolith::InputEventName name,
+		geom::Vec2 loc) {
 	using namespace xenolith;
 
-	return InputEvent{makeInputEventData(id, name, loc), loc, loc, loc, 0, 0, 0, InputModifier::None, InputModifier::None};
+	return InputEvent{makeInputEventData(id, name, loc), loc, loc, loc, 0, 0, 0,
+		InputModifier::None, InputModifier::None};
 }
 
-static xenolith::InputEvent makeInputKeyEvent(xenolith::InputEventName name, xenolith::InputKeyCode key) {
+static xenolith::InputEvent makeInputKeyEvent(xenolith::InputEventName name,
+		xenolith::InputKeyCode key) {
 	using namespace xenolith;
 
 	auto ev = makeInputEvent(toInt(key), name, Vec2(0.0f, 0.0f));
 	ev.data.key.keycode = key;
 	return ev;
 }
-static void updateInputEvent(xenolith::InputEvent &event, xenolith::InputEventName name, geom::Vec2 loc) {
+static void updateInputEvent(xenolith::InputEvent &event, xenolith::InputEventName name,
+		geom::Vec2 loc) {
 	event.previousLocation = event.currentLocation;
 	event.previousTime = event.currentTime;
 	event.data.event = name;
@@ -484,12 +508,14 @@ static bool XenolithCoreTest_input() {
 
 	do {
 		Map<uint32_t, InputEvent> inputs;
-		auto pinchRec = Rc<GesturePinchRecognizer>::create([] (const GesturePinch &) {
+		auto pinchRec = Rc<GesturePinchRecognizer>::create([](const GesturePinch &) {
 
 		}, makeButtonMask());
 
-		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f))).first;
-		auto it2 = inputs.emplace(1, makeInputEvent(1, InputEventName::Begin, Vec2(100.0f, 100.0f))).first;
+		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f)))
+						   .first;
+		auto it2 = inputs.emplace(1, makeInputEvent(1, InputEventName::Begin, Vec2(100.0f, 100.0f)))
+						   .first;
 
 		pinchRec->handleInputEvent(it1->second, 1.0f);
 		pinchRec->handleInputEvent(it2->second, 1.0f);
@@ -512,13 +538,14 @@ static bool XenolithCoreTest_input() {
 	} while (0);
 
 	do {
-		auto rec = Rc<GestureScrollRecognizer>::create([] (const GestureScroll &) { return true; });
+		auto rec = Rc<GestureScrollRecognizer>::create([](const GestureScroll &) { return true; });
 		auto ev = makeInputEvent(0, InputEventName::Scroll, Vec2(10.0f, 10.0f));
 		rec->handleInputEvent(ev, 1.0f);
 	} while (0);
 
 	do {
-		auto rec = Rc<GestureMoveRecognizer>::create([] (const GestureData &) { return true; }, false);
+		auto rec =
+				Rc<GestureMoveRecognizer>::create([](const GestureData &) { return true; }, false);
 		auto ev = makeInputEvent(0, InputEventName::MouseMove, Vec2(10.0f, 10.0f));
 		rec->canHandleEvent(ev);
 		rec->handleInputEvent(ev, 1.0f);
@@ -528,7 +555,8 @@ static bool XenolithCoreTest_input() {
 		GestureKeyRecognizer::KeyMask mask;
 		mask.set();
 
-		auto rec = Rc<GestureKeyRecognizer>::create([] (const GestureData &) { return true; }, sp::move(mask));
+		auto rec = Rc<GestureKeyRecognizer>::create([](const GestureData &) { return true; },
+				sp::move(mask));
 		auto ev = makeInputKeyEvent(InputEventName::KeyPressed, InputKeyCode::ENTER);
 		rec->canHandleEvent(ev);
 		rec->handleInputEvent(ev, 1.0f);
@@ -546,17 +574,18 @@ static bool XenolithCoreTest_input() {
 
 	do {
 		Map<uint32_t, InputEvent> inputs;
-		auto rec = Rc<GestureSwipeRecognizer>::create([] (const GestureSwipe &) {
-			return true;
-		}, 25.0f, false, makeButtonMask());
+		auto rec = Rc<GestureSwipeRecognizer>::create([](const GestureSwipe &) { return true; },
+				25.0f, false, makeButtonMask());
 
-		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f))).first;
+		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f)))
+						   .first;
 		rec->handleInputEvent(it1->second, 1.0f);
 
 		updateInputEvent(it1->second, InputEventName::Move, Vec2(20.0f, 20.0f));
 		rec->handleInputEvent(it1->second, 1.0f);
 
-		auto it2 = inputs.emplace(1, makeInputEvent(1, InputEventName::Begin, Vec2(100.0f, 100.0f))).first;
+		auto it2 = inputs.emplace(1, makeInputEvent(1, InputEventName::Begin, Vec2(100.0f, 100.0f)))
+						   .first;
 		rec->handleInputEvent(it2->second, 1.0f);
 
 		updateInputEvent(it1->second, InputEventName::Move, Vec2(-30.0f, -30.0f));
@@ -579,11 +608,11 @@ static bool XenolithCoreTest_input() {
 	do {
 		uint64_t ival = 51'000;
 		Map<uint32_t, InputEvent> inputs;
-		auto rec = Rc<GesturePressRecognizer>::create([] (const GesturePress &) {
-			return true;
-		}, TimeInterval::milliseconds(50), true, makeButtonMask());
+		auto rec = Rc<GesturePressRecognizer>::create([](const GesturePress &) { return true; },
+				TimeInterval::milliseconds(50), true, makeButtonMask());
 
-		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f))).first;
+		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f)))
+						   .first;
 		rec->handleInputEvent(it1->second, 1.0f);
 
 		updateInputEvent(it1->second, InputEventName::Move, Vec2(11.0f, 11.0f));
@@ -617,11 +646,11 @@ static bool XenolithCoreTest_input() {
 
 	do {
 		Map<uint32_t, InputEvent> inputs;
-		auto rec = Rc<GestureTapRecognizer>::create([] (const GestureTap &) {
-			return true;
-		}, makeButtonMask(), 2);
+		auto rec = Rc<GestureTapRecognizer>::create([](const GestureTap &) { return true; },
+				makeButtonMask(), 2);
 
-		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f))).first;
+		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f)))
+						   .first;
 		rec->handleInputEvent(it1->second, 1.0f);
 
 		updateInputEvent(it1->second, InputEventName::Move, Vec2(11.0f, 11.0f));
@@ -646,7 +675,7 @@ static bool XenolithCoreTest_input() {
 
 	do {
 		Map<uint32_t, InputEvent> inputs;
-		auto rec = Rc<GestureTouchRecognizer>::create([] (const GestureData &data) {
+		auto rec = Rc<GestureTouchRecognizer>::create([](const GestureData &data) {
 			if (data.location() == Vec2(12.0f, 12.0f)) {
 				return false;
 			}
@@ -656,7 +685,8 @@ static bool XenolithCoreTest_input() {
 		rec->getMaxEvents();
 		rec->setMaxEvents(2);
 
-		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f))).first;
+		auto it1 = inputs.emplace(0, makeInputEvent(0, InputEventName::Begin, Vec2(10.0f, 10.0f)))
+						   .first;
 		rec->handleInputEvent(it1->second, 1.0f);
 
 		updateInputEvent(it1->second, InputEventName::Move, Vec2(12.0f, 12.0f));
@@ -706,24 +736,22 @@ static bool XenolithCoreTest_input() {
 		keyMask.set();
 
 		auto l1 = Rc<InputListener>::create(-1);
-		l1->addTouchRecognizer([l1] (const GestureData &data) {
+		l1->addTouchRecognizer([l1](const GestureData &data) {
 			if (data.location() == Vec2(12.0f, 12.0f)) {
 				l1->setExclusiveForTouch(data.input->data.id);
 			}
 			return true;
 		}, makeButtonMask());
-		l1->addKeyRecognizer([] (const GestureData &) {
-			return true;
-		}, sp::move(keyMask));
+		l1->addKeyRecognizer([](const GestureData &) { return true; }, sp::move(keyMask));
 
 		auto l2 = Rc<InputListener>::create(-3);
-		l2->addTouchRecognizer([] (const GestureData &data) {
+		l2->addTouchRecognizer([](const GestureData &data) {
 			if (data.location() == Vec2(12.0f, 12.0f)) {
 				return false;
 			}
 			return true;
 		}, makeButtonMask());
-		l2->addKeyRecognizer([l2] (const GestureData &data) {
+		l2->addKeyRecognizer([l2](const GestureData &data) {
 			if (data.input->data.key.keychar == 'B') {
 				l2->setExclusive();
 			}
@@ -732,21 +760,15 @@ static bool XenolithCoreTest_input() {
 
 		auto l3 = Rc<InputListener>::create(-2);
 		auto l4 = Rc<InputListener>::create(1);
-		l4->addPinchRecognizer([] (const GesturePinch &) {
-			return true;
-		});
+		l4->addPinchRecognizer([](const GesturePinch &) { return true; });
 		auto l5 = Rc<InputListener>::create(3);
-		l5->setPointerEnterCallback([] (bool) { return true; });
-		l5->setBackgroudCallback([] (bool) { return true; });
-		l5->setFocusCallback([] (bool) { return true; });
+		l5->setPointerEnterCallback([](bool) { return true; });
+		l5->setBackgroudCallback([](bool) { return true; });
+		l5->setFocusCallback([](bool) { return true; });
 
 		auto l6 = Rc<InputListener>::create(2);
-		l6->addScrollRecognizer([] (const GestureScroll &) {
-			return true;
-		});
-		l6->addMouseOverRecognizer([] (const GestureData &) {
-			return true;
-		});
+		l6->addScrollRecognizer([](const GestureScroll &) { return true; });
+		l6->addMouseOverRecognizer([](const GestureData &) { return true; });
 
 		ev->addListener(l1, 0);
 		ev->addListener(l2, 0);
@@ -761,7 +783,7 @@ static bool XenolithCoreTest_input() {
 
 		TextInputHandler handler;
 		handler.run(mngr, u"Test", TextCursor(), TextCursor(), TextInputType::Text);
-		handler.setString(u"ASDF",  TextCursor(), TextCursor());
+		handler.setString(u"ASDF", TextCursor(), TextCursor());
 		handler.setCursor(TextCursor(1, 2));
 		handler.setMarked(TextCursor(1, 1));
 
@@ -801,8 +823,10 @@ static bool XenolithCoreTest_input() {
 
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::DELETE, 0));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyReleased, InputKeyCode::DELETE, 0));
-		d->handleInputEvent(makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::BACKSPACE, 0));
-		d->handleInputEvent(makeInputKeyData(InputEventName::KeyReleased, InputKeyCode::BACKSPACE, 0));
+		d->handleInputEvent(
+				makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::BACKSPACE, 0));
+		d->handleInputEvent(
+				makeInputKeyData(InputEventName::KeyReleased, InputKeyCode::BACKSPACE, 0));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::ESCAPE, 0));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyReleased, InputKeyCode::ESCAPE, 0));
 
@@ -811,12 +835,15 @@ static bool XenolithCoreTest_input() {
 		mngr->setInputEnabled(true);
 
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::C, 'C'));
-		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::C, 'C', InputKeyComposeState::Composing));
-		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::C, 'C', InputKeyComposeState::Composed));
+		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::C, 'C',
+				InputKeyComposeState::Composing));
+		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::C, 'C',
+				InputKeyComposeState::Composed));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::C, 'C'));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::C, 'C'));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::C, 'C'));
-		d->handleInputEvent(makeInputKeyData(InputEventName::KeyReleased, InputKeyCode::C, 'C', InputKeyComposeState::Forced));
+		d->handleInputEvent(makeInputKeyData(InputEventName::KeyReleased, InputKeyCode::C, 'C',
+				InputKeyComposeState::Forced));
 		handler.cancel();
 
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::A, 'A'));
@@ -871,13 +898,17 @@ static bool XenolithCoreTest_input() {
 		l6->clear();
 
 		l3->isSwallowAllEvents();
-		l3->isSwallowAllEvents(InputListener::makeEventMask({InputEventName::Begin, InputEventName::Move, InputEventName::End}));
-		l3->isSwallowAnyEvents(InputListener::makeEventMask({InputEventName::Begin, InputEventName::Move, InputEventName::End}));
+		l3->isSwallowAllEvents(InputListener::makeEventMask(
+				{InputEventName::Begin, InputEventName::Move, InputEventName::End}));
+		l3->isSwallowAnyEvents(InputListener::makeEventMask(
+				{InputEventName::Begin, InputEventName::Move, InputEventName::End}));
 		l3->isSwallowEvent(InputEventName::Begin);
-		l3->clearSwallowEvents(InputListener::makeEventMask({InputEventName::Begin, InputEventName::Move, InputEventName::End}));
+		l3->clearSwallowEvents(InputListener::makeEventMask(
+				{InputEventName::Begin, InputEventName::Move, InputEventName::End}));
 		l3->clearSwallowEvent(InputEventName::Begin);
 		l3->setSwallowEvent(InputEventName::Begin);
-		l3->setSwallowEvents(InputListener::makeEventMask({InputEventName::Begin, InputEventName::Move, InputEventName::End}));
+		l3->setSwallowEvents(InputListener::makeEventMask(
+				{InputEventName::Begin, InputEventName::Move, InputEventName::End}));
 		l3->setSwallowAllEvents();
 		l3->clearSwallowAllEvents();
 
@@ -889,7 +920,7 @@ static bool XenolithCoreTest_input() {
 static bool XenolithCoreTest_action() {
 	using namespace xenolith;
 
-	float program[8] = { 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f };
+	float program[8] = {0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f};
 
 	interpolation::interpolateTo(0.5f, interpolation::Type::Linear, nullptr);
 
@@ -958,7 +989,7 @@ static void testImageLoader() {
 	using namespace xenolith::core;
 
 	auto png1 = filesystem::currentDir<Interface>("resources/1.png");
-	Bytes imageData = filesystem::readIntoMemory<Interface>(png1);
+	Bytes imageData = filesystem::readIntoMemory<Interface>(FileInfo{png1});
 	Bitmap bmp(imageData);
 
 	auto rgbaData = makeData(imageData, bitmap::PixelFormat::RGBA8888);
@@ -966,55 +997,78 @@ static void testImageLoader() {
 	auto iaData = makeData(imageData, bitmap::PixelFormat::IA88);
 	auto aData = makeData(imageData, bitmap::PixelFormat::A8);
 
-	Bytes bytes; bytes.resize(bmp.width() * bmp.height() * 4);
+	Bytes bytes;
+	bytes.resize(bmp.width() * bmp.height() * 4);
 
-	Resource::loadImageMemoryData(nullptr, 0, rgbaData, ImageFormat::R8G8B8A8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, rgbaData, ImageFormat::R8G8B8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, rgbaData, ImageFormat::R8G8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, rgbaData, ImageFormat::R8_UNORM, [] (BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, rgbaData, ImageFormat::R8G8B8A8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, rgbaData, ImageFormat::R8G8B8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, rgbaData, ImageFormat::R8G8_UNORM, [](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, rgbaData, ImageFormat::R8_UNORM, [](BytesView) { });
 
-	Resource::loadImageMemoryData(nullptr, 0, rgbData, ImageFormat::R8G8B8A8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, rgbData, ImageFormat::R8G8B8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, rgbData, ImageFormat::R8G8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, rgbData, ImageFormat::R8_UNORM, [] (BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, rgbData, ImageFormat::R8G8B8A8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, rgbData, ImageFormat::R8G8B8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, rgbData, ImageFormat::R8G8_UNORM, [](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, rgbData, ImageFormat::R8_UNORM, [](BytesView) { });
 
-	Resource::loadImageMemoryData(nullptr, 0, iaData, ImageFormat::R8G8B8A8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, iaData, ImageFormat::R8G8B8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, iaData, ImageFormat::R8G8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, iaData, ImageFormat::R8_UNORM, [] (BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, iaData, ImageFormat::R8G8B8A8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, iaData, ImageFormat::R8G8B8_UNORM, [](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, iaData, ImageFormat::R8G8_UNORM, [](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, iaData, ImageFormat::R8_UNORM, [](BytesView) { });
 
-	Resource::loadImageMemoryData(nullptr, 0, aData, ImageFormat::R8G8B8A8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, aData, ImageFormat::R8G8B8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, aData, ImageFormat::R8G8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(nullptr, 0, aData, ImageFormat::R8_UNORM, [] (BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, aData, ImageFormat::R8G8B8A8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, aData, ImageFormat::R8G8B8_UNORM, [](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, aData, ImageFormat::R8G8_UNORM, [](BytesView) { });
+	Resource::loadImageMemoryData(nullptr, 0, aData, ImageFormat::R8_UNORM, [](BytesView) { });
 
 
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbaData, ImageFormat::R8G8B8A8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbaData, ImageFormat::R8G8B8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbaData, ImageFormat::R8G8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbaData, ImageFormat::R8_UNORM, [] (BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbaData, ImageFormat::R8G8B8A8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbaData, ImageFormat::R8G8B8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbaData, ImageFormat::R8G8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbaData, ImageFormat::R8_UNORM,
+			[](BytesView) { });
 
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbData, ImageFormat::R8G8B8A8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbData, ImageFormat::R8G8B8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbData, ImageFormat::R8G8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbData, ImageFormat::R8_UNORM, [] (BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbData, ImageFormat::R8G8B8A8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbData, ImageFormat::R8G8B8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbData, ImageFormat::R8G8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), rgbData, ImageFormat::R8_UNORM,
+			[](BytesView) { });
 
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), iaData, ImageFormat::R8G8B8A8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), iaData, ImageFormat::R8G8B8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), iaData, ImageFormat::R8G8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), iaData, ImageFormat::R8_UNORM, [] (BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), iaData, ImageFormat::R8G8B8A8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), iaData, ImageFormat::R8G8B8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), iaData, ImageFormat::R8G8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), iaData, ImageFormat::R8_UNORM,
+			[](BytesView) { });
 
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), aData, ImageFormat::R8G8B8A8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), aData, ImageFormat::R8G8B8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), aData, ImageFormat::R8G8_UNORM, [] (BytesView) { });
-	Resource::loadImageMemoryData(bytes.data(), bytes.size(), aData, ImageFormat::R8_UNORM, [] (BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), aData, ImageFormat::R8G8B8A8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), aData, ImageFormat::R8G8B8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), aData, ImageFormat::R8G8_UNORM,
+			[](BytesView) { });
+	Resource::loadImageMemoryData(bytes.data(), bytes.size(), aData, ImageFormat::R8_UNORM,
+			[](BytesView) { });
 }
 
 static Rc<xenolith::core::Resource> makeResource() {
 	using namespace xenolith::core;
 
 	auto png1 = filesystem::currentDir<Interface>("resources/1.png");
-	Bytes imageData = filesystem::readIntoMemory<Interface>(png1);
+	Bytes imageData = filesystem::readIntoMemory<Interface>(FileInfo{png1});
 
 	auto path = filesystem::currentDir<Interface>("resources/mnist/t10k-labels.idx1-ubyte");
 	Bytes bytes = valid::makeRandomBytes<Interface>(128);
@@ -1024,31 +1078,35 @@ static Rc<xenolith::core::Resource> makeResource() {
 	builder.addBufferByRef("Buffer1", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, bytes);
 	builder.addBufferByRef("Buffer1", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, bytes);
 
-	builder.addBuffer("Buffer2", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, FilePath(path));
-	builder.addBuffer("Buffer2", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, FilePath(path));
+	builder.addBuffer("Buffer2", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
+			FileInfo(path));
+	builder.addBuffer("Buffer2", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
+			FileInfo(path));
 
-	builder.addBuffer("Buffer3", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, BytesView(bytes));
-	builder.addBuffer("Buffer3", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, BytesView(bytes));
+	builder.addBuffer("Buffer3", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
+			BytesView(bytes));
+	builder.addBuffer("Buffer3", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
+			BytesView(bytes));
 
 	builder.addBuffer("Buffer4", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
-			[] (uint8_t *, uint64_t, const BufferData::DataCallback &) { });
+			[](uint8_t *, uint64_t, const BufferData::DataCallback &) { });
 	builder.addBuffer("Buffer4", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
-			[] (uint8_t *, uint64_t, const BufferData::DataCallback &) { });
+			[](uint8_t *, uint64_t, const BufferData::DataCallback &) { });
 
 	builder.addImageByRef("Image1", ImageInfo{ImageUsage::Sampled}, imageData);
 	builder.addImageByRef("Image1", ImageInfo{ImageUsage::Sampled}, imageData);
 
-	builder.addImage("Image2", ImageInfo{ImageUsage::Sampled}, FilePath(png1));
-	builder.addImage("Image2", ImageInfo{ImageUsage::Sampled}, FilePath(png1));
-	builder.addImage("Image5", ImageInfo{ImageUsage::Sampled}, FilePath("resources/1.png"));
+	builder.addImage("Image2", ImageInfo{ImageUsage::Sampled}, FileInfo(png1));
+	builder.addImage("Image2", ImageInfo{ImageUsage::Sampled}, FileInfo(png1));
+	builder.addImage("Image5", ImageInfo{ImageUsage::Sampled}, FileInfo("resources/1.png"));
 
 	builder.addImage("Image3", ImageInfo{ImageUsage::Sampled}, BytesView(imageData));
 	builder.addImage("Image3", ImageInfo{ImageUsage::Sampled}, BytesView(imageData));
 
 	builder.addImage("Image4", ImageInfo{ImageUsage::Sampled},
-			[] (uint8_t *, uint64_t, const BufferData::DataCallback &) { });
+			[](uint8_t *, uint64_t, const BufferData::DataCallback &) { });
 	builder.addImage("Image4", ImageInfo{ImageUsage::Sampled},
-			[] (uint8_t *, uint64_t, const BufferData::DataCallback &) { });
+			[](uint8_t *, uint64_t, const BufferData::DataCallback &) { });
 
 	auto res = Rc<Resource>::create(move(builder));
 	res->getPool();
@@ -1064,9 +1122,9 @@ static bool XenolithCoreTest_queue() {
 	auto png1 = filesystem::currentDir<Interface>("resources/1.png");
 	auto path = filesystem::currentDir<Interface>("resources/mnist/t10k-labels.idx1-ubyte");
 
-	Bytes imageData = filesystem::readIntoMemory<Interface>(png1);
-	Bytes fragData = filesystem::readIntoMemory<Interface>(frag);
-	Bytes vertData = filesystem::readIntoMemory<Interface>(vert);
+	Bytes imageData = filesystem::readIntoMemory<Interface>(FileInfo{png1});
+	Bytes fragData = filesystem::readIntoMemory<Interface>(FileInfo{frag});
+	Bytes vertData = filesystem::readIntoMemory<Interface>(FileInfo{vert});
 	Bytes bytes = valid::makeRandomBytes<Interface>(128);
 
 	Queue::Builder builder("Noise");
@@ -1076,77 +1134,90 @@ static bool XenolithCoreTest_queue() {
 	res->setCompiled(true);
 	builder.addLinkedResource(res);
 
-	auto buf1 = builder.addBufferByRef("Buffer1", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, bytes);
+	auto buf1 = builder.addBufferByRef("Buffer1",
+			BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, bytes);
 	builder.addBufferByRef("Buffer1", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, bytes);
 
-	builder.addBuffer("Buffer2", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, FilePath(path));
-	builder.addBuffer("Buffer2", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, FilePath(path));
+	builder.addBuffer("Buffer2", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
+			FileInfo(path));
+	builder.addBuffer("Buffer2", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
+			FileInfo(path));
 
-	builder.addBuffer("Buffer3", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, BytesView(bytes));
-	builder.addBuffer("Buffer3", BufferInfo{BufferUsage::UniformBuffer, bytes.size()}, BytesView(bytes));
+	builder.addBuffer("Buffer3", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
+			BytesView(bytes));
+	builder.addBuffer("Buffer3", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
+			BytesView(bytes));
 
 	builder.addBuffer("Buffer4", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
-			[] (uint8_t *, uint64_t, const BufferData::DataCallback &) { });
+			[](uint8_t *, uint64_t, const BufferData::DataCallback &) { });
 	builder.addBuffer("Buffer4", BufferInfo{BufferUsage::UniformBuffer, bytes.size()},
-			[] (uint8_t *, uint64_t, const BufferData::DataCallback &) { });
+			[](uint8_t *, uint64_t, const BufferData::DataCallback &) { });
 
 	auto image1 = builder.addImageByRef("Image1", ImageInfo{ImageUsage::Sampled}, imageData);
 	builder.addImageByRef("Image1", ImageInfo{ImageUsage::Sampled}, imageData);
 
-	auto image2 = builder.addImage("Image2", ImageInfo{ImageUsage::Sampled}, FilePath(png1));
-	builder.addImage("Image2", ImageInfo{ImageUsage::Sampled}, FilePath(png1));
+	auto image2 = builder.addImage("Image2", ImageInfo{ImageUsage::Sampled}, FileInfo(png1));
+	builder.addImage("Image2", ImageInfo{ImageUsage::Sampled}, FileInfo(png1));
 
 	auto image3 = builder.addImage("Image3", ImageInfo{ImageUsage::Sampled}, BytesView(imageData));
 	builder.addImage("Image3", ImageInfo{ImageUsage::Sampled}, BytesView(imageData));
 
 	builder.addImage("Image4", ImageInfo{ImageUsage::Sampled},
-			[] (uint8_t *, uint64_t, const BufferData::DataCallback &) { });
+			[](uint8_t *, uint64_t, const BufferData::DataCallback &) { });
 	builder.addImage("Image4", ImageInfo{ImageUsage::Sampled},
-			[] (uint8_t *, uint64_t, const BufferData::DataCallback &) { });
+			[](uint8_t *, uint64_t, const BufferData::DataCallback &) { });
 
 	ProgramInfo info1;
 	info1.stage = ProgramStage::Fragment;
 	info1.bindings = memory::vector<ProgramDescriptorBinding>{
-		ProgramDescriptorBinding{0, 0, DescriptorType::SampledImage, 0}
-	};
-	info1.constants = memory::vector<ProgramPushConstantBlock>{
-		ProgramPushConstantBlock{0, 0}
-	};
-	info1.entryPoints = memory::vector<ProgramEntryPointBlock>{
-		ProgramEntryPointBlock{0, "name", 1, 1, 1}
-	};
+		ProgramDescriptorBinding{0, 0, DescriptorType::SampledImage, 0}};
+	info1.constants = memory::vector<ProgramPushConstantBlock>{ProgramPushConstantBlock{0, 0}};
+	info1.entryPoints =
+			memory::vector<ProgramEntryPointBlock>{ProgramEntryPointBlock{0, "name", 1, 1, 1}};
 
-	builder.addProgram("program0", [vertData] (xenolith::core::Device &, const ProgramData::DataCallback &cb) {
-		cb(SpanView<uint32_t>((const uint32_t *)vertData.data(), vertData.size() / sizeof(uint32_t)));
+	builder.addProgram("program0",
+			[vertData](xenolith::core::Device &, const ProgramData::DataCallback &cb) {
+		cb(SpanView<uint32_t>((const uint32_t *)vertData.data(),
+				vertData.size() / sizeof(uint32_t)));
 	}, &info1);
 
 	builder.setDefaultSyncPassState(FrameRenderPassState::Submitted);
 	builder.addProgram("program1", SpanView<uint32_t>(), &info1);
 	builder.addProgramByRef("program2", SpanView<uint32_t>(), &info1);
-	builder.addProgram("program3", [] (xenolith::core::Device &, const ProgramData::DataCallback &) { }, &info1);
+	builder.addProgram("program3",
+			[](xenolith::core::Device &, const ProgramData::DataCallback &) { }, &info1);
 	builder.addProgram("program1", SpanView<uint32_t>(), &info1);
 	builder.addProgramByRef("program2", SpanView<uint32_t>(), &info1);
-	builder.addProgram("program3", [] (xenolith::core::Device &, const ProgramData::DataCallback &) { }, &info1);
+	builder.addProgram("program3",
+			[](xenolith::core::Device &, const ProgramData::DataCallback &) { }, &info1);
 
-	auto fragProgram = builder.addProgram("program4", SpanView<uint32_t>((const uint32_t *)fragData.data(), fragData.size() / sizeof(uint32_t)), &info1);
-	builder.addProgramByRef("program5", SpanView<uint32_t>((const uint32_t *)fragData.data(), fragData.size() / sizeof(uint32_t)), &info1);
-	auto vertProgram = builder.addProgram("program6", [vertData] (xenolith::core::Device &, const ProgramData::DataCallback &cb) {
-		cb(SpanView<uint32_t>((const uint32_t *)vertData.data(), vertData.size() / sizeof(uint32_t)));
+	auto fragProgram = builder.addProgram("program4",
+			SpanView<uint32_t>((const uint32_t *)fragData.data(),
+					fragData.size() / sizeof(uint32_t)),
+			&info1);
+	builder.addProgramByRef("program5",
+			SpanView<uint32_t>((const uint32_t *)fragData.data(),
+					fragData.size() / sizeof(uint32_t)),
+			&info1);
+	auto vertProgram = builder.addProgram("program6",
+			[vertData](xenolith::core::Device &, const ProgramData::DataCallback &cb) {
+		cb(SpanView<uint32_t>((const uint32_t *)vertData.data(),
+				vertData.size() / sizeof(uint32_t)));
 	});
 
-	auto a1 = builder.addAttachemnt("Attachment1", [&] (AttachmentBuilder &b) -> Rc<Attachment> {
+	auto a1 = builder.addAttachemnt("Attachment1", [&](AttachmentBuilder &b) -> Rc<Attachment> {
 		b.defineAsOutput();
-		auto a = Rc<ImageAttachment>::create(b, image1, ImageAttachment::AttachmentInfo({
-			AttachmentLayout::ShaderReadOnlyOptimal,
-			AttachmentLayout::TransferSrcOptimal
-		}));
+		auto a = Rc<ImageAttachment>::create(b, image1,
+				ImageAttachment::AttachmentInfo({AttachmentLayout::ShaderReadOnlyOptimal,
+					AttachmentLayout::TransferSrcOptimal}));
 		a->isCompatible(*image2);
-		a->setInputCallback([] (FrameQueue &, const Rc<AttachmentHandle> &, Function<void(bool)> &&) { });
+		a->setInputCallback(
+				[](FrameQueue &, const Rc<AttachmentHandle> &, Function<void(bool)> &&) { });
 		a->getName();
 		return a;
 	});
 
-	auto a2 = builder.addAttachemnt("Attachment2", [&] (AttachmentBuilder &b) -> Rc<Attachment> {
+	auto a2 = builder.addAttachemnt("Attachment2", [&](AttachmentBuilder &b) -> Rc<Attachment> {
 		b.defineAsOutput();
 		auto a = Rc<BufferAttachment>::create(b, buf1);
 		a->isCompatible(*image2);
@@ -1155,7 +1226,7 @@ static bool XenolithCoreTest_queue() {
 		return a;
 	});
 
-	auto a3 = builder.addAttachemnt("Attachment3", [&] (AttachmentBuilder &b) -> Rc<Attachment> {
+	auto a3 = builder.addAttachemnt("Attachment3", [&](AttachmentBuilder &b) -> Rc<Attachment> {
 		b.defineAsOutput();
 		b.defineAsInput();
 		auto a = Rc<ImageAttachment>::create(b, image3, ImageAttachment::AttachmentInfo());
@@ -1169,7 +1240,7 @@ static bool XenolithCoreTest_queue() {
 	Rc<QueuePass> pass2;
 	Rc<QueuePass> pass3;
 
-	builder.addPass("Pass1", PassType::Graphics, RenderOrdering(0), [&] (QueuePassBuilder &b) {
+	builder.addPass("Pass1", PassType::Graphics, RenderOrdering(0), [&](QueuePassBuilder &b) {
 		b.addAttachment(a1);
 		b.addAttachment(a2);
 		b.addAttachment(a3);
@@ -1181,11 +1252,11 @@ static bool XenolithCoreTest_queue() {
 		return p;
 	});
 
-	builder.addPass("Pass2", PassType::Graphics, RenderOrdering(1), [&] (QueuePassBuilder &b) {
+	builder.addPass("Pass2", PassType::Graphics, RenderOrdering(1), [&](QueuePassBuilder &b) {
 		b.addAttachment(a1);
 		b.addAttachment(a2);
 		b.addAttachment(a3);
-		b.addSubmittedCallback([] (const QueuePassData &, FrameQueue &, bool success) {
+		b.addSubmittedCallback([](const QueuePassData &, FrameQueue &, bool success) {
 
 		});
 
@@ -1196,8 +1267,8 @@ static bool XenolithCoreTest_queue() {
 		return p;
 	});
 
-	builder.addPass("Pass3", PassType::Graphics, RenderOrdering(2), [&] (QueuePassBuilder &b) {
-		auto pa1 = b.addAttachment(a1, [] (AttachmentPassBuilder &ab) {
+	builder.addPass("Pass3", PassType::Graphics, RenderOrdering(2), [&](QueuePassBuilder &b) {
+		auto pa1 = b.addAttachment(a1, [](AttachmentPassBuilder &ab) {
 			ab.setAttachmentOps(AttachmentOps::WritesColor);
 			ab.setInitialLayout(AttachmentLayout::ShaderReadOnlyOptimal);
 			ab.setFinalLayout(AttachmentLayout::ShaderReadOnlyOptimal);
@@ -1212,50 +1283,48 @@ static bool XenolithCoreTest_queue() {
 
 		auto p = Rc<QueuePass>::create(b);
 
-		auto l = b.addDescriptorLayout([] (PipelineLayoutBuilder &lb) {
-			
+		auto l = b.addDescriptorLayout([](PipelineLayoutBuilder &lb) {
+
 		});
 
-		b.addSubpass([&] (SubpassBuilder &sb) {
+		b.addSubpass([&](SubpassBuilder &sb) {
 			sb.addColor(pa1, AttachmentDependencyInfo());
 			sb.addResolve(pa1, pa3, AttachmentDependencyInfo(), AttachmentDependencyInfo());
 
 			ProgramData pdata;
 			pdata.key = StringView("program10");
 
-			auto shaderSpecInfo = Vector<SpecializationInfo>({
-				// no specialization required for vertex shader
-				SpecializationInfo(fragProgram, Vector<SpecializationConstant>{
-					SpecializationConstant(PredefinedConstant::BuffersArraySize)
-				}),
-				// specialization for fragment shader - use platform-dependent array sizes
-				SpecializationInfo(vertProgram, Vector<SpecializationConstant>{
-					SpecializationConstant(PredefinedConstant::SamplersArraySize),
-					SpecializationConstant(PredefinedConstant::TexturesArraySize)
-				})
-			});
+			auto shaderSpecInfo =
+					Vector<SpecializationInfo>({// no specialization required for vertex shader
+						SpecializationInfo(fragProgram,
+								Vector<SpecializationConstant>{
+									SpecializationConstant(PredefinedConstant::BuffersArraySize)}),
+						// specialization for fragment shader - use platform-dependent array sizes
+						SpecializationInfo(vertProgram,
+								Vector<SpecializationConstant>{
+									SpecializationConstant(PredefinedConstant::SamplersArraySize),
+									SpecializationConstant(
+											PredefinedConstant::TexturesArraySize)})});
 
-			sb.addGraphicPipeline("Pipeline1", l, shaderSpecInfo, PipelineMaterialInfo({
-				BlendInfo(),
-				DepthInfo(true, true, CompareOp::Less)
-			}), DynamicState::Viewport);
+			sb.addGraphicPipeline("Pipeline1", l, shaderSpecInfo,
+					PipelineMaterialInfo({BlendInfo(), DepthInfo(true, true, CompareOp::Less)}),
+					DynamicState::Viewport);
 
-			auto shaderSpecInfo2 = Vector<SpecializationInfo>({
-				// no specialization required for vertex shader
-				SpecializationInfo(&pdata, Vector<SpecializationConstant>{
-					SpecializationConstant(PredefinedConstant::BuffersArraySize)
-				}),
-				// specialization for fragment shader - use platform-dependent array sizes
-				SpecializationInfo(vertProgram, Vector<SpecializationConstant>{
-					SpecializationConstant(PredefinedConstant::SamplersArraySize),
-					SpecializationConstant(PredefinedConstant::TexturesArraySize)
-				})
-			});
+			auto shaderSpecInfo2 =
+					Vector<SpecializationInfo>({// no specialization required for vertex shader
+						SpecializationInfo(&pdata,
+								Vector<SpecializationConstant>{
+									SpecializationConstant(PredefinedConstant::BuffersArraySize)}),
+						// specialization for fragment shader - use platform-dependent array sizes
+						SpecializationInfo(vertProgram,
+								Vector<SpecializationConstant>{
+									SpecializationConstant(PredefinedConstant::SamplersArraySize),
+									SpecializationConstant(
+											PredefinedConstant::TexturesArraySize)})});
 
-			sb.addGraphicPipeline("Pipeline2", l, shaderSpecInfo2, PipelineMaterialInfo({
-				BlendInfo(),
-				DepthInfo(true, true, CompareOp::Less)
-			}), DynamicState::Viewport);
+			sb.addGraphicPipeline("Pipeline2", l, shaderSpecInfo2,
+					PipelineMaterialInfo({BlendInfo(), DepthInfo(true, true, CompareOp::Less)}),
+					DynamicState::Viewport);
 		});
 
 		pass3 = p;
@@ -1290,94 +1359,100 @@ static bool XenolithCoreTest_queue() {
 	return true;
 }
 
-}
+} // namespace stappler::app::test
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::test {
 
 static bool XenolithCoreTest_locale() {
 	using namespace locale;
 
-	define("ru-ru", {
-		pair("RichTextCopy", "Копировать"),
-		pair("RichTextMakeBookmark", "В закладки"),
-		pair("RichTextSendEmail", "Отправить письмом"),
-		pair("RichTextShare", "Поделиться"),
-		pair("RichTextReportMisprint", "Сообщить об ошибке"),
+	define("ru-ru",
+			{
+				pair("RichTextCopy", "Копировать"),
+				pair("RichTextMakeBookmark", "В закладки"),
+				pair("RichTextSendEmail", "Отправить письмом"),
+				pair("RichTextShare", "Поделиться"),
+				pair("RichTextReportMisprint", "Сообщить об ошибке"),
 
-		pair("RichTextMisprintReported", "Ваше сообщение об опечатке отправлено. Опечатка будет исправлена в ближайшее время."),
-		pair("RichTextBookmarkCreated", "Закладка создана."),
-		pair("RichTextNoNetworkConnection", "Нет соединения с интернетом, попробуйте позже."),
+				pair("RichTextMisprintReported",
+						"Ваше сообщение об опечатке отправлено. Опечатка будет исправлена в " "ближ" "айше" "е " "врем" "я."),
+				pair("RichTextBookmarkCreated", "Закладка создана."),
+				pair("RichTextNoNetworkConnection",
+						"Нет соединения с интернетом, попробуйте позже."),
 
-		pair("RichTextBookmarks", "Закладки"),
-		pair("RichTextBookmarkFiller", "Избранные статьи и закладки появятся в этом разделе"),
-		pair("RichTextHistoryFiller", "Здесь будет показана история просмотра лекций"),
-		pair("NumTest", "Первый:Второй:Третий"),
-		pair("Num:NumTest", "First:Second:Third"),
-	});
+				pair("RichTextBookmarks", "Закладки"),
+				pair("RichTextBookmarkFiller",
+						"Избранные статьи и закладки появятся в этом разделе"),
+				pair("RichTextHistoryFiller", "Здесь будет показана история просмотра лекций"),
+				pair("NumTest", "Первый:Второй:Третий"),
+				pair("Num:NumTest", "First:Second:Third"),
+			});
 
-	define("ru-ru", {
-		pair(uint32_t(0), "Копировать"),
-		pair(uint32_t(1), "В закладки"),
-		pair(uint32_t(2), "Отправить письмом"),
-		pair(uint32_t(3), "Поделиться"),
-		pair(uint32_t(4), "Сообщить об ошибке"),
+	define("ru-ru",
+			{
+				pair(uint32_t(0), "Копировать"),
+				pair(uint32_t(1), "В закладки"),
+				pair(uint32_t(2), "Отправить письмом"),
+				pair(uint32_t(3), "Поделиться"),
+				pair(uint32_t(4), "Сообщить об ошибке"),
 
-		pair(uint32_t(5), "Ваше сообщение об опечатке отправлено. Опечатка будет исправлена в ближайшее время."),
-		pair(uint32_t(6), "Закладка создана."),
-		pair(uint32_t(7), "Нет соединения с интернетом, попробуйте позже."),
+				pair(uint32_t(5),
+						"Ваше сообщение об опечатке отправлено. Опечатка будет исправлена в " "ближ" "айше" "е " "врем" "я."),
+				pair(uint32_t(6), "Закладка создана."),
+				pair(uint32_t(7), "Нет соединения с интернетом, попробуйте позже."),
 
-		pair(uint32_t(8), "Закладки"),
-		pair(uint32_t(9), "Избранные статьи и закладки появятся в этом разделе"),
-		pair(uint32_t(10), "Здесь будет показана история просмотра лекций"),
-	});
+				pair(uint32_t(8), "Закладки"),
+				pair(uint32_t(9), "Избранные статьи и закладки появятся в этом разделе"),
+				pair(uint32_t(10), "Здесь будет показана история просмотра лекций"),
+			});
 
-	std::array<StringView, toInt(TimeTokens::Max)> ruRuTimeToken{
-		"сегодня", "вчера",
-		"января", "февраля", "марта", "апреля", "мая", "июня",
-		"июля", "августа", "сентября", "октября", "ноября", "декабря"
-	};
+	std::array<StringView, toInt(TimeTokens::Max)> ruRuTimeToken{"сегодня", "вчера", "января",
+		"февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября",
+		"ноября", "декабря"};
 
 	define("ru-ru", ruRuTimeToken);
 
-	define("en-us", {
-		pair("RichTextCopy", "Copy"),
-		pair("RichTextMakeBookmark", "Make bookmark"),
-		pair("RichTextSendEmail", "Send as email"),
-		pair("RichTextShare", "Share"),
-		pair("RichTextReportMisprint", "Report misprint"),
+	define("en-us",
+			{
+				pair("RichTextCopy", "Copy"),
+				pair("RichTextMakeBookmark", "Make bookmark"),
+				pair("RichTextSendEmail", "Send as email"),
+				pair("RichTextShare", "Share"),
+				pair("RichTextReportMisprint", "Report misprint"),
 
-		pair("RichTextMisprintReported", "Your misprint report has been sent. Misprint will be corrected soon."),
-		pair("RichTextBookmarkCreated", "Bookmark created"),
-		pair("RichTextNoNetworkConnection", "No connection with internet, try again later."),
+				pair("RichTextMisprintReported",
+						"Your misprint report has been sent. Misprint will be corrected soon."),
+				pair("RichTextBookmarkCreated", "Bookmark created"),
+				pair("RichTextNoNetworkConnection",
+						"No connection with internet, try again later."),
 
-		pair("RichTextBookmarks", "Bookmarks"),
-		pair("RichTextBookmarkFiller", "Your favorites and bookmarks are going to be here"),
-		pair("RichTextHistoryFiller", "Reading history are going to be here"),
-		pair("NumTest", "First:Second:Third"),
-		pair("Num:NumTest", "First:Second:Third"),
-	});
+				pair("RichTextBookmarks", "Bookmarks"),
+				pair("RichTextBookmarkFiller", "Your favorites and bookmarks are going to be here"),
+				pair("RichTextHistoryFiller", "Reading history are going to be here"),
+				pair("NumTest", "First:Second:Third"),
+				pair("Num:NumTest", "First:Second:Third"),
+			});
 
-	define("en-us", {
-		pair(uint32_t(0), "Copy"),
-		pair(uint32_t(1), "Make bookmark"),
-		pair(uint32_t(2), "Send as email"),
-		pair(uint32_t(3), "Share"),
-		pair(uint32_t(4), "Report misprint"),
+	define("en-us",
+			{
+				pair(uint32_t(0), "Copy"),
+				pair(uint32_t(1), "Make bookmark"),
+				pair(uint32_t(2), "Send as email"),
+				pair(uint32_t(3), "Share"),
+				pair(uint32_t(4), "Report misprint"),
 
-		pair(uint32_t(5), "Your misprint report has been sent. Misprint will be corrected soon."),
-		pair(uint32_t(6), "Bookmark created"),
-		pair(uint32_t(7), "No connection with internet, try again later."),
+				pair(uint32_t(5),
+						"Your misprint report has been sent. Misprint will be corrected soon."),
+				pair(uint32_t(6), "Bookmark created"),
+				pair(uint32_t(7), "No connection with internet, try again later."),
 
-		pair(uint32_t(8), "Bookmarks"),
-		pair(uint32_t(9), "Your favorites and bookmarks are going to be here"),
-		pair(uint32_t(10), "Reading history are going to be here"),
-	});
+				pair(uint32_t(8), "Bookmarks"),
+				pair(uint32_t(9), "Your favorites and bookmarks are going to be here"),
+				pair(uint32_t(10), "Reading history are going to be here"),
+			});
 
-	std::array<StringView, toInt(TimeTokens::Max)> enUsTimeToken{
-		"today", "yesterday",
-		"jan", "feb", "mar", "apr", "may", "jun",
-		"jul", "aug", "sep", "oct", "nov", "dev"
-	};
+	std::array<StringView, toInt(TimeTokens::Max)> enUsTimeToken{"today", "yesterday", "jan", "feb",
+		"mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dev"};
 
 	define("en-us", enUsTimeToken);
 
@@ -1405,7 +1480,7 @@ static bool XenolithCoreTest_locale() {
 	numeric("NumTest"_meta, 12);
 	numeric("NumTest"_meta, 22);
 
-	setNumRule("ru-ru", [] (uint32_t idx) -> uint8_t {
+	setNumRule("ru-ru", [](uint32_t idx) -> uint8_t {
 		if (idx < 10) {
 			return 0;
 		} else if (idx < 20) {
@@ -1417,7 +1492,7 @@ static bool XenolithCoreTest_locale() {
 		}
 	});
 
-	setNumRule("en-us", [] (uint32_t idx) -> uint8_t {
+	setNumRule("en-us", [](uint32_t idx) -> uint8_t {
 		if (idx < 10) {
 			return 2;
 		} else if (idx < 20) {
@@ -1489,7 +1564,7 @@ static bool XenolithCoreTest_locale() {
 	return true;
 }
 
-}
+} // namespace stappler::xenolith::test
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
@@ -1515,6 +1590,6 @@ struct XenolithCoreTest : Test {
 	}
 } _XenolithCoreTest;
 
-}
+} // namespace stappler::app::test
 
 #endif

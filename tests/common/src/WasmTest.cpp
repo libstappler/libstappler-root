@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +37,8 @@ struct WesmTest : Test {
 		auto mempool = memory::pool::create();
 		memory::pool::push(mempool);
 
-		auto mod = Rc<Module>::create("stappler:wasm/app", FilePath(filesystem::currentDir<Interface>("stappler-build/host/wasm/clang/debug/app.wasm")));
+		auto mod = Rc<Module>::create("stappler:wasm/app",
+				FileInfo("stappler-build/host/wasm/clang/debug/app.wasm"));
 		if (!mod) {
 			return -1;
 		}
@@ -64,6 +65,6 @@ struct WesmTest : Test {
 	}
 } _WesmTest;
 
-}
+} // namespace stappler::app::test
 
 #endif

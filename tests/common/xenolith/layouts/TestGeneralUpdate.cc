@@ -33,11 +33,11 @@ bool TestGeneralUpdate::init() {
 		return false;
 	}
 
-	setEnterCallback([] (xenolith::Scene *) { });
-	setExitCallback([] () { });
-	setContentSizeDirtyCallback([] () { });
-	setReorderChildDirtyCallback([] () { });
-	setTransformDirtyCallback([] (const Mat4 &) { });
+	setEnterCallback([](xenolith::Scene *) { });
+	setExitCallback([]() { });
+	setContentSizeDirtyCallback([]() { });
+	setReorderChildDirtyCallback([]() { });
+	setTransformDirtyCallback([](const Mat4 &) { });
 
 	_sprite = addChild(Rc<Sprite>::create("xenolith-1-480.png"), ZOrder(2));
 	//_sprite->setAutofit(Sprite::Autofit::Contain);
@@ -69,7 +69,7 @@ bool TestGeneralUpdate::init() {
 	_listener = _spriteLayer->addInputListener(Rc<InputListener>::create());
 
 	_sub = addComponent(Rc<SubscriptionListener>::create());
-	_sub->setCallback([] (SubscriptionFlags flags) { });
+	_sub->setCallback([](SubscriptionFlags flags) { });
 	_sub->check();
 
 	scheduleUpdate();
@@ -158,7 +158,7 @@ void TestGeneralUpdate::handleEnter(xenolith::Scene *scene) {
 
 	StringView name("external://resources/xenolith-2-480.png");
 
-	_sprite2->setTextureLoadedCallback([this] () {
+	_sprite2->setTextureLoadedCallback([this]() {
 		auto s = Rc<Sprite>::create(Rc<Texture>(_sprite2->getTexture()));
 		s = Rc<Sprite>::create();
 		s->setTexture(_sprite2->getTexture()->getName());
@@ -178,7 +178,6 @@ void TestGeneralUpdate::handleEnter(xenolith::Scene *scene) {
 		auto w = _sprite2->getLineWidth();
 		_sprite2->setLineWidth(1.0f);
 		_sprite2->setLineWidth(w);
-
 	});
 
 	if (auto res = cache->getTemporaryResource(name)) {
@@ -188,8 +187,9 @@ void TestGeneralUpdate::handleEnter(xenolith::Scene *scene) {
 		}
 	} else {
 		auto tex = cache->addExternalImage(name,
-				core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled, core::ImageHints::Opaque),
-				FilePath("resources/xenolith-2-480.png"), TimeInterval::floatSeconds(0.1f));
+				core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM, core::ImageUsage::Sampled,
+						core::ImageHints::Opaque),
+				FileInfo("resources/xenolith-2-480.png"), TimeInterval::floatSeconds(0.1f));
 		if (tex) {
 			_sprite2->setTexture(move(tex));
 		}
@@ -223,28 +223,26 @@ void TestGeneralUpdate::handleEnter(xenolith::Scene *scene) {
 		_sprite->setCascadeOpacityEnabled(true);
 	}));
 
-	_sprite->runAction(Rc<Speed>::create(Rc<MoveTo>::create(0.5f, _contentSize / 2.0f + Vec2(0.0f, 100.0f)), 2.0f), 123);
+	_sprite->runAction(
+			Rc<Speed>::create(Rc<MoveTo>::create(0.5f, _contentSize / 2.0f + Vec2(0.0f, 100.0f)),
+					2.0f),
+			123);
 
-	_sprite->runAction(Rc<Spawn>::create(
-		Rc<TintTo>::create(1.0f, Color::Amber_500),
-		Rc<ScaleTo>::create(1.5f, 1.2f),
-		Rc<RenderContinuously>::create(0.5f),
-		0.5f,
-		[] () { }
-	));
+	_sprite->runAction(Rc<Spawn>::create(Rc<TintTo>::create(1.0f, Color::Amber_500),
+			Rc<ScaleTo>::create(1.5f, 1.2f), Rc<RenderContinuously>::create(0.5f), 0.5f, []() { }));
 
-	_spriteLayer2->runAction(Rc<Repeat>::create(Rc<ScaleTo>::create(0.1f, Vec3(1.0f, 1.2f, 1.1f)), 3));
-	_spriteLayer2->runAction(Rc<RepeatForever>::create(Rc<MoveTo>::create(0.1f, Vec3(1.0f, 1.2f, 0.0f))), 234);
-	auto a = _spriteLayer2->runAction(Rc<ActionProgress>::create(1.5f, 0.0f, 1.0f, [] (float p) { }));
+	_spriteLayer2->runAction(
+			Rc<Repeat>::create(Rc<ScaleTo>::create(0.1f, Vec3(1.0f, 1.2f, 1.1f)), 3));
+	_spriteLayer2->runAction(
+			Rc<RepeatForever>::create(Rc<MoveTo>::create(0.1f, Vec3(1.0f, 1.2f, 0.0f))), 234);
+	auto a =
+			_spriteLayer2->runAction(Rc<ActionProgress>::create(1.5f, 0.0f, 1.0f, [](float p) { }));
 	a->setDuration(1.5f);
 	a->getContainer();
 	a->getSourceProgress();
 
-	runAction(Rc<Sequence>::create(0.03f, [this] {
-		_spriteLayer2->runAction(Rc<Hide>::create());
-	}, 0.03f, [this] {
-		_spriteLayer2->runAction(Rc<Show>::create());
-	}, 0.03f, [this, a] {
+	runAction(Rc<Sequence>::create(0.03f, [this] { _spriteLayer2->runAction(Rc<Hide>::create()); },
+			0.03f, [this] { _spriteLayer2->runAction(Rc<Show>::create()); }, 0.03f, [this, a] {
 		_spriteLayer2->runAction(Rc<ToggleVisibility>::create());
 		_spriteLayer2->stopAction(a);
 	}, 0.03f, [this] {
@@ -255,7 +253,6 @@ void TestGeneralUpdate::handleEnter(xenolith::Scene *scene) {
 
 		_actionManager->pauseTarget(_sprite);
 		_actionManager->resumeTarget(_sprite);
-
 	}, 0.03f, [this] {
 		_spriteLayer2->stopActionByTag(234);
 		_spriteLayer2->runAction(Rc<Place>::create(Vec2(50.0f, 50.0f)));
@@ -266,9 +263,7 @@ void TestGeneralUpdate::handleEnter(xenolith::Scene *scene) {
 
 		_spriteLayer2->runAction(Rc<RemoveSelf>::create(true, false));
 		_spriteLayer2 = nullptr;
-	}, 0.03f, [this] {
-		_sprite->stopAllActions();
-	}, 0.03f, [] { }));
+	}, 0.03f, [this] { _sprite->stopAllActions(); }, 0.03f, [] {}));
 }
 
 void TestGeneralUpdate::update(const UpdateTime &time) {
@@ -306,14 +301,15 @@ void TestGeneralUpdate::updateAngle(float val) {
 	Vec2 start = center - angle * 0.5f;
 	Vec2 end = center + angle * 0.5f;
 
-	auto g = Rc<LinearGradient>::create(start, end, Vector<GradientStep>{
-		GradientStep{0.0f, 1.0f, Color::Blue_500},
-		GradientStep{0.45f, 0.0f, Color::Red_500},
-		GradientStep{0.55f, 0.0f, Color::Blue_500},
-		GradientStep{1.0f, 1.0f, Color::Red_500},
-	});
+	auto g = Rc<LinearGradient>::create(start, end,
+			Vector<GradientStep>{
+				GradientStep{0.0f, 1.0f, Color::Blue_500},
+				GradientStep{0.45f, 0.0f, Color::Red_500},
+				GradientStep{0.55f, 0.0f, Color::Blue_500},
+				GradientStep{1.0f, 1.0f, Color::Red_500},
+			});
 
 	_sprite->setLinearGradient(move(g));
 }
 
-}
+} // namespace stappler::xenolith::app

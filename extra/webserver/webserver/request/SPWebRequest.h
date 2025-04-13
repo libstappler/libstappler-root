@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2024-2025 Stappler LLC <admin@stappler.dev>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,9 @@ class Session;
 class RequestController;
 class InputFilter;
 
-class SP_PUBLIC Request final : public std::basic_ostream<char, std::char_traits<char>>, public AllocBase {
-public:
+class SP_PUBLIC Request final : public std::basic_ostream<char, std::char_traits<char>>,
+								public AllocBase {
+	public:
 	using char_type = char;
 	using traits_type = std::char_traits<char>;
 	using ostream_type = std::basic_ostream<char_type, traits_type>;
@@ -44,16 +45,16 @@ public:
 
 	Request();
 	Request(RequestController *);
-	Request & operator =(RequestController *);
+	Request &operator=(RequestController *);
 
 	Request(Request &&);
-	Request & operator =(Request &&);
+	Request &operator=(Request &&);
 
 	Request(const Request &);
-	Request & operator =(const Request &);
+	Request &operator=(const Request &);
 
 	RequestController *getController() const { return _config; }
-	explicit operator bool () const { return _config != nullptr; }
+	explicit operator bool() const { return _config != nullptr; }
 
 	const RequestInfo &getInfo() const;
 
@@ -82,13 +83,14 @@ public:
 	void setContentEncoding(StringView);
 
 	/* set path for file, that should be returned in response via sendfile */
-	void setFilename(StringView, bool updateStat = true, Time mtime = Time());
+	void setFilename(const FileInfo &, bool updateStat = true, Time mtime = Time());
 
 	/* set HTTP status code and response status line ("404 NOT FOUND", etc.)
 	 * if no string provided, default status line for code will be used */
 	void setStatus(Status status, StringView = StringView());
 
-	void setCookie(StringView name, StringView value, TimeInterval maxAge = TimeInterval(), CookieFlags flags = CookieFlags::Default);
+	void setCookie(StringView name, StringView value, TimeInterval maxAge = TimeInterval(),
+			CookieFlags flags = CookieFlags::Default);
 	void removeCookie(StringView name, CookieFlags flags = CookieFlags::Default);
 
 	// cookies, that will be sent in server response
@@ -97,10 +99,15 @@ public:
 	StringView getCookie(StringView name, bool removeFromHeadersTable = true) const;
 
 	Status redirectTo(StringView location);
-	Status sendFile(StringView path, size_t cacheTimeInSeconds = maxOf<size_t>());
-	Status sendFile(StringView path, StringView contentType, size_t cacheTimeInSeconds = maxOf<size_t>());
+	Status sendFile(const FileInfo &path, size_t cacheTimeInSeconds = maxOf<size_t>());
+	Status sendFile(const FileInfo &path, StringView contentType,
+			size_t cacheTimeInSeconds = maxOf<size_t>());
 
-	Status runPug(const StringView & path, const Function<bool(pug::Context &, const pug::Template &)> & = nullptr);
+	Status runPug(const FileInfo &path,
+			const Function<bool(pug::Context &, const pug::Template &)> & = nullptr);
+
+	Status runPug(StringView,
+			const Function<bool(pug::Context &, const pug::Template &)> & = nullptr);
 
 	String getFullHostname(int port = -1) const;
 
@@ -108,7 +115,7 @@ public:
 	bool checkCacheHeaders(Time, const StringView &etag);
 	bool checkCacheHeaders(Time, uint32_t idHash);
 
-	const db::InputConfig & getInputConfig() const;
+	const db::InputConfig &getInputConfig() const;
 
 	void setInputConfig(const db::InputConfig &);
 
@@ -138,41 +145,33 @@ public:
 
 	db::Transaction acquireDbTransaction() const;
 
-	const Vector<Value> & getDebugMessages() const;
-	const Vector<Value> & getErrorMessages() const;
+	const Vector<Value> &getDebugMessages() const;
+	const Vector<Value> &getErrorMessages() const;
 
 	template <typename Source, typename Text>
 	void addError(Source &&source, Text &&text) const {
-		addErrorMessage(Value{
-			std::make_pair("source", Value(std::forward<Source>(source))),
-			std::make_pair("text", Value(std::forward<Text>(text)))
-		});
+		addErrorMessage(Value{std::make_pair("source", Value(std::forward<Source>(source))),
+			std::make_pair("text", Value(std::forward<Text>(text)))});
 	}
 
 	template <typename Source, typename Text>
 	void addError(Source &&source, Text &&text, Value &&d) const {
-		addErrorMessage(Value{
-			std::make_pair("source", Value(std::forward<Source>(source))),
+		addErrorMessage(Value{std::make_pair("source", Value(std::forward<Source>(source))),
 			std::make_pair("text", Value(std::forward<Text>(text))),
-			std::make_pair("data", sp::move(d))
-		});
+			std::make_pair("data", sp::move(d))});
 	}
 
 	template <typename Source, typename Text>
 	void addDebug(Source &&source, Text &&text) const {
-		addDebugMessage(Value{
-			std::make_pair("source", Value(std::forward<Source>(source))),
-			std::make_pair("text", Value(std::forward<Text>(text)))
-		});
+		addDebugMessage(Value{std::make_pair("source", Value(std::forward<Source>(source))),
+			std::make_pair("text", Value(std::forward<Text>(text)))});
 	}
 
 	template <typename Source, typename Text>
 	void addDebug(Source &&source, Text &&text, Value &&d) const {
-		addDebugMessage(Value{
-			std::make_pair("source", Value(std::forward<Source>(source))),
+		addDebugMessage(Value{std::make_pair("source", Value(std::forward<Source>(source))),
 			std::make_pair("text", Value(std::forward<Text>(text))),
-			std::make_pair("data", sp::move(d))
-		});
+			std::make_pair("data", sp::move(d))});
 	}
 
 	void addErrorMessage(Value &&) const;
@@ -195,13 +194,13 @@ public:
 	void setInputFilter(InputFilter *);
 	InputFilter *getInputFilter() const;
 
-protected:
+	protected:
 	void initScriptContext(pug::Context &ctx);
 
 	/* Buffer class used as basic_streambuf to allow stream writing to request
 	 * like 'request << "String you want to send"; */
 	class Buffer : public std::basic_streambuf<char, std::char_traits<char>> {
-	public:
+		public:
 		using int_type = typename traits_type::int_type;
 		using pos_type = typename traits_type::pos_type;
 		using off_type = typename traits_type::off_type;
@@ -212,13 +211,13 @@ protected:
 		using ios_base = std::ios_base;
 
 		Buffer(RequestController *r);
-		Buffer(Buffer&&);
-		Buffer& operator=(Buffer&&);
+		Buffer(Buffer &&);
+		Buffer &operator=(Buffer &&);
 
-		Buffer(const Buffer&);
-		Buffer& operator=(const Buffer&);
+		Buffer(const Buffer &);
+		Buffer &operator=(const Buffer &);
 
-	protected:
+		protected:
 		virtual int_type overflow(int_type c = traits_type::eof()) override;
 
 		virtual pos_type seekoff(off_type off, ios_base::seekdir way, ios_base::openmode) override;
@@ -226,7 +225,7 @@ protected:
 
 		virtual int sync() override;
 
-		virtual streamsize xsputn(const char_type* s, streamsize n) override;
+		virtual streamsize xsputn(const char_type *s, streamsize n) override;
 
 		RequestController *_config = nullptr;
 	};
@@ -235,6 +234,6 @@ protected:
 	RequestController *_config = nullptr;
 };
 
-}
+} // namespace stappler::web
 
 #endif /* EXTRA_WEBSERVER_WEBSERVER_REQUEST_SPWEBREQUEST_H_ */

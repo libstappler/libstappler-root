@@ -40,9 +40,9 @@ struct FilesystemTest : Test {
 
 		runTest(stream, "FilePath", count, passed, [&] {
 			StringView pathStr("/usr/local");
-			FilePath path(pathStr);
+			FileInfo path(pathStr);
 
-			return path.get() == pathStr;
+			return path.path == pathStr;
 		});
 
 		_desc = stream.str();

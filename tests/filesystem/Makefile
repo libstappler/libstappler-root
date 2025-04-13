@@ -24,13 +24,15 @@ STAPPLER_BUILD_ROOT ?= ../../build/make
 LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 
 LOCAL_OUTDIR := stappler-build
-LOCAL_EXECUTABLE := eventtest
+LOCAL_EXECUTABLE := fstest
 
 LOCAL_MODULES_PATHS = core/stappler-modules.mk
 
 LOCAL_MODULES ?= \
-	stappler_event \
-	stappler_data
+	stappler_data \
+	stappler_brotli_lib \
+	stappler_bitmap \
+	stappler_filesystem
 
 LOCAL_ROOT = .
 
@@ -42,7 +44,7 @@ LOCAL_INCLUDES_OBJS :=
 
 LOCAL_MAIN := main.cpp
 
-APPCONFIG_APP_NAME := EventTest
-APPCONFIG_BUNDLE_NAME := org.stappler.eventtest
+APPCONFIG_APP_NAME := Filesystem Test
+APPCONFIG_BUNDLE_NAME := org.stappler.fstest
 
 include $(STAPPLER_BUILD_ROOT)/universal.mk

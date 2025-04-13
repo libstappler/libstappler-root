@@ -398,7 +398,7 @@ wasm::Module *HostController::loadWasmModule(StringView name, StringView str) {
 		return it->second;
 	}
 
-	auto mod = Rc<wasm::Module>::create(name, FilePath(path));
+	auto mod = Rc<wasm::Module>::create(name, FileInfo(path));
 	if (mod) {
 		_wasmModules.emplace(StringView(path).pdup(_wasmModules.get_allocator()), mod);
 		return mod;
@@ -411,19 +411,19 @@ String HostController::resolvePath(StringView path) const {
 	for (auto &it : _sourceRoot) {
 		auto str = filepath::merge<Interface>(it, path);
 		if (str.front() == '/') {
-			if (filesystem::exists(str)) {
+			if (filesystem::exists(FileInfo{str})) {
 				return str;
 			}
 		} else {
 			str = filesystem::currentDir<Interface>(str);
-			if (filesystem::exists(str)) {
+			if (filesystem::exists(FileInfo{str})) {
 				return str;
 			}
 		}
 	}
 
 	auto str = filepath::merge<Interface>(_hostInfo.documentRoot, path);
-	if (filesystem::exists(str)) {
+	if (filesystem::exists(FileInfo{str})) {
 		return str;
 	}
 	return String();

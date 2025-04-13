@@ -394,7 +394,7 @@ void Root::handleChildInit(pool_t *p) {
 
 Status Root::runTypeChecker(Request &r) {
 	auto &info = r.getInfo();
-	if (info.stat.type == filesystem::FileType::Dir) {
+	if (info.stat.type == FileType::Dir) {
 		r.setContentType(config::DIR_MIME_TYPE);
 		return OK;
 	}

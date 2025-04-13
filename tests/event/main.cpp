@@ -59,21 +59,7 @@ static CommandLineParser<Value> CommandLine({
 			target.setBool(true, "help");
 			return true;
 		}
-	},
-	CommandLineOption<Value> {
-		.patterns = {
-			"-l<#>", "--length <#>"
-		},
-		.description = StringView("Length for password or key"),
-		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
-			// Дублируем StringView, поскольку SpanView запрещает менять аргументы
-			auto firstArg = StringView(args.at(0));
-
-			// читаем целое число и записываем значение
-			target.setInteger(firstArg.readInteger(10).get(0), "length");
-			return true;
-		}
-	},
+	}
 });
 
 
@@ -100,9 +86,6 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 
 	if (opts.getBool("verbose")) {
 		std::cerr << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
-		std::cerr << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
-		std::cerr << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
-		std::cerr << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
 		std::cerr << " Options: " << stappler::data::EncodeFormat::Pretty << opts << "\n";
 		if (!args.empty()) {
 			std::cerr << " Arguments: \n";
@@ -112,93 +95,93 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		}
 	}
 
-	auto looper = event::Looper::acquire();
-	if (!looper) {
-		return -1;
-	}
+	auto ret = perform_main([&] () -> int {
+		auto looper = event::Looper::acquire();
+		if (!looper) {
+			return -1;
+		}
+	
+		auto c = platform::clock();
+	
+		auto handle = looper->schedule(TimeInterval::seconds(10), [c] (event::Handle *, bool success) {
+			auto t = platform::clock() - c;
+			std::cout << platform::clock(ClockType::Realtime) - c << " " << t / 1000000 << "\n";
+			log::debug("App", "Fn timer: ", success);
+		});
+	
+		/*(void)looper->scheduleTimer(event::TimerInfo{
+			.completion = event::TimerInfo::Completion::create<void>(handle.get(),
+					[] (void *data, event::TimerHandle *self, uint32_t value, Status status) {
+				log::debug("App", "Timer1: ", value, " ", status);
+				if (status != Status::Ok) {
+					log::debug("App", "Timer1 ended: ", value, " ", status);
+				}
+	
+				if (value == 2) {
+					//((event::Handle *)data)->cancel();
+				}
+	
+				if (value == 3) {
+					event::Looper::acquire()->wakeup(event::QueueWakeupInfo{
+						event::WakeupFlags::Graceful
+					});
+				}
+			}),
+			.interval = TimeInterval::seconds(1),
+			.count = 100,
+		});*/
+	
+		(void)looper->scheduleTimer(event::TimerInfo{
+			.completion = event::TimerInfo::Completion::create<void>(nullptr,
+					[] (void *data, event::TimerHandle *self, uint32_t value, Status status) {
+				log::debug("App", "Timer2: ", value, " ", status);
+			}),
+			.interval = TimeInterval::seconds(1),
+			.count = 50,
+		});
+	
+		std::thread thread([] (event::Looper *looper) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			looper->performOnThread([] {
+				log::debug("App", "From thread");
+			}, nullptr);
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			looper->performOnThread([] {
+				log::debug("App", "From thread");
+			}, nullptr);
+		}, looper);
+	
+		std::thread thread2([] (event::Looper *looper) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			looper->performOnThread([] {
+				log::debug("App", "From thread2");
+			}, nullptr);
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			looper->performOnThread([] {
+				log::debug("App", "From thread2");
+			}, nullptr);
+		}, looper);
+	
+		auto status = looper->run();
+	
+		std::cout << "Wakeup: " << status << "\n";
+	
+		status = looper->run();
+	
+		thread.join();
+		thread2.join();
+	
+		struct AppData {
+			uint32_t timerTicks = 0;
+			Rc<event::TimerHandle> timer1;
+			Rc<event::TimerHandle> timer2;
+			Rc<event::QueueRef> queue;
+			Rc<event::DirHandle> dir;
+			Rc<event::DirHandle> dir2;
+			Rc<event::StatHandle> stat;
+			Rc<event::ThreadHandle> thread;
+		};
 
-	auto c = platform::clock();
-
-	auto handle = looper->schedule(TimeInterval::seconds(10), [c] (event::Handle *, bool success) {
-		auto t = platform::clock() - c;
-		std::cout << platform::clock(ClockType::Realtime) - c << " " << t / 1000000 << "\n";
-		log::debug("App", "Fn timer: ", success);
-	});
-
-	/*(void)looper->scheduleTimer(event::TimerInfo{
-		.completion = event::TimerInfo::Completion::create<void>(handle.get(),
-				[] (void *data, event::TimerHandle *self, uint32_t value, Status status) {
-			log::debug("App", "Timer1: ", value, " ", status);
-			if (status != Status::Ok) {
-				log::debug("App", "Timer1 ended: ", value, " ", status);
-			}
-
-			if (value == 2) {
-				//((event::Handle *)data)->cancel();
-			}
-
-			if (value == 3) {
-				event::Looper::acquire()->wakeup(event::QueueWakeupInfo{
-					event::WakeupFlags::Graceful
-				});
-			}
-		}),
-		.interval = TimeInterval::seconds(1),
-		.count = 100,
-	});*/
-
-	(void)looper->scheduleTimer(event::TimerInfo{
-		.completion = event::TimerInfo::Completion::create<void>(nullptr,
-				[] (void *data, event::TimerHandle *self, uint32_t value, Status status) {
-			log::debug("App", "Timer2: ", value, " ", status);
-		}),
-		.interval = TimeInterval::seconds(1),
-		.count = 50,
-	});
-
-	std::thread thread([] (event::Looper *looper) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		looper->performOnThread([] {
-			log::debug("App", "From thread");
-		}, nullptr);
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		looper->performOnThread([] {
-			log::debug("App", "From thread");
-		}, nullptr);
-	}, looper);
-
-	std::thread thread2([] (event::Looper *looper) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		looper->performOnThread([] {
-			log::debug("App", "From thread2");
-		}, nullptr);
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		looper->performOnThread([] {
-			log::debug("App", "From thread2");
-		}, nullptr);
-	}, looper);
-
-	auto status = looper->run();
-
-	std::cout << "Wakeup: " << status << "\n";
-
-	status = looper->run();
-
-	thread.join();
-	thread2.join();
-
-	struct AppData {
-		uint32_t timerTicks = 0;
-		Rc<event::TimerHandle> timer1;
-		Rc<event::TimerHandle> timer2;
-		Rc<event::QueueRef> queue;
-		Rc<event::DirHandle> dir;
-		Rc<event::DirHandle> dir2;
-		Rc<event::StatHandle> stat;
-		Rc<event::ThreadHandle> thread;
-	};
-
-	auto ret = perform_temporary([&] () -> int {
 		AppData data;
 
 		//data.queue = Rc<event::QueueRef>::create(event::QueueInfo(), event::QueueFlags::Protected);
