@@ -9,3 +9,5 @@ xcuserdata
 **/.cache
 **/.clangd
 **/.clang-format
+**/.vscode
+**/*.code-workspace
