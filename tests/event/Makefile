@@ -44,5 +44,6 @@ LOCAL_MAIN := main.cpp
 
 APPCONFIG_APP_NAME := EventTest
 APPCONFIG_BUNDLE_NAME := org.stappler.eventtest
+APPCONFIG_APP_PATH_COMMON := 3
 
 include $(STAPPLER_BUILD_ROOT)/universal.mk

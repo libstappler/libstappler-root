@@ -68,7 +68,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		return 0;
 	}
 
-	auto ret = perform_main([&]() -> int {
+	return perform_main([&]() -> int {
 		using namespace bitmap;
 
 		std::cout << getVersionDescription<Interface>(getAppconfigVersionIndex()) << "\n";
@@ -201,6 +201,20 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			});
 		}
 
+		filesystem::ftw(FileInfo{"scripts"},
+				[](const FileInfo &info, FileType type) {
+			std::cout << "ftw: " << type << " " << info << "\n";
+			return true;
+		}, -1, true);
+
+		filesystem::copy(FileInfo{"scripts"}, FileInfo{"/", FileCategory::AppData});
+
+		filesystem::ftw(FileInfo("scripts", FileCategory::AppData),
+				[](const FileInfo &info, FileType type) {
+			std::cout << "ftw: " << type << " " << info << "\n";
+			return true;
+		}, -1, true);
+
 		filesystem::remove(FileInfo("test1", FileCategory::AppData), true, true);
 
 		filesystem::mkdir_recursive(FileInfo{"test1/test2/test3", FileCategory::AppData});
@@ -223,18 +237,8 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			return true;
 		});
 
-		filesystem::copy(FileInfo{"scripts"}, FileInfo{"/", FileCategory::AppData});
-
-		filesystem::ftw(FileInfo("scripts", FileCategory::AppData),
-				[](const FileInfo &info, FileType type) {
-			std::cout << "ftw: " << type << " " << info << "\n";
-			return true;
-		}, -1, true);
-
 		return 0;
 	});
-
-	return ret;
 }
 
 } // namespace stappler::app

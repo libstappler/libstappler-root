@@ -95,7 +95,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		}
 	}
 
-	auto ret = perform_main([&] () -> int {
+	return perform_main([&] () -> int {
 		auto looper = event::Looper::acquire();
 		if (!looper) {
 			return -1;
@@ -242,9 +242,6 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 
 		return 0;
 	});
-
-	memory::pool::terminate();
-	return ret;
 }
 
 }

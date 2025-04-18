@@ -44,7 +44,7 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	}
 
 	// Выполняем все действия во временном пуле памяти
-	perform_main([&] {
+	return perform_main([&] {
 		// Создаём приложение на основании данных командной строки
 		auto app = Rc<ExampleApplication>::create(move(data));
 
@@ -55,9 +55,9 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 
 		// Ожидаем завершения работы приложения
 		app->waitStopped();
-	});
 
-	return 0;
+		return 0;
+	});
 }
 
 } // namespace stappler::xenolith::app

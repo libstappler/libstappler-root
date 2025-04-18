@@ -8,6 +8,5 @@ xcuserdata
 **/compile_commands.json
 **/.cache
 **/.clangd
-**/.clang-format
 **/.vscode
 **/*.code-workspace
