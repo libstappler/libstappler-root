@@ -21,10 +21,12 @@
  **/
 
 #include "TestGeneralActions.h"
+#include "XLInterpolation.h"
 
 namespace stappler::xenolith::app {
 
-bool ActionEaseNode::init(StringView str, Function<Rc<ActionInterval>(Rc<ActionInterval> &&)> &&cb) {
+bool ActionEaseNode::init(StringView str,
+		Function<Rc<ActionInterval>(Rc<ActionInterval> &&)> &&cb) {
 	if (!Node::init()) {
 		return false;
 	}
@@ -56,7 +58,8 @@ void ActionEaseNode::run() {
 
 	auto progress = _layer->getPosition().x / (_contentSize.width - _layer->getContentSize().width);
 	if (progress < 0.5f) {
-		auto a = _callback(Rc<MoveTo>::create(_time, Vec2(_contentSize.width - _layer->getContentSize().width, 0.0f)));
+		auto a = _callback(Rc<MoveTo>::create(_time,
+				Vec2(_contentSize.width - _layer->getContentSize().width, 0.0f)));
 		_layer->runAction(move(a));
 	} else {
 		auto a = _callback(Rc<MoveTo>::create(_time, Vec2(0.0f, 0.0f)));
@@ -69,74 +72,74 @@ bool TestGeneralAction::init() {
 		return false;
 	}
 
-	auto node = addChild(Rc<ActionEaseNode>::create("Elastic:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Elastic_EaseInOut), move(a));
+	auto node = addChild(Rc<ActionEaseNode>::create("Elastic:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::ElasticEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Ease:", [this] (Rc<ActionInterval> &&a) {
+	node = addChild(Rc<ActionEaseNode>::create("Ease:", [this](Rc<ActionInterval> &&a) {
 		return makeAction(getSelectedType(interpolation::EaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Rate:", [this] (Rc<ActionInterval> &&a) {
+	node = addChild(Rc<ActionEaseNode>::create("Rate:", [this](Rc<ActionInterval> &&a) {
 		return makeAction(getSelectedType(interpolation::Linear), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Bounce:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Bounce_EaseInOut), move(a));
+	node = addChild(Rc<ActionEaseNode>::create("Bounce:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::BounceEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Back:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Back_EaseInOut), move(a));
+	node = addChild(Rc<ActionEaseNode>::create("Back:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::BackEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Sine:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Sine_EaseInOut), move(a));
+	node = addChild(Rc<ActionEaseNode>::create("Sine:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::SineEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Exponential:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Expo_EaseInOut), move(a));
+	node = addChild(Rc<ActionEaseNode>::create("Exponential:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::ExpoEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Quadratic:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Quad_EaseInOut), move(a));
+	node = addChild(Rc<ActionEaseNode>::create("Quadratic:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::QuadEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Cubic:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Cubic_EaseInOut), move(a));
+	node = addChild(Rc<ActionEaseNode>::create("Cubic:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::CubicEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Quartic:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Quart_EaseInOut), move(a));
+	node = addChild(Rc<ActionEaseNode>::create("Quartic:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::QuartEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Quintic:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Quint_EaseInOut), move(a));
+	node = addChild(Rc<ActionEaseNode>::create("Quintic:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::QuintEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
 
-	node = addChild(Rc<ActionEaseNode>::create("Circle:", [this] (Rc<ActionInterval> &&a) {
-		return makeAction(getSelectedType(interpolation::Circ_EaseInOut), move(a));
+	node = addChild(Rc<ActionEaseNode>::create("Circle:", [this](Rc<ActionInterval> &&a) {
+		return makeAction(getSelectedType(interpolation::CircEaseInOut), move(a));
 	}));
 	node->setAnchorPoint(Anchor::Middle);
 	_nodes.emplace_back(node);
@@ -161,85 +164,29 @@ void TestGeneralAction::handleEnter(xenolith::Scene *scene) {
 	TestLayout::handleEnter(scene);
 
 	runAction(Rc<Sequence>::create(0.01f, [this] {
-		for (auto &it : _nodes) {
-			it->run();
-		}
+		for (auto &it : _nodes) { it->run(); }
 	}, 0.17f, [this] {
 		_mode = Mode::In;
-		for (auto &it : _nodes) {
-			it->run();
-		}
+		for (auto &it : _nodes) { it->run(); }
 	}, 0.34f, [this] {
 		_mode = Mode::Out;
-		for (auto &it : _nodes) {
-			it->run();
-		}
+		for (auto &it : _nodes) { it->run(); }
 	}));
 
-	runAction(Rc<ActionEase>::create(Rc<DelayTime>::create(0.5f)));
+	runAction(Rc<EaseActionTyped>::create(Rc<DelayTime>::create(0.5f), interpolation::EaseInOut,
+			0.5f));
 }
 
-Rc<ActionInterval> TestGeneralAction::makeAction(interpolation::Type type, Rc<ActionInterval> &&a) const {
-	switch (type) {
-	case interpolation::Linear: return Rc<EaseRateAction>::create(move(a), 0.5f); break;
-
-	case interpolation::EaseIn: return Rc<EaseIn>::create(move(a), 0.5f); break;
-	case interpolation::EaseOut: return Rc<EaseOut>::create(move(a), 0.5f); break;
-	case interpolation::EaseInOut: return Rc<EaseInOut>::create(move(a), 0.5f); break;
-
-	case interpolation::Sine_EaseIn: return Rc<EaseSineIn>::create(move(a)); break;
-	case interpolation::Sine_EaseOut: return Rc<EaseSineOut>::create(move(a)); break;
-	case interpolation::Sine_EaseInOut: return Rc<EaseSineInOut>::create(move(a)); break;
-
-	case interpolation::Quad_EaseIn: return Rc<EaseQuadraticActionIn>::create(move(a)); break;
-	case interpolation::Quad_EaseOut: return Rc<EaseQuadraticActionOut>::create(move(a)); break;
-	case interpolation::Quad_EaseInOut: return Rc<EaseQuadraticActionInOut>::create(move(a)); break;
-
-	case interpolation::Cubic_EaseIn: return Rc<EaseCubicActionIn>::create(move(a)); break;
-	case interpolation::Cubic_EaseOut: return Rc<EaseCubicActionOut>::create(move(a)); break;
-	case interpolation::Cubic_EaseInOut: return Rc<EaseCubicActionInOut>::create(move(a)); break;
-
-	case interpolation::Quart_EaseIn: return Rc<EaseQuarticActionIn>::create(move(a)); break;
-	case interpolation::Quart_EaseOut: return Rc<EaseQuarticActionOut>::create(move(a)); break;
-	case interpolation::Quart_EaseInOut: return Rc<EaseQuarticActionInOut>::create(move(a)); break;
-
-	case interpolation::Quint_EaseIn: return Rc<EaseQuinticActionIn>::create(move(a)); break;
-	case interpolation::Quint_EaseOut: return Rc<EaseQuinticActionOut>::create(move(a)); break;
-	case interpolation::Quint_EaseInOut: return Rc<EaseQuinticActionInOut>::create(move(a)); break;
-
-	case interpolation::Expo_EaseIn: return Rc<EaseExponentialIn>::create(move(a)); break;
-	case interpolation::Expo_EaseOut: return Rc<EaseExponentialOut>::create(move(a)); break;
-	case interpolation::Expo_EaseInOut: return Rc<EaseExponentialInOut>::create(move(a)); break;
-
-	case interpolation::Circ_EaseIn: return Rc<EaseCircleActionIn>::create(move(a)); break;
-	case interpolation::Circ_EaseOut: return Rc<EaseCircleActionOut>::create(move(a)); break;
-	case interpolation::Circ_EaseInOut: return Rc<EaseCircleActionInOut>::create(move(a)); break;
-
-	case interpolation::Elastic_EaseIn: return Rc<EaseElasticIn>::create(move(a)); break;
-	case interpolation::Elastic_EaseOut: return Rc<EaseElasticOut>::create(move(a)); break;
-	case interpolation::Elastic_EaseInOut: return Rc<EaseElasticInOut>::create(move(a)); break;
-
-	case interpolation::Back_EaseIn: return Rc<EaseBackIn>::create(move(a)); break;
-	case interpolation::Back_EaseOut: return Rc<EaseBackOut>::create(move(a)); break;
-	case interpolation::Back_EaseInOut: return Rc<EaseBackInOut>::create(move(a)); break;
-
-	case interpolation::Bounce_EaseIn: return Rc<EaseBounceIn>::create(move(a)); break;
-	case interpolation::Bounce_EaseOut: return Rc<EaseBounceOut>::create(move(a)); break;
-	case interpolation::Bounce_EaseInOut: return Rc<EaseBounceInOut>::create(move(a)); break;
-	default: break;
-	}
-	return nullptr;
+Rc<ActionInterval> TestGeneralAction::makeAction(interpolation::Type type,
+		Rc<ActionInterval> &&a) const {
+	return Rc<EaseActionTyped>::create(move(a), type, 0.5f);
 }
 
 interpolation::Type TestGeneralAction::getSelectedType(interpolation::Type type) const {
 	switch (type) {
-	case interpolation::Type::Linear:
-		return interpolation::Type::Linear;
-		break;
-	default:
-		return interpolation::Type(type - toInt(_mode));
-		break;
+	case interpolation::Type::Linear: return interpolation::Type::Linear; break;
+	default: return interpolation::Type(type - toInt(_mode)); break;
 	}
 }
 
-}
+} // namespace stappler::xenolith::app

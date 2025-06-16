@@ -42,10 +42,12 @@ public:
 protected:
 	using Scene::init;
 
+	virtual void handlePresented(Director *) override;
+
 	// Текстовое поле Hello world
 	basic2d::Label *_helloWorldLabel = nullptr;
 };
 
-}
+} // namespace stappler::xenolith::app
 
 #endif /* EXAMPLES_VK_GUI_SRC_EXAMPLESCENE_H_ */

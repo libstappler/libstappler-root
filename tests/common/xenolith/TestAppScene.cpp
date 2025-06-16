@@ -84,17 +84,12 @@ bool TestAppScene::init(Application *app, const core::FrameConstraints &constrai
 	auto content = Rc<material2d::SceneContent>::create();
 
 	auto el = content->addComponent(Rc<EventListener>::create());
-	el->onEvent(View::onBackground, [el](const Event &ev) {
-		auto fn = [](int id) {
-
-		};
-
+	el->listenForEvent(View::onBackground, [el](const Event &ev) {
 		EventHeader header(onCustomEvent);
 		EventHeader header2(move(header));
 		EventHeader header3(onCustomEvent);
 		header3 = move(header2);
 		header3 = onCustomEvent;
-		fn(onCustomEvent);
 
 		if (ev == View::onBackground && View::onBackground == ev) {
 			ev.getCategory();
@@ -140,7 +135,7 @@ bool TestAppScene::init(Application *app, const core::FrameConstraints &constrai
 	return true;
 }
 
-void TestAppScene::onPresented(Director *dir) {
+void TestAppScene::handlePresented(Director *dir) {
 	auto c = dir->getFrameConstraints();
 	auto tmp = c;
 
@@ -178,10 +173,10 @@ void TestAppScene::onPresented(Director *dir) {
 	dir->getView()->releaseBackButton();
 	dir->getView()->setDecorationVisible(true);
 
-	Scene2d::onPresented(dir);
+	Scene2d::handlePresented(dir);
 }
 
-void TestAppScene::onFinished(Director *dir) { Scene2d::onFinished(dir); }
+void TestAppScene::handleFinished(Director *dir) { Scene2d::handleFinished(dir); }
 
 void TestAppScene::update(const UpdateTime &time) { Scene2d::update(time); }
 
@@ -215,9 +210,7 @@ void TestAppScene::handleEnter(xenolith::Scene *scene) {
 		}
 	}, TimeInterval::seconds(60 * 60), this);
 
-	onCustomEvent.getCategory();
 	onCustomEvent.getName();
-	onCustomEvent.isInCategory(EventHeader::getCategoryForName("TestAppScene"));
 
 	onCustomEvent(this, 0.5f);
 	onCustomEvent(this, scene);

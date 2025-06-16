@@ -26,6 +26,5 @@ WEBSERVER_VERSION_REV := 3
 
 TOOLKIT_MODULE_LIST += \
 	$(WEBSERVER_MODULE_DIR)/webserver/webserver.mk \
-	$(WEBSERVER_MODULE_DIR)/pug/pug.mk \
 	$(WEBSERVER_MODULE_DIR)/unix/unix.mk \
 	$(WEBSERVER_MODULE_DIR)/httpd/httpd.mk \

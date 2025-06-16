@@ -203,7 +203,7 @@ Session *Request::authorizeUser(db::User *user, TimeInterval maxAge) {
 	if (_config->_session) {
 		_config->_session->cancel();
 	}
-	auto s = new Session(*this, user, maxAge);
+	auto s = new (std::nothrow) Session(*this, user, maxAge);
 	if (s->isValid()) {
 		_config->_session = s;
 		_config->_user = user;
@@ -236,7 +236,7 @@ void Request::setUser(int64_t id) { _config->_userId = id; }
 
 Session *Request::getSession() {
 	if (!_config->_session) {
-		_config->_session = new Session(*this);
+		_config->_session = new (std::nothrow) Session(*this);
 	}
 
 	if (_config->_session->isValid()) {

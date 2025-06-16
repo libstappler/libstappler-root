@@ -8,10 +8,11 @@ tasks.register('prepareAndroidMk', Exec) {
 }
 
 preBuild.dependsOn prepareAndroidMk
+clean.dependsOn prepareAndroidMk
 
 android {
     compileSdk 35
-    ndkVersion '28.0.13004108'
+    ndkVersion '28.1.13356709'
 
     defaultConfig {
         applicationId = 'org.stappler.xenolith.gui'

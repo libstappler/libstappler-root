@@ -7,7 +7,7 @@ ConstructorInitializerIndentWidth: 0
 ContinuationIndentWidth: 8
 IndentWidth: 4
 TabWidth: 4
-UseTab: ForContinuationAndIndentation
+UseTab: Always
 Standard: c++20
 
 AlignAfterOpenBracket: DontAlign

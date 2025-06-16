@@ -51,7 +51,10 @@ public:
 
 	db::User *getUser() const { return _user; }
 	const Vector<SocketCommand *> &getCommands() const { return _cmds; }
-	const Vector<Pair<StringView, const Map<String, HostComponent::Command> *>> &getExternals() const { return _external; }
+	const Vector<Pair<StringView, const Map<String, HostComponent::Command> *>> &
+	getExternals() const {
+		return _external;
+	}
 
 	bool onCommand(StringView &r);
 
@@ -65,7 +68,7 @@ public:
 
 	void sendCmd(const StringView &v);
 	void sendError(const String &str);
-	void sendData(const Value & data);
+	void sendData(const Value &data);
 
 protected:
 	Vector<SocketCommand *> _cmds;
@@ -92,10 +95,14 @@ struct DebugCmd : SocketCommand {
 		if (!r.empty()) {
 			if (r.is("on")) {
 				Root::getCurrent()->setDebugEnabled(true);
-				h.send("Try to enable debug mode, wait a second, until all servers receive your message");
+				h
+						.send("Try to enable debug mode, wait a second, until all servers receive "
+							  "your " "message");
 			} else if (r.is("off")) {
 				Root::getCurrent()->setDebugEnabled(false);
-				h.send("Try to disable debug mode, wait a second, until all servers receive your message");
+				h
+						.send("Try to disable debug mode, wait a second, until all servers receive "
+							  "your " "message");
 			}
 		} else {
 			if (Root::getCurrent()->isDebugEnabled()) {
@@ -107,12 +114,8 @@ struct DebugCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const override {
-		return "on|off - Switch server debug mode";
-	}
-	virtual StringView help() const override {
-		return "on|off - Switch server debug mode";
-	}
+	virtual StringView desc() const override { return "on|off - Switch server debug mode"; }
+	virtual StringView help() const override { return "on|off - Switch server debug mode"; }
 };
 
 struct ListCmd : SocketCommand {
@@ -122,9 +125,7 @@ struct ListCmd : SocketCommand {
 		if (r.empty()) {
 			Value ret;
 			auto &schemes = h.manager()->host().getSchemes();
-			for (auto &it : schemes) {
-				ret.addString(it.first);
-			}
+			for (auto &it : schemes) { ret.addString(it.first); }
 			h.sendData(ret);
 		} else if (r == "all") {
 			Value ret;
@@ -132,9 +133,7 @@ struct ListCmd : SocketCommand {
 			for (auto &it : schemes) {
 				auto &val = ret.emplace(it.first);
 				auto &fields = it.second->getFields();
-				for (auto &fit : fields) {
-					val.setValue(fit.second.getTypeDesc(), fit.first);
-				}
+				for (auto &fit : fields) { val.setValue(fit.second.getTypeDesc(), fit.first); }
 			}
 			h.sendData(ret);
 		} else {
@@ -143,9 +142,7 @@ struct ListCmd : SocketCommand {
 			auto scheme = h.manager()->host().getScheme(cmd);
 			if (scheme) {
 				auto &fields = scheme->getFields();
-				for (auto &fit : fields) {
-					ret.setValue(fit.second.getTypeDesc(), fit.first);
-				}
+				for (auto &fit : fields) { ret.setValue(fit.second.getTypeDesc(), fit.first); }
 				h.sendData(ret);
 			}
 		}
@@ -167,18 +164,18 @@ struct ResourceCmd : SocketCommand {
 		return h.manager()->host().getScheme(scheme);
 	}
 
-	Resource *acquireResource(const db::Transaction &t, ShellSocketHandler &h, const StringView &scheme, const StringView &path,
-			const StringView &resolve, const Value &val = Value()) {
+	Resource *acquireResource(const db::Transaction &t, ShellSocketHandler &h,
+			const StringView &scheme, const StringView &path, const StringView &resolve,
+			const Value &val = Value()) {
 		Resource *ret = nullptr;
 		if (!scheme.empty()) {
-			auto s =  acquireScheme(h, scheme);
+			auto s = acquireScheme(h, scheme);
 			if (s) {
-				ret =  Resource::resolve(t, *s,
-						path.empty()
-						? String("/")
-						: (path.is<StringView::CharGroup<CharGroupId::Numbers>>())
-							? StringView(toString("/id", path))
-							: path);
+				ret = Resource::resolve(t, *s,
+						path.empty() ? String("/")
+								: (path.is<StringView::CharGroup<CharGroupId::Numbers>>())
+								? StringView(toString("/id", path))
+								: path);
 				if (ret) {
 					ret->setUser(h.getUser());
 					if (!resolve.empty()) {
@@ -191,7 +188,8 @@ struct ResourceCmd : SocketCommand {
 					}
 					ret->prepare();
 				} else {
-					h.sendError(toString("Fail to resolve resource \"", path, "\" for scheme ", scheme));
+					h.sendError(toString("Fail to resolve resource \"", path, "\" for scheme ",
+							scheme));
 				}
 			} else {
 				h.sendError(toString("No such scheme: ", scheme));
@@ -218,7 +216,7 @@ struct GetCmd : ResourceCmd {
 
 		auto resolve = r.readUntil<StringView::CharGroup<CharGroupId::WhiteSpace>>();
 
-		h.performWithStorage([&, this] (const db::Transaction &t) {
+		h.performWithStorage([&, this](const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, resolve)) {
 				auto data = r->getResultObject();
 				h.sendData(data);
@@ -249,7 +247,8 @@ struct HistoryCmd : ResourceCmd {
 		r.skipChars<StringView::CharGroup<CharGroupId::WhiteSpace>>();
 
 		auto schemeView = schemeName;
-		StringView field; uint64_t tag = 0;
+		StringView field;
+		uint64_t tag = 0;
 		schemeName = schemeView.readUntilString("::");
 		if (schemeView.is("::")) {
 			schemeView += 2;
@@ -265,13 +264,16 @@ struct HistoryCmd : ResourceCmd {
 		}
 
 		if (auto s = acquireScheme(h, schemeName)) {
-			h.performWithStorage([&] (const db::Transaction &t) {
-				if (auto a = dynamic_cast<db::sql::SqlHandle *>(t.getAdapter().getBackendInterface())) {
+			h.performWithStorage([&](const db::Transaction &t) {
+				if (auto a = dynamic_cast<db::sql::SqlHandle *>(
+							t.getAdapter().getBackendInterface())) {
 					if (field.empty()) {
 						h.sendData(a->getHistory(*s, Time::microseconds(time), true));
 					} else if (auto f = s->getField(field)) {
 						if (f->getType() == db::Type::View) {
-							h.sendData(a->getHistory(*static_cast<const db::FieldView *>(f->getSlot()), s, tag, Time::microseconds(time), true));
+							h.sendData(
+									a->getHistory(*static_cast<const db::FieldView *>(f->getSlot()),
+											s, tag, Time::microseconds(time), true));
 						}
 					}
 					ret = true;
@@ -302,7 +304,8 @@ struct DeltaCmd : ResourceCmd {
 
 		int64_t time = r.readInteger().get(0);
 		auto schemeView = schemeName;
-		StringView field; uint64_t tag = 0;
+		StringView field;
+		uint64_t tag = 0;
 		schemeName = schemeView.readUntilString("::");
 		if (schemeView.is("::")) {
 			schemeView += 2;
@@ -318,13 +321,16 @@ struct DeltaCmd : ResourceCmd {
 		}
 
 		if (auto s = acquireScheme(h, schemeName)) {
-			h.performWithStorage([&] (const db::Transaction &t) {
-				if (auto a = dynamic_cast<db::sql::SqlHandle *>(t.getAdapter().getBackendInterface())) {
+			h.performWithStorage([&](const db::Transaction &t) {
+				if (auto a = dynamic_cast<db::sql::SqlHandle *>(
+							t.getAdapter().getBackendInterface())) {
 					if (field.empty()) {
 						h.sendData(a->getDeltaData(*s, Time::microseconds(time)));
 					} else if (auto f = s->getField(field)) {
 						if (f->getType() == db::Type::View) {
-							h.sendData(a->getDeltaData(*s, *static_cast<const db::FieldView *>(f->getSlot()), Time::microseconds(time), tag));
+							h.sendData(a->getDeltaData(*s,
+									*static_cast<const db::FieldView *>(f->getSlot()),
+									Time::microseconds(time), tag));
 						}
 					}
 					ret = true;
@@ -358,10 +364,10 @@ struct MultiCmd : ResourceCmd {
 					StringView path(it.first);
 					StringView scheme = path.readUntil<StringView::Chars<'/'>>();
 					if (path.is('/')) {
-						++ path;
+						++path;
 					}
 
-					h.performWithStorage([&, this] (const db::Transaction &t) {
+					h.performWithStorage([&, this](const db::Transaction &t) {
 						if (auto r = acquireResource(t, h, scheme, path, StringView(), it.second)) {
 							result.setValue(r->getResultObject(), it.first);
 							delete r;
@@ -375,12 +381,8 @@ struct MultiCmd : ResourceCmd {
 		return true;
 	}
 
-	virtual StringView desc() const override {
-		return "<request> - perform multi-request";
-	}
-	virtual StringView help() const override {
-		return "<request> - perform multi-request";
-	}
+	virtual StringView desc() const override { return "<request> - perform multi-request"; }
+	virtual StringView help() const override { return "<request> - perform multi-request"; }
 };
 
 struct CreateCmd : ResourceCmd {
@@ -397,8 +399,10 @@ struct CreateCmd : ResourceCmd {
 		}
 
 		bool success = false;
-		Value patch = (r.is('{') || r.is('[') || r.is('(')) ? data::read<Interface>(r) : UrlView::parseArgs<Interface>(r, 1_KiB);
-		h.performWithStorage([&, this] (const db::Transaction &t) {
+		Value patch = (r.is('{') || r.is('[') || r.is('('))
+				? data::read<Interface>(r)
+				: UrlView::parseArgs<Interface>(r, 1_KiB);
+		h.performWithStorage([&, this](const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				Vector<db::InputFile> f;
 				if (r->prepareCreate()) {
@@ -407,7 +411,8 @@ struct CreateCmd : ResourceCmd {
 						success = true;
 					}
 				} else {
-					h.sendError(toString("Action for scheme ", schemeName, " is forbidden for ", h.getUser()->getName()));
+					h.sendError(toString("Action for scheme ", schemeName, " is forbidden for ",
+							h.getUser()->getName()));
 				}
 				delete r;
 			}
@@ -443,8 +448,10 @@ struct UpdateCmd : ResourceCmd {
 		}
 
 		bool success = false;
-		Value patch = (r.is('{') || r.is('[') || r.is('(')) ? data::read<Interface>(r) : UrlView::parseArgs<Interface>(r, 1_KiB);
-		h.performWithStorage([&, this] (const db::Transaction &t) {
+		Value patch = (r.is('{') || r.is('[') || r.is('('))
+				? data::read<Interface>(r)
+				: UrlView::parseArgs<Interface>(r, 1_KiB);
+		h.performWithStorage([&, this](const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				Vector<db::InputFile> f;
 				if (r->prepareUpdate()) {
@@ -453,7 +460,8 @@ struct UpdateCmd : ResourceCmd {
 						success = true;
 					}
 				} else {
-					h.sendError(toString("Action for scheme ", schemeName, " is forbidden for ", h.getUser()->getName()));
+					h.sendError(toString("Action for scheme ", schemeName, " is forbidden for ",
+							h.getUser()->getName()));
 				}
 				delete r;
 			}
@@ -489,7 +497,7 @@ struct UploadCmd : ResourceCmd {
 		}
 
 		bool success = false;
-		h.performWithStorage([&, this] (const db::Transaction &t) {
+		h.performWithStorage([&, this](const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				if (r->prepareCreate()) {
 					Bytes bkey = valid::makeRandomBytes<Interface>(8);
@@ -502,7 +510,7 @@ struct UploadCmd : ResourceCmd {
 						pair("user", Value(h.getUser()->getObjectId())),
 					});
 
-					h.performWithStorage([&] (const db::Transaction &t) {
+					h.performWithStorage([&](const db::Transaction &t) {
 						t.getAdapter().set(key, token, TimeInterval::seconds(5));
 					});
 
@@ -548,8 +556,10 @@ struct AppendCmd : ResourceCmd {
 		}
 
 		bool success = false;
-		Value patch = (r.is('{') || r.is('[') || r.is('(')) ? data::read<Interface>(r) : UrlView::parseArgs<Interface>(r, 1_KiB);
-		h.performWithStorage([&, this] (const db::Transaction &t) {
+		Value patch = (r.is('{') || r.is('[') || r.is('('))
+				? data::read<Interface>(r)
+				: UrlView::parseArgs<Interface>(r, 1_KiB);
+		h.performWithStorage([&, this](const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				if (r->prepareAppend()) {
 					if (auto ret = r->appendObject(patch)) {
@@ -557,7 +567,8 @@ struct AppendCmd : ResourceCmd {
 						success = true;
 					}
 				} else {
-					h.sendError(toString("Action for scheme ", schemeName, " is forbidden for ", h.getUser()->getName()));
+					h.sendError(toString("Action for scheme ", schemeName, " is forbidden for ",
+							h.getUser()->getName()));
 				}
 				delete r;
 			}
@@ -593,13 +604,14 @@ struct DeleteCmd : ResourceCmd {
 		}
 
 		bool success = false;
-		h.performWithStorage([&, this] (const db::Transaction &t) {
+		h.performWithStorage([&, this](const db::Transaction &t) {
 			if (auto r = acquireResource(t, h, schemeName, path, StringView())) {
 				if (r->removeObject()) {
 					success = true;
 					h.sendData(Value(true));
 				} else {
-					h.sendError(toString("Action for scheme ", schemeName, " is forbidden for ", h.getUser()->getName()));
+					h.sendError(toString("Action for scheme ", schemeName, " is forbidden for ",
+							h.getUser()->getName()));
 				}
 				delete r;
 			}
@@ -642,7 +654,7 @@ struct SearchCmd : ResourceCmd {
 			data.setString(r, "search");
 		}
 
-		h.performWithStorage([&, this] (const db::Transaction &t) {
+		h.performWithStorage([&, this](const db::Transaction &t) {
 			if (auto res = acquireResource(t, h, schemeName, path, StringView(), data)) {
 				if (auto val = res->getResultObject()) {
 					h.sendData(val);
@@ -692,12 +704,8 @@ struct HandlersCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const override {
-		return " - Information about registered handlers";
-	}
-	virtual StringView help() const override {
-		return " - Information about registered handlers";
-	}
+	virtual StringView desc() const override { return " - Information about registered handlers"; }
+	virtual StringView help() const override { return " - Information about registered handlers"; }
 };
 
 struct CloseCmd : SocketCommand {
@@ -708,19 +716,17 @@ struct CloseCmd : SocketCommand {
 		return false;
 	}
 
-	virtual StringView desc() const override {
-		return " - close current connection";
-	}
-	virtual StringView help() const override {
-		return " - close current connection";
-	}
+	virtual StringView desc() const override { return " - close current connection"; }
+	virtual StringView help() const override { return " - close current connection"; }
 };
 
 struct EchoCmd : SocketCommand {
 	EchoCmd() : SocketCommand("echo") { }
 
 	virtual bool run(ShellSocketHandler &h, StringView &r) override {
-		if (!r.empty()) { h.send(r); }
+		if (!r.empty()) {
+			h.send(r);
+		}
 		return true;
 	}
 
@@ -736,7 +742,9 @@ struct ParseCmd : SocketCommand {
 	ParseCmd() : SocketCommand("parse") { }
 
 	virtual bool run(ShellSocketHandler &h, StringView &r) override {
-		Value patch = (r.is('{') || r.is('[') || r.is('(')) ? data::read<Interface>(r) : UrlView::parseArgs<Interface>(r, 1_KiB);
+		Value patch = (r.is('{') || r.is('[') || r.is('('))
+				? data::read<Interface>(r)
+				: UrlView::parseArgs<Interface>(r, 1_KiB);
 		h.sendData(patch);
 		return true;
 	}
@@ -779,20 +787,16 @@ struct CountCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const override {
-		return " - display number of opened terminals";
-	}
-	virtual StringView help() const override {
-		return " - display number of opened terminals";
-	}
+	virtual StringView desc() const override { return " - display number of opened terminals"; }
+	virtual StringView help() const override { return " - display number of opened terminals"; }
 };
 
 struct HelpCmd : SocketCommand {
 	HelpCmd() : SocketCommand("help") { }
 
 	virtual bool run(ShellSocketHandler &h, StringView &r) override {
-		auto & cmds = h.getCommands();
-		auto & externals = h.getExternals();
+		auto &cmds = h.getCommands();
+		auto &externals = h.getExternals();
 		StringStream stream;
 		if (r.empty()) {
 			stream << "Loaded components:\n";
@@ -801,9 +805,7 @@ struct HelpCmd : SocketCommand {
 			}
 
 			stream << "Available commands:\n";
-			for (auto &it : cmds) {
-				stream << "  - " << it->name << " " << it->desc() << "\n";
-			}
+			for (auto &it : cmds) { stream << "  - " << it->name << " " << it->desc() << "\n"; }
 
 			for (auto &it : externals) {
 				if (it.second && !it.second->empty()) {
@@ -828,7 +830,8 @@ struct HelpCmd : SocketCommand {
 					stream << " From component: " << it.first << "\n";
 					for (auto &eit : *it.second) {
 						if (r == eit.second.name) {
-							stream << "  - " << eit.second.name << " " << eit.second.desc << "\n" << eit.second.help;
+							stream << "  - " << eit.second.name << " " << eit.second.desc << "\n"
+								   << eit.second.help;
 							found = true;
 							break;
 						}
@@ -860,12 +863,8 @@ struct GenPasswordCmd : SocketCommand {
 		return true;
 	}
 
-	virtual StringView desc() const override {
-		return " - generate password with <length>";
-	}
-	virtual StringView help() const override {
-		return " - generate password with <length>";
-	}
+	virtual StringView desc() const override { return " - generate password with <length>"; }
+	virtual StringView help() const override { return " - generate password with <length>"; }
 };
 
 struct TimeCmd : SocketCommand {
@@ -907,29 +906,30 @@ struct TimeCmd : SocketCommand {
 	}
 };
 
-ShellSocketHandler::ShellSocketHandler(WebsocketManager *m, pool_t *pool, StringView url, int64_t userId)
+ShellSocketHandler::ShellSocketHandler(WebsocketManager *m, pool_t *pool, StringView url,
+		int64_t userId)
 : WebsocketHandler(m, pool, url, 600_sec), _userId(userId) {
-	_cmds.push_back(new ListCmd());
-	_cmds.push_back(new HandlersCmd());
-	_cmds.push_back(new HistoryCmd());
-	_cmds.push_back(new DeltaCmd());
-	_cmds.push_back(new GetCmd());
-	_cmds.push_back(new MultiCmd());
-	_cmds.push_back(new CreateCmd());
-	_cmds.push_back(new UpdateCmd());
-	_cmds.push_back(new AppendCmd());
-	_cmds.push_back(new UploadCmd());
-	_cmds.push_back(new DeleteCmd());
-	_cmds.push_back(new SearchCmd());
-	_cmds.push_back(new DebugCmd());
-	_cmds.push_back(new CloseCmd());
-	_cmds.push_back(new EchoCmd());
-	_cmds.push_back(new ParseCmd());
-	_cmds.push_back(new MsgCmd());
-	_cmds.push_back(new CountCmd());
-	_cmds.push_back(new HelpCmd());
-	_cmds.push_back(new GenPasswordCmd());
-	_cmds.push_back(new TimeCmd());
+	_cmds.push_back(new (std::nothrow) ListCmd());
+	_cmds.push_back(new (std::nothrow) HandlersCmd());
+	_cmds.push_back(new (std::nothrow) HistoryCmd());
+	_cmds.push_back(new (std::nothrow) DeltaCmd());
+	_cmds.push_back(new (std::nothrow) GetCmd());
+	_cmds.push_back(new (std::nothrow) MultiCmd());
+	_cmds.push_back(new (std::nothrow) CreateCmd());
+	_cmds.push_back(new (std::nothrow) UpdateCmd());
+	_cmds.push_back(new (std::nothrow) AppendCmd());
+	_cmds.push_back(new (std::nothrow) UploadCmd());
+	_cmds.push_back(new (std::nothrow) DeleteCmd());
+	_cmds.push_back(new (std::nothrow) SearchCmd());
+	_cmds.push_back(new (std::nothrow) DebugCmd());
+	_cmds.push_back(new (std::nothrow) CloseCmd());
+	_cmds.push_back(new (std::nothrow) EchoCmd());
+	_cmds.push_back(new (std::nothrow) ParseCmd());
+	_cmds.push_back(new (std::nothrow) MsgCmd());
+	_cmds.push_back(new (std::nothrow) CountCmd());
+	_cmds.push_back(new (std::nothrow) HelpCmd());
+	_cmds.push_back(new (std::nothrow) GenPasswordCmd());
+	_cmds.push_back(new (std::nothrow) TimeCmd());
 
 	auto serv = m->host();
 	_external.reserve(serv.getComponents().size());
@@ -954,11 +954,9 @@ bool ShellSocketHandler::onCommand(StringView &r) {
 		for (auto &eit : *it.second) {
 			if (cmd == eit.second.name) {
 				bool ret = false;
-				performWithStorage([&, this] (const db::Transaction &t) {
+				performWithStorage([&, this](const db::Transaction &t) {
 					t.setRole(db::AccessRoleId::Admin);
-					ret = eit.second.callback(r, [&, this] (const Value &val) {
-						send(val);
-					});
+					ret = eit.second.callback(r, [&, this](const Value &val) { send(val); });
 				});
 				return ret;
 			}
@@ -970,10 +968,8 @@ bool ShellSocketHandler::onCommand(StringView &r) {
 }
 
 void ShellSocketHandler::handleBegin() {
-	performWithStorage([&, this] (const db::Transaction &t) {
-		web::perform([&, this] {
-			_user = db::User::get(t.getAdapter(), _userId);
-		}, _pool);
+	performWithStorage([&, this](const db::Transaction &t) {
+		web::perform([&, this] { _user = db::User::get(t.getAdapter(), _userId); }, _pool);
 	});
 
 	sendBroadcast(Value({
@@ -1014,7 +1010,7 @@ bool ShellSocketHandler::handleMessage(const Value &val) {
 				sendData(d);
 			}
 		}
-	} else  if (val.isString("event")) {
+	} else if (val.isString("event")) {
 		auto &ev = val.getString("event");
 		if (ev == "enter") {
 			StringStream resp;
@@ -1038,33 +1034,31 @@ void ShellSocketHandler::sendCmd(const StringView &v) {
 
 void ShellSocketHandler::sendError(const String &str) {
 	StringStream stream;
-	switch(_mode) {
+	switch (_mode) {
 	case ShellMode::Plain: stream << "Error: " << str << "\n"; break;
 	case ShellMode::Html: stream << "<span class=\"error\">Error:</span> " << str; break;
 	};
 	send(stream.weak());
 }
 
-void ShellSocketHandler::sendData(const Value & data) {
+void ShellSocketHandler::sendData(const Value &data) {
 	String stream;
-	switch(_mode) {
+	switch (_mode) {
 	case ShellMode::Plain:
-		data::write([&] (StringView str) {
-			stream.append(str.data(), str.size());
-		}, data, data::EncodeFormat::Json);
+		data::write([&](StringView str) { stream.append(str.data(), str.size()); }, data,
+				data::EncodeFormat::Json);
 		break;
 	case ShellMode::Html:
 		stream.append("<p>");
-		output::formatJsonAsHtml([&] (StringView str) {
-			stream.append(str.data(), str.size());
-		}, data);
+		output::formatJsonAsHtml([&](StringView str) { stream.append(str.data(), str.size()); },
+				data);
 		stream.append("</p>");
 		break;
 	};
 	send(stream);
 }
 
-WebsocketHandler * ShellSocket::onAccept(const Request &req, pool_t *pool) {
+WebsocketHandler *ShellSocket::onAccept(const Request &req, pool_t *pool) {
 	WebsocketHandler *ret = nullptr;
 	Request rctx(req);
 	if (!req.getController()->isSecureAuthAllowed()) {
@@ -1077,7 +1071,8 @@ WebsocketHandler * ShellSocket::onAccept(const Request &req, pool_t *pool) {
 			rctx.setStatus(HTTP_FORBIDDEN);
 		} else {
 			web::perform([&, this] {
-				ret = new ShellSocketHandler(this, pool, req.getInfo().url.path, user->getObjectId());
+				ret = new (std::nothrow)
+						ShellSocketHandler(this, pool, req.getInfo().url.path, user->getObjectId());
 			}, pool);
 		}
 	}
@@ -1088,14 +1083,15 @@ WebsocketHandler * ShellSocket::onAccept(const Request &req, pool_t *pool) {
 			auto &name = data.getString("name");
 			auto &passwd = data.getString("passwd");
 
-			rctx.performWithStorage([&] (const db::Transaction &t) {
-				db::User * user = db::User::get(t, name, passwd);
+			rctx.performWithStorage([&](const db::Transaction &t) {
+				db::User *user = db::User::get(t, name, passwd);
 				if (!user || !user->isAdmin()) {
 					rctx.setStatus(HTTP_FORBIDDEN);
 				} else {
 					rctx.setUser(user);
 					web::perform([&, this] {
-						ret = new ShellSocketHandler(this, pool, req.getInfo().url.path, user->getObjectId());
+						ret = new (std::nothrow) ShellSocketHandler(this, pool,
+								req.getInfo().url.path, user->getObjectId());
 					}, pool);
 				}
 				return true;
@@ -1105,9 +1101,7 @@ WebsocketHandler * ShellSocket::onAccept(const Request &req, pool_t *pool) {
 	return ret;
 }
 
-bool ShellSocket::onBroadcast(const Value &) {
-	return true;
-}
+bool ShellSocket::onBroadcast(const Value &) { return true; }
 
 Status ShellGui::onPostReadRequest(Request &rctx) {
 	auto &info = rctx.getInfo();
@@ -1117,7 +1111,7 @@ Status ShellGui::onPostReadRequest(Request &rctx) {
 			size_t count = 0;
 			bool hasDb = false;
 			if (userScheme) {
-				rctx.performWithStorage([&] (const db::Transaction &t) {
+				rctx.performWithStorage([&](const db::Transaction &t) {
 					count = userScheme->count(t, db::Query());
 					hasDb = true;
 					return true;
@@ -1125,7 +1119,8 @@ Status ShellGui::onPostReadRequest(Request &rctx) {
 			}
 
 			rctx.setContentType("text/html;charset=UTF-8");
-			rctx.runPug("virtual://html/server.pug", [&] (pug::Context &exec, const pug::Template &) -> bool {
+			rctx.runPug("virtual://html/server.pug",
+					[&](pug::Context &exec, const pug::Template &) -> bool {
 				exec.set("count", Value(count));
 				exec.set("setup", Value(count != 0));
 				exec.set("hasDb", Value(hasDb));
@@ -1144,7 +1139,7 @@ Status ShellGui::onPostReadRequest(Request &rctx) {
 		} else {
 			path += "/upload/"_len;
 			Status status = HTTP_NOT_FOUND;
-			rctx.performWithStorage([&, this] (const db::Transaction &t) {
+			rctx.performWithStorage([&, this](const db::Transaction &t) {
 				auto data = t.getAdapter().get(path);
 				if (!path.empty()) {
 					if (data) {
@@ -1181,12 +1176,8 @@ void ShellGui::onInsertFilter(Request &rctx) {
 		return;
 	}
 
-	rctx.setInputConfig(db::InputConfig({
-		db::InputConfig::Require::Files,
-		_resource->getMaxRequestSize(),
-		_resource->getMaxVarSize(),
-		_resource->getMaxFileSize()
-	}));
+	rctx.setInputConfig(db::InputConfig({db::InputConfig::Require::Files,
+		_resource->getMaxRequestSize(), _resource->getMaxVarSize(), _resource->getMaxFileSize()}));
 
 	auto &info = rctx.getInfo();
 	if (info.method == RequestMethod::Put || info.method == RequestMethod::Post) {
@@ -1201,18 +1192,17 @@ void ShellGui::onInsertFilter(Request &rctx) {
 	}
 }
 
-Status ShellGui::onHandler(Request &) {
-	return OK;
-}
+Status ShellGui::onHandler(Request &) { return OK; }
 
 void ShellGui ::onFilterComplete(InputFilter *filter) {
 	Request rctx(filter->getRequest());
 	Value data;
 	data.setBool(false, "OK");
 	if (_resource) {
-		_request.performWithStorage([&, this] (const db::Transaction &t) {
+		_request.performWithStorage([&, this](const db::Transaction &t) {
 			return t.performAsSystem([&, this] {
-				data.setValue(_resource->createObject(filter->getData(), filter->getFiles()), "result");
+				data.setValue(_resource->createObject(filter->getData(), filter->getFiles()),
+						"result");
 				data.setBool(true, "OK");
 				return true;
 			});
@@ -1234,4 +1224,4 @@ void ShellGui ::onFilterComplete(InputFilter *filter) {
 	_request.writeData(data, false);
 }
 
-}
+} // namespace stappler::web::tools

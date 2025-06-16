@@ -22,6 +22,7 @@ THE SOFTWARE.
 **/
 
 #include "SPCommon.h"
+#include "SPMemFunction.h"
 #include "SPTime.h"
 #include "Test.h"
 
@@ -30,7 +31,7 @@ THE SOFTWARE.
 #endif
 
 static constexpr auto HELP_STRING(
-R"HelpString(testapp <options> <list|test-name|all>
+		R"HelpString(testapp <options> <list|test-name|all>
 Options are one of:
     -v (--verbose)
     -h (--help))HelpString");
@@ -51,7 +52,8 @@ struct StringToNumberTest : Test {
 	template <typename T>
 	bool runFloatTest(StringStream &stream, const T &t) {
 		auto n = StringToNumber<T>(toString(t));
-		stream << "\t" << t << " -> " << toString(t) << " -> " << n << " -> " << (toString(n) == toString(t)) << "\n";
+		stream << "\t" << t << " -> " << toString(t) << " -> " << n << " -> "
+			   << (toString(n) == toString(t)) << "\n";
 		return toString(n) == toString(t);
 	}
 
@@ -61,12 +63,24 @@ struct StringToNumberTest : Test {
 
 		stream << "\n";
 
-		if (runTest(stream, rand_int64_t())) { ++ pass; }
-		if (runTest(stream, rand_uint64_t())) { ++ pass; }
-		if (runTest(stream, rand_int32_t())) { ++ pass; }
-		if (runTest(stream, rand_uint32_t())) { ++ pass; }
-		if (runFloatTest(stream, rand_float())) { ++ pass; }
-		if (runFloatTest(stream, rand_double())) { ++ pass; }
+		if (runTest(stream, rand_int64_t())) {
+			++pass;
+		}
+		if (runTest(stream, rand_uint64_t())) {
+			++pass;
+		}
+		if (runTest(stream, rand_int32_t())) {
+			++pass;
+		}
+		if (runTest(stream, rand_uint32_t())) {
+			++pass;
+		}
+		if (runFloatTest(stream, rand_float())) {
+			++pass;
+		}
+		if (runFloatTest(stream, rand_double())) {
+			++pass;
+		}
 
 		_desc = stream.str();
 
@@ -82,8 +96,13 @@ struct UnicodeTest : Test {
 	UnicodeTest() : Test("UnicodeTest") { }
 
 	virtual bool run() {
-		String str("Идейные соображения высшего порядка, а также начало повседневной работы по формированию позиции");
-		WideString wstr(u"Идейные соображения высшего порядка, а также начало повседневной работы по формированию позиции");
+		String
+				str(
+						"Идейные соображения высшего порядка, а также начало повседневной работы "
+						"по " "формированию позиции");
+		WideString wstr(
+				u"Идейные соображения высшего порядка, а также начало повседневной работы "
+				u"по " u"формированию позиции");
 		String strHtml("Идейные&nbsp;&lt;соображения&gt;&amp;работы&#x410;&#x0411;&#1042;&#1043;");
 
 		StringStream stream;
@@ -92,7 +111,7 @@ struct UnicodeTest : Test {
 		stream << "\n\tUtf8 -> Utf16 -> Utf8 test";
 		if (str == string::toUtf8<Interface>(string::toUtf16<Interface>(str))) {
 			stream << " passed\n";
-			++ pass;
+			++pass;
 		} else {
 			stream << " failed\n";
 		}
@@ -100,15 +119,16 @@ struct UnicodeTest : Test {
 		stream << "\tUtf16 -> Utf8 -> Utf16 test";
 		if (wstr == string::toUtf16<Interface>(string::toUtf8<Interface>(wstr))) {
 			stream << " passed\n";
-			++ pass;
+			++pass;
 		} else {
 			stream << " failed\n";
 		}
 
-		stream << "\tUtf16Html \"" << string::toUtf8<Interface>(string::toUtf16Html<Interface>(strHtml)) << "\"";
+		stream << "\tUtf16Html \""
+			   << string::toUtf8<Interface>(string::toUtf16Html<Interface>(strHtml)) << "\"";
 		if (u"Идейные <соображения>&работыАБВГ" == string::toUtf16Html<Interface>(strHtml)) {
 			stream << " passed\n";
-			++ pass;
+			++pass;
 		} else {
 			stream << " failed\n";
 		}
@@ -133,11 +153,11 @@ struct TimeTest : Test {
 		sp_time_exp_t ext4(Time::now(), 0);
 
 		Time t5;
-		t5.setMicros(1000);
-		t5.setMicroseconds(1000);
-		t5.setMillis(1000);
-		t5.setMilliseconds(1000);
-		t5.setSeconds(1000);
+		t5.setMicros(1'000);
+		t5.setMicroseconds(1'000);
+		t5.setMillis(1'000);
+		t5.setMilliseconds(1'000);
+		t5.setSeconds(1'000);
 		Time::floatSeconds(0.5f);
 
 		TimeInterval ti;
@@ -160,8 +180,8 @@ struct TimeTest : Test {
 		t5.asGmt();
 		t5.asLocal();
 
-		for (int i = 0; i <= 10; ++ i) {
-			auto t = now + TimeInterval::milliseconds( (i == 0) ? 0 : rand());
+		for (int i = 0; i <= 10; ++i) {
+			auto t = now + TimeInterval::milliseconds((i == 0) ? 0 : rand());
 
 			auto ctime = t.toCTime<Interface>();
 			auto http = t.toHttp<Interface>();
@@ -169,23 +189,25 @@ struct TimeTest : Test {
 			auto t1 = Time::fromHttp(http);
 			auto t2 = Time::fromHttp(ctime);
 
-			stream << "\n\t" << t.toSeconds() << " | Rfc822: " << http << " | " << t1.toSeconds() << " " << (t1.toSeconds() == t.toSeconds());
-			stream << " | CTime: " << ctime << " | " << t2.toSeconds() << " " << (t2.toSeconds() == t.toSeconds());
+			stream << "\n\t" << t.toSeconds() << " | Rfc822: " << http << " | " << t1.toSeconds()
+				   << " " << (t1.toSeconds() == t.toSeconds());
+			stream << " | CTime: " << ctime << " | " << t2.toSeconds() << " "
+				   << (t2.toSeconds() == t.toSeconds());
 
 			if (!(t1.toSeconds() == t.toSeconds() && t2.toSeconds() == t.toSeconds())) {
 				success = false;
 			}
 		}
 
-		for (int i = 0; i <= 10; ++ i) {
-			auto t = now + TimeInterval::milliseconds( (i == 0) ? 0 : rand());
+		for (int i = 0; i <= 10; ++i) {
+			auto t = now + TimeInterval::milliseconds((i == 0) ? 0 : rand());
 
 			auto xml = t.toIso8601<Interface>(6);
 
 			auto t1 = Time::fromHttp(xml);
 
-			stream << "\n\t" << t.toMicros() << " | Iso8601: " << xml << " | " << t1.toMicros() << " "
-					<< t1.toIso8601<Interface>(3) << " " << (t1.toMicros() == t.toMicros());
+			stream << "\n\t" << t.toMicros() << " | Iso8601: " << xml << " | " << t1.toMicros()
+				   << " " << t1.toIso8601<Interface>(3) << " " << (t1.toMicros() == t.toMicros());
 
 			if (!(t1.toMicros() == t.toMicros())) {
 				success = false;
@@ -207,7 +229,7 @@ int parseOptionSwitch(Value &ret, char c, const char *str) {
 	return 1;
 }
 
-int parseOptionString(Value &ret, const StringView &str, int argc, const char * argv[]) {
+int parseOptionString(Value &ret, const StringView &str, int argc, const char *argv[]) {
 	if (str == "help") {
 		ret.setBool(true, "help");
 	} else if (str == "verbose") {
@@ -223,8 +245,8 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	memory::pool::initialize();
 
 #if MODULE_STAPPLER_DATA
-	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv,
-			&parseOptionSwitch, &parseOptionString);
+	auto opts = data::parseCommandLineOptions<Interface, Value>(argc, argv, &parseOptionSwitch,
+			&parseOptionString);
 	if (opts.first.getBool("help")) {
 		std::cout << HELP_STRING << "\n";
 
@@ -239,33 +261,25 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 #endif
 		std::cout << " Options: " << stappler::data::EncodeFormat::Pretty << opts.first << "\n";
 		std::cout << " Arguments: \n";
-		for (auto &it : opts.second) {
-			std::cout << "\t" << it << "\n";
-		}
+		for (auto &it : opts.second) { std::cout << "\t" << it << "\n"; }
 	}
 #endif
 
-	auto mempool = memory::pool::create();
-	memory::pool::push(mempool);
-
-	if (argc > 1) {
-		StringView testName(argv[1]);
-		if (testName == "all") {
-			Test::RunAll();
-		} else if (testName == "list") {
-			Test::List();
-		} else {
-			for (int i = 1; i < argc; ++ i) {
-				Test::Run(StringView(argv[i]));
+	return perform_main([&] {
+		if (argc > 1) {
+			StringView testName(argv[1]);
+			if (testName == "all") {
+				Test::RunAll();
+			} else if (testName == "list") {
+				Test::List();
+			} else {
+				for (int i = 1; i < argc; ++i) { Test::Run(StringView(argv[i])); }
 			}
+		} else {
+			Test::RunAll();
 		}
-	} else {
-		Test::RunAll();
-	}
-
-	memory::pool::pop();
-	memory::pool::terminate();
-	return 0;
+		return 0;
+	});
 }
 
-}
+} // namespace stappler::app::test

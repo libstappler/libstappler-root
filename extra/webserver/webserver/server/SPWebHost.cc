@@ -34,6 +34,7 @@
 
 #include "SPDbUser.h"
 #include "SPValid.h"
+#include <new>
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
@@ -895,7 +896,7 @@ void Host::addResourceHandler(StringView path, const db::Scheme &scheme) const {
 	if (!path.empty() && path.front() == '/') {
 		_config->_requests.emplace(path,
 				RequestSchemeInfo{_config->_currentComponent, [s = &scheme]() -> RequestHandler * {
-			return new ResourceHandler(*s, Value());
+			return new (std::nothrow) ResourceHandler(*s, Value());
 		}, Value(), &scheme});
 	}
 	auto it = _config->_resources.find(&scheme);
@@ -910,7 +911,7 @@ void Host::addResourceHandler(StringView path, const db::Scheme &scheme, const V
 		_config->_requests.emplace(path,
 				RequestSchemeInfo{_config->_currentComponent,
 					[s = &scheme, val]() -> RequestHandler * {
-			return new ResourceHandler(*s, val);
+			return new (std::nothrow) ResourceHandler(*s, val);
 		}, Value(), &scheme});
 	}
 	auto it = _config->_resources.find(&scheme);
@@ -925,8 +926,10 @@ void Host::addMultiResourceHandler(StringView path,
 		path = path.pdup(_config->_rootPool);
 		_config->_requests.emplace(path,
 				RequestSchemeInfo{_config->_currentComponent,
-					[s = Map<StringView, const db::Scheme *>(sp::move(schemes))]()
-							-> RequestHandler * { return new ResourceMultiHandler(s); },
+					[s = Map<StringView, const db::Scheme *>(
+							 sp::move(schemes))]() -> RequestHandler * {
+			return new (std::nothrow) ResourceMultiHandler(s);
+		},
 					Value()});
 	}
 }
@@ -1065,7 +1068,7 @@ void Host::runErrorReportTask(const Request &req, const Vector<Value> &errors) {
 	AsyncTask::perform(Host(*this), [&, this, c = req.getController()](AsyncTask &task) {
 		Value *err = nullptr;
 		if (c) {
-			err = new Value{pair("documentRoot", Value(getHostInfo().documentRoot)),
+			err = new (std::nothrow) Value{pair("documentRoot", Value(getHostInfo().documentRoot)),
 				pair("name", Value(getHostInfo().hostname)),
 				pair("url", Value(toString(req.getInfo().url.host, req.getInfo().unparserUri))),
 				pair("request", Value(req.getInfo().requestLine)),
@@ -1076,7 +1079,7 @@ void Host::runErrorReportTask(const Request &req, const Vector<Value> &errors) {
 				err->emplace("headers").setString(value, key);
 			});
 		} else {
-			err = new Value{pair("documentRoot", Value(getHostInfo().documentRoot)),
+			err = new (std::nothrow) Value{pair("documentRoot", Value(getHostInfo().documentRoot)),
 				pair("name", Value(getHostInfo().hostname)),
 				pair("time", Value(Time::now().toMicros()))};
 		}

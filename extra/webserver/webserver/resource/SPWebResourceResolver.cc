@@ -28,8 +28,8 @@
 namespace STAPPLER_VERSIONIZED stappler::web {
 
 template <typename Result = bool>
-SP_COVERAGE_TRIVIAL
-static auto exitWithResolverError(StringView text, Value &&data = Value()) -> Result {
+SP_COVERAGE_TRIVIAL static auto exitWithResolverError(StringView text, Value &&data = Value())
+		-> Result {
 	Root::getCurrent()->error("ResourceResolver", text, move(data));
 	return Result(0);
 }
@@ -37,30 +37,23 @@ static auto exitWithResolverError(StringView text, Value &&data = Value()) -> Re
 static Vector<StringView> parsePath(StringView path) {
 	Vector<StringView> pathVec;
 	if (!path.empty() && (path.front() == ':' || path.starts_with("/:"))) {
-		path.split<StringView::Chars<':'>>([&] (const StringView &v) {
-			pathVec.emplace_back(v);
-		});
+		path.split<StringView::Chars<':'>>([&](const StringView &v) { pathVec.emplace_back(v); });
 	} else {
-		path.split<StringView::Chars<'/'>>([&] (const StringView &v) {
-			pathVec.emplace_back(v);
-		});
+		path.split<StringView::Chars<'/'>>([&](const StringView &v) { pathVec.emplace_back(v); });
 	}
 
-	while (!pathVec.empty() && pathVec.back().empty()) {
-		pathVec.pop_back();
-	}
+	while (!pathVec.empty() && pathVec.back().empty()) { pathVec.pop_back(); }
 
 	if (!pathVec.empty()) {
 		std::reverse(pathVec.begin(), pathVec.end());
-		while (pathVec.back().empty() || pathVec.back().equals("/")) {
-			pathVec.pop_back();
-		}
+		while (pathVec.back().empty() || pathVec.back().equals("/")) { pathVec.pop_back(); }
 	}
 
 	return pathVec;
 }
 
-static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
+static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path,
+		bool &isSingleObject) {
 	if (path.size() < 2) {
 		return exitWithResolverError("invalid 'select' query");
 	}
@@ -71,7 +64,8 @@ static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path, 
 	}
 	path.pop_back();
 
-	StringView cmpStr(path.back()); path.pop_back();
+	StringView cmpStr(path.back());
+	path.pop_back();
 
 	auto decComp = stappler::sql::decodeComparation(cmpStr);
 	db::Comparation cmp = decComp.first;
@@ -86,46 +80,58 @@ static bool getSelectResource(ResourceResolver *resv, Vector<StringView> &path, 
 			return resv->selectByQuery(db::Query::Select(field->getName(), cmp, cmpStr));
 		} else if (field->getType() == db::Type::Boolean) {
 			if (valid::validateNumber(cmpStr)) {
-				return resv->selectByQuery(db::Query::Select(field->getName(), cmp, cmpStr.readInteger().get(), 0));
+				return resv->selectByQuery(
+						db::Query::Select(field->getName(), cmp, cmpStr.readInteger().get(), 0));
 			} else if (cmpStr == "t" || cmpStr == "true") {
-				return resv->selectByQuery(db::Query::Select(field->getName(), cmp, Value(true), Value(false)));
+				return resv->selectByQuery(
+						db::Query::Select(field->getName(), cmp, Value(true), Value(false)));
 			} else if (cmpStr == "f" || cmpStr == "false") {
-				return resv->selectByQuery(db::Query::Select(field->getName(), cmp, Value(false), Value(false)));
+				return resv->selectByQuery(
+						db::Query::Select(field->getName(), cmp, Value(false), Value(false)));
 			}
-		} else if (valid::validateNumber(cmpStr) && db::checkIfComparationIsValid(field->getType(), cmp, field->getFlags())) {
-			return resv->selectByQuery(db::Query::Select(field->getName(), cmp, cmpStr.readInteger().get(), 0));
+		} else if (valid::validateNumber(cmpStr)
+				&& db::checkIfComparationIsValid(field->getType(), cmp, field->getFlags())) {
+			return resv->selectByQuery(
+					db::Query::Select(field->getName(), cmp, cmpStr.readInteger().get(), 0));
 		} else {
 			return exitWithResolverError("invalid 'select' query");
 		}
 	}
 
-	if (path.size() < valuesRequired || !db::checkIfComparationIsValid(field->getType(), cmp, field->getFlags())) {
+	if (path.size() < valuesRequired
+			|| !db::checkIfComparationIsValid(field->getType(), cmp, field->getFlags())) {
 		return exitWithResolverError("invalid 'select' query");
 	}
 
 	if (valuesRequired == 1) {
-		StringView value(sp::move(path.back())); path.pop_back();
+		StringView value(sp::move(path.back()));
+		path.pop_back();
 		if (field->getType() == db::Type::Text) {
 			return resv->selectByQuery(db::Query::Select(field->getName(), cmp, value));
 		} else if (valid::validateNumber(value)) {
-			return resv->selectByQuery(db::Query::Select(field->getName(), cmp, value.readInteger().get(), 0));
+			return resv->selectByQuery(
+					db::Query::Select(field->getName(), cmp, value.readInteger().get(), 0));
 		} else {
 			return exitWithResolverError("invalid 'select' query");
 		}
 	}
 
 	if (valuesRequired == 2) {
-		StringView value1(sp::move(path.back())); path.pop_back();
-		StringView value2(sp::move(path.back())); path.pop_back();
+		StringView value1(sp::move(path.back()));
+		path.pop_back();
+		StringView value2(sp::move(path.back()));
+		path.pop_back();
 		if (valid::validateNumber(value1) && valid::validateNumber(value2)) {
-			return resv->selectByQuery(db::Query::Select(field->getName(), cmp, value1.readInteger().get(), value2.readInteger().get()));
+			return resv->selectByQuery(db::Query::Select(field->getName(), cmp,
+					value1.readInteger().get(), value2.readInteger().get()));
 		}
 	}
 
 	return false;
 }
 
-static bool getSearchResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
+static bool getSearchResource(ResourceResolver *resv, Vector<StringView> &path,
+		bool &isSingleObject) {
 	if (path.size() < 1) {
 		return exitWithResolverError("invalid 'search' query");
 	}
@@ -152,7 +158,7 @@ static bool getOrderResource(ResourceResolver *resv, Vector<StringView> &path) {
 
 	db::Ordering ord = db::Ordering::Ascending;
 	if (!path.empty()) {
-		if (path.back() == "asc" ) {
+		if (path.back() == "asc") {
 			ord = db::Ordering::Ascending;
 			path.pop_back();
 		} else if (path.back() == "desc") {
@@ -177,7 +183,8 @@ static bool getOrderResource(ResourceResolver *resv, Vector<StringView> &path) {
 	return resv->order(field->getName(), ord);
 }
 
-static bool getOrderResource(ResourceResolver *resv, Vector<StringView> &path, const StringView &fieldName, db::Ordering ord) {
+static bool getOrderResource(ResourceResolver *resv, Vector<StringView> &path,
+		const StringView &fieldName, db::Ordering ord) {
 	auto field = resv->getScheme()->getField(fieldName);
 	if (!field || !field->isIndexed()) {
 		return exitWithResolverError("invalid 'order' query");
@@ -199,12 +206,14 @@ static bool getOrderResource(ResourceResolver *resv, Vector<StringView> &path, c
 	return resv->order(field->getName(), ord);
 }
 
-static bool getLimitResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
+static bool getLimitResource(ResourceResolver *resv, Vector<StringView> &path,
+		bool &isSingleObject) {
 	if (path.size() < 1) {
 		return exitWithResolverError("invalid 'limit' query");
 	}
 
-	StringView value(path.back()); path.pop_back();
+	StringView value(path.back());
+	path.pop_back();
 	if (valid::validateNumber(value)) {
 		auto val = value.readInteger().get();
 		if (val == 1) {
@@ -221,7 +230,8 @@ static bool getOffsetResource(ResourceResolver *resv, Vector<StringView> &path) 
 		return exitWithResolverError("invalid 'offset' query");
 	}
 
-	StringView value(sp::move(path.back())); path.pop_back();
+	StringView value(sp::move(path.back()));
+	path.pop_back();
 	if (valid::validateNumber(value)) {
 		return resv->offset(value.readInteger().get());
 	} else {
@@ -229,7 +239,8 @@ static bool getOffsetResource(ResourceResolver *resv, Vector<StringView> &path) 
 	}
 }
 
-static bool getFirstResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
+static bool getFirstResource(ResourceResolver *resv, Vector<StringView> &path,
+		bool &isSingleObject) {
 	if (path.size() < 1) {
 		return exitWithResolverError("invalid 'first' query");
 	}
@@ -256,7 +267,8 @@ static bool getFirstResource(ResourceResolver *resv, Vector<StringView> &path, b
 	return resv->first(field->getName(), 1);
 }
 
-static bool getLastResource(ResourceResolver *resv, Vector<StringView> &path, bool &isSingleObject) {
+static bool getLastResource(ResourceResolver *resv, Vector<StringView> &path,
+		bool &isSingleObject) {
 	if (path.size() < 1) {
 		return exitWithResolverError("invalid 'last' query");
 	}
@@ -406,12 +418,14 @@ static Resource *getResolvedResource(ResourceResolver *resv, Vector<StringView> 
 	return parseResource(resv, path);
 }
 
-Resource *Resource::resolve(const db::Transaction &a, const db::Scheme &scheme, const StringView &path) {
+Resource *Resource::resolve(const db::Transaction &a, const db::Scheme &scheme,
+		const StringView &path) {
 	Value tmp;
 	return resolve(a, scheme, path, tmp);
 }
 
-Resource *Resource::resolve(const Transaction &a, const Scheme &scheme, const StringView &path, Value & sub) {
+Resource *Resource::resolve(const Transaction &a, const Scheme &scheme, const StringView &path,
+		Value &sub) {
 	auto pathVec = parsePath(path);
 
 	ResourceResolver resolver(a, scheme);
@@ -423,15 +437,14 @@ Resource *Resource::resolve(const Transaction &a, const Scheme &scheme, const St
 					case db::Type::Integer:
 					case db::Type::Boolean:
 					case db::Type::Object:
-						resolver.selectByQuery(
-								db::Query::Select(it.first, db::Comparation::Equal, it.second.getInteger(), 0));
+						resolver.selectByQuery(db::Query::Select(it.first, db::Comparation::Equal,
+								it.second.getInteger(), 0));
 						break;
 					case db::Type::Text:
-						resolver.selectByQuery(
-								db::Query::Select(it.first, db::Comparation::Equal, it.second.getString()));
+						resolver.selectByQuery(db::Query::Select(it.first, db::Comparation::Equal,
+								it.second.getString()));
 						break;
-					default:
-						break;
+					default: break;
 					}
 				}
 			}
@@ -442,7 +455,7 @@ Resource *Resource::resolve(const Transaction &a, const Scheme &scheme, const St
 			resolver.selectById(id);
 		}
 	} else if (sub.isString()) {
-		auto & str = sub.getString();
+		auto &str = sub.getString();
 		if (!str.empty()) {
 			resolver.selectByAlias(str);
 		}
@@ -451,7 +464,8 @@ Resource *Resource::resolve(const Transaction &a, const Scheme &scheme, const St
 	return getResolvedResource(&resolver, pathVec);
 }
 
-Resource *Resource::resolve(const db::Transaction &a, const db::Scheme &scheme, Vector<StringView> &pathVec) {
+Resource *Resource::resolve(const db::Transaction &a, const db::Scheme &scheme,
+		Vector<StringView> &pathVec) {
 	ResourceResolver resolver(a, scheme);
 	return getResolvedResource(&resolver, pathVec);
 }
@@ -624,23 +638,38 @@ Resource *ResourceResolver::getResult() {
 	return _resource;
 }
 
-const db::Scheme *ResourceResolver::getScheme() const {
-	return _scheme;
-}
+const db::Scheme *ResourceResolver::getScheme() const { return _scheme; }
 
-Resource *ResourceResolver::makeResource(ResourceType type, db::QueryList &&list, const db::Field *f) {
+Resource *ResourceResolver::makeResource(ResourceType type, db::QueryList &&list,
+		const db::Field *f) {
 	switch (type) {
-	case ResourceType::ResourceList: return new ResourceReslist(_storage, sp::move(list));  break;
-	case ResourceType::ReferenceSet: return new ResourceRefSet(_storage, sp::move(list)); break;
-	case ResourceType::ObjectField: return new ResourceFieldObject(_storage, sp::move(list)); break;
-	case ResourceType::Object: return new ResourceObject(_storage, sp::move(list)); break;
-	case ResourceType::Set: return new ResourceSet(_storage, sp::move(list)); break;
-	case ResourceType::View: return new ResourceView(_storage, sp::move(list)); break;
-	case ResourceType::File: return new ResourceFile(_storage, sp::move(list), f); break;
-	case ResourceType::Array: return new ResourceArray(_storage, sp::move(list), f); break;
-	case ResourceType::Search: return new ResourceSearch(_storage, sp::move(list), f); break;
+	case ResourceType::ResourceList:
+		return new (std::nothrow) ResourceReslist(_storage, sp::move(list));
+		break;
+	case ResourceType::ReferenceSet:
+		return new (std::nothrow) ResourceRefSet(_storage, sp::move(list));
+		break;
+	case ResourceType::ObjectField:
+		return new (std::nothrow) ResourceFieldObject(_storage, sp::move(list));
+		break;
+	case ResourceType::Object:
+		return new (std::nothrow) ResourceObject(_storage, sp::move(list));
+		break;
+	case ResourceType::Set: return new (std::nothrow) ResourceSet(_storage, sp::move(list)); break;
+	case ResourceType::View:
+		return new (std::nothrow) ResourceView(_storage, sp::move(list));
+		break;
+	case ResourceType::File:
+		return new (std::nothrow) ResourceFile(_storage, sp::move(list), f);
+		break;
+	case ResourceType::Array:
+		return new (std::nothrow) ResourceArray(_storage, sp::move(list), f);
+		break;
+	case ResourceType::Search:
+		return new (std::nothrow) ResourceSearch(_storage, sp::move(list), f);
+		break;
 	}
 	return nullptr;
 }
 
-}
+} // namespace stappler::web

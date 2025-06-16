@@ -30,13 +30,19 @@ namespace STAPPLER_VERSIONIZED stappler::web::tools {
 void registerTools(StringView prefix, Host &host) {
 	host.addHandler(prefix, RequestHandler::Make<tools::ServerGui>());
 	host.addHandler(toString(prefix, config::TOOLS_SHELL), RequestHandler::Make<tools::ShellGui>());
-	host.addHandler(toString(prefix, config::TOOLS_ERRORS), RequestHandler::Make<tools::ErrorsGui>());
-	host.addHandler(toString(prefix, config::TOOLS_HANDLERS), RequestHandler::Make<tools::HandlersGui>());
-	host.addHandler(toString(prefix, config::TOOLS_REPORTS), RequestHandler::Make<tools::ReportsGui>());
-	host.addWebsocket(toString(prefix, config::TOOLS_SHELL_SOCKET), new tools::ShellSocket(host));
+	host.addHandler(toString(prefix, config::TOOLS_ERRORS),
+			RequestHandler::Make<tools::ErrorsGui>());
+	host.addHandler(toString(prefix, config::TOOLS_HANDLERS),
+			RequestHandler::Make<tools::HandlersGui>());
+	host.addHandler(toString(prefix, config::TOOLS_REPORTS),
+			RequestHandler::Make<tools::ReportsGui>());
+	host.addWebsocket(toString(prefix, config::TOOLS_SHELL_SOCKET),
+			new (std::nothrow) tools::ShellSocket(host));
 
-	host.addHandler(toString(prefix, config::TOOLS_AUTH), RequestHandler::Make<tools::AuthHandler>());
-	host.addHandler(toString(prefix, config::TOOLS_VIRTUALFS), RequestHandler::Make<tools::VirtualFilesystem>());
+	host.addHandler(toString(prefix, config::TOOLS_AUTH),
+			RequestHandler::Make<tools::AuthHandler>());
+	host.addHandler(toString(prefix, config::TOOLS_VIRTUALFS),
+			RequestHandler::Make<tools::VirtualFilesystem>());
 }
 
 Status VirtualFilesystem::onTranslateName(Request &rctx) {
@@ -55,7 +61,8 @@ Status VirtualFilesystem::onTranslateName(Request &rctx) {
 				rctx.setContentType("text/html;charset=UTF-8");
 			}
 
-			if (output::checkCacheHeaders(rctx, getCompileUnixTime(), hash::hash32(it.name.data(), it.name.size()))) {
+			if (output::checkCacheHeaders(rctx, getCompileUnixTime(),
+						hash::hash32(it.name.data(), it.name.size()))) {
 				return HTTP_NOT_MODIFIED;
 			}
 
@@ -68,4 +75,4 @@ Status VirtualFilesystem::onTranslateName(Request &rctx) {
 	return HTTP_NOT_FOUND;
 }
 
-}
+} // namespace stappler::web::tools

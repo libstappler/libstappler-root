@@ -38,14 +38,11 @@ bool TestCheckbox::init(bool value, Function<void(bool)> &&cb) {
 	setColor(_backgroundColor);
 	setContentSize(Size2(32.0f, 32.0f));
 
-	_input = addInputListener(Rc<InputListener>::create());
-	_input->addTapRecognizer([this] (const GestureTap &data) {
+	_input = addComponent(Rc<InputListener>::create());
+	_input->addTapRecognizer([this](const GestureTap &data) {
 		switch (data.event) {
-		case GestureEvent::Activated:
-			setValue(!_value);
-			break;
-		default:
-			break;
+		case GestureEvent::Activated: setValue(!_value); break;
+		default: break;
 		}
 		return true;
 	}, InputListener::makeButtonMask({InputMouseButton::Touch}), 1);
@@ -65,9 +62,7 @@ void TestCheckbox::setValue(bool value) {
 	}
 }
 
-bool TestCheckbox::getValue() const {
-	return _value;
-}
+bool TestCheckbox::getValue() const { return _value; }
 
 void TestCheckbox::setForegroundColor(const Color4F &color) {
 	if (_foregroundColor != color) {
@@ -76,9 +71,7 @@ void TestCheckbox::setForegroundColor(const Color4F &color) {
 	}
 }
 
-Color4F TestCheckbox::getForegroundColor() const {
-	return _foregroundColor;
-}
+Color4F TestCheckbox::getForegroundColor() const { return _foregroundColor; }
 
 void TestCheckbox::setBackgroundColor(const Color4F &color) {
 	if (_backgroundColor != color) {
@@ -87,9 +80,7 @@ void TestCheckbox::setBackgroundColor(const Color4F &color) {
 	}
 }
 
-Color4F TestCheckbox::getBackgroundColor() const {
-	return _backgroundColor;
-}
+Color4F TestCheckbox::getBackgroundColor() const { return _backgroundColor; }
 
 void TestCheckbox::updateValue() {
 	if (_value) {
@@ -104,7 +95,8 @@ bool TestCheckboxWithLabel::init(StringView title, bool value, Function<void(boo
 		return false;
 	}
 
-	_label = addChild(Rc<material2d::TypescaleLabel>::create(material2d::TypescaleRole::HeadlineSmall));
+	_label = addChild(
+			Rc<material2d::TypescaleLabel>::create(material2d::TypescaleRole::HeadlineSmall));
 	_label->setAnchorPoint(Anchor::MiddleLeft);
 	_label->setString(title);
 
@@ -117,8 +109,6 @@ void TestCheckboxWithLabel::handleContentSizeDirty() {
 	_label->setPosition(Vec2(_contentSize.width + 16.0f, _contentSize.height / 2.0f));
 }
 
-void TestCheckboxWithLabel::setLabelColor(const Color4F &color) {
-	_label->setColor(color);
-}
+void TestCheckboxWithLabel::setLabelColor(const Color4F &color) { _label->setColor(color); }
 
-}
+} // namespace stappler::xenolith::app

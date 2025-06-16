@@ -34,7 +34,7 @@ MODULE_STAPPLER_WEBSERVER_WEBSERVER_DEPENDS_ON := \
 	stappler_data \
 	stappler_db \
 	stappler_crypto \
-	stappler_webserver_pug \
+	stappler_pug \
 	stappler_brotli_lib \
 	stappler_bitmap
 

@@ -35,7 +35,7 @@ public:
 
 	template <typename T, typename... Args>
 	static HandlerCallback Make(Args &&...args) {
-		return HandlerCallback([=] { return new T(std::forward<Args>(args)...); });
+		return HandlerCallback([=] { return new (std::nothrow) T(std::forward<Args>(args)...); });
 	}
 
 	virtual ~RequestHandler() { }
@@ -168,7 +168,8 @@ public:
 	public: // simplified interface
 		template <typename T, typename... Args>
 		static Function<Handler *()> Make(Args &&...args) {
-			return Function<Handler *()>([=] { return new T(std::forward<Args>(args)...); });
+			return Function<Handler *()>(
+					[=] { return new (std::nothrow) T(std::forward<Args>(args)...); });
 		}
 
 		virtual bool isPermitted();

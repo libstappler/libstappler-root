@@ -26,8 +26,9 @@
 
 namespace STAPPLER_VERSIONIZED stappler::web {
 
-static uint32_t stappler_wasm_webserver_constructor_host_component(wasm_exec_env_t exec_env, uint32_t hostHandle, uint32_t infoHandle,
-		uint32_t onChildInit, uint32_t onStorageInit, uint32_t onHeartbeat, uint32_t userdata) {
+static uint32_t stappler_wasm_webserver_constructor_host_component(wasm_exec_env_t exec_env,
+		uint32_t hostHandle, uint32_t infoHandle, uint32_t onChildInit, uint32_t onStorageInit,
+		uint32_t onHeartbeat, uint32_t userdata) {
 	auto env = wasm::ExecEnv::get(exec_env);
 	auto inst = env->getInstance();
 	auto host = inst->getObject<Host>(hostHandle);
@@ -42,16 +43,19 @@ static uint32_t stappler_wasm_webserver_constructor_host_component(wasm_exec_env
 		return wasm::ModuleInstance::InvalidHandle;
 	}
 
-	auto c = new WasmComponent(*host, *info, env, WasmComponent::WasmData{onChildInit, onStorageInit, onHeartbeat, userdata});
+	auto c = new (std::nothrow) WasmComponent(*host, *info, env,
+			WasmComponent::WasmData{onChildInit, onStorageInit, onHeartbeat, userdata});
 	return inst->addHandle(c);
 }
 
 static NativeSymbol stapper_wen_symbols[] = {
-	NativeSymbol{"[constructor]host-component", (void *)&stappler_wasm_webserver_constructor_host_component, "(iiiiii)i", NULL},
+	NativeSymbol{"[constructor]host-component",
+		(void *)&stappler_wasm_webserver_constructor_host_component, "(iiiiii)i", NULL},
 };
 
-static wasm::NativeModule s_wasmModule("stappler:wasm/webserver", stapper_wen_symbols, sizeof(stapper_wen_symbols) / sizeof(NativeSymbol));
+static wasm::NativeModule s_wasmModule("stappler:wasm/webserver", stapper_wen_symbols,
+		sizeof(stapper_wen_symbols) / sizeof(NativeSymbol));
 
-}
+} // namespace stappler::web
 
 #endif

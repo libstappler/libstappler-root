@@ -149,7 +149,7 @@ ServerScheme::ServerScheme(memory::pool_t *p, uint32_t version) : _pool(p) {
 		Field::Boolean("delivered", Value(false)), Field::Text("name"), Field::Text("documentRoot"),
 		Field::Text("url"), Field::Text("request"), Field::Text("ip"), Field::Data("headers"),
 		Field::Data("data"), Field::Integer("time"),
-		Field::Custom(new FieldTextArray("tags", db::Flags::Indexed,
+		Field::Custom(new (std::nothrow) FieldTextArray("tags", db::Flags::Indexed,
 				db::DefaultFn([&](const Value &data) -> Value {
 		Vector<String> tags;
 		for (auto &it : data.getArray("data")) {
@@ -356,10 +356,10 @@ ServerScheme::ServerScheme(memory::pool_t *p, uint32_t version) : _pool(p) {
 		Field::Integer("time", Flags::Indexed | Flags::AutoMTime),
 		Field::Bytes("secret"),
 		Field::Data("data"),
-		Field::Custom(new FieldBigIntArray("clusters")),
-		Field::Custom(new FieldIntArray("refs")),
-		Field::Custom(new FieldTextArray("text")),
-		Field::Custom(new FieldPoint("coords")),
+		Field::Custom(new (std::nothrow) FieldBigIntArray("clusters")),
+		Field::Custom(new (std::nothrow) FieldIntArray("refs")),
+		Field::Custom(new (std::nothrow) FieldTextArray("text")),
+		Field::Custom(new (std::nothrow) FieldPoint("coords")),
 
 		Field::Extra("tsvData",
 				Vector<Field>{

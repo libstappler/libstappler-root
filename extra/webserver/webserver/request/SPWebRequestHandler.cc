@@ -605,7 +605,7 @@ RequestHandlerMap::HandlerInfo &RequestHandlerMap::addHandler(const StringView &
 		Function<Value(Handler &)> &&process, Value &&opts) {
 	return addHandler(name, m, pattern,
 			[accessControl = sp::move(accessControl), process = sp::move(process)]() -> Handler * {
-		return new HandlerCallback(accessControl, process);
+		return new (std::nothrow) HandlerCallback(accessControl, process);
 	}, sp::move(opts));
 }
 

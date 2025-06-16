@@ -42,7 +42,8 @@ bool MaterialColorPicker::init(Type type, const ColorHCT &color, Function<void(f
 	case Type::Tone: _value = _targetColor.data.tone / 100.0f; break;
 	}
 
-	_label = addChild(Rc<material2d::TypescaleLabel>::create(material2d::TypescaleRole::TitleLarge), ZOrder(1));
+	_label = addChild(Rc<material2d::TypescaleLabel>::create(material2d::TypescaleRole::TitleLarge),
+			ZOrder(1));
 	_label->setFontSize(20);
 	_label->setAnchorPoint(Anchor::MiddleLeft);
 	_label->setString(makeString());
@@ -51,15 +52,16 @@ bool MaterialColorPicker::init(Type type, const ColorHCT &color, Function<void(f
 	_indicator = addChild(Rc<Layer>::create(Color::Grey_500));
 	_indicator->setAnchorPoint(Anchor::MiddleLeft);
 
-	_input = addInputListener(Rc<InputListener>::create());
-	_input->addTouchRecognizer([this] (const GestureData &data) {
+	_input = addComponent(Rc<InputListener>::create());
+	_input->addTouchRecognizer([this](const GestureData &data) {
 		switch (data.event) {
 		case GestureEvent::Began:
 		case GestureEvent::Activated:
-			setValue(math::clamp(convertToNodeSpace(data.input->currentLocation).x / _contentSize.width, 0.0f, 1.0f));
+			setValue(math::clamp(convertToNodeSpace(data.input->currentLocation).x
+							/ _contentSize.width,
+					0.0f, 1.0f));
 			break;
-		default:
-			break;
+		default: break;
 		}
 		return true;
 	}, InputListener::makeButtonMask({InputMouseButton::Touch}));
@@ -75,9 +77,7 @@ void MaterialColorPicker::handleContentSizeDirty() {
 	_indicator->setPosition(Vec2(_contentSize.width * _value, _contentSize.height / 2.0f));
 }
 
-const ColorHCT &MaterialColorPicker::getTargetColor() const {
-	return _targetColor;
-}
+const ColorHCT &MaterialColorPicker::getTargetColor() const { return _targetColor; }
 
 void MaterialColorPicker::setTargetColor(const ColorHCT &color) {
 	if (_targetColor != color) {
@@ -101,13 +101,9 @@ void MaterialColorPicker::setValue(float value) {
 	}
 }
 
-float MaterialColorPicker::getValue() const {
-	return _value;
-}
+float MaterialColorPicker::getValue() const { return _value; }
 
-void MaterialColorPicker::setLabelColor(const Color4F &color) {
-	_label->setColor(color);
-}
+void MaterialColorPicker::setLabelColor(const Color4F &color) { _label->setColor(color); }
 
 void MaterialColorPicker::updateVertexesColor() {
 	_indicator->setPosition(Vec2(_contentSize.width * _value, _contentSize.height / 2.0f));
@@ -123,29 +119,37 @@ void MaterialColorPicker::updateVertexes(FrameInfo &frame) {
 
 	Size2 size(_contentSize.width / QuadsCount, _contentSize.height);
 	Vec2 origin(0, 0);
-	for (size_t i = 0; i < QuadsCount; ++ i) {
+	for (size_t i = 0; i < QuadsCount; ++i) {
 		ColorHCT color1;
 		ColorHCT color2;
 
 		switch (_type) {
 		case Type::Hue:
-			color1 = ColorHCT(i * (float(360) / float(QuadsCount)), _targetColor.data.chroma, _targetColor.data.tone, 1.0f);
-			color2 = ColorHCT((i + 1) * (float(360) / float(QuadsCount)), _targetColor.data.chroma, _targetColor.data.tone, 1.0f);
+			color1 = ColorHCT(i * (float(360) / float(QuadsCount)), _targetColor.data.chroma,
+					_targetColor.data.tone, 1.0f);
+			color2 = ColorHCT((i + 1) * (float(360) / float(QuadsCount)), _targetColor.data.chroma,
+					_targetColor.data.tone, 1.0f);
 			break;
 		case Type::Chroma:
-			color1 = ColorHCT(_targetColor.data.hue, i * (float(100) / float(QuadsCount)), _targetColor.data.tone, 1.0f);
-			color2 = ColorHCT(_targetColor.data.hue, (i + 1) * (float(100) / float(QuadsCount)), _targetColor.data.tone, 1.0f);
+			color1 = ColorHCT(_targetColor.data.hue, i * (float(100) / float(QuadsCount)),
+					_targetColor.data.tone, 1.0f);
+			color2 = ColorHCT(_targetColor.data.hue, (i + 1) * (float(100) / float(QuadsCount)),
+					_targetColor.data.tone, 1.0f);
 			break;
 		case Type::Tone:
-			color1 = ColorHCT(_targetColor.data.hue, _targetColor.data.chroma, i * (float(100) / float(QuadsCount)), 1.0f);
-			color2 = ColorHCT(_targetColor.data.hue, _targetColor.data.chroma, (i + 1) * (float(100) / float(QuadsCount)), 1.0f);
+			color1 = ColorHCT(_targetColor.data.hue, _targetColor.data.chroma,
+					i * (float(100) / float(QuadsCount)), 1.0f);
+			color2 = ColorHCT(_targetColor.data.hue, _targetColor.data.chroma,
+					(i + 1) * (float(100) / float(QuadsCount)), 1.0f);
 			break;
 		}
 
 		_vertexes.addQuad()
-			.setGeometry(Vec4(origin, 0.0f, 1.0f), size)
-			.setTextureRect(Rect(0.0f, 0.0f, 1.0f, 1.0f), 1.0f, 1.0f, _flippedX, _flippedY, _rotated)
-			.setColor({color1.asColor4F(), color1.asColor4F(), color2.asColor4F(), color2.asColor4F()});
+				.setGeometry(Vec4(origin, 0.0f, 1.0f), size)
+				.setTextureRect(Rect(0.0f, 0.0f, 1.0f, 1.0f), 1.0f, 1.0f, _flippedX, _flippedY,
+						_rotated)
+				.setColor({color1.asColor4F(), color1.asColor4F(), color2.asColor4F(),
+					color2.asColor4F()});
 
 		origin += Vec2(size.width, 0.0f);
 	}
@@ -155,15 +159,9 @@ void MaterialColorPicker::updateVertexes(FrameInfo &frame) {
 
 String MaterialColorPicker::makeString() {
 	switch (_type) {
-	case Type::Hue:
-		return toString("Hue: ", _targetColor.data.hue);
-		break;
-	case Type::Chroma:
-		return toString("Chroma: ", _targetColor.data.chroma);
-		break;
-	case Type::Tone:
-		return toString("Tone: ", _targetColor.data.tone);
-		break;
+	case Type::Hue: return toString("Hue: ", _targetColor.data.hue); break;
+	case Type::Chroma: return toString("Chroma: ", _targetColor.data.chroma); break;
+	case Type::Tone: return toString("Tone: ", _targetColor.data.tone); break;
 	}
 	return String();
 }
@@ -172,4 +170,4 @@ void MaterialColorPicker::updateValue() {
 	_indicator->setPosition(Vec2(_contentSize.width * _value, _contentSize.height / 2.0f));
 }
 
-}
+} // namespace stappler::xenolith::app

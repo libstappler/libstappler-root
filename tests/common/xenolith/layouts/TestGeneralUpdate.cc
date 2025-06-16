@@ -24,6 +24,7 @@
 #include "XLDirector.h"
 #include "XLScheduler.h"
 #include "XLActionManager.h"
+#include "XLInputListener.h"
 #include "SPTime.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
@@ -66,7 +67,7 @@ bool TestGeneralUpdate::init() {
 	_component->setEnabled(true);
 	_component->scheduleUpdate();
 
-	_listener = _spriteLayer->addInputListener(Rc<InputListener>::create());
+	_listener = _spriteLayer->addComponent(Rc<InputListener>::create());
 
 	_sub = addComponent(Rc<SubscriptionListener>::create());
 	_sub->setCallback([](SubscriptionFlags flags) { });
@@ -202,7 +203,7 @@ void TestGeneralUpdate::handleEnter(xenolith::Scene *scene) {
 	runAction(Rc<Sequence>::create(0.1f, [this] {
 		getNumberOfRunningActions();
 
-		_spriteLayer->removeInputListener(_listener);
+		_spriteLayer->removeComponent(_listener);
 		_spriteLayer->clearFocus();
 
 		auto n = _sprite->getChildByTag(123);

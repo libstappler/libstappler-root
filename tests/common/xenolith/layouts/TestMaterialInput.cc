@@ -41,24 +41,11 @@ bool TestMaterialInput::init() {
 }
 
 static Vector<InputEventData> makeKeyInput(InputKeyCode code, char32_t ch) {
-	auto ret = Vector<InputEventData> {
-		InputEventData({
-			toInt(code),
-			InputEventName::KeyPressed,
-			InputMouseButton::Touch,
-			InputModifier::None,
-			float(0),
-			float(0)
-		}),
-		InputEventData({
-			toInt(code),
-			InputEventName::KeyReleased,
-			InputMouseButton::Touch,
-			InputModifier::None,
-			float(0),
-			float(0)
-		})
-	};
+	auto ret = Vector<InputEventData>{
+		InputEventData({toInt(code), InputEventName::KeyPressed, InputMouseButton::Touch,
+			InputModifier::None, float(0), float(0)}),
+		InputEventData({toInt(code), InputEventName::KeyReleased, InputMouseButton::Touch,
+			InputModifier::None, float(0), float(0)})};
 
 	ret[0].key.keycode = code;
 	ret[0].key.compose = InputKeyComposeState::Nothing;
@@ -78,24 +65,11 @@ void TestMaterialInput::handleContentSizeDirty() {
 
 	_field->setPosition(Vec2(_contentSize / 2.0f) - Vec2(0.0f, 100.0f));
 
-	Vector<InputEventData> events {
-		InputEventData({
-			0,
-			InputEventName::Begin,
-			InputMouseButton::Touch,
-			InputModifier::None,
-			float(_field->getPosition().x),
-			float(_field->getPosition().y)
-		}),
-		InputEventData({
-			0,
-			InputEventName::End,
-			InputMouseButton::Touch,
-			InputModifier::None,
-			float(_field->getPosition().x),
-			float(_field->getPosition().y)
-		})
-	};
+	Vector<InputEventData> events{
+		InputEventData({0, InputEventName::Begin, InputMouseButton::Touch, InputModifier::None,
+			float(_field->getPosition().x), float(_field->getPosition().y)}),
+		InputEventData({0, InputEventName::End, InputMouseButton::Touch, InputModifier::None,
+			float(_field->getPosition().x), float(_field->getPosition().y)})};
 
 	auto v = _director->getView();
 	v->handleInputEvents(sp::move(events));
@@ -132,12 +106,16 @@ void TestMaterialInput::handleContentSizeDirty() {
 		_director->getView()->handleInputEvents(makeKeyInput(InputKeyCode::S, 'S'));
 		_director->getView()->handleInputEvents(makeKeyInput(InputKeyCode::T, 'T'));
 	}, 0.03f, [this] {
-		if (_director->getTextInputManager()->hasText()) {
-			_director->getTextInputManager()->textChanged(WideStringView(), TextCursor(), TextCursor());
+		if (_director->getTextInputManager()->isEnabled()) {
+
+
+			_director->getTextInputManager()->handleInputUpdate(TextInputState{
+				TextInputString::create(WideStringView()), TextCursor(), TextCursor()});
 
 			auto wstr = string::toUtf16<Interface>(toString(_director->getFps()));
 
-			_director->getTextInputManager()->textChanged(wstr, TextCursor(0, wstr.size()), TextCursor());
+			_director->getTextInputManager()->handleInputUpdate(
+					TextInputState{TextInputString::create(wstr), TextCursor(), TextCursor()});
 		}
 	}, 0.03f, [this] {
 		_director->getView()->handleInputEvents(makeKeyInput(InputKeyCode::SPACE, ' '));
@@ -146,23 +124,23 @@ void TestMaterialInput::handleContentSizeDirty() {
 		_director->getView()->handleInputEvents(makeKeyInput(InputKeyCode::S, 'S'));
 		_director->getView()->handleInputEvents(makeKeyInput(InputKeyCode::T, 'T'));
 
-		_director->getView()->handleInputEvent(core::InputEventData::BoolEvent(core::InputEventName::Background, true));
-		_director->getView()->handleInputEvent(core::InputEventData::BoolEvent(core::InputEventName::PointerEnter, true));
-		_director->getView()->handleInputEvent(core::InputEventData::BoolEvent(core::InputEventName::FocusGain, false));
+		_director->getView()->handleInputEvent(
+				core::InputEventData::BoolEvent(core::InputEventName::Background, true));
+		_director->getView()->handleInputEvent(
+				core::InputEventData::BoolEvent(core::InputEventName::PointerEnter, true));
+		_director->getView()->handleInputEvent(
+				core::InputEventData::BoolEvent(core::InputEventName::FocusGain, false));
 
-		Vector<InputEventData> events({
-			core::InputEventData::BoolEvent(core::InputEventName::Background, false),
-			core::InputEventData::BoolEvent(core::InputEventName::PointerEnter, false),
-			core::InputEventData::BoolEvent(core::InputEventName::FocusGain, true)
-		});
+		Vector<InputEventData> events(
+				{core::InputEventData::BoolEvent(core::InputEventName::Background, false),
+					core::InputEventData::BoolEvent(core::InputEventName::PointerEnter, false),
+					core::InputEventData::BoolEvent(core::InputEventName::FocusGain, true)});
 		_director->getView()->handleInputEvents(sp::move(events));
 	});
 
 	runAction(a);
 }
 
-void TestMaterialInput::update(const UpdateTime &) {
+void TestMaterialInput::update(const UpdateTime &) { }
 
-}
-
-}
+} // namespace stappler::xenolith::app

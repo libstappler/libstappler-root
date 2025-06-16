@@ -29,7 +29,7 @@
 #include "XL2dLayer.h"
 #include "XLAssetLibrary.h"
 #include "XLSubscriptionListener.h"
-#include "XLEventHeader.h"
+#include "XLEvent.h"
 
 #include "TestLayout.h"
 #include "TestStorage.h"
@@ -44,8 +44,8 @@ public:
 
 	virtual bool init(Application *, const core::FrameConstraints &constraints) override;
 
-	virtual void onPresented(Director *) override;
-	virtual void onFinished(Director *) override;
+	virtual void handlePresented(Director *) override;
+	virtual void handleFinished(Director *) override;
 
 	virtual void update(const UpdateTime &) override;
 	virtual void handleEnter(xenolith::Scene *) override;
@@ -66,6 +66,6 @@ protected:
 	DataListener<storage::Asset> *_assetListener = nullptr;
 };
 
-}
+} // namespace stappler::xenolith::app
 
 #endif /* TESTS_COMMON_XENOLITH_TESTAPPSCENE_H_ */

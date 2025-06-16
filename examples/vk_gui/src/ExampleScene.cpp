@@ -76,4 +76,10 @@ void ExampleScene::handleContentSizeDirty() {
 	_helloWorldLabel->setPosition(_content->getContentSize() / 2.0f);
 }
 
+void ExampleScene::handlePresented(Director *dir) {
+	Scene2d::handlePresented(dir);
+
+	_queue->describe([](StringView str) { std::cout << str; });
+}
+
 } // namespace stappler::xenolith::app

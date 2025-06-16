@@ -728,7 +728,7 @@ static bool XenolithCoreTest_input() {
 	do {
 		TextInterface iface;
 		auto pool = Rc<PoolRef>::alloc();
-		auto d = Rc<InputDispatcher>::create(pool, &iface);
+		auto d = Rc<InputDispatcher>::create(pool);
 
 		auto ev = d->acquireNewStorage();
 
@@ -770,44 +770,12 @@ static bool XenolithCoreTest_input() {
 		l6->addScrollRecognizer([](const GestureScroll &) { return true; });
 		l6->addMouseOverRecognizer([](const GestureData &) { return true; });
 
-		ev->addListener(l1, 0);
-		ev->addListener(l2, 0);
-		ev->addListener(l3, 0);
-		ev->addListener(l4, 0);
-		ev->addListener(l5, 0);
-		ev->addListener(l6, 0);
-
-		auto mngr = d->getTextInputManager();
-		d->commitStorage(move(ev));
-		mngr->setInputEnabled(true);
-
-		TextInputHandler handler;
-		handler.run(mngr, u"Test", TextCursor(), TextCursor(), TextInputType::Text);
-		handler.setString(u"ASDF", TextCursor(), TextCursor());
-		handler.setCursor(TextCursor(1, 2));
-		handler.setMarked(TextCursor(1, 1));
-
-		handler.getString();
-		handler.getCursor();
-		handler.getMarked();
-		handler.isInputEnabled();
-		handler.isActive();
-
-		mngr->insertText(u"WA1234SD", TextCursor(1, 2));
-		mngr->setMarkedText(u"WA1234SD", TextCursor(1, 2), TextCursor(1, 2));
-		mngr->cursorChanged(TextCursor(2, 2));
-		mngr->deleteBackward();
-		mngr->deleteBackward();
-
-		mngr->insertText(u"WA1234SD", TextCursor(1, 2));
-		mngr->cursorChanged(TextCursor(2, 2));
-		mngr->deleteForward();
-		mngr->deleteForward();
-
-		mngr->unmarkText();
-		mngr->textChanged(WideStringView(), TextCursor(), TextCursor());
-		mngr->textChanged(u"WA1234SD", TextCursor(), TextCursor());
-		mngr->getStringByRange(TextCursor(2, 2));
+		ev->addListener(l1, 0, ViewLayerFlags::None, Rect());
+		ev->addListener(l2, 0, ViewLayerFlags::None, Rect());
+		ev->addListener(l3, 0, ViewLayerFlags::None, Rect());
+		ev->addListener(l4, 0, ViewLayerFlags::None, Rect());
+		ev->addListener(l5, 0, ViewLayerFlags::None, Rect());
+		ev->addListener(l6, 0, ViewLayerFlags::None, Rect());
 
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::A, 'A'));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::A, 'A'));
@@ -830,10 +798,6 @@ static bool XenolithCoreTest_input() {
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::ESCAPE, 0));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyReleased, InputKeyCode::ESCAPE, 0));
 
-		handler.cancel();
-		handler.run(mngr, u"Test", TextCursor(), TextCursor(), TextInputType::Text);
-		mngr->setInputEnabled(true);
-
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::C, 'C'));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::C, 'C',
 				InputKeyComposeState::Composing));
@@ -844,7 +808,6 @@ static bool XenolithCoreTest_input() {
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::C, 'C'));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyReleased, InputKeyCode::C, 'C',
 				InputKeyComposeState::Forced));
-		handler.cancel();
 
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyPressed, InputKeyCode::A, 'A'));
 		d->handleInputEvent(makeInputKeyData(InputEventName::KeyRepeated, InputKeyCode::A, 'A'));
@@ -922,55 +885,55 @@ static bool XenolithCoreTest_action() {
 
 	float program[8] = {0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f, 0.3f};
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Linear, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::Linear);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::EaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::EaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::EaseInOut);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Sine_EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Sine_EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Sine_EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::SineEaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::SineEaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::SineEaseInOut);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Quad_EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Quad_EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Quad_EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::QuadEaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::QuadEaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::QuadEaseInOut);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Cubic_EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Cubic_EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Cubic_EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::CubicEaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::CubicEaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::CubicEaseInOut);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Quart_EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Quart_EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Quart_EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::QuartEaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::QuartEaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::QuartEaseInOut);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Quint_EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Quint_EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Quint_EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::QuintEaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::QuintEaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::QuintEaseInOut);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Expo_EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Expo_EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Expo_EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::ExpoEaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::ExpoEaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::ExpoEaseInOut);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Circ_EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Circ_EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Circ_EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::CircEaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::CircEaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::CircEaseInOut);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Elastic_EaseIn, program);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Elastic_EaseOut, program);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Elastic_EaseInOut, program);
+	interpolation::interpolateTo(0.5f, interpolation::Type::ElasticEaseIn, program);
+	interpolation::interpolateTo(0.5f, interpolation::Type::ElasticEaseOut, program);
+	interpolation::interpolateTo(0.5f, interpolation::Type::ElasticEaseInOut, program);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Back_EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Back_EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Back_EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::BackEaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::BackEaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::BackEaseInOut);
 
-	interpolation::interpolateTo(0.5f, interpolation::Type::Bounce_EaseIn, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Bounce_EaseOut, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Bounce_EaseInOut, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::BounceEaseIn);
+	interpolation::interpolateTo(0.5f, interpolation::Type::BounceEaseOut);
+	interpolation::interpolateTo(0.5f, interpolation::Type::BounceEaseInOut);
 
 	interpolation::interpolateTo(0.5f, interpolation::Type::Custom, program);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Custom, nullptr);
-	interpolation::interpolateTo(0.5f, interpolation::Type::Max, nullptr);
+	interpolation::interpolateTo(0.5f, interpolation::Type::Custom);
+	interpolation::interpolateTo(0.5f, interpolation::Type::Max);
 
 	interpolation::easeIn(0.5f, 2.0f);
 	interpolation::easeOut(0.5f, 2.0f);
@@ -1211,8 +1174,8 @@ static bool XenolithCoreTest_queue() {
 				ImageAttachment::AttachmentInfo({AttachmentLayout::ShaderReadOnlyOptimal,
 					AttachmentLayout::TransferSrcOptimal}));
 		a->isCompatible(*image2);
-		a->setInputCallback(
-				[](FrameQueue &, const Rc<AttachmentHandle> &, Function<void(bool)> &&) { });
+		b.setInputSubmissionCallback([](FrameQueue &, AttachmentHandle &, AttachmentInputData *,
+											 Function<void(bool)> &&) { });
 		a->getName();
 		return a;
 	});
@@ -1256,7 +1219,7 @@ static bool XenolithCoreTest_queue() {
 		b.addAttachment(a1);
 		b.addAttachment(a2);
 		b.addAttachment(a3);
-		b.addSubmittedCallback([](const QueuePassData &, FrameQueue &, bool success) {
+		b.addSubmittedCallback([](FrameQueue &, const QueuePassData &, bool success) {
 
 		});
 
@@ -1297,32 +1260,26 @@ static bool XenolithCoreTest_queue() {
 			auto shaderSpecInfo =
 					Vector<SpecializationInfo>({// no specialization required for vertex shader
 						SpecializationInfo(fragProgram,
-								Vector<SpecializationConstant>{
-									SpecializationConstant(PredefinedConstant::BuffersArraySize)}),
+								Vector<SpecializationConstant>{SpecializationConstant(0)}),
 						// specialization for fragment shader - use platform-dependent array sizes
 						SpecializationInfo(vertProgram,
-								Vector<SpecializationConstant>{
-									SpecializationConstant(PredefinedConstant::SamplersArraySize),
-									SpecializationConstant(
-											PredefinedConstant::TexturesArraySize)})});
+								Vector<SpecializationConstant>{SpecializationConstant(0),
+									SpecializationConstant(0)})});
 
-			sb.addGraphicPipeline("Pipeline1", l, shaderSpecInfo,
+			sb.addGraphicPipeline("Pipeline1", l->defaultFamily, shaderSpecInfo,
 					PipelineMaterialInfo({BlendInfo(), DepthInfo(true, true, CompareOp::Less)}),
 					DynamicState::Viewport);
 
 			auto shaderSpecInfo2 =
 					Vector<SpecializationInfo>({// no specialization required for vertex shader
 						SpecializationInfo(&pdata,
-								Vector<SpecializationConstant>{
-									SpecializationConstant(PredefinedConstant::BuffersArraySize)}),
+								Vector<SpecializationConstant>{SpecializationConstant(0)}),
 						// specialization for fragment shader - use platform-dependent array sizes
 						SpecializationInfo(vertProgram,
-								Vector<SpecializationConstant>{
-									SpecializationConstant(PredefinedConstant::SamplersArraySize),
-									SpecializationConstant(
-											PredefinedConstant::TexturesArraySize)})});
+								Vector<SpecializationConstant>{SpecializationConstant(0),
+									SpecializationConstant(0)})});
 
-			sb.addGraphicPipeline("Pipeline2", l, shaderSpecInfo2,
+			sb.addGraphicPipeline("Pipeline2", l->defaultFamily, shaderSpecInfo2,
 					PipelineMaterialInfo({BlendInfo(), DepthInfo(true, true, CompareOp::Less)}),
 					DynamicState::Viewport);
 		});

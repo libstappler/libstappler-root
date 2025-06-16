@@ -33,7 +33,8 @@ THE SOFTWARE.
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
-constexpr auto TEST_STRING_1 = R"(Этапы принятия решений и их характеристики в этой простой модели таковы:
+constexpr auto TEST_STRING_1 =
+		R"(Этапы принятия решений и их характеристики в этой простой модели таковы:
 
 (1) Определение поля для анализа: принимая экономические решения, человек изучает только экономические данные.
 
@@ -109,93 +110,107 @@ struct DbTest : MemPoolTest {
 			db::Field::Text("name", db::Flags::Indexed | db::Flags::PatternIndexed),
 			db::Field::Password("password"),
 			db::Field::Float("value"),
-			db::Field::Custom(new db::FieldTextArray("textArray", db::Flags::Indexed)),
+			db::Field::Custom(
+					new (std::nothrow) db::FieldTextArray("textArray", db::Flags::Indexed)),
 			db::Field::Text("title", db::Flags::Indexed | db::Flags::PatternIndexed),
 			db::Field::Text("desc", db::MaxLength(10_MiB)),
-			db::Field::FullTextView("tsv", db::FullTextViewFn([this] (const db::Scheme &scheme, const db::Value &obj) -> db::FullTextVector {
-				size_t count = 0;
-				db::FullTextVector vec;
+			db::Field::FullTextView("tsv",
+					db::FullTextViewFn([this](const db::Scheme &scheme,
+											   const db::Value &obj) -> db::FullTextVector {
+			size_t count = 0;
+			db::FullTextVector vec;
 
-				count = _search.makeSearchVector(vec, obj.getString("name"), db::FullTextRank::A, count);
-				count = _search.makeSearchVector(vec, obj.getString("desc"), db::FullTextRank::B, count);
+			count = _search.makeSearchVector(vec, obj.getString("name"), db::FullTextRank::A,
+					count);
+			count = _search.makeSearchVector(vec, obj.getString("desc"), db::FullTextRank::B,
+					count);
 
-				return vec;
-			}), /* db::FullTextQueryFn([this] (const db::Value &data) -> db::FullTextQuery {
+			return vec;
+		}),
+					/* db::FullTextQueryFn([this] (const db::Value &data) -> db::FullTextQuery {
 				return _search.parseQuery(data.getString());
-			}), */ _search, Vector<String>({"title", "desc"})),
+			}), */
+					_search, Vector<String>({"title", "desc"})),
 		});
 
 		// we need BackendInterface to make queries, or an Adapter wrapper
-		driver->performWithStorage(driverHandle, [&] (const db::Adapter &adapter) {
+		driver->performWithStorage(driverHandle, [&](const db::Adapter &adapter) {
 			db::BackendInterface::Config cfg;
 			cfg.name = StringView("temporary_db");
 
-			mem_pool::Map<StringView, const db::Scheme *> schemes({
-				pair(dataScheme.getName(), &dataScheme)
-			});
+			mem_pool::Map<StringView, const db::Scheme *> schemes(
+					{pair(dataScheme.getName(), &dataScheme)});
 
 			if (!adapter.init(cfg, schemes)) {
 				success = false;
 				return;
 			}
 
-			adapter.performWithTransaction([&] (const db::Transaction &t) {
+			adapter.performWithTransaction([&](const db::Transaction &t) {
 				auto d = dataScheme.select(t, db::Query().include("name"));
-				for (auto &it : d.asArray()) {
-					dataScheme.remove(t, it);
-				}
+				for (auto &it : d.asArray()) { dataScheme.remove(t, it); }
 				return true;
 			});
 
-			adapter.performWithTransaction([&] (const db::Transaction &t) {
-				auto v = dataScheme.create(t, mem_pool::Value({
-					pair("number", db::Value(42)),
-					pair("name", db::Value("testName")),
-					pair("password", db::Value("Pas$w0rd")),
-					pair("value", db::Value(37.72)),
-					pair("textArray", db::Value({
-						db::Value("text string 1"),
-						db::Value("text string 2"),
-					})),
-					pair("title", db::Value("1.1.1 Модель принятия экономических решений")),
-					pair("desc", db::Value(TEST_STRING_1)),
-				}));
+			adapter.performWithTransaction([&](const db::Transaction &t) {
+				auto v = dataScheme.create(t,
+						mem_pool::Value({
+							pair("number", db::Value(42)),
+							pair("name", db::Value("testName")),
+							pair("password", db::Value("Pas$w0rd")),
+							pair("value", db::Value(37.72)),
+							pair("textArray",
+									db::Value({
+										db::Value("text string 1"),
+										db::Value("text string 2"),
+									})),
+							pair("title", db::Value("1.1.1 Модель принятия экономических решений")),
+							pair("desc", db::Value(TEST_STRING_1)),
+						}));
 
-				auto v2 = dataScheme.create(t, mem_pool::Value({
-					pair("number", db::Value(43)),
-					pair("name", db::Value("testName2")),
-					pair("password", db::Value("Pas$w0rd")),
-					pair("value", db::Value(37.72)),
-					pair("textArray", db::Value({
-						db::Value("text string 3"),
-						db::Value("text string 4"),
-					})),
-					pair("title", db::Value("1.1.2. Проблемы восприятия данных")),
-					pair("desc", db::Value(TEST_STRING_2)),
-				}));
+				auto v2 = dataScheme.create(t,
+						mem_pool::Value({
+							pair("number", db::Value(43)),
+							pair("name", db::Value("testName2")),
+							pair("password", db::Value("Pas$w0rd")),
+							pair("value", db::Value(37.72)),
+							pair("textArray",
+									db::Value({
+										db::Value("text string 3"),
+										db::Value("text string 4"),
+									})),
+							pair("title", db::Value("1.1.2. Проблемы восприятия данных")),
+							pair("desc", db::Value(TEST_STRING_2)),
+						}));
 
 				if (!v) {
 					success = false;
 					return false;
 				}
 
-				auto inQuery = dataScheme.select(t, db::Query().select("number", db::Comparation::In, db::Value({ db::Value(41), db::Value(42) })));
+				auto inQuery = dataScheme.select(t,
+						db::Query().select("number", db::Comparation::In,
+								db::Value({db::Value(41), db::Value(42)})));
 				if (inQuery.size() != 1) {
 					success = false;
 					return false;
 				}
 
-				auto tsvResult = dataScheme.select(t, db::Query().select("tsv", Value("культурные нормы")));
+				auto tsvResult =
+						dataScheme.select(t, db::Query().select("tsv", Value("культурные нормы")));
 
-				auto val = dataScheme.select(t, db::Query().select("textArray", Value("text string 4")));
+				auto val = dataScheme.select(t,
+						db::Query().select("textArray", Value("text string 4")));
 				auto v1 = dataScheme.get(t, v.getInteger("__oid"));
 
 				//SELECT *, ts_query_rank(1) as rank FROM ts_query_ids(1) left join on table(__oid=__ts_id) WHERE ts_query_valid(1) ORDER BY rank;
 
 				if (auto h = (db::sql::SqlHandle *)adapter.getBackendInterface()) {
-					h->performSimpleSelect("SELECT * FROM data_scheme, sp_unwrap(data_scheme.textArray) as unwrap "
-							"WHERE unwrap.__unwrap_value = 'text string 4';",
-							[&] (db::sql::Result &res) {
+					h
+							->performSimpleSelect(
+									"SELECT * FROM data_scheme, sp_unwrap(data_scheme.textArray) "
+									"as unwrap " "WHERE unwrap.__unwrap_value = 'text string 4';",
+									[&](db::sql::Result &res) {
 						/*for (auto it : res) {
 							std::cout << data::EncodeFormat::Pretty << it.encode() << "\n";
 						}*/
@@ -226,6 +241,6 @@ protected:
 	search::Configuration _search;
 } _DbTest;
 
-}
+} // namespace stappler::app::test
 
 #endif

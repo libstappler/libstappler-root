@@ -121,30 +121,25 @@ bool NoiseQueue::init() {
 		auto a = Rc<vk::BufferAttachment>::create(attachmentBuilder,
 				core::BufferInfo(core::BufferUsage::UniformBuffer, sizeof(NoiseData)));
 
-		a->setValidateInputCallback([](const Attachment &, const Rc<AttachmentInputData> &data) {
-			return dynamic_cast<NoiseDataInput *>(data.get()) != nullptr;
+		attachmentBuilder.setInputValidationCallback([](const AttachmentInputData *data) {
+			return dynamic_cast<const NoiseDataInput *>(data) != nullptr;
 		});
 
-		a->setFrameHandleCallback([](Attachment &a, const FrameQueue &queue) {
-			auto h = Rc<vk::BufferAttachmentHandle>::create(a, queue);
-			h->setInputCallback([](AttachmentHandle &handle, FrameQueue &queue,
-										AttachmentInputData *input, Function<void(bool)> &&cb) {
-				auto a = static_cast<vk::BufferAttachment *>(handle.getAttachment().get());
-				auto d = static_cast<NoiseDataInput *>(input);
-				auto devFrame = static_cast<vk::DeviceFrameHandle *>(queue.getFrame().get());
-				auto buf = devFrame->getMemPool(devFrame)->spawn(
-						vk::AllocationUsage::DeviceLocalHostVisible, a->getInfo());
-				auto b = static_cast<vk::BufferAttachmentHandle *>(&handle);
+		attachmentBuilder.setInputSubmissionCallback(
+				[](FrameQueue &queue, AttachmentHandle &handle, AttachmentInputData *input,
+						Function<void(bool)> &&cb) {
+			auto a = static_cast<vk::BufferAttachment *>(handle.getAttachment().get());
+			auto d = static_cast<NoiseDataInput *>(input);
+			auto devFrame = static_cast<vk::DeviceFrameHandle *>(queue.getFrame().get());
+			auto buf = devFrame->getMemPool(devFrame)->spawn(
+					vk::AllocationUsage::DeviceLocalHostVisible, a->getInfo());
+			auto b = static_cast<vk::BufferAttachmentHandle *>(&handle);
 
-				buf->map([&](uint8_t *buf, VkDeviceSize) {
-					memcpy(buf, &d->data, sizeof(NoiseData));
-				});
+			buf->map([&](uint8_t *buf, VkDeviceSize) { memcpy(buf, &d->data, sizeof(NoiseData)); });
 
-				b->addBufferView(move(buf));
+			b->addBufferView(move(buf));
 
-				cb(true);
-			});
-			return h;
+			cb(true);
 		});
 		return a;
 	});
@@ -303,7 +298,7 @@ bool NoisePass::init(Queue::Builder &queueBuilder, QueuePassBuilder &builder,
 	Shader::inspectShader(NoiseComp);
 
 	builder.addSubpass([&](SubpassBuilder &subpassBuilder) {
-		subpassBuilder.addComputePipeline("NoisePipeline", layout,
+		subpassBuilder.addComputePipeline("NoisePipeline", layout->defaultFamily,
 				queueBuilder.addProgramByRef("NoisePipelineComp", NoiseComp));
 	});
 

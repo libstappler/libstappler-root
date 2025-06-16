@@ -34,19 +34,16 @@ public:
 	virtual bool isPermitted() override { return true; }
 
 	virtual Value onData() override {
-		return Value({
-			pair("params", Value(_params)),
-			pair("query", Value(_queryFields)),
-			pair("input", Value(_inputFields)),
-			pair("isCompleted", Value(_filter->isCompleted())),
+		return Value({pair("params", Value(_params)), pair("query", Value(_queryFields)),
+			pair("input", Value(_inputFields)), pair("isCompleted", Value(_filter->isCompleted())),
 			pair("bodyLength", Value(_filter->getBody().size())),
 			pair("contentLength", Value(_filter->getContentLength())),
 			pair("bytesRead", Value(_filter->getBytesRead())),
 			pair("bytesReadSinceUpdate", Value(_filter->getBytesReadSinceUpdate())),
 			pair("startTime", Value(_filter->getStartTime().toMicros())),
 			pair("elapsedTime", Value(_filter->getElapsedTime().toMicros())),
-			pair("elapsedTimeSinceUpdate", Value(_filter->getElapsedTimeSinceUpdate().toMicros()))
-		});
+			pair("elapsedTimeSinceUpdate",
+					Value(_filter->getElapsedTimeSinceUpdate().toMicros()))});
 	}
 };
 
@@ -76,46 +73,55 @@ public:
 class TestHandlerMap : public RequestHandlerMap {
 public:
 	TestHandlerMap() {
-		addHandler("Variant1", RequestMethod::Get, "/:id/:page", Handler::Make<TestHandlerMapVariant1>())
+		addHandler("Variant1", RequestMethod::Get, "/:id/:page",
+				Handler::Make<TestHandlerMapVariant1>())
 				.addQueryFields({
-			db::Field::Integer("intValue", db::Flags::Required),
-			db::Field::Integer("mtime", db::Flags::AutoMTime),
-		});
+					db::Field::Integer("intValue", db::Flags::Required),
+					db::Field::Integer("mtime", db::Flags::AutoMTime),
+				});
 
-		addHandler("Variant1Post", RequestMethod::Post, "/:id/:page", Handler::Make<TestHandlerMapVariant1>())
+		addHandler("Variant1Post", RequestMethod::Post, "/:id/:page",
+				Handler::Make<TestHandlerMapVariant1>())
 				.addQueryFields({
-			db::Field::Integer("intValue", db::Flags::Required),
-			db::Field::Integer("mtime", db::Flags::AutoMTime),
-		}).addInputFields({
-			db::Field::Text("text", db::Flags::Required),
-			db::Field::File("file", db::MaxFileSize(2_MiB)),
-			db::Field::Data("data"),
-		}).setInputConfig(db::InputConfig{
-			db::InputConfig::Require::Body | db::InputConfig::Require::Data | db::InputConfig::Require::Files | db::InputConfig::Require::FilesAsData,
-			2_MiB,
-			2_MiB,
-			2_MiB,
-		});
-
-		addHandler("Variant2Post", RequestMethod::Post, "/urlencoded", Handler::Make<TestHandlerMapVariant2>())
+					db::Field::Integer("intValue", db::Flags::Required),
+					db::Field::Integer("mtime", db::Flags::AutoMTime),
+				})
 				.addInputFields({
-			db::Field::Text("text", db::Flags::Required),
-			db::Field::Data("dict"),
-			db::Field::Data("arr"),
-			db::Field::Data("array space"),
-		}).setInputConfig(db::InputConfig{
-			db::InputConfig::Require::Data,
-			2_MiB,
-			2_MiB,
-			2_MiB,
-		});
-		addHandler("Variant3Post", RequestMethod::Post, "/files", Handler::Make<TestHandlerMapVariant3>())
+					db::Field::Text("text", db::Flags::Required),
+					db::Field::File("file", db::MaxFileSize(2_MiB)),
+					db::Field::Data("data"),
+				})
 				.setInputConfig(db::InputConfig{
-			db::InputConfig::Require::Files | db::InputConfig::Require::Body,
-			2_MiB,
-			2_MiB,
-			2_MiB,
-		});
+					db::InputConfig::Require::Body | db::InputConfig::Require::Data
+							| db::InputConfig::Require::Files
+							| db::InputConfig::Require::FilesAsData,
+					2_MiB,
+					2_MiB,
+					2_MiB,
+				});
+
+		addHandler("Variant2Post", RequestMethod::Post, "/urlencoded",
+				Handler::Make<TestHandlerMapVariant2>())
+				.addInputFields({
+					db::Field::Text("text", db::Flags::Required),
+					db::Field::Data("dict"),
+					db::Field::Data("arr"),
+					db::Field::Data("array space"),
+				})
+				.setInputConfig(db::InputConfig{
+					db::InputConfig::Require::Data,
+					2_MiB,
+					2_MiB,
+					2_MiB,
+				});
+		addHandler("Variant3Post", RequestMethod::Post, "/files",
+				Handler::Make<TestHandlerMapVariant3>())
+				.setInputConfig(db::InputConfig{
+					db::InputConfig::Require::Files | db::InputConfig::Require::Body,
+					2_MiB,
+					2_MiB,
+					2_MiB,
+				});
 	}
 };
 
@@ -149,18 +155,17 @@ TestHandler::TestHandler(const Host &serv, const HostComponentInfo &info)
 
 	using namespace db;
 
-	_hierarchy.define(Vector<Field>({
-		Field::Text("name", MinLength(3)),
+	_hierarchy.define(Vector<Field>({Field::Text("name", MinLength(3)),
 		Field::Integer("id", Flags::Indexed | Flags::Unique),
 		Field::Object("root", _hierarchy, Linkage::Manual, ForeignLink("sections")),
 		Field::Set("sections", _hierarchy, Linkage::Manual, ForeignLink("root")),
 
-		Field::View("pages", _pages, ViewFn([] (const Scheme &, const Value &obj) -> bool {
-			return obj.getBool("hidden") ? false : true;
-		}), Vector<String>({ "hidden" })),
+		Field::View("pages", _pages, ViewFn([](const Scheme &, const Value &obj) -> bool {
+		return obj.getBool("hidden") ? false : true;
+	}),
+				Vector<String>({"hidden"})),
 
-		Field::Set("all_pages", _pages)
-	}));
+		Field::Set("all_pages", _pages)}));
 
 	_pages.define(Vector<Field>({
 		Field::Text("name", MinLength(3)),
@@ -168,67 +173,74 @@ TestHandler::TestHandler(const Host &serv, const HostComponentInfo &info)
 		Field::Object("root", _hierarchy),
 	}));
 
-	_objects.define(Vector<Field>{
-		Field::Text("text", MinLength(3), Flags::Indexed),
-		Field::Extra("data", Vector<Field>{
-			Field::Array("strings", Field::Text("")),
-		}),
-		Field::Set("subobjects", _subobjects),
-		Field::File("file", MaxFileSize(1_MiB)),
-		Field::Text("alias", Transform::Alias),
-		Field::Integer("mtime", Flags::AutoMTime | Flags::Indexed),
-		Field::Integer("index", Flags::Indexed),
-		Field::View("refs", _refs, ViewFn([] (const Scheme &objScheme, const Value &obj) -> bool {
-			return true;
-		}), FieldView::Delta),
+	_objects.define(
+			Vector<Field>{
+				Field::Text("text", MinLength(3), Flags::Indexed),
+				Field::Extra("data",
+						Vector<Field>{
+							Field::Array("strings", Field::Text("")),
+						}),
+				Field::Set("subobjects", _subobjects),
+				Field::File("file", MaxFileSize(1_MiB)),
+				Field::Text("alias", Transform::Alias),
+				Field::Integer("mtime", Flags::AutoMTime | Flags::Indexed),
+				Field::Integer("index", Flags::Indexed),
+				Field::View("refs", _refs,
+						ViewFn([](const Scheme &objScheme, const Value &obj) -> bool {
+		return true;
+	}),
+						FieldView::Delta),
 
-		Field::Array("array", Field::Extra("", Vector<Field>{
-			Field::Integer("one"),
-			Field::Integer("two"),
-		})),
+				Field::Array("array",
+						Field::Extra("",
+								Vector<Field>{
+									Field::Integer("one"),
+									Field::Integer("two"),
+								})),
 
-		Field::Extra("textFile", Vector<Field>{
-			Field::Text("type"),
-			Field::Integer("mtime"),
-			Field::Text("content"),
-		}),
-		Field::Extra("binaryFile", Vector<Field>{
-			Field::Text("type"),
-			Field::Integer("mtime"),
-			Field::Bytes("content"),
-		}),
+				Field::Extra("textFile",
+						Vector<Field>{
+							Field::Text("type"),
+							Field::Integer("mtime"),
+							Field::Text("content"),
+						}),
+				Field::Extra("binaryFile",
+						Vector<Field>{
+							Field::Text("type"),
+							Field::Integer("mtime"),
+							Field::Bytes("content"),
+						}),
 
-		Field::Set("images", _images, Flags::Composed),
-	},
-	AccessRole::Admin(AccessRoleId::Authorized));
+				Field::Set("images", _images, Flags::Composed),
+			},
+			AccessRole::Admin(AccessRoleId::Authorized));
 
-	_refs.define({
-		Field::Text("alias", Transform::Alias),
-		Field::Text("text", MinLength(3)),
-		Field::Set("features", _objects, RemovePolicy::StrongReference), // objects, that will be removed when ref is removed
+	_refs.define({Field::Text("alias", Transform::Alias), Field::Text("text", MinLength(3)),
+		Field::Set("features", _objects,
+				RemovePolicy::StrongReference), // objects, that will be removed when ref is removed
 		Field::Set("optionals", _objects, RemovePolicy::Reference),
 		Field::Integer("mtime", Flags::AutoMTime | Flags::Indexed),
-		Field::Integer("index", Flags::Indexed),
-		Field::File("file", MaxFileSize(100_KiB)),
+		Field::Integer("index", Flags::Indexed), Field::File("file", MaxFileSize(100_KiB)),
 		Field::Data("array", Transform::Array),
 		Field::Object("objectRef", _objects, Flags::Reference),
 		Field::Object("subobject", _subobjects, Flags::Reference),
 
-		Field::Extra("extra", Vector<Field>{
-			Field::Integer("one"),
-			Field::Integer("two"),
-		}),
+		Field::Extra("extra",
+				Vector<Field>{
+					Field::Integer("one"),
+					Field::Integer("two"),
+				}),
 
-		Field::Image("cover", MaxImageSize(1080, 1080, ImagePolicy::Resize), Vector<Thumbnail>{
-			Thumbnail("thumb", 160, 160),
-			Thumbnail("cover512", 512, 512),
-			Thumbnail("cover256", 256, 256),
-			Thumbnail("cover128", 128, 128),
-			Thumbnail("cover64", 64, 64),
-		}),
+		Field::Image("cover", MaxImageSize(1'080, 1'080, ImagePolicy::Resize),
+				Vector<Thumbnail>{
+					Thumbnail("thumb", 160, 160),
+					Thumbnail("cover512", 512, 512),
+					Thumbnail("cover256", 256, 256),
+					Thumbnail("cover128", 128, 128),
+					Thumbnail("cover64", 64, 64),
+				}),
 
-		Field::Data("data")
-	});
+		Field::Data("data")});
 
 	_subobjects.define({
 		Field::Text("text", MinLength(3)),
@@ -237,18 +249,18 @@ TestHandler::TestHandler(const Host &serv, const HostComponentInfo &info)
 		Field::Integer("index", Flags::Indexed),
 	});
 
-	_images.define(Vector<Field>{
-		Field::Integer("ctime", Flags::ReadOnly | Flags::AutoCTime | Flags::ForceInclude),
-		Field::Integer("mtime", Flags::ReadOnly | Flags::AutoMTime | Flags::ForceInclude),
+	_images.define(
+			Vector<Field>{
+				Field::Integer("ctime", Flags::ReadOnly | Flags::AutoCTime | Flags::ForceInclude),
+				Field::Integer("mtime", Flags::ReadOnly | Flags::AutoMTime | Flags::ForceInclude),
 
-		Field::Text("name", Transform::Identifier, Flags::Required | Flags::Indexed | Flags::ForceInclude),
+				Field::Text("name", Transform::Identifier,
+						Flags::Required | Flags::Indexed | Flags::ForceInclude),
 
-		Field::Image("content", MaxImageSize(2048, 2048, ImagePolicy::Resize), Vector<Thumbnail>{
-			Thumbnail("thumb", 380, 380)
-		}),
-	},
-		AccessRole::Admin(AccessRoleId::Authorized)
-	);
+				Field::Image("content", MaxImageSize(2'048, 2'048, ImagePolicy::Resize),
+						Vector<Thumbnail>{Thumbnail("thumb", 380, 380)}),
+			},
+			AccessRole::Admin(AccessRoleId::Authorized));
 
 	_test.define({
 		Field::Text("key", Transform::Alias),
@@ -258,60 +270,62 @@ TestHandler::TestHandler(const Host &serv, const HostComponentInfo &info)
 		Field::Integer("time", Flags::Indexed | Flags::AutoMTime),
 		Field::Bytes("secret"),
 		Field::Data("data"),
-		Field::Custom(new FieldBigIntArray("clusters")),
-		Field::Custom(new FieldIntArray("refs")),
-		Field::Custom(new FieldTextArray("text")),
-		Field::Custom(new FieldPoint("coords")),
+		Field::Custom(new (std::nothrow) FieldBigIntArray("clusters")),
+		Field::Custom(new (std::nothrow) FieldIntArray("refs")),
+		Field::Custom(new (std::nothrow) FieldTextArray("text")),
+		Field::Custom(new (std::nothrow) FieldPoint("coords")),
 
-		Field::Extra("tsvData", Vector<Field>{
-			Field::Text("text", MaxLength(1_KiB)),
-			Field::Text("html", MaxLength(1_KiB)),
-			Field::Data("words"),
-		}, AutoFieldDef{
-			Vector<AutoFieldScheme>({
-				AutoFieldScheme{ _test, {"text", "key"} }
-			}),
-			DefaultFn([] (const Value &data) -> Value {
-				StringStream html;
-				StringStream text;
-				text << data.getString("key") << " ";
-				html << "<html><body><h1>" <<  data.getString("key") << "</h1>";
-				for (auto &it : data.getArray("text")) {
-					text << it.getString() << " ";
-					html << "<p>" <<  it.getString() << "</p>";
-				}
-				html << "</body></html>";
+		Field::Extra("tsvData",
+				Vector<Field>{
+					Field::Text("text", MaxLength(1_KiB)),
+					Field::Text("html", MaxLength(1_KiB)),
+					Field::Data("words"),
+				},
+				AutoFieldDef{
+					Vector<AutoFieldScheme>({AutoFieldScheme{_test, {"text", "key"}}}),
+					DefaultFn([](const Value &data) -> Value {
+		StringStream html;
+		StringStream text;
+		text << data.getString("key") << " ";
+		html << "<html><body><h1>" << data.getString("key") << "</h1>";
+		for (auto &it : data.getArray("text")) {
+			text << it.getString() << " ";
+			html << "<p>" << it.getString() << "</p>";
+		}
+		html << "</body></html>";
 
-				auto textdata = StringView(text.weak());
-				textdata.trimChars<StringView::WhiteSpace>();
+		auto textdata = StringView(text.weak());
+		textdata.trimChars<StringView::WhiteSpace>();
 
-				Value ret;
-				ret.setString(textdata, "text");
-				ret.setString(html.str(), "html");
-				auto &words = ret.emplace("words");
+		Value ret;
+		ret.setString(textdata, "text");
+		ret.setString(html.str(), "html");
+		auto &words = ret.emplace("words");
 
-				textdata.split<StringView::WhiteSpace>([&] (StringView word) {
-					words.addString(word);
-				});
+		textdata.split<StringView::WhiteSpace>([&](StringView word) { words.addString(word); });
 
-				return ret;
-			}),
-			Vector<String>({"text", "key"}),
-		}),
+		return ret;
+	}),
+					Vector<String>({"text", "key"}),
+				}),
 
-		Field::FullTextView("tsv", db::FullTextViewFn([this] (const db::Scheme &scheme, const db::Value &obj) -> db::FullTextVector {
-			size_t count = 0;
-			db::FullTextVector vec;
+		Field::FullTextView("tsv",
+				db::FullTextViewFn([this](const db::Scheme &scheme,
+										   const db::Value &obj) -> db::FullTextVector {
+		size_t count = 0;
+		db::FullTextVector vec;
 
-			count = _search.makeSearchVector(vec, obj.getString("key"), db::FullTextRank::A, count);
-			for (auto &it : obj.getArray("text")) {
-				count = _search.makeSearchVector(vec, it.getString(), db::FullTextRank::B, count);
-			}
+		count = _search.makeSearchVector(vec, obj.getString("key"), db::FullTextRank::A, count);
+		for (auto &it : obj.getArray("text")) {
+			count = _search.makeSearchVector(vec, it.getString(), db::FullTextRank::B, count);
+		}
 
-			return vec;
-		}), /* db::FullTextQueryFn([this] (const db::Value &data) -> db::FullTextQuery {
+		return vec;
+	}),
+				/* db::FullTextQueryFn([this] (const db::Value &data) -> db::FullTextQuery {
 			return _search.parseQuery(data.getString());
-		}), */ _search, Vector<String>({"key", "text"})),
+		}), */
+				_search, Vector<String>({"key", "text"})),
 	});
 
 	_detached.define({
@@ -327,12 +341,8 @@ TestHandler::TestHandler(const Host &serv, const HostComponentInfo &info)
 void TestHandler::handleChildInit(const Host &serv) {
 	serv.addResourceHandler("/objects_root/", _objects, Value("root"));
 	serv.addResourceHandler("/objects_indexed/", _objects, Value(1));
-	serv.addResourceHandler("/objects_first/", _objects, Value({
-		pair("index", Value(10))
-	}));
-	serv.addResourceHandler("/objects_named/", _objects, Value({
-		pair("text", Value("text1"))
-	}));
+	serv.addResourceHandler("/objects_first/", _objects, Value({pair("index", Value(10))}));
+	serv.addResourceHandler("/objects_named/", _objects, Value({pair("text", Value("text1"))}));
 	serv.addResourceHandler("/objects/", _objects);
 	serv.addResourceHandler("/refs/", _refs);
 	serv.addResourceHandler("/test/", _test);
@@ -341,30 +351,27 @@ void TestHandler::handleChildInit(const Host &serv) {
 	serv.addResourceHandler("/pages/", _pages);
 	serv.addResourceHandler("/users/", *serv.getUserScheme());
 
-	serv.addMultiResourceHandler("/multi", {
-		pair("objects", &_objects),
-		pair("refs", &_refs),
-		pair("subobjects", &_subobjects),
-	});
+	serv.addMultiResourceHandler("/multi",
+			{
+				pair("objects", &_objects),
+				pair("refs", &_refs),
+				pair("subobjects", &_subobjects),
+			});
 
 	/*serv.addHandler("/handler", SA_HANDLER(TestSelectHandler));
 	serv.addHandler("/pug/", SA_HANDLER(TestPugHandler));
 	serv.addHandler("/upload/", SA_HANDLER(TestUploadHandler));*/
 
-	serv.addHandler("/map/", new TestHandlerMap);
+	serv.addHandler("/map/", new (std::nothrow) TestHandlerMap);
 
-	addOutputCommand("test", [&, this] (StringView str, const Callback<void(const Value &)> &cb) -> bool {
+	addOutputCommand("test",
+			[&, this](StringView str, const Callback<void(const Value &)> &cb) -> bool {
 		if (auto t = db::Transaction::acquireIfExists()) {
-			cb(_test.create(t, Value({
-				Value({
-					pair("time", Value(Time::now().toMicros())),
-					pair("key", Value(valid::generatePassword<Interface>(6)))
-				}),
-				Value({
-					pair("time", Value(Time::now().toMicros())),
-					pair("key", Value(valid::generatePassword<Interface>(6)))
-				})
-			})));
+			cb(_test.create(t,
+					Value({Value({pair("time", Value(Time::now().toMicros())),
+							   pair("key", Value(valid::generatePassword<Interface>(6)))}),
+						Value({pair("time", Value(Time::now().toMicros())),
+							pair("key", Value(valid::generatePassword<Interface>(6)))})})));
 		}
 		return true;
 	}, " - test");
@@ -377,84 +384,65 @@ void TestHandler::handleStorageInit(const Host &, const db::Adapter &a) {
 		pair("text", Value("text1")),
 		pair("alias", Value("root")),
 		pair("index", Value(10)),
-		pair("strings", Value({ Value("String1"), Value("String2") })),
-		pair("array", Value({
-			Value({
-				pair("one", Value(1)),
-				pair("two", Value(2)),
-			}),
-			Value({
-				pair("one", Value(3)),
-				pair("two", Value(4)),
-			})
-		})),
+		pair("strings", Value({Value("String1"), Value("String2")})),
+		pair("array",
+				Value({Value({
+						   pair("one", Value(1)),
+						   pair("two", Value(2)),
+					   }),
+					Value({
+						pair("one", Value(3)),
+						pair("two", Value(4)),
+					})})),
 	});
 
 	_objects.create(t, obj);
 
-	for (size_t i = 0; i < 30; ++ i) {
-		Value data {
-			pair("key", Value(toString("key", i))),
-			pair("index", Value(10 + i)),
-			pair("value", Value(1.5 + i)),
-			pair("flag", Value(i < 15)),
+	for (size_t i = 0; i < 30; ++i) {
+		Value data{pair("key", Value(toString("key", i))), pair("index", Value(10 + i)),
+			pair("value", Value(1.5 + i)), pair("flag", Value(i < 15)),
 			pair("secret", Value(valid::makeRandomBytes<Interface>(12))),
-			pair("clusters", Value{
-				Value(i * 1000 + 100), Value(-i * 1000 - 200)
-			}),
-			pair("refs", Value{
-				Value(i * 100000 + 1000), Value(-i * 100000 - 2000)
-			}),
-			pair("text", Value{
-				Value(toString("key", i)),
-				Value(toString("value", i)),
-				Value(toString("word", i, " ", "sub", i))
-			}),
-			pair("coords", Value{
-				Value(0.5 + i), Value(toString(-0.5 - i))
-			}),
-			pair("data", Value{
-				pair("key", Value(toString("key", i))),
-				pair("index", Value(10 + i)),
-				pair("value", Value(1.5 + i)),
-			})
-		};
+			pair("clusters", Value{Value(i * 1'000 + 100), Value(-i * 1'000 - 200)}),
+			pair("refs", Value{Value(i * 100'000 + 1'000), Value(-i * 100'000 - 2'000)}),
+			pair("text",
+					Value{Value(toString("key", i)), Value(toString("value", i)),
+						Value(toString("word", i, " ", "sub", i))}),
+			pair("coords", Value{Value(0.5 + i), Value(toString(-0.5 - i))}),
+			pair("data",
+					Value{
+						pair("key", Value(toString("key", i))),
+						pair("index", Value(10 + i)),
+						pair("value", Value(1.5 + i)),
+					})};
 
-		_test.create(t,  data);
+		_test.create(t, data);
 	}
 
-	auto cat = _hierarchy.create(t, Value({
-		pair("name", Value("TestCategory")),
-		pair("id", Value(10)),
-	}));
+	auto cat = _hierarchy.create(t,
+			Value({
+				pair("name", Value("TestCategory")),
+				pair("id", Value(10)),
+			}));
 
-	_pages.create(t, Value({
-		pair("name", Value("Page1")),
-		pair("root", Value(cat.getInteger("__oid"))),
-		pair("hidden", Value(false))
-	}));
+	_pages.create(t,
+			Value({pair("name", Value("Page1")), pair("root", Value(cat.getInteger("__oid"))),
+				pair("hidden", Value(false))}));
 
-	_pages.create(t, Value({
-		pair("name", Value("Page2")),
-		pair("root", Value(cat.getInteger("__oid"))),
-		pair("hidden", Value(false))
-	}));
+	_pages.create(t,
+			Value({pair("name", Value("Page2")), pair("root", Value(cat.getInteger("__oid"))),
+				pair("hidden", Value(false))}));
 
-	_pages.create(t, Value({
-		pair("name", Value("Page3")),
-		pair("root", Value(cat.getInteger("__oid"))),
-		pair("hidden", Value(true))
-	}));
+	_pages.create(t,
+			Value({pair("name", Value("Page3")), pair("root", Value(cat.getInteger("__oid"))),
+				pair("hidden", Value(true))}));
 
 	t.release();
 }
 
-void TestHandler::initTransaction(db::Transaction &t) {
-	t.setRole(db::AccessRoleId::Authorized);
-}
+void TestHandler::initTransaction(db::Transaction &t) { t.setRole(db::AccessRoleId::Authorized); }
 
-extern "C" HostComponent * CreateTestComponent(const Host &serv, const HostComponentInfo &info) {
-	return new TestHandler(serv, info);
+extern "C" HostComponent *CreateTestComponent(const Host &serv, const HostComponentInfo &info) {
+	return new (std::nothrow) TestHandler(serv, info);
 }
 
 static SharedSymbol s_testComponentSymbols[] = {
@@ -462,6 +450,7 @@ static SharedSymbol s_testComponentSymbols[] = {
 		(void *)static_cast<HostComponent::Symbol>(CreateTestComponent)},
 };
 
-static SharedModule s_testComponentModule("TestComonent", s_testComponentSymbols, sizeof(s_testComponentSymbols) / sizeof(SharedSymbol));
+static SharedModule s_testComponentModule("TestComonent", s_testComponentSymbols,
+		sizeof(s_testComponentSymbols) / sizeof(SharedSymbol));
 
-}
+} // namespace stappler::web

@@ -42,15 +42,19 @@ namespace STAPPLER_VERSIONIZED stappler::web {
 static Root *getRootFromContext(pool_t *p, uint32_t tag, const void *ptr) {
 	switch (tag) {
 	case uint32_t(config::TAG_HOST): return ((HostController *)ptr)->getRoot(); break;
-	case uint32_t(config::TAG_REQUEST): return ((RequestController *)ptr)->getHost()->getRoot(); break;
-	case uint32_t(config::TAG_WEBSOCKET): return ((WebsocketConnection *)ptr)->getHost().getRoot(); break;
+	case uint32_t(config::TAG_REQUEST):
+		return ((RequestController *)ptr)->getHost()->getRoot();
+		break;
+	case uint32_t(config::TAG_WEBSOCKET):
+		return ((WebsocketConnection *)ptr)->getHost().getRoot();
+		break;
 	}
 	return nullptr;
 }
 
 Root *Root::getCurrent() {
 	Root *ret = nullptr;
-	pool::foreach_info(&ret, [] (void *ud, pool_t *p, uint32_t tag, const void *data) -> bool {
+	pool::foreach_info(&ret, [](void *ud, pool_t *p, uint32_t tag, const void *data) -> bool {
 		auto ptr = getRootFromContext(p, tag, data);
 		if (ptr) {
 			*((Root **)ud) = ptr;
@@ -68,10 +72,10 @@ void Root::parseParameterList(Map<StringView, StringView> &target, StringView st
 	while (!r.empty()) {
 		StringView params, n, v;
 		if (r.is('"')) {
-			++ r;
+			++r;
 			params = r.readUntil<StringView::Chars<'"'>>();
 			if (r.is('"')) {
-				++ r;
+				++r;
 			}
 		} else {
 			params = r.readUntil<StringView::CharGroup<CharGroupId::WhiteSpace>>();
@@ -79,10 +83,10 @@ void Root::parseParameterList(Map<StringView, StringView> &target, StringView st
 
 		if (!params.empty()) {
 			n = params.readUntil<StringView::Chars<'='>>();
-			++ params;
+			++params;
 			v = params;
 
-			if (!n.empty() && ! v.empty()) {
+			if (!n.empty() && !v.empty()) {
 				target.emplace(n.pdup(target.get_allocator()), v.pdup(target.get_allocator()));
 			}
 		}
@@ -91,7 +95,8 @@ void Root::parseParameterList(Map<StringView, StringView> &target, StringView st
 	}
 }
 
-void Root::setErrorNotification(pool_t *p, Function<void(Value &&)> errorCb, Function<void(Value &&)> debugCb) {
+void Root::setErrorNotification(pool_t *p, Function<void(Value &&)> errorCb,
+		Function<void(Value &&)> debugCb) {
 	perform([&] {
 		ErrorNotificator *err = nullptr;
 		pool::userdata_get((void **)&err, ErrorNotificatorKey, p);
@@ -141,51 +146,40 @@ void Root::dumpCurrentState(StringView filepath) {
 				::fprintf(f, "\tIp: %s\n", reqInfo.useragentIp.data());
 
 				::fputs("\tHeaders:\n", f);
-				req.foreachRequestHeaders([&] (StringView key, StringView value) {
+				req.foreachRequestHeaders([&](StringView key, StringView value) {
 					::fprintf(f, "\t\t%s: %s\n", key.data(), value.data());
 				});
 			}
 
 			::fputs("\nBacktrace:\n", f);
 
-			getBacktrace(2, [&] (StringView str) {
-				::fprintf(f, "\t%s\n", str.data());
-			});
+			getBacktrace(2, [&](StringView str) { ::fprintf(f, "\t%s\n", str.data()); });
 
 			::fclose(f);
 		}
 	}
 }
 
-Root::~Root() {
-	pool::destroy(_workerPool);
-}
+Root::~Root() { pool::destroy(_workerPool); }
 
 Root::Root(Ref *ret, pool_t *p) : _self(ret), _rootPool(p) {
 	_workerPool = pool::create(p);
 
-	_serverNameLine = StringView(
-			toString("Stappler/", getStapplerVersionString(), " ", "Webserver/", config::getWebserverVersionString())).pdup(_rootPool);
+	_serverNameLine = StringView(toString("Stappler/", getStapplerVersionString(), " ",
+										 "Webserver/", config::getWebserverVersionString()))
+							  .pdup(_rootPool);
 }
 
 Root::Stat Root::getStat() const {
-	return Stat{
-		_requestsReceived.load(),
-		_heartbeatCounter.load(),
-		_dbQueriesReleased.load(),
-		_dbQueriesPerformed.load()
-	};
+	return Stat{_requestsReceived.load(), _heartbeatCounter.load(), _dbQueriesReleased.load(),
+		_dbQueriesPerformed.load()};
 }
 
-void Root::setDebugEnabled(bool val) {
-	_debug = val;
-}
+void Root::setDebugEnabled(bool val) { _debug = val; }
 
-bool Root::isSecureConnection(const Request &) const {
-	return false;
-}
+bool Root::isSecureConnection(const Request &) const { return false; }
 
-db::sql::Driver * Root::getDbDriver(StringView driver) {
+db::sql::Driver *Root::getDbDriver(StringView driver) {
 	auto it = _dbDrivers.find(driver);
 	if (it != _dbDrivers.end()) {
 		return it->second;
@@ -233,7 +227,7 @@ Status Root::runPostReadRequest(Request &r) {
 }
 
 Status Root::runTranslateName(Request &r) {
-	return perform([&] () {
+	return perform([&]() {
 		Request request(r);
 
 		RequestHandler *rhdl = request.getRequestHandler();
@@ -246,8 +240,7 @@ Status Root::runTranslateName(Request &r) {
 				return status;
 			}
 			auto res = rhdl->onTranslateName(request);
-			if (res == DECLINED
-					&& request.getInfo().method != RequestMethod::Post
+			if (res == DECLINED && request.getInfo().method != RequestMethod::Post
 					&& request.getInfo().method != RequestMethod::Put
 					&& request.getInfo().method != RequestMethod::Patch
 					&& request.getInfo().method != RequestMethod::Options) {
@@ -270,7 +263,8 @@ Status Root::runCheckAccess(Request &r) {
 			return OK; // already checked by serenity
 		}
 		if (!request.getInfo().filename.empty()) {
-			if (StringView(request.getInfo().filename).starts_with(StringView(request.getInfo().documentRoot))) {
+			if (StringView(request.getInfo().filename)
+							.starts_with(StringView(request.getInfo().documentRoot))) {
 				return OK;
 			}
 		}
@@ -279,7 +273,7 @@ Status Root::runCheckAccess(Request &r) {
 }
 
 Status Root::runQuickHandler(Request &r, int v) {
-	return perform([&] () -> Status {
+	return perform([&]() -> Status {
 		Request request(r);
 		RequestHandler *rhdl = request.getRequestHandler();
 		if (rhdl) {
@@ -301,7 +295,7 @@ void Root::runInsertFilter(Request &r) {
 }
 
 Status Root::runHandler(Request &r) {
-	return perform([&] () -> Status {
+	return perform([&]() -> Status {
 		Request request(r);
 
 		RequestHandler *rhdl = request.getRequestHandler();
@@ -333,15 +327,11 @@ void Root::handleFilterComplete(InputFilter *f) {
 }
 
 void Root::addDb(StringView str) {
-	perform([&, this] {
-		emplace_ordered(_dbs, str.pdup(_rootPool));
-	}, _rootPool);
+	perform([&, this] { emplace_ordered(_dbs, str.pdup(_rootPool)); }, _rootPool);
 }
 
 void Root::setDbParams(StringView str) {
-	perform([&, this] {
-		parseParameterList(_dbParams, str);
-	}, _rootPool);
+	perform([&, this] { parseParameterList(_dbParams, str); }, _rootPool);
 }
 
 void Root::setThreadsCount(StringView init, StringView max) {
@@ -350,10 +340,8 @@ void Root::setThreadsCount(StringView init, StringView max) {
 }
 
 void Root::handleHeartbeat(pool_t *pool) {
-	foreachHost([&] (Host &serv) {
-		perform([&] {
-			serv.handleHeartBeat(pool);
-		}, pool, config::TAG_HOST, serv.getController());
+	foreachHost([&](Host &serv) {
+		perform([&] { serv.handleHeartBeat(pool); }, pool, config::TAG_HOST, serv.getController());
 	});
 }
 
@@ -367,10 +355,9 @@ void Root::handleBroadcast(const Value &res) {
 		}
 		return;
 	} else if (res.getBool("local")) {
-		foreachHost([&] (Host &serv) {
-			perform([&] {
-				serv.handleBroadcast(res);
-			}, serv.getThreadPool(), config::TAG_HOST, serv.getController());
+		foreachHost([&](Host &serv) {
+			perform([&] { serv.handleBroadcast(res); }, serv.getThreadPool(), config::TAG_HOST,
+					serv.getController());
 		});
 	}
 }
@@ -381,11 +368,9 @@ void Root::handleChildInit(pool_t *p) {
 
 		initSignals();
 
-		_pending = new Vector<PendingTask>();
+		_pending = new (std::nothrow) Vector<PendingTask>();
 
-		foreachHost([&, this] (Host &host) {
-			host.handleChildInit(_configPool);
-		});
+		foreachHost([&, this](Host &host) { host.handleChildInit(_configPool); });
 
 		// start threads only after all initialization is done
 		initThreads();
@@ -407,12 +392,12 @@ Status Root::runTypeChecker(Request &r) {
 	StringView charset;
 	Vector<StringView> contentEncoding;
 
-	auto onTypeCheckerExtension = [&, this] (StringView fileName, StringView ext) {
+	auto onTypeCheckerExtension = [&, this](StringView fileName, StringView ext) {
 		auto ct = filesystem::detectMimeType(fileName);
 		if (!ct.empty()) {
 			contentType = ct;
 		} else {
-			ct = findTypeCheckerContentType(r,  ext);
+			ct = findTypeCheckerContentType(r, ext);
 			if (!ct.empty()) {
 				contentType = ct;
 			}
@@ -434,7 +419,7 @@ Status Root::runTypeChecker(Request &r) {
 
 	auto tmp = fileName;
 	tmp.skipUntil<StringView::Chars<'.'>>();
-	if (tmp.size() < 2 || !tmp.is('.') ) {
+	if (tmp.size() < 2 || !tmp.is('.')) {
 		return DECLINED;
 	}
 
@@ -453,9 +438,9 @@ Status Root::runTypeChecker(Request &r) {
 	}
 
 	if (!contentEncoding.empty()) {
-	    if (info.contentEncoding.empty() && contentEncoding.size() == 1) {
-	    	r.setContentEncoding(contentEncoding.front());
-	    } else {
+		if (info.contentEncoding.empty() && contentEncoding.size() == 1) {
+			r.setContentEncoding(contentEncoding.front());
+		} else {
 			StringStream stream;
 
 			bool start = true;
@@ -474,11 +459,11 @@ Status Root::runTypeChecker(Request &r) {
 			}
 
 			r.setContentEncoding(stream.weak());
-	    }
+		}
 	}
 
-    if (!contentType.empty()) {
-    	auto v = extractCharset(contentType);
+	if (!contentType.empty()) {
+		auto v = extractCharset(contentType);
 		if (!charset.empty()) {
 			if (v.empty()) {
 				StringStream stream;
@@ -486,7 +471,8 @@ Status Root::runTypeChecker(Request &r) {
 				r.setContentType(stream.weak());
 			} else {
 				StringView start = StringView(contentType, v.data() - contentType.data());
-				StringView end = StringView(v.data() + v.size(), contentType.size() - (v.data() - contentType.data() + v.size()));
+				StringView end = StringView(v.data() + v.size(),
+						contentType.size() - (v.data() - contentType.data() + v.size()));
 
 				StringStream stream;
 				stream << start << charset << end;
@@ -495,22 +481,20 @@ Status Root::runTypeChecker(Request &r) {
 		} else {
 			r.setContentType(contentType);
 		}
-    }
+	}
 
-    if (info.contentType.empty()) {
-        return DECLINED;
-    }
+	if (info.contentType.empty()) {
+		return DECLINED;
+	}
 
-    return OK;
+	return OK;
 }
 
 StringView Root::findTypeCheckerContentType(Request &r, StringView ext) const {
 	return StringView();
 }
 
-StringView Root::findTypeCheckerCharset(Request &r, StringView ext) const {
-	return StringView();
-}
+StringView Root::findTypeCheckerCharset(Request &r, StringView ext) const { return StringView(); }
 
 StringView Root::findTypeCheckerContentLanguage(Request &r, StringView ext) const {
 	return StringView();
@@ -547,15 +531,13 @@ void Root::initDatabases() {
 					emplace_ordered(dit->second, dbname);
 				}
 				if (!_dbs.empty()) {
-					for (auto &it : _dbs) {
-						emplace_ordered(dit->second, it);
-					}
+					for (auto &it : _dbs) { emplace_ordered(dit->second, it); }
 				}
 				_primaryDriver = d;
 			}
 		}
 
-		foreachHost([&, this] (Host &host) {
+		foreachHost([&, this](Host &host) {
 			auto config = host.getController();
 			if (!config->getDbParams().empty()) {
 				StringView driver;
@@ -629,13 +611,15 @@ static void s_sigAction(int sig, siginfo_t *info, void *ucontext) {
 		}
 	} else {
 		if (s_sharedSigOldAction.sa_handler == SIG_DFL) {
-			if (SIGURG == sig || SIGWINCH == sig || SIGCONT == sig) return;
+			if (SIGURG == sig || SIGWINCH == sig || SIGCONT == sig) {
+				return;
+			}
 
 			static struct sigaction tmpSig;
 			tmpSig.sa_handler = SIG_DFL;
 			::sigemptyset(&tmpSig.sa_mask);
-		    ::sigaction(sig, &tmpSig, nullptr);
-		    ::kill(getpid(), sig);
+			::sigaction(sig, &tmpSig, nullptr);
+			::kill(getpid(), sig);
 			::sigaction(sig, &s_sharedSigAction, nullptr);
 		} else if (s_sharedSigOldAction.sa_handler == SIG_IGN) {
 			return;
@@ -656,17 +640,15 @@ void Root::initSignals() {
 	sigemptyset(&s_sharedSigAction.sa_mask);
 	//sigaddset(&s_sharedSigAction.sa_mask, SIGSEGV);
 
-    ::sigaction(SIGSEGV, &s_sharedSigAction, &s_sharedSigOldAction);
+	::sigaction(SIGSEGV, &s_sharedSigAction, &s_sharedSigOldAction);
 #endif
 }
 
-void Root::initThreads() {
-
-}
+void Root::initThreads() { }
 
 db::sql::Driver *Root::createDbDriver(StringView driverName) {
 	if (auto d = db::sql::Driver::open(_rootPool, this, driverName)) {
-		d->setDbCtrl([this] (bool complete) {
+		d->setDbCtrl([this](bool complete) {
 			if (complete) {
 				_dbQueriesReleased += 1;
 			} else {
@@ -754,7 +736,8 @@ void Root::pushDebugMessage(Value &&val) const {
 db::Adapter Root::getAdapterFromContext() const {
 	if (auto p = pool::acquire()) {
 		db::BackendInterface *h = nullptr;
-		stappler::memory::pool::userdata_get((void **)&h, db::config::STORAGE_INTERFACE_KEY.data(), p);
+		stappler::memory::pool::userdata_get((void **)&h, db::config::STORAGE_INTERFACE_KEY.data(),
+				p);
 		if (h) {
 			return db::Adapter(h, this);
 		}
@@ -766,13 +749,14 @@ db::Adapter Root::getAdapterFromContext() const {
 	return db::Adapter(nullptr, nullptr);
 }
 
-void Root::scheduleAyncDbTask(const Callback<Function<void(const db::Transaction &)>(pool_t *)> &setupCb) const {
+void Root::scheduleAyncDbTask(
+		const Callback<Function<void(const db::Transaction &)>(pool_t *)> &setupCb) const {
 	if (auto serv = Host::getCurrent()) {
-		AsyncTask::perform(serv, [&] (AsyncTask &task) {
+		AsyncTask::perform(serv, [&](AsyncTask &task) {
 			auto cb = setupCb(task.pool());
-			task.addExecuteFn([cb = sp::move(cb)] (const AsyncTask &task) -> bool {
-				task.performWithStorage([&] (const db::Transaction &t) {
-					t.performAsSystem([&] () -> bool {
+			task.addExecuteFn([cb = sp::move(cb)](const AsyncTask &task) -> bool {
+				task.performWithStorage([&](const db::Transaction &t) {
+					t.performAsSystem([&]() -> bool {
 						cb(t);
 						return true;
 					});
@@ -849,4 +833,4 @@ int64_t Root::getUserIdFromContext() const {
 	return 0;
 }
 
-}
+} // namespace stappler::web

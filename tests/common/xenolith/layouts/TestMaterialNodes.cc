@@ -53,7 +53,9 @@ bool MaterialNodeWithLabel::init(const material2d::SurfaceStyle &style, StringVi
 }
 
 bool MaterialNodeWithLabel::initialize(StringView str) {
-	_label = addChild(Rc<material2d::TypescaleLabel>::create(material2d::TypescaleRole::TitleLarge, str), ZOrder(1));
+	_label = addChild(
+			Rc<material2d::TypescaleLabel>::create(material2d::TypescaleRole::TitleLarge, str),
+			ZOrder(1));
 	_label->setAnchorPoint(Anchor::Middle);
 
 	return true;
@@ -70,16 +72,19 @@ bool TestMaterialNodes::init() {
 		return false;
 	}
 
-	_nodeElevation = addChild(Rc<MaterialNodeWithLabel>::create(material2d::SurfaceStyle{
-		material2d::ColorRole::Primary, material2d::Elevation::Level1
-	}, "Elevation"), ZOrder(1));
+	_nodeElevation = addChild(Rc<MaterialNodeWithLabel>::create(
+									  material2d::SurfaceStyle{material2d::ColorRole::Primary,
+										  material2d::Elevation::Level1},
+									  "Elevation"),
+			ZOrder(1));
 	_nodeElevation->setContentSize(Size2(160.0f, 100.0f));
 	_nodeElevation->setAnchorPoint(Anchor::Middle);
 
-	auto el = _nodeElevation->addInputListener(Rc<InputListener>::create());
-	el->addTapRecognizer([this] (GestureTap tap) {
+	auto el = _nodeElevation->addComponent(Rc<InputListener>::create());
+	el->addTapRecognizer([this](GestureTap tap) {
 		auto style = _nodeElevation->getStyleTarget();
-		style.elevation = material2d::Elevation((toInt(style.elevation) + 1) % (toInt(material2d::Elevation::Level5) + 1));
+		style.elevation = material2d::Elevation(
+				(toInt(style.elevation) + 1) % (toInt(material2d::Elevation::Level5) + 1));
 		_nodeElevation->setStyle(move(style), NODE_UPDATE_TIME);
 
 		sendEventForNode(_nodeElevation, 1, NODE_UPDATE_TIME);
@@ -88,16 +93,20 @@ bool TestMaterialNodes::init() {
 	}, InputListener::makeButtonMask({InputMouseButton::Touch}), 1);
 
 
-	_nodeShadow = addChild(Rc<MaterialNodeWithLabel>::create(material2d::SurfaceStyle{
-		material2d::ColorRole::Primary, material2d::Elevation::Level3, material2d::NodeStyle::SurfaceTonalElevated
-	}, "Shadow"), ZOrder(1));
+	_nodeShadow = addChild(
+			Rc<MaterialNodeWithLabel>::create(
+					material2d::SurfaceStyle{material2d::ColorRole::Primary,
+						material2d::Elevation::Level3, material2d::NodeStyle::SurfaceTonalElevated},
+					"Shadow"),
+			ZOrder(1));
 	_nodeShadow->setContentSize(Size2(160.0f, 100.0f));
 	_nodeShadow->setAnchorPoint(Anchor::Middle);
 
-	el = _nodeShadow->addInputListener(Rc<InputListener>::create());
-	el->addTapRecognizer([this] (GestureTap tap) {
+	el = _nodeShadow->addComponent(Rc<InputListener>::create());
+	el->addTapRecognizer([this](GestureTap tap) {
 		auto style = _nodeShadow->getStyleTarget();
-		style.elevation = material2d::Elevation((toInt(style.elevation) + 1) % (toInt(material2d::Elevation::Level5) + 1));
+		style.elevation = material2d::Elevation(
+				(toInt(style.elevation) + 1) % (toInt(material2d::Elevation::Level5) + 1));
 		_nodeShadow->setStyle(move(style), NODE_UPDATE_TIME);
 
 		sendEventForNode(_nodeShadow, 2, NODE_UPDATE_TIME);
@@ -106,17 +115,21 @@ bool TestMaterialNodes::init() {
 	}, InputListener::makeButtonMask({InputMouseButton::Touch}), 1);
 
 
-	_nodeCornerRounded = addChild(Rc<MaterialNodeWithLabel>::create(material2d::SurfaceStyle{
-		material2d::Elevation::Level3, material2d::ShapeFamily::RoundedCorners, material2d::ShapeStyle::ExtraSmall,
-		material2d::NodeStyle::SurfaceTonalElevated
-	}, "Rounded"), ZOrder(1));
+	_nodeCornerRounded = addChild(
+			Rc<MaterialNodeWithLabel>::create(
+					material2d::SurfaceStyle{material2d::Elevation::Level3,
+						material2d::ShapeFamily::RoundedCorners, material2d::ShapeStyle::ExtraSmall,
+						material2d::NodeStyle::SurfaceTonalElevated},
+					"Rounded"),
+			ZOrder(1));
 	_nodeCornerRounded->setContentSize(Size2(160.0f, 100.0f));
 	_nodeCornerRounded->setAnchorPoint(Anchor::Middle);
 
-	el = _nodeCornerRounded->addInputListener(Rc<InputListener>::create());
-	el->addTapRecognizer([this] (GestureTap tap) {
+	el = _nodeCornerRounded->addComponent(Rc<InputListener>::create());
+	el->addTapRecognizer([this](GestureTap tap) {
 		auto style = _nodeCornerRounded->getStyleTarget();
-		style.shapeStyle = material2d::ShapeStyle((toInt(style.shapeStyle) + 1) % (toInt(material2d::ShapeStyle::Full) + 1));
+		style.shapeStyle = material2d::ShapeStyle(
+				(toInt(style.shapeStyle) + 1) % (toInt(material2d::ShapeStyle::Full) + 1));
 		_nodeCornerRounded->setStyle(move(style), NODE_UPDATE_TIME);
 
 		sendEventForNode(_nodeCornerRounded, 3, NODE_UPDATE_TIME);
@@ -125,17 +138,21 @@ bool TestMaterialNodes::init() {
 	}, InputListener::makeButtonMask({InputMouseButton::Touch}), 1);
 
 
-	_nodeCornerCut = addChild(Rc<MaterialNodeWithLabel>::create(material2d::SurfaceStyle{
-		material2d::Elevation::Level3, material2d::ShapeFamily::CutCorners, material2d::ShapeStyle::ExtraSmall,
-		material2d::NodeStyle::SurfaceTonalElevated
-	}, "Cut"), ZOrder(1));
+	_nodeCornerCut = addChild(
+			Rc<MaterialNodeWithLabel>::create(
+					material2d::SurfaceStyle{material2d::Elevation::Level3,
+						material2d::ShapeFamily::CutCorners, material2d::ShapeStyle::ExtraSmall,
+						material2d::NodeStyle::SurfaceTonalElevated},
+					"Cut"),
+			ZOrder(1));
 	_nodeCornerCut->setContentSize(Size2(160.0f, 100.0f));
 	_nodeCornerCut->setAnchorPoint(Anchor::Middle);
 
-	el = _nodeCornerCut->addInputListener(Rc<InputListener>::create());
-	el->addTapRecognizer([this] (GestureTap tap) {
+	el = _nodeCornerCut->addComponent(Rc<InputListener>::create());
+	el->addTapRecognizer([this](GestureTap tap) {
 		auto style = _nodeCornerCut->getStyleTarget();
-		style.shapeStyle = material2d::ShapeStyle((toInt(style.shapeStyle) + 1) % (toInt(material2d::ShapeStyle::Full) + 1));
+		style.shapeStyle = material2d::ShapeStyle(
+				(toInt(style.shapeStyle) + 1) % (toInt(material2d::ShapeStyle::Full) + 1));
 		_nodeCornerCut->setStyle(move(style), NODE_UPDATE_TIME);
 
 		sendEventForNode(_nodeCornerCut, 4, NODE_UPDATE_TIME);
@@ -144,28 +161,36 @@ bool TestMaterialNodes::init() {
 	}, InputListener::makeButtonMask({InputMouseButton::Touch}), 1);
 
 
-	_nodeStyle = addChild(Rc<MaterialNodeWithLabel>::create(material2d::SurfaceStyle{
-		material2d::Elevation::Level5, material2d::NodeStyle::SurfaceTonalElevated, material2d::ShapeStyle::Full, material2d::ActivityState::Enabled
-	}, "Style"), ZOrder(1));
+	_nodeStyle =
+			addChild(Rc<MaterialNodeWithLabel>::create(
+							 material2d::SurfaceStyle{material2d::Elevation::Level5,
+								 material2d::NodeStyle::SurfaceTonalElevated,
+								 material2d::ShapeStyle::Full, material2d::ActivityState::Enabled},
+							 "Style"),
+					ZOrder(1));
 	_nodeStyle->setContentSize(Size2(160.0f, 100.0f));
 	_nodeStyle->setAnchorPoint(Anchor::Middle);
 
-	el = _nodeStyle->addInputListener(Rc<InputListener>::create());
-	el->addTapRecognizer([this] (GestureTap tap) {
+	el = _nodeStyle->addComponent(Rc<InputListener>::create());
+	el->addTapRecognizer(
+			[this](GestureTap tap) {
 		if (tap.input->data.button == InputMouseButton::MouseLeft) {
 			auto style = _nodeStyle->getStyleTarget();
-			 style.nodeStyle = material2d::NodeStyle((toInt(style.nodeStyle) + 1) % (toInt(material2d::NodeStyle::Text) + 1));
+			style.nodeStyle = material2d::NodeStyle(
+					(toInt(style.nodeStyle) + 1) % (toInt(material2d::NodeStyle::Text) + 1));
 			_nodeStyle->setStyle(move(style), NODE_UPDATE_TIME);
 		} else {
 			auto style = _nodeStyle->getStyleTarget();
-			style.activityState = material2d::ActivityState((toInt(style.activityState) + 1) % (toInt(material2d::ActivityState::Pressed) + 1));
+			style.activityState = material2d::ActivityState((toInt(style.activityState) + 1)
+					% (toInt(material2d::ActivityState::Pressed) + 1));
 			_nodeStyle->setStyle(move(style), NODE_UPDATE_TIME);
 		}
 
 		sendEventForNode(_nodeStyle, 5, NODE_UPDATE_TIME);
 
 		return true;
-	}, InputListener::makeButtonMask({InputMouseButton::MouseLeft, InputMouseButton::MouseRight}), 1);
+	}, InputListener::makeButtonMask({InputMouseButton::MouseLeft, InputMouseButton::MouseRight}),
+			1);
 
 	scheduleUpdate();
 
@@ -188,39 +213,24 @@ void TestMaterialNodes::handleContentSizeDirty() {
 	sendEventForNode(_nodeStyle, 5, 0.0f);
 }
 
-void TestMaterialNodes::update(const UpdateTime &time) {
-
-}
+void TestMaterialNodes::update(const UpdateTime &time) { }
 
 void TestMaterialNodes::sendEventForNode(material2d::Surface *surface, uint32_t id, float d) {
-	Vector<InputEventData> events {
-		InputEventData({
-			id,
-			InputEventName::Begin,
-			InputMouseButton::Touch,
-			InputModifier::None,
-			float(surface->getPosition().x),
-			float(surface->getPosition().y)
-		}),
-		InputEventData({
-			id,
-			InputEventName::End,
-			InputMouseButton::Touch,
-			InputModifier::None,
-			float(surface->getPosition().x),
-			float(surface->getPosition().y)
-		})
-	};
+	Vector<InputEventData> events{
+		InputEventData({id, InputEventName::Begin, InputMouseButton::Touch, InputModifier::None,
+			float(surface->getPosition().x), float(surface->getPosition().y)}),
+		InputEventData({id, InputEventName::End, InputMouseButton::Touch, InputModifier::None,
+			float(surface->getPosition().x), float(surface->getPosition().y)})};
 
 	if (d == 0.0f) {
 		auto v = _director->getView();
 		v->handleInputEvents(sp::move(events));
 	} else {
-		runAction(Rc<Sequence>::create(d, [this, events = sp::move(events)] () mutable {
+		runAction(Rc<Sequence>::create(d, [this, events = sp::move(events)]() mutable {
 			auto v = _director->getView();
 			v->handleInputEvents(sp::move(events));
 		}));
 	}
 }
 
-}
+} // namespace stappler::xenolith::app
