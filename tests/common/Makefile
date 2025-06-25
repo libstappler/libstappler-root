@@ -28,6 +28,8 @@ LOCAL_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 LOCAL_OUTDIR := stappler-build
 LOCAL_EXECUTABLE := testapp
 
+LOCAL_SHARED_DEPS ?= 1
+
 LOCAL_MODULES_PATHS = \
 	core/stappler-modules.mk \
 	xenolith/xenolith-modules.mk \
@@ -49,10 +51,9 @@ LOCAL_MODULES := \
 
 LOCAL_MODULES_OPTIONAL := \
 	stappler_crypto_gnutls \
-	stappler_crypto_mbedtls \
 	stappler_pug \
-	stappler_webserver_webserver \
-	stappler_wasm
+	stappler_webserver_webserver
+
 
 ifndef XWIN
 LOCAL_MODULES += \
@@ -67,8 +68,6 @@ endif
 
 LOCAL_ROOT = .
 
-SHADERNN_DIR := ../../xenolith/utils/shadernn
-
 LOCAL_SRCS_DIRS :=  src
 LOCAL_SRCS_OBJS := app.wit
 
@@ -76,11 +75,14 @@ LOCAL_INCLUDES_DIRS := src
 LOCAL_INCLUDES_OBJS :=
 
 ifndef XWIN
-LOCAL_SRCS_DIRS += $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests xenolith web
-LOCAL_INCLUDES_DIRS += $(SHADERNN_DIR)/src $(SHADERNN_DIR)/tests xenolith
+LOCAL_SRCS_DIRS += xenolith web
+LOCAL_INCLUDES_DIRS += xenolith
 endif
 
 LOCAL_MAIN := main.cpp
+
+ifneq ($(LOCAL_SHARED_DEPS),1)
+LOCAL_MODULES_OPTIONAL += stappler_crypto_mbedtls stappler_wasm
 
 ifdef SHARED_PREFIX
 $(info SHARED_ROOT: $(SHARED_PREFIX))
@@ -88,6 +90,7 @@ LOCAL_LDFLAGS := -lpng
 else
 LOCAL_WASM_MODULE := app.wasm
 LOCAL_WASM_DIRS := wasm
+endif
 endif
 
 SHADER_WORK_GROUP_X = 4

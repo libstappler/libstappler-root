@@ -174,14 +174,12 @@ protected:
 bool StorageTestComponentContainer::init() { return ComponentContainer::init("UtilsStorageTest"); }
 
 void StorageTestComponentContainer::handleStorageInit(storage::ComponentLoader &loader) {
-	std::cout << "handleStorageInit\n";
 	ComponentContainer::handleStorageInit(loader);
 	_component = new (std::nothrow) StorageTestComponent(loader);
 }
 void StorageTestComponentContainer::handleStorageDisposed(const db::Transaction &t) {
 	_component = nullptr;
 	ComponentContainer::handleStorageDisposed(t);
-	std::cout << "handleStorageDisposed\n";
 }
 
 void StorageTestComponentContainer::handleComponentsLoaded(const storage::Server &serv) {
@@ -211,7 +209,6 @@ void StorageTestComponentContainer::handleComponentsLoaded(const storage::Server
 }
 
 void StorageTestComponentContainer::handleComponentsUnloaded(const storage::Server &serv) {
-	std::cout << "handleComponentsUnloaded\n";
 	ComponentContainer::handleComponentsUnloaded(serv);
 }
 

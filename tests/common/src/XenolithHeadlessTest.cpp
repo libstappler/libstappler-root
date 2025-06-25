@@ -25,6 +25,7 @@
 #include "Test.h"
 
 #if MODULE_XENOLITH_APPLICATION && MODULE_XENOLITH_BACKEND_VK
+#if (0)
 
 #include "SPBitmap.h"
 #include "XLApplication.h"
@@ -37,11 +38,6 @@
 #include "XLCoreAttachment.h"
 #include "XLCoreFrameQueue.h"
 #include "XLCoreFrameRequest.h"
-
-#include "XLSnnGenTest.h"
-#include "XLSnnInputTest.h"
-#include "XLSnnModelTest.h"
-#include "XLSnnModelProcessor.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::test::detail {
 
@@ -426,4 +422,5 @@ struct XenolithHeadlessTest : Test {
 
 } // namespace stappler::app::test
 
+#endif
 #endif

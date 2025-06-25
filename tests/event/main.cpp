@@ -35,32 +35,23 @@ namespace STAPPLER_VERSIONIZED stappler::app {
 
 using namespace mem_std;
 
-static constexpr auto HELP_STRING =
-R"(eventtest <options> [<action>])";
+static constexpr auto HELP_STRING = R"(eventtest <options> [<action>])";
 
 // Опции для аргументов командной строки
-static CommandLineParser<Value> CommandLine({
-	CommandLineOption<Value> {
-		.patterns = {
-			"-v", "--verbose"
-		},
-		.description = "Produce more verbose output",
-		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
-			target.setBool(true, "verbose");
-			return true;
-		}
-	},
-	CommandLineOption<Value> {
-		.patterns = {
-			"-h", "--help"
-		},
-		.description = StringView("Show help message and exit"),
-		.callback = [] (Value &target, StringView pattern, SpanView<StringView> args) -> bool {
-			target.setBool(true, "help");
-			return true;
-		}
-	}
-});
+static CommandLineParser<Value> CommandLine(
+		{CommandLineOption<Value>{.patterns = {"-v", "--verbose"},
+			 .description = "Produce more verbose output",
+			 .callback = [](Value &target, StringView pattern, SpanView<StringView> args) -> bool {
+				 target.setBool(true, "verbose");
+				 return true;
+			 }},
+			CommandLineOption<Value>{.patterns = {"-h", "--help"},
+				.description = StringView("Show help message and exit"),
+				.callback = [](Value &target, StringView pattern,
+									SpanView<StringView> args) -> bool {
+					target.setBool(true, "help");
+					return true;
+				}}});
 
 
 SP_EXTERN_C int main(int argc, const char *argv[]) {
@@ -69,18 +60,15 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	Value opts;
 	Vector<StringView> args;
 
-	if (!CommandLine.parse(opts, argc, argv, [&] (Value &, StringView arg) {
-		args.emplace_back(arg);
-	})) {
+	if (!CommandLine.parse(opts, argc, argv,
+				[&](Value &, StringView arg) { args.emplace_back(arg); })) {
 		std::cerr << "Fail to parse command line arguments\n";
 		return -1;
 	}
 
 	if (opts.getBool("help")) {
 		std::cout << HELP_STRING << "\n";
-		CommandLine.describe([&] (StringView str) {
-			std::cout << str;
-		});
+		CommandLine.describe([&](StringView str) { std::cout << str; });
 		return 0;
 	}
 
@@ -89,26 +77,25 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		std::cerr << " Options: " << stappler::data::EncodeFormat::Pretty << opts << "\n";
 		if (!args.empty()) {
 			std::cerr << " Arguments: \n";
-			for (auto &it : args) {
-				std::cerr << "\t" << it << "\n";
-			}
+			for (auto &it : args) { std::cerr << "\t" << it << "\n"; }
 		}
 	}
 
-	return perform_main([&] () -> int {
+	return perform_main([&]() -> int {
 		auto looper = event::Looper::acquire();
 		if (!looper) {
 			return -1;
 		}
-	
+
 		auto c = platform::clock();
-	
-		auto handle = looper->schedule(TimeInterval::seconds(10), [c] (event::Handle *, bool success) {
+
+		auto handle =
+				looper->schedule(TimeInterval::seconds(10), [c](event::Handle *, bool success) {
 			auto t = platform::clock() - c;
-			std::cout << platform::clock(ClockType::Realtime) - c << " " << t / 1000000 << "\n";
+			std::cout << platform::clock(ClockType::Realtime) - c << " " << t / 1'000'000 << "\n";
 			log::debug("App", "Fn timer: ", success);
 		});
-	
+
 		/*(void)looper->scheduleTimer(event::TimerInfo{
 			.completion = event::TimerInfo::Completion::create<void>(handle.get(),
 					[] (void *data, event::TimerHandle *self, uint32_t value, Status status) {
@@ -130,55 +117,47 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			.interval = TimeInterval::seconds(1),
 			.count = 100,
 		});*/
-	
+
 		(void)looper->scheduleTimer(event::TimerInfo{
 			.completion = event::TimerInfo::Completion::create<void>(nullptr,
-					[] (void *data, event::TimerHandle *self, uint32_t value, Status status) {
-				log::debug("App", "Timer2: ", value, " ", status);
-			}),
+					[](void *data, event::TimerHandle *self, uint32_t value, Status status) {
+			log::debug("App", "Timer2: ", value, " ", status);
+		}),
 			.interval = TimeInterval::seconds(1),
 			.count = 50,
 		});
-	
-		std::thread thread([] (event::Looper *looper) {
+
+		std::thread thread([](event::Looper *looper) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			looper->performOnThread([] {
-				log::debug("App", "From thread");
-			}, nullptr);
+			looper->performOnThread([] { log::debug("App", "From thread"); }, nullptr);
 			std::this_thread::sleep_for(std::chrono::milliseconds(500));
-			looper->performOnThread([] {
-				log::debug("App", "From thread");
-			}, nullptr);
+			looper->performOnThread([] { log::debug("App", "From thread"); }, nullptr);
 		}, looper);
-	
-		std::thread thread2([] (event::Looper *looper) {
+
+		std::thread thread2([](event::Looper *looper) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			looper->performOnThread([] {
-				log::debug("App", "From thread2");
-			}, nullptr);
+			looper->performOnThread([] { log::debug("App", "From thread2"); }, nullptr);
 			std::this_thread::sleep_for(std::chrono::milliseconds(500));
-			looper->performOnThread([] {
-				log::debug("App", "From thread2");
-			}, nullptr);
+			looper->performOnThread([] { log::debug("App", "From thread2"); }, nullptr);
 		}, looper);
-	
+
 		auto status = looper->run();
-	
+
 		std::cout << "Wakeup: " << status << "\n";
-	
+
 		status = looper->run();
-	
+
 		thread.join();
 		thread2.join();
-	
+
 		struct AppData {
 			uint32_t timerTicks = 0;
 			Rc<event::TimerHandle> timer1;
 			Rc<event::TimerHandle> timer2;
 			Rc<event::QueueRef> queue;
-			Rc<event::DirHandle> dir;
+			/*Rc<event::DirHandle> dir;
 			Rc<event::DirHandle> dir2;
-			Rc<event::StatHandle> stat;
+			Rc<event::StatHandle> stat;*/
 			Rc<event::ThreadHandle> thread;
 		};
 
@@ -198,7 +177,6 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			.timeout = TimeInterval::seconds(5),
 			.count = uint32_t(10),
 		});*/
-
 
 
 		/*data.dir = data.queue->openDir(event::OpenDirInfo{
@@ -244,4 +222,4 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	});
 }
 
-}
+} // namespace stappler::app
