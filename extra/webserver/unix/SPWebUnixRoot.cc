@@ -47,13 +47,11 @@ bool UnixRoot::init(Config &&config) {
 
 		for (auto &it : config.hosts) {
 			auto p = pool::create(_rootPool);
-			pool::push(p);
+			memory::pool::perform([&] {
+				auto host = new (p) UnixHostController(this, p, it);
 
-			auto host = new (p) UnixHostController(this, p, it);
-
-			_hosts.emplace(host->getHostInfo().hostname, host);
-
-			pool::pop();
+				_hosts.emplace(host->getHostInfo().hostname, host);
+			}, p);
 		}
 
 		initDatabases();

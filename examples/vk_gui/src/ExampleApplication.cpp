@@ -24,7 +24,7 @@
 #include "ExampleScene.h"
 
 namespace stappler::xenolith::app {
-
+/*
 ExampleApplication::~ExampleApplication() { }
 
 bool ExampleApplication::init(ApplicationInfo &&data) {
@@ -41,5 +41,5 @@ Rc<Scene> ExampleApplication::createSceneForView(vk::View &view, const core::Fra
 	// Создаём сцену с примером
 	return Rc<ExampleScene>::create(this, constraints);
 }
-
+*/
 }

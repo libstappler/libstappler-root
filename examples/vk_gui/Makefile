@@ -40,10 +40,10 @@ LOCAL_MODULES_PATHS = \
 
 # Используемые модули
 LOCAL_MODULES := \
-	xenolith_backend_vkgui \
+	xenolith_application \
 	xenolith_renderer_material2d \
-	xenolith_resources_assets \
-	stappler_backtrace
+
+#	xenolith_resources_assets
 
 LOCAL_SRCS_DIRS :=  src proj.android/src
 LOCAL_SRCS_OBJS :=

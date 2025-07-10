@@ -759,12 +759,13 @@ Server::Server(const mem_std::Value &params, const Callback<Rc<ServerScheme>(mem
 void Server::scheduleAyncDbTask(
 		const db::Callback<db::Function<void(const db::Transaction &)>(db::pool_t *)> &setupCb)
 		const {
-	memory::pool::push(_updatePool);
-	if (!asyncTasks) {
-		asyncTasks = new (_updatePool) db::Vector<db::Function<void(const db::Transaction &)>>;
-	}
-	asyncTasks->emplace_back(setupCb(_updatePool));
-	memory::pool::pop();
+
+	memory::pool::perform([&] {
+		if (!asyncTasks) {
+			asyncTasks = new (_updatePool) db::Vector<db::Function<void(const db::Transaction &)>>;
+		}
+		asyncTasks->emplace_back(setupCb(_updatePool));
+	}, _updatePool);
 }
 
 StringView Server::getDocumentRoot() const { return _documentRoot; }

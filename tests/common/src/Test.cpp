@@ -22,6 +22,8 @@ THE SOFTWARE.
 **/
 
 #include "SPCommon.h"
+#include "SPMemPoolApi.h"
+#include "SPMemPoolInterface.h"
 #include "Test.h"
 
 #include <random>
@@ -68,12 +70,8 @@ TestManager *TestManager::getInstance() {
 
 TestManager::TestManager() : rd(), gen32(rd()), gen64(rd()) { }
 
-void TestManager::insert(Test *t) {
-	tests.insert(t);
-}
-void TestManager::erase(Test *t) {
-	tests.erase(t);
-}
+void TestManager::insert(Test *t) { tests.insert(t); }
+void TestManager::erase(Test *t) { tests.erase(t); }
 
 int64_t TestManager::rand_int64_t() {
 	std::uniform_int_distribution<int64_t> dis;
@@ -148,61 +146,32 @@ bool TestManager::run(StringView str) const {
 
 void TestManager::list() const {
 	std::cout << "Available test:\n";
-	for (auto &it : tests) {
-		std::cout << "\t" << it->_name << "\n";
-	}
+	for (auto &it : tests) { std::cout << "\t" << it->_name << "\n"; }
 }
 
-bool Test::RunAll() {
-	return TestManager::getInstance()->runAll();
-}
+bool Test::RunAll() { return TestManager::getInstance()->runAll(); }
 
-bool Test::Run(StringView str) {
-	return TestManager::getInstance()->run(str);
-}
+bool Test::Run(StringView str) { return TestManager::getInstance()->run(str); }
 
-void Test::List() {
-	return TestManager::getInstance()->list();
-}
+void Test::List() { return TestManager::getInstance()->list(); }
 
 Test::Test(StringView name) : _name(name.str<Interface>()) {
 	TestManager::getInstance()->insert(this);
 }
 
-Test::~Test() {
-	TestManager::getInstance()->erase(this);
-}
+Test::~Test() { TestManager::getInstance()->erase(this); }
 
-int64_t Test::rand_int64_t() const {
-	return TestManager::getInstance()->rand_int64_t();
-}
-uint64_t Test::rand_uint64_t() const {
-	return TestManager::getInstance()->rand_uint64_t();
-}
+int64_t Test::rand_int64_t() const { return TestManager::getInstance()->rand_int64_t(); }
+uint64_t Test::rand_uint64_t() const { return TestManager::getInstance()->rand_uint64_t(); }
 
-int64_t Test::rand_int32_t() const {
-	return TestManager::getInstance()->rand_int32_t();
-}
-uint64_t Test::rand_uint32_t() const {
-	return TestManager::getInstance()->rand_uint32_t();
-}
+int64_t Test::rand_int32_t() const { return TestManager::getInstance()->rand_int32_t(); }
+uint64_t Test::rand_uint32_t() const { return TestManager::getInstance()->rand_uint32_t(); }
 
-float Test::rand_float() const {
-	return TestManager::getInstance()->rand_float();
-}
-double Test::rand_double() const {
-	return TestManager::getInstance()->rand_double();
-}
+float Test::rand_float() const { return TestManager::getInstance()->rand_float(); }
+double Test::rand_double() const { return TestManager::getInstance()->rand_double(); }
 
 bool MemPoolTest::run() {
-	pool_t *pool = memory::pool::create(memory::pool::acquire());
-
-	memory::pool::push(pool);
-	auto ret = run(pool);
-	memory::pool::pop();
-
-	memory::pool::destroy(pool);
-	return ret;
+	return memory::pool::perform_temporary([&](memory::pool_t *pool) { return run(pool); });
 }
 
-}
+} // namespace stappler::app::test

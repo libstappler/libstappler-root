@@ -22,6 +22,7 @@ THE SOFTWARE.
 **/
 
 #include "SPCommon.h"
+#include "SPMemPoolApi.h"
 
 #ifdef MODULE_STAPPLER_DATA
 
@@ -30,8 +31,7 @@ THE SOFTWARE.
 #include "SPData.h"
 #include "Test.h"
 
-static constexpr auto JsonNumberTestString(
-R"JsonString({"neg1":-1;"neg2": -123456})JsonString");
+static constexpr auto JsonNumberTestString(R"JsonString({"neg1":-1;"neg2": -123456})JsonString");
 
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
@@ -75,16 +75,14 @@ struct PoolJsonTest : MemPoolTest {
 			auto tmp = memory::pool::create(pool);
 			uint64_t v = 0;
 			for (size_t i = 0; i < ntests; ++i) {
-				memory::pool::clear(tmp);
-				memory::pool::push(tmp);
-				auto t = Time::now();
-				auto d = data::read<memory::PoolInterface>(data);
-				v += (Time::now() - t).toMicroseconds();
-				memory::pool::pop();
+				memory::pool::perform_clear([&] {
+					auto t = Time::now();
+					auto d = data::read<memory::PoolInterface>(data);
+					v += (Time::now() - t).toMicroseconds();
+				}, tmp);
 			}
-			stream << v / ntests << " "
-					 << memory::pool::get_allocated_bytes(pool) << " "
-					 << memory::pool::get_return_bytes(pool);
+			stream << v / ntests << " " << memory::pool::get_allocated_bytes(pool) << " "
+				   << memory::pool::get_return_bytes(pool);
 			return true;
 		});
 
@@ -134,6 +132,6 @@ struct JsonNumbersTest : Test {
 
 } JsonNumbersTest;
 
-}
+} // namespace stappler::app::test
 
 #endif

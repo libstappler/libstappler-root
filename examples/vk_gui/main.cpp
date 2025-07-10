@@ -23,41 +23,28 @@
 #include "SPMemPoolInterface.h"
 #include "XLCommon.h"
 #include "SPData.h"
-#include "ExampleApplication.h"
+#include "XLContext.h"
 
 namespace stappler::xenolith::app {
 
 static constexpr auto HELP_STRING(R"HelpString(testapp <options>)HelpString");
 
 SP_EXTERN_C int main(int argc, const char *argv[]) {
-	ApplicationInfo data = ApplicationInfo::readFromCommandLine(argc, argv);
+	ContextConfig config(argc, argv);
 
-	if (data.help) {
+	if (hasFlag(config.flags, CommonFlags::Help)) {
 		std::cout << HELP_STRING << "\n";
-		ApplicationInfo::CommandLine.describe([&](StringView str) { std::cout << str; });
+		ContextConfig::CommandLine.describe([&](StringView str) { std::cout << str; });
 		return 0;
 	}
 
-	if (data.verbose) {
+	if (hasFlag(config.flags, CommonFlags::Verbose)) {
 		std::cerr << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
-		std::cerr << " Options: " << stappler::data::EncodeFormat::Pretty << data.encode() << "\n";
+		std::cerr << " Options: " << stappler::data::EncodeFormat::Pretty << config.encode()
+				  << "\n";
 	}
 
-	// Выполняем все действия во временном пуле памяти
-	return perform_main([&] {
-		// Создаём приложение на основании данных командной строки
-		auto app = Rc<ExampleApplication>::create(move(data));
-
-		// Инициализируем приложение
-		app->run();
-
-		// Здесь может располагаться инициализация дополнительных инструментов ОС
-
-		// Ожидаем завершения работы приложения
-		app->waitStopped();
-
-		return 0;
-	});
+	return Rc<Context>::create(move(config))->run();
 }
 
 } // namespace stappler::xenolith::app

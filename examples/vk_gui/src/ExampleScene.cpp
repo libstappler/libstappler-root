@@ -26,7 +26,7 @@
 
 namespace stappler::xenolith::app {
 
-bool ExampleScene::init(Application *app, const core::FrameConstraints &constraints) {
+bool ExampleScene::init(AppThread *app, const core::FrameConstraints &constraints) {
 	// Инициализируем суперкласс
 	if (!Scene2d::init(app, constraints)) {
 		return false;

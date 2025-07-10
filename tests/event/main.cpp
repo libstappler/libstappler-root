@@ -81,17 +81,18 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		}
 	}
 
+	std::cout << sizeof(event::TimerHandle) << "\n";
+
 	return perform_main([&]() -> int {
 		auto looper = event::Looper::acquire();
 		if (!looper) {
 			return -1;
 		}
 
-		auto c = platform::clock();
+		auto c = platform::clock(ClockType::Realtime);
 
-		auto handle =
-				looper->schedule(TimeInterval::seconds(10), [c](event::Handle *, bool success) {
-			auto t = platform::clock() - c;
+		auto handle = looper->schedule(TimeInterval::seconds(5), [c](bool success) {
+			auto t = platform::clock(ClockType::Realtime) - c;
 			std::cout << platform::clock(ClockType::Realtime) - c << " " << t / 1'000'000 << "\n";
 			log::debug("App", "Fn timer: ", success);
 		});
@@ -122,6 +123,13 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 			.completion = event::TimerInfo::Completion::create<void>(nullptr,
 					[](void *data, event::TimerHandle *self, uint32_t value, Status status) {
 			log::debug("App", "Timer2: ", value, " ", status);
+
+			if (value > 2) {
+				self->reset(event::TimerInfo{
+					.interval = TimeInterval::seconds(2),
+					.count = 50,
+				});
+			}
 		}),
 			.interval = TimeInterval::seconds(1),
 			.count = 50,

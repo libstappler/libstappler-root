@@ -21,6 +21,7 @@
  **/
 
 #include "SPCommon.h"
+#include "SPMemPoolApi.h"
 #include "Test.h"
 
 #if MODULE_XENOLITH_CORE && MODULE_XENOLITH_BACKEND_VK
@@ -1529,19 +1530,16 @@ struct XenolithCoreTest : Test {
 	XenolithCoreTest() : Test("XenolithCoreTest") { }
 
 	virtual bool run() override {
-		auto mempool = memory::pool::create();
-		memory::pool::push(mempool);
+		memory::pool::perform_temporary([] {
+			testImageLoader();
 
-		testImageLoader();
+			XenolithCoreTest_core();
+			XenolithCoreTest_input();
+			XenolithCoreTest_action();
+			XenolithCoreTest_queue();
 
-		XenolithCoreTest_core();
-		XenolithCoreTest_input();
-		XenolithCoreTest_action();
-		XenolithCoreTest_queue();
-
-		xenolith::test::XenolithCoreTest_locale();
-
-		memory::pool::pop();
+			xenolith::test::XenolithCoreTest_locale();
+		});
 
 		return true;
 	}

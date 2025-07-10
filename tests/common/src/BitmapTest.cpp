@@ -23,6 +23,7 @@
 #include "SPCommon.h"
 #include "SPBitmap.h"
 #include "SPFilepath.h"
+#include "SPMemPoolApi.h"
 #include "Test.h"
 
 #include "png.h"
@@ -41,7 +42,7 @@ struct ReadState {
 	size_t offset = 0;
 };
 
-static bool isPng(const uint8_t * data, size_t dataLen) {
+static bool isPng(const uint8_t *data, size_t dataLen) {
 	if (dataLen <= 8) {
 		return false;
 	}
@@ -49,7 +50,8 @@ static bool isPng(const uint8_t * data, size_t dataLen) {
 	return memcmp(CUSTOM_SIGNATURE, data, sizeof(CUSTOM_SIGNATURE)) == 0;
 }
 
-static bool getPngImageSize(const io::Producer &file, StackBuffer<512> &data, uint32_t &width, uint32_t &height) {
+static bool getPngImageSize(const io::Producer &file, StackBuffer<512> &data, uint32_t &width,
+		uint32_t &height) {
 	if (isPng(data.data(), data.size()) && data.size() >= 24) {
 		auto reader = BytesViewNetwork(data.data() + 16, 8);
 
@@ -70,7 +72,8 @@ static void readDynamicData(png_structp pngPtr, png_bytep data, png_size_t lengt
 struct PngReadStruct {
 	~PngReadStruct() {
 		if (png_ptr || info_ptr) {
-			png_destroy_read_struct(png_ptr ? &png_ptr : nullptr, info_ptr ? &info_ptr : nullptr, NULL);
+			png_destroy_read_struct(png_ptr ? &png_ptr : nullptr, info_ptr ? &info_ptr : nullptr,
+					NULL);
 			png_ptr = nullptr;
 			info_ptr = nullptr;
 		}
@@ -101,7 +104,7 @@ struct PngReadStruct {
 
 		state.data = inputData;
 		state.offset = 0;
-		png_set_read_fn(png_ptr,(png_voidp)&state, readDynamicData);
+		png_set_read_fn(png_ptr, (png_voidp)&state, readDynamicData);
 
 #ifdef PNG_ARM_NEON_API_SUPPORTED
 		png_set_option(png_ptr, PNG_ARM_NEON, PNG_OPTION_ON);
@@ -145,7 +148,7 @@ struct PngReadStruct {
 		auto rowbytes = png_get_rowbytes(png_ptr, info_ptr);
 
 		if (color_type == PNG_COLOR_TYPE_GRAY) {
-			info.color = (info.color == PixelFormat::A8?PixelFormat::A8:PixelFormat::I8);
+			info.color = (info.color == PixelFormat::A8 ? PixelFormat::A8 : PixelFormat::I8);
 		} else if (color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
 			info.color = PixelFormat::IA88;
 		} else if (color_type == PNG_COLOR_TYPE_RGB) {
@@ -156,7 +159,8 @@ struct PngReadStruct {
 			info.width = 0;
 			info.height = 0;
 			info.stride = 0;
-			log::format(log::Error, "libpng", "unsupported color type: %u", (unsigned int)color_type);
+			log::format(log::Error, "libpng", "unsupported color type: %u",
+					(unsigned int)color_type);
 			return false;
 		}
 
@@ -185,7 +189,9 @@ struct PngReadStruct {
 
 		if (outputData.getStride) {
 			auto rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-			outputData.stride = max((uint32_t)outputData.getStride(outputData.target, outputData.color, outputData.width), (uint32_t)rowbytes);
+			outputData.stride = max((uint32_t)outputData.getStride(outputData.target,
+											outputData.color, outputData.width),
+					(uint32_t)rowbytes);
 		}
 
 		png_bytep row_pointers[outputData.height];
@@ -234,7 +240,7 @@ struct PngWriteStruct {
 			return;
 		}
 
-		info_ptr = png_create_info_struct (png_ptr);
+		info_ptr = png_create_info_struct(png_ptr);
 		if (info_ptr == nullptr) {
 			log::error("libpng", "fail to create info struct");
 			return;
@@ -271,7 +277,7 @@ struct PngWriteStruct {
 			return false;
 		}
 
-		if (setjmp (png_jmpbuf (png_ptr))) {
+		if (setjmp(png_jmpbuf(png_ptr))) {
 			log::error("libpng", "error in processing (setjmp return)");
 			return false;
 		}
@@ -283,40 +289,32 @@ struct PngWriteStruct {
 		int color_type = 0;
 		switch (state.color) {
 		case PixelFormat::A8:
-		case PixelFormat::I8:
-			color_type = PNG_COLOR_TYPE_GRAY;
-			break;
-		case PixelFormat::IA88:
-			color_type = PNG_COLOR_TYPE_GRAY_ALPHA;
-			break;
-		case PixelFormat::RGB888:
-			color_type = PNG_COLOR_TYPE_RGB;
-			break;
-		case PixelFormat::RGBA8888:
-			color_type = PNG_COLOR_TYPE_RGBA;
-			break;
-		default:
-			return false;
+		case PixelFormat::I8: color_type = PNG_COLOR_TYPE_GRAY; break;
+		case PixelFormat::IA88: color_type = PNG_COLOR_TYPE_GRAY_ALPHA; break;
+		case PixelFormat::RGB888: color_type = PNG_COLOR_TYPE_RGB; break;
+		case PixelFormat::RGBA8888: color_type = PNG_COLOR_TYPE_RGBA; break;
+		default: return false;
 		}
 
 		/* Set image attributes. */
-		png_set_IHDR (png_ptr, info_ptr, state.width, state.height, bit_depth,
-				color_type, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+		png_set_IHDR(png_ptr, info_ptr, state.width, state.height, bit_depth, color_type,
+				PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
 		/* Initialize rows of PNG. */
 		png_byte *row_pointers[state.height];
 		for (size_t i = 0; i < state.height; ++i) {
-			row_pointers[i] = (png_byte *)data + (invert ? state.stride * (state.height - i - 1) : state.stride * i);
+			row_pointers[i] = (png_byte *)data
+					+ (invert ? state.stride * (state.height - i - 1) : state.stride * i);
 		}
 
 		if (fp) {
-			png_init_io (png_ptr, fp);
+			png_init_io(png_ptr, fp);
 		} else {
 			png_set_write_fn(png_ptr, out, &writePngFn, nullptr);
 		}
 
-		png_set_rows (png_ptr, info_ptr, row_pointers);
-		png_write_png (png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+		png_set_rows(png_ptr, info_ptr, row_pointers);
+		png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
 		state.assign(state.target, CUSTOM_SIGNATURE, sizeof(CUSTOM_SIGNATURE));
 		return true;
 	}
@@ -332,7 +330,8 @@ static bool loadPng(const uint8_t *inputData, size_t size, BitmapWriter &outputD
 	return pngStruct.init(inputData, size) && pngStruct.load(outputData);
 }
 
-static bool savePng(const FileInfo &filename, const uint8_t *data, BitmapWriter &state, bool invert) {
+static bool savePng(const FileInfo &filename, const uint8_t *data, BitmapWriter &state,
+		bool invert) {
 	struct WriteData {
 		uint32_t offset = 0;
 		Bytes data;
@@ -343,10 +342,10 @@ static bool savePng(const FileInfo &filename, const uint8_t *data, BitmapWriter 
 	bitmap::BitmapWriter writer(state);
 	writer.target = &writeData;
 
-	writer.getStride = [] (void *, bitmap::PixelFormat fmt, uint32_t width) -> uint32_t {
+	writer.getStride = [](void *, bitmap::PixelFormat fmt, uint32_t width) -> uint32_t {
 		return uint32_t(width * bitmap::getBytesPerPixel(fmt));
 	};
-	writer.push = [] (void *ptr, const uint8_t *data, uint32_t size) {
+	writer.push = [](void *ptr, const uint8_t *data, uint32_t size) {
 		auto writeData = ((WriteData *)ptr);
 		if (writeData->data.size() < writeData->offset + size) {
 			writeData->data.resize(writeData->offset + size);
@@ -354,20 +353,20 @@ static bool savePng(const FileInfo &filename, const uint8_t *data, BitmapWriter 
 		memcpy(writeData->data.data() + writeData->offset, data, size);
 		writeData->offset += size;
 	};
-	writer.resize = [] (void *ptr, uint32_t size) {
+	writer.resize = [](void *ptr, uint32_t size) {
 		auto writeData = ((WriteData *)ptr);
 		writeData->data.resize(size);
 	};
-	writer.getData = [] (void *ptr, uint32_t location) {
+	writer.getData = [](void *ptr, uint32_t location) {
 		auto writeData = ((WriteData *)ptr);
 		return writeData->data.data() + location;
 	};
-	writer.assign = [] (void *ptr, const uint8_t *data, uint32_t size) {
+	writer.assign = [](void *ptr, const uint8_t *data, uint32_t size) {
 		auto writeData = ((WriteData *)ptr);
 		memcpy(writeData->data.data(), data, size);
 		writeData->offset = size;
 	};
-	writer.clear = [] (void *ptr) { };
+	writer.clear = [](void *ptr) { };
 
 	PngWriteStruct s(&writer);
 	s.write(data, writer, invert);
@@ -380,16 +379,16 @@ static bool writePng(const uint8_t *data, BitmapWriter &state, bool invert) {
 	return s.write(data, state, invert);
 }
 
-}
+} // namespace custom
 
-static bitmap::BitmapFormat s_custom = bitmap::BitmapFormat("PNG-Custom", "image/png", &custom::isPng, &custom::getPngImageSize
-		, &custom::infoPng, &custom::loadPng, &custom::writePng, &custom::savePng
-);
+static bitmap::BitmapFormat s_custom =
+		bitmap::BitmapFormat("PNG-Custom", "image/png", &custom::isPng, &custom::getPngImageSize,
+				&custom::infoPng, &custom::loadPng, &custom::writePng, &custom::savePng);
 
 struct BitmapTest : Test {
 	BitmapTest() : Test("BitmapTest") { }
 
-	virtual void testImage(const FileInfo & path) {
+	virtual void testImage(const FileInfo &path) {
 		auto data = filesystem::readIntoMemory<Interface>(path);
 
 		uint32_t w, h;
@@ -429,28 +428,28 @@ struct BitmapTest : Test {
 		bitmap::BitmapWriter writer;
 		writer.target = &writeData;
 
-		writer.getStride = [] (void *, bitmap::PixelFormat fmt, uint32_t width) -> uint32_t {
+		writer.getStride = [](void *, bitmap::PixelFormat fmt, uint32_t width) -> uint32_t {
 			return uint32_t(width * bitmap::getBytesPerPixel(fmt));
 		};
-		writer.push = [] (void *ptr, const uint8_t *data, uint32_t size) {
+		writer.push = [](void *ptr, const uint8_t *data, uint32_t size) {
 			auto writeData = ((WriteData *)ptr);
 			memcpy(writeData->data.data() + writeData->offset, data, size);
 			writeData->offset += size;
 		};
-		writer.resize = [] (void *ptr, uint32_t size) {
+		writer.resize = [](void *ptr, uint32_t size) {
 			auto writeData = ((WriteData *)ptr);
 			writeData->data.resize(size);
 		};
-		writer.getData = [] (void *ptr, uint32_t location) {
+		writer.getData = [](void *ptr, uint32_t location) {
 			auto writeData = ((WriteData *)ptr);
 			return writeData->data.data() + location;
 		};
-		writer.assign = [] (void *ptr, const uint8_t *data, uint32_t size) {
+		writer.assign = [](void *ptr, const uint8_t *data, uint32_t size) {
 			auto writeData = ((WriteData *)ptr);
 			memcpy(writeData->data.data(), data, size);
 			writeData->offset = size;
 		};
-		writer.clear = [] (void *ptr) { };
+		writer.clear = [](void *ptr) { };
 
 		if (info.format) {
 			bitmap::getMimeType(info.format->getName());
@@ -476,7 +475,7 @@ struct BitmapTest : Test {
 
 		bmp.save(bitmap::FileFormat::Png, png1);
 		bmp.save(s_custom.getName(), png2custom);
-		bmp.save(bitmap::FileFormat::Tiff,tiff1tmp);
+		bmp.save(bitmap::FileFormat::Tiff, tiff1tmp);
 
 		filesystem::remove(tiff1tmp);
 
@@ -606,17 +605,15 @@ struct BitmapTest : Test {
 		bmp2.convert(bitmap::PixelFormat::RGB888);
 		bmp2.convert(bitmap::PixelFormat::IA88);
 		bmp2.convert(bitmap::PixelFormat::IA88);
-		bmp2.updateStride([] (bitmap::PixelFormat fmt, uint32_t w) -> uint32_t {
-			return w * 4;
-		});
+		bmp2.updateStride([](bitmap::PixelFormat fmt, uint32_t w) -> uint32_t { return w * 4; });
 
 		imageData = filesystem::readIntoMemory<Interface>(png2custom);
 		bmp = Bitmap(imageData);
 
 		testImage(png2custom);
- 		testImage(svg1);
- 		testImage(svg2);
- 		testImage(svg3);
+		testImage(svg1);
+		testImage(svg2);
+		testImage(svg3);
 		testImage(png1);
 		testImage(png1gray);
 		testImage(png1alpha);
@@ -634,19 +631,14 @@ struct BitmapTest : Test {
 		testImage(tiff2);
 
 		auto tiffs = FileInfo("resources/tiff");
-		filesystem::ftw(tiffs, [] (const FileInfo &path, FileType) {
+		filesystem::ftw(tiffs, [](const FileInfo &path, FileType) {
 			std::cout << path << "\n";
 			uint32_t w, h;
 			bitmap::getImageSize(path, w, h);
 			return true;
 		});
 
-		auto p = memory::pool::create(memory::app_root_pool);
-		memory::pool::push(p);
-
-		runPoolTest();
-
-		memory::pool::pop();
+		memory::pool::perform_temporary([&] { runPoolTest(); });
 
 		_desc = stream.str();
 
@@ -654,4 +646,4 @@ struct BitmapTest : Test {
 	}
 } _BitmapTest;
 
-}
+} // namespace stappler::app::test

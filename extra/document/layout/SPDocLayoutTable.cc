@@ -57,7 +57,7 @@ void LayoutTable::addCol(const Node *group, const Node &node) {
 			colGroup = idx;
 			break;
 		}
-		++ idx;
+		++idx;
 	}
 
 	if (!init && group) {
@@ -86,7 +86,7 @@ void LayoutTable::addRow(const Node *group, const Node &node) {
 			rowGroup = idx;
 			break;
 		}
-		++ idx;
+		++idx;
 	}
 
 	if (!init) {
@@ -102,9 +102,7 @@ void LayoutTable::addRow(const Node *group, const Node &node) {
 }
 
 static uint16_t nextRowIndex(const LayoutTable::Row &row, uint16_t idx) {
-	while (idx < row.cells.size() && row.cells[idx] != nullptr) {
-		++ idx;
-	}
+	while (idx < row.cells.size() && row.cells[idx] != nullptr) { ++idx; }
 	return idx;
 }
 
@@ -119,9 +117,9 @@ void LayoutTable::processRow(const Row &row, size_t colsCount) {
 
 			cells.emplace_back(Cell{it, rowIndex, colIndex, rowSpan, colSpan});
 
-			for (uint16_t i = 0; i < colSpan; ++ i) {
+			for (uint16_t i = 0; i < colSpan; ++i) {
 				if (colIndex + i < colsCount) {
-					for (uint16_t j = 0; j < rowSpan; ++ j) {
+					for (uint16_t j = 0; j < rowSpan; ++j) {
 						if (rowIndex + j < rowsCount) {
 							rows[rowIndex + j].cells[colIndex + i] = &cells.back();
 							cols[colIndex + i].cells[rowIndex + j] = &cells.back();
@@ -142,9 +140,9 @@ uint32_t LayoutTable::makeCells(NodeId nodeId) {
 
 	auto colsAttr = layout->node.node->getAttribute("cols");
 	if (!colsAttr.empty()) {
-		colsAttr.readInteger().unwrap([&] (int64_t colNum) {
+		colsAttr.readInteger().unwrap([&](int64_t colNum) {
 			if (colNum > 0 && colNum <= 32) {
-				for (size_t i = cols.size(); i < size_t(colNum); ++ i) {
+				for (size_t i = cols.size(); i < size_t(colNum); ++i) {
 					cols.emplace_back(Col{uint16_t(cols.size()), maxOf<uint16_t>(), nullptr});
 				}
 			}
@@ -166,9 +164,9 @@ uint32_t LayoutTable::makeCells(NodeId nodeId) {
 
 	if (colsCount != cols.size()) {
 		auto extra = colsCount - cols.size();
-		for (size_t i = 0; i < extra; ++ i) {
+		for (size_t i = 0; i < extra; ++i) {
 			cols.emplace_back(Col{uint16_t(cols.size()), maxOf<uint16_t>(), nullptr});
-			++ phantomColsCount;
+			++phantomColsCount;
 		}
 	}
 
@@ -185,7 +183,7 @@ uint32_t LayoutTable::makeCells(NodeId nodeId) {
 			phantomCols.emplace_back("col");
 			phantomCols.back().setNodeId(nodeId);
 			it.node = &phantomCols.back();
-			++ nodeId;
+			++nodeId;
 		}
 	}
 
@@ -195,19 +193,15 @@ uint32_t LayoutTable::makeCells(NodeId nodeId) {
 		it.cells.resize(colsCount, nullptr);
 		for (auto &iit : it.node->getNodes()) {
 			if (iit->getHtmlName() == "td" || iit->getHtmlName() == "th") {
-				++ cellsCount;
+				++cellsCount;
 			}
 		}
 	}
 
-	for (auto &it : cols) {
-		it.cells.resize(rows.size(), nullptr);
-	}
+	for (auto &it : cols) { it.cells.resize(rows.size(), nullptr); }
 
 	cells.reserve(cellsCount);
-	for (auto &it : rows) {
-		processRow(it, colsCount);
-	}
+	for (auto &it : rows) { processRow(it, colsCount); }
 
 	return phantomColsCount;
 }
@@ -283,7 +277,9 @@ bool LayoutTable::allocateSpace() {
 	for (auto &col : cols) {
 		if (isnan(col.info->width)) {
 			col.xPos = xPos;
-			auto space = (maxExtraSpace != 0.0f) ? ((col.info->maxWidth - col.info->minWidth) / maxExtraSpace) * extraSpace : 0.0f;
+			auto space = (maxExtraSpace != 0.0f)
+					? ((col.info->maxWidth - col.info->minWidth) / maxExtraSpace) * extraSpace
+					: 0.0f;
 			col.width = col.info->width = col.info->minWidth + space;
 			xPos += col.width;
 		}
@@ -293,7 +289,7 @@ bool LayoutTable::allocateSpace() {
 	for (auto &cell : cells) {
 		if (isnan(cell.info->width)) {
 			cell.info->width = 0.0f;
-			for (size_t i = cell.colIndex; i < cell.colIndex + cell.colSpan; ++ i) {
+			for (size_t i = cell.colIndex; i < cell.colIndex + cell.colSpan; ++i) {
 				cell.info->width += cols[i].info->width;
 			}
 			// log::format("Col", "%d %d %f", cell.colIndex, cell.rowIndex, cell.info->width);
@@ -303,7 +299,8 @@ bool LayoutTable::allocateSpace() {
 	return true;
 }
 
-static void Table_processTableChildsNodes(LayoutTable &table, const mem_pool::Vector<Node *> &nodes) {
+static void Table_processTableChildsNodes(LayoutTable &table,
+		const mem_pool::Vector<Node *> &nodes) {
 	for (auto &it : nodes) {
 		if (it->getHtmlName() == "caption") {
 			table.caption = it;
@@ -340,7 +337,8 @@ static void Table_processTableChildsNodes(LayoutTable &table, const mem_pool::Ve
 }
 
 template <typename PushCallback, typename PopCallback, typename CompileCallback>
-static void Table_processTableChildsStyle(const StyleInterface *iface, LayoutTable &table, const PushCallback &push, const PopCallback &pop, const CompileCallback &compile) {
+static void Table_processTableChildsStyle(const StyleInterface *iface, LayoutTable &table,
+		const PushCallback &push, const PopCallback &pop, const CompileCallback &compile) {
 	uint16_t tmpColGroup = maxOf<uint16_t>();
 	for (auto &col : table.cols) {
 		if (col.group != tmpColGroup) {
@@ -414,27 +412,33 @@ static void Table_processTableChildsStyle(const StyleInterface *iface, LayoutTab
 }
 
 template <typename Callback>
-static void Table_prepareTableCell(const LayoutEngine *b, const LayoutTable &table, LayoutTable::Col &col, LayoutTable::Cell &cell, const MediaParameters &media, const Callback &cb) {
+static void Table_prepareTableCell(const LayoutEngine *b, const LayoutTable &table,
+		LayoutTable::Col &col, LayoutTable::Cell &cell, const MediaParameters &media,
+		const Callback &cb) {
 	cell.info->pos.padding.right = media.computeValueAuto(cell.info->node.block.paddingRight, 0.0f);
 	cell.info->pos.padding.left = media.computeValueAuto(cell.info->node.block.paddingLeft, 0.0f);
 
 	if (cell.info->node.block.width.isFixed()) {
 		// fixed width - no need to calculate column width
-		cell.info->minWidth = cell.info->maxWidth = cell.info->width = media.computeValueStrong(cell.info->node.block.width, 0.0f);
+		cell.info->minWidth = cell.info->maxWidth = cell.info->width =
+				media.computeValueStrong(cell.info->node.block.width, 0.0f);
 		return;
 	} else if (!isnan(table.width) && cell.info->node.block.width.metric == Metric::Percent) {
-		cell.info->minWidth = cell.info->maxWidth = cell.info->width = table.width * cell.info->node.block.width.value;
+		cell.info->minWidth = cell.info->maxWidth = cell.info->width =
+				table.width * cell.info->node.block.width.value;
 		return;
 	} else {
 		if (cell.info->node.block.minWidth.isFixed()) {
 			cell.info->minWidth = media.computeValueStrong(cell.info->node.block.minWidth, 0.0f);
-		} else if (!isnan(table.width) && cell.info->node.block.minWidth.metric == Metric::Percent) {
+		} else if (!isnan(table.width)
+				&& cell.info->node.block.minWidth.metric == Metric::Percent) {
 			cell.info->minWidth = table.width * cell.info->node.block.minWidth.value;
 		}
 
 		if (cell.info->node.block.maxWidth.isFixed()) {
 			cell.info->maxWidth = media.computeValueStrong(cell.info->node.block.maxWidth, 0.0f);
-		} else if (!isnan(table.width) && cell.info->node.block.maxWidth.metric == Metric::Percent) {
+		} else if (!isnan(table.width)
+				&& cell.info->node.block.maxWidth.metric == Metric::Percent) {
 			cell.info->maxWidth = table.width * cell.info->node.block.maxWidth.value;
 		}
 
@@ -442,7 +446,8 @@ static void Table_prepareTableCell(const LayoutEngine *b, const LayoutTable &tab
 	}
 }
 
-static void Table_processTableColSpan(LayoutTable &table, const mem_pool::Vector<LayoutTable::Cell *> &vec) {
+static void Table_processTableColSpan(LayoutTable &table,
+		const mem_pool::Vector<LayoutTable::Cell *> &vec) {
 	for (auto &cell : vec) {
 		float minCellWidth = 0.0f;
 		float maxCellWidth = 0.0f;
@@ -459,18 +464,21 @@ static void Table_processTableColSpan(LayoutTable &table, const mem_pool::Vector
 		};
 
 		bool allFixed = true;
-		mem_pool::Vector<ColInfo> cols; cols.reserve(cell->colSpan);
+		mem_pool::Vector<ColInfo> cols;
+		cols.reserve(cell->colSpan);
 
-		for (size_t i = 0; i < cell->colSpan; ++ i) {
+		for (size_t i = 0; i < cell->colSpan; ++i) {
 			auto minW = table.cols[cell->colIndex + i].info->minWidth;
 			auto maxW = table.cols[cell->colIndex + i].info->maxWidth;
 
 			if (!isnan(table.cols[cell->colIndex + i].info->width)) {
 				float f = table.cols[cell->colIndex + i].info->width;
 				fixedWidth += f;
-				cols.emplace_back(ColInfo{&table.cols[cell->colIndex + i], f, f, true, cell->colIndex + i});
+				cols.emplace_back(
+						ColInfo{&table.cols[cell->colIndex + i], f, f, true, cell->colIndex + i});
 			} else {
-				cols.emplace_back(ColInfo{&table.cols[cell->colIndex + i], minW, maxW, false, cell->colIndex + i});
+				cols.emplace_back(ColInfo{&table.cols[cell->colIndex + i], minW, maxW, false,
+					cell->colIndex + i});
 				allFixed = false;
 			}
 
@@ -519,16 +527,18 @@ static void Table_processTableColSpan(LayoutTable &table, const mem_pool::Vector
 		}
 
 		if (isnan(minCellWidth) || isnan(maxCellWidth)) {
-			float minW = 0.0f; size_t minWeightCount = 0;
-			float maxW = 0.0f; size_t maxWeightCount = 0;
+			float minW = 0.0f;
+			size_t minWeightCount = 0;
+			float maxW = 0.0f;
+			size_t maxWeightCount = 0;
 			for (auto &it : cols) {
 				if (!isnan(it.colMin)) {
 					minW = std::max(minW, it.colMin);
-					++ minWeightCount;
+					++minWeightCount;
 				}
 				if (!isnan(it.colMax)) {
 					maxW = std::max(maxW, it.colMax);
-					++ maxWeightCount;
+					++maxWeightCount;
 				}
 			}
 
@@ -545,8 +555,12 @@ static void Table_processTableColSpan(LayoutTable &table, const mem_pool::Vector
 				}
 			}
 
-			const float minMod = (minWeightCount > 0) ? (minWeightSum / float(minWeightCount)) / float(cell->colSpan) : 1.0f;
-			const float maxMod = (maxWeightCount > 0) ? (maxWeightSum / float(maxWeightCount)) / float(cell->colSpan) : 1.0f;
+			const float minMod = (minWeightCount > 0)
+					? (minWeightSum / float(minWeightCount)) / float(cell->colSpan)
+					: 1.0f;
+			const float maxMod = (maxWeightCount > 0)
+					? (maxWeightSum / float(maxWeightCount)) / float(cell->colSpan)
+					: 1.0f;
 			for (auto &it : cols) {
 				if (!isnan(it.colMin)) {
 					it.minWeight *= minMod;
@@ -563,7 +577,8 @@ static void Table_processTableColSpan(LayoutTable &table, const mem_pool::Vector
 				// has undefined min-width
 				float weightToAllocate = (1.0f - minWeightSum) / (cell->colSpan - minWeightCount);
 				for (auto &it : cols) {
-					const float w = isnan(it.colMin) ? cell->info->minWidth * weightToAllocate : cell->info->minWidth * it.minWeight;
+					const float w = isnan(it.colMin) ? cell->info->minWidth * weightToAllocate
+													 : cell->info->minWidth * it.minWeight;
 					if (isnan(it.col->info->minWidth) || it.col->info->minWidth < w) {
 						it.col->info->minWidth = w;
 					}
@@ -574,7 +589,8 @@ static void Table_processTableColSpan(LayoutTable &table, const mem_pool::Vector
 				// has undefined max-width
 				float weightToAllocate = (1.0f - maxWeightSum) / (cell->colSpan - maxWeightCount);
 				for (auto &it : cols) {
-					const float w = isnan(it.colMax) ? cell->info->maxWidth * weightToAllocate : cell->info->maxWidth * it.maxWeight;
+					const float w = isnan(it.colMax) ? cell->info->maxWidth * weightToAllocate
+													 : cell->info->maxWidth * it.maxWeight;
 					if (isnan(it.col->info->maxWidth) || it.col->info->maxWidth < w) {
 						it.col->info->maxWidth = w;
 					}
@@ -593,16 +609,15 @@ void LayoutTable::processTableChilds() {
 
 	// compile styles
 	Table_processTableChildsStyle(layout->engine, *this,
-		[this] (const Node *node) { layout->engine->pushNode(node);},
-		[this] { layout->engine->popNode(); },
-		[this] (const Node *node) { return layout->engine->compileStyle(*node); }
-	);
+			[this](const Node *node) { layout->engine->pushNode(node); }, [this] {
+		layout->engine->popNode();
+	}, [this](const Node *node) { return layout->engine->compileStyle(*node); });
 
 	if (layout->node.block.width.isFixed()) {
 		width = layout->pos.size.width;
 	}
 
-	auto calcSizes = [&] (float scale) {
+	auto calcSizes = [&](float scale) {
 		auto media = _media;
 		media.fontScale *= scale;
 
@@ -621,21 +636,27 @@ void LayoutTable::processTableChilds() {
 			if (col.info->node.node) {
 				if (col.info->node.block.width.isFixed()) {
 					// fixed width - no need to calculate column width
-					col.info->maxWidth = col.info->minWidth = col.info->width = media.computeValueStrong(col.info->node.block.width, 0.0f);
+					col.info->maxWidth = col.info->minWidth = col.info->width =
+							media.computeValueStrong(col.info->node.block.width, 0.0f);
 					continue;
 				} else if (!isnan(width) && col.info->node.block.width.metric == Metric::Percent) {
-					col.info->maxWidth = col.info->minWidth = col.info->width = width * col.info->node.block.width.value;
+					col.info->maxWidth = col.info->minWidth = col.info->width =
+							width * col.info->node.block.width.value;
 				}
 
 				if (col.info->node.block.minWidth.isFixed()) {
-					col.info->minWidth = media.computeValueStrong(col.info->node.block.minWidth, 0.0f);
-				} else if (!isnan(width) && col.info->node.block.minWidth.metric == Metric::Percent) {
+					col.info->minWidth =
+							media.computeValueStrong(col.info->node.block.minWidth, 0.0f);
+				} else if (!isnan(width)
+						&& col.info->node.block.minWidth.metric == Metric::Percent) {
 					col.info->minWidth = width * col.info->node.block.minWidth.value;
 				}
 
 				if (col.info->node.block.maxWidth.isFixed()) {
-					col.info->maxWidth = media.computeValueStrong(col.info->node.block.maxWidth, 0.0f);
-				} else if (!isnan(width) && col.info->node.block.maxWidth.metric == Metric::Percent) {
+					col.info->maxWidth =
+							media.computeValueStrong(col.info->node.block.maxWidth, 0.0f);
+				} else if (!isnan(width)
+						&& col.info->node.block.maxWidth.metric == Metric::Percent) {
 					col.info->maxWidth = width * col.info->node.block.maxWidth.value;
 				}
 			}
@@ -647,14 +668,19 @@ void LayoutTable::processTableChilds() {
 				if (!cell || !cell->node) {
 					continue;
 				}
-				Table_prepareTableCell(layout->engine, *this, col, *cell, media, [&] (LayoutTable::Cell &cell) {
+				Table_prepareTableCell(layout->engine, *this, col, *cell, media,
+						[&](LayoutTable::Cell &cell) {
 					auto &row = rows[cell.rowIndex];
 					layout->engine->pushNode(rowGroups[row.group].node);
 					layout->engine->pushNode(row.node);
 					layout->engine->pushNode(cell.node);
 
-					auto minW = ceilf(LayoutBlock::requestWidth(layout->engine, cell.info->node, LayoutBlock::ContentRequest::Minimize, media)) + 1.0f;
-					auto maxW = ceilf(LayoutBlock::requestWidth(layout->engine, cell.info->node, LayoutBlock::ContentRequest::Maximize, media)) + 1.0f;
+					auto minW = ceilf(LayoutBlock::requestWidth(layout->engine, cell.info->node,
+										LayoutBlock::ContentRequest::Minimize, media))
+							+ 1.0f;
+					auto maxW = ceilf(LayoutBlock::requestWidth(layout->engine, cell.info->node,
+										LayoutBlock::ContentRequest::Maximize, media))
+							+ 1.0f;
 
 					auto minWidth = minW + cell.info->pos.padding.horizontal();
 					auto maxWidth = maxW + cell.info->pos.padding.horizontal();
@@ -677,14 +703,17 @@ void LayoutTable::processTableChilds() {
 				});
 				if (cell->colSpan == 1) {
 					if (!isnan(cell->info->width)) {
-						col.info->maxWidth = col.info->minWidth = col.info->width = cell->info->width;
+						col.info->maxWidth = col.info->minWidth = col.info->width =
+								cell->info->width;
 						fixed = true;
 						break;
 					} else {
-						if (isnan(col.info->minWidth) || col.info->minWidth < cell->info->minWidth) {
+						if (isnan(col.info->minWidth)
+								|| col.info->minWidth < cell->info->minWidth) {
 							col.info->minWidth = cell->info->minWidth;
 						}
-						if (isnan(col.info->maxWidth) || col.info->maxWidth < cell->info->maxWidth) {
+						if (isnan(col.info->maxWidth)
+								|| col.info->maxWidth < cell->info->maxWidth) {
 							col.info->maxWidth = cell->info->maxWidth;
 						}
 					}
@@ -706,16 +735,19 @@ void LayoutTable::processTableChilds() {
 	size_t limit = 4;
 	do {
 		calcSizes(widthScale);
-		-- limit;
+		--limit;
 	} while (!allocateSpace() && limit > 0);
 }
 
-static void Table_procesRowCell(LayoutTable &table, LayoutTable::Row &row, LayoutTable::Cell &cell, LayoutBlock &newL, float xPos) {
+static void Table_procesRowCell(LayoutTable &table, LayoutTable::Row &row, LayoutTable::Cell &cell,
+		LayoutBlock &newL, float xPos) {
 	auto &parentPos = table.layout->pos.position;
 	auto &_media = table.layout->engine->getMedia();
 	float height = _media.computeValueStrong(newL.node.block.height, table.layout->pos.size.height);
-	const float minHeight = _media.computeValueStrong(newL.node.block.minHeight, table.layout->pos.size.height);
-	const float maxHeight = _media.computeValueStrong(newL.node.block.maxHeight, table.layout->pos.size.height);
+	const float minHeight =
+			_media.computeValueStrong(newL.node.block.minHeight, table.layout->pos.size.height);
+	const float maxHeight =
+			_media.computeValueStrong(newL.node.block.maxHeight, table.layout->pos.size.height);
 
 	newL.pos.margin = Margin(0.0f);
 
@@ -737,12 +769,14 @@ static void Table_procesRowCell(LayoutTable &table, LayoutTable::Row &row, Layou
 
 	newL.pos.size = Size2(cell.info->width - cell.info->pos.padding.horizontal(), height);
 	newL.pos.padding.top = _media.computeValueAuto(newL.node.block.paddingTop, newL.pos.size.width);
-	newL.pos.padding.bottom = _media.computeValueAuto(newL.node.block.paddingBottom, newL.pos.size.width);
+	newL.pos.padding.bottom =
+			_media.computeValueAuto(newL.node.block.paddingBottom, newL.pos.size.width);
 
 	if (isnan(table.layout->pos.position.y)) {
 		newL.pos.position = Vec2(parentPos.x + xPos + newL.pos.padding.left, newL.pos.padding.top);
 	} else {
-		newL.pos.position = Vec2(parentPos.x + xPos + newL.pos.padding.left, parentPos.y + newL.pos.padding.top);
+		newL.pos.position = Vec2(parentPos.x + xPos + newL.pos.padding.left,
+				parentPos.y + newL.pos.padding.top);
 	}
 
 	newL.node.context = Display::Block;
@@ -759,12 +793,13 @@ static void Table_procesRowCell(LayoutTable &table, LayoutTable::Row &row, Layou
 static void Table_processTableRowSpan(LayoutTable &table, LayoutTable::Cell &cell) {
 	float fullHeight = 0.0f;
 	size_t undefinedCount = 0;
-	mem_pool::Vector<float> heights; heights.reserve(cell.rowSpan);
-	for (size_t i = 0; i < cell.rowSpan; ++ i) {
+	mem_pool::Vector<float> heights;
+	heights.reserve(cell.rowSpan);
+	for (size_t i = 0; i < cell.rowSpan; ++i) {
 		heights.emplace_back(table.rows[cell.rowIndex + i].height);
 		fullHeight += table.rows[cell.rowIndex + i].height;
 		if (heights.back() == 0) {
-			++ undefinedCount;
+			++undefinedCount;
 		}
 	}
 
@@ -772,14 +807,14 @@ static void Table_processTableRowSpan(LayoutTable &table, LayoutTable::Cell &cel
 		const auto diff = cell.info->layout->getBoundingBox().size.height - fullHeight;
 		if (undefinedCount > 0) {
 			// allocate space to undefined rows;
-			for (size_t i = 0; i < cell.rowSpan; ++ i) {
+			for (size_t i = 0; i < cell.rowSpan; ++i) {
 				if (table.rows[cell.rowIndex + i].height == 0.0f) {
 					table.rows[cell.rowIndex + i].height = diff / undefinedCount;
 				}
 			}
 		} else {
 			// allocate to all rows;
-			for (size_t i = 0; i < cell.rowSpan; ++ i) {
+			for (size_t i = 0; i < cell.rowSpan; ++i) {
 				table.rows[cell.rowIndex + i].height += diff * (heights[i] / fullHeight);
 			}
 		}
@@ -803,9 +838,7 @@ static void Table_finalizeRowCell(LayoutTable &table, LayoutBlock &newL, float y
 		newL.pos.position.y += diff / 2.0f;
 		break;
 	case VerticalAlign::Super:
-	case VerticalAlign::Top:
-		newL.pos.padding.bottom += diff;
-		break;
+	case VerticalAlign::Top: newL.pos.padding.bottom += diff; break;
 	case VerticalAlign::Sub:
 	case VerticalAlign::Bottom:
 		newL.pos.padding.top += diff;
@@ -832,7 +865,8 @@ void LayoutTable::processTableLayouts() {
 	}
 
 	if (width < layout->pos.size.width) {
-		if (layout->node.block.marginLeft.metric == Metric::Auto && layout->node.block.marginRight.metric == Metric::Auto) {
+		if (layout->node.block.marginLeft.metric == Metric::Auto
+				&& layout->node.block.marginRight.metric == Metric::Auto) {
 			auto diff = layout->pos.size.width - width;
 			layout->pos.margin.left += diff / 2.0f;
 			layout->pos.margin.right += diff / 2.0f;
@@ -864,7 +898,7 @@ void LayoutTable::processTableLayouts() {
 				continue;
 			}
 			if (cell->rowIndex != row.index || cell->colIndex != colIdx) {
-				++ colIdx;
+				++colIdx;
 				continue;
 			}
 
@@ -874,7 +908,7 @@ void LayoutTable::processTableLayouts() {
 			Table_procesRowCell(*this, row, *cell, *newL, xPos);
 
 			xPos += cell->info->width;
-			++ colIdx;
+			++colIdx;
 
 			if (cell->rowSpan == 1) {
 				row.height = std::max(row.height, newL->getBoundingBox().size.height);
@@ -884,9 +918,7 @@ void LayoutTable::processTableLayouts() {
 		}
 	}
 
-	for (auto &cell : rowSpans) {
-		Table_processTableRowSpan(*this, *cell);
-	}
+	for (auto &cell : rowSpans) { Table_processTableRowSpan(*this, *cell); }
 
 	// vertical align
 	float currentYPos = 0.0f;
@@ -898,18 +930,18 @@ void LayoutTable::processTableLayouts() {
 				continue;
 			}
 			if (cell->rowIndex != row.index || cell->colIndex != colIdx) {
-				++ colIdx;
+				++colIdx;
 				continue;
 			}
 
 			float yPos = row.yPos;
 			float rowHeight = 0.0f;
-			for (size_t i = 0; i < cell->rowSpan; ++ i) {
+			for (size_t i = 0; i < cell->rowSpan; ++i) {
 				rowHeight += rows[cell->rowIndex + i].height;
 			}
 
 			Table_finalizeRowCell(*this, *cell->info->layout, yPos, rowHeight);
-			++ colIdx;
+			++colIdx;
 		}
 
 		currentYPos += row.height;
@@ -921,9 +953,7 @@ void LayoutTable::processTableLayouts() {
 	for (auto &it : colGroups) {
 		it.xPos = groupXPos;
 		float groupWidth = 0.0f;
-		for (auto &col : it.cols) {
-			groupWidth += cols[col].width;
-		}
+		for (auto &col : it.cols) { groupWidth += cols[col].width; }
 		it.width = groupWidth;
 		groupXPos += groupWidth;
 	}
@@ -932,9 +962,7 @@ void LayoutTable::processTableLayouts() {
 	for (auto &it : rowGroups) {
 		it.yPos = groupYPos;
 		float groupHeight = 0.0f;
-		for (auto &row : it.rows) {
-			groupHeight += rows[row].height;
-		}
+		for (auto &row : it.rows) { groupHeight += rows[row].height; }
 		it.height = groupHeight;
 		groupYPos += groupHeight;
 	}
@@ -952,23 +980,24 @@ void LayoutTable::processTableLayouts() {
 
 static void Table_Borders_fillExternalBorder(LayoutTable::Borders &b, const BorderParams &params) {
 	b.solidBorder = true;
-	for (size_t i = 0; i < b.numRows; ++ i) {
+	for (size_t i = 0; i < b.numRows; ++i) {
 		b.vertical.at(i * (b.numCols + 1)) = params;
 		b.vertical.at((i + 1) * (b.numCols + 1) - 1) = params;
 	}
-	for (size_t i = 0; i < b.numCols; ++ i) {
+	for (size_t i = 0; i < b.numCols; ++i) {
 		b.horizontal.at(i) = params;
 		b.horizontal.at(i + b.numCols * b.numRows) = params;
 	}
 }
 
-static void Table_Borders_fillExternalBorder(LayoutTable::Borders &b, const BorderParams &left, const BorderParams &top, const BorderParams &right, const BorderParams &bottom) {
+static void Table_Borders_fillExternalBorder(LayoutTable::Borders &b, const BorderParams &left,
+		const BorderParams &top, const BorderParams &right, const BorderParams &bottom) {
 	b.solidBorder = true;
-	for (size_t i = 0; i < b.numRows; ++ i) {
+	for (size_t i = 0; i < b.numRows; ++i) {
 		b.vertical.at(i * (b.numCols + 1)) = left;
 		b.vertical.at((i + 1) * (b.numCols + 1) - 1) = right;
 	}
-	for (size_t i = 0; i < b.numCols; ++ i) {
+	for (size_t i = 0; i < b.numCols; ++i) {
 		b.horizontal.at(i) = top;
 		b.horizontal.at(i + b.numCols * b.numRows) = bottom;
 	}
@@ -979,9 +1008,10 @@ static void Table_Borders_fillCellBorder(LayoutTable::Borders &b, const LayoutTa
 	auto style = cell.info->layout->node.style->compileOutline(cell.info->layout->engine);
 
 	if (style.top.style != BorderStyle::None) {
-		auto top = BorderParams{style.top.style, media.computeValueAuto(style.top.width, b.size.width), style.top.color};
+		auto top = BorderParams{style.top.style,
+			media.computeValueAuto(style.top.width, b.size.width), style.top.color};
 		if (top.isVisible()) {
-			for (size_t i = 0; i < cell.colSpan; ++ i) {
+			for (size_t i = 0; i < cell.colSpan; ++i) {
 				if (b.horizontal.at(cell.rowIndex * b.numCols + cell.colIndex + i).merge(top)) {
 					if (cell.rowIndex == 0) {
 						b.solidBorder = false;
@@ -991,10 +1021,13 @@ static void Table_Borders_fillCellBorder(LayoutTable::Borders &b, const LayoutTa
 		}
 	}
 	if (style.right.style != BorderStyle::None) {
-		auto right = BorderParams{style.right.style, media.computeValueAuto(style.right.width, b.size.width), style.right.color};
+		auto right = BorderParams{style.right.style,
+			media.computeValueAuto(style.right.width, b.size.width), style.right.color};
 		if (right.isVisible()) {
-			for (size_t i = 0; i < cell.rowSpan; ++ i) {
-				if (b.vertical.at((cell.rowIndex + i) * (b.numCols + 1) + cell.colIndex + cell.colSpan).merge(right)) {
+			for (size_t i = 0; i < cell.rowSpan; ++i) {
+				if (b.vertical.at((cell.rowIndex + i) * (b.numCols + 1) + cell.colIndex
+									  + cell.colSpan)
+								.merge(right)) {
 					if (cell.colIndex + cell.colSpan > b.numCols) {
 						b.solidBorder = false;
 					}
@@ -1003,10 +1036,12 @@ static void Table_Borders_fillCellBorder(LayoutTable::Borders &b, const LayoutTa
 		}
 	}
 	if (style.bottom.style != BorderStyle::None) {
-		auto bottom = BorderParams{style.bottom.style, media.computeValueAuto(style.bottom.width, b.size.width), style.bottom.color};
+		auto bottom = BorderParams{style.bottom.style,
+			media.computeValueAuto(style.bottom.width, b.size.width), style.bottom.color};
 		if (bottom.isVisible()) {
-			for (size_t i = 0; i < cell.colSpan; ++ i) {
-				if (b.horizontal.at((cell.rowIndex + cell.rowSpan) * b.numCols + cell.colIndex + i).merge(bottom)) {
+			for (size_t i = 0; i < cell.colSpan; ++i) {
+				if (b.horizontal.at((cell.rowIndex + cell.rowSpan) * b.numCols + cell.colIndex + i)
+								.merge(bottom)) {
 					if (cell.rowIndex + cell.rowSpan > b.numRows) {
 						b.solidBorder = false;
 					}
@@ -1015,10 +1050,12 @@ static void Table_Borders_fillCellBorder(LayoutTable::Borders &b, const LayoutTa
 		}
 	}
 	if (style.left.style != BorderStyle::None) {
-		auto left = BorderParams{style.left.style, media.computeValueAuto(style.left.width, b.size.width), style.left.color};
+		auto left = BorderParams{style.left.style,
+			media.computeValueAuto(style.left.width, b.size.width), style.left.color};
 		if (left.isVisible()) {
-			for (size_t i = 0; i < cell.rowSpan; ++ i) {
-				if (b.vertical.at((cell.rowIndex + i) * (b.numCols + 1) + cell.colIndex).merge(left)) {
+			for (size_t i = 0; i < cell.rowSpan; ++i) {
+				if (b.vertical.at((cell.rowIndex + i) * (b.numCols + 1) + cell.colIndex)
+								.merge(left)) {
 					if (cell.colIndex == 0) {
 						b.solidBorder = false;
 					}
@@ -1041,16 +1078,20 @@ LayoutTable::Borders::Borders(LayoutTable &table) {
 
 	BorderParams left, top, right, bottom;
 	if (style.top.style != BorderStyle::None) {
-		top = BorderParams{style.top.style, media.computeValueAuto(style.top.width, size.width), style.top.color};
+		top = BorderParams{style.top.style, media.computeValueAuto(style.top.width, size.width),
+			style.top.color};
 	}
 	if (style.right.style != BorderStyle::None) {
-		right = BorderParams{style.right.style, media.computeValueAuto(style.right.width, size.width), style.right.color};
+		right = BorderParams{style.right.style,
+			media.computeValueAuto(style.right.width, size.width), style.right.color};
 	}
 	if (style.bottom.style != BorderStyle::None) {
-		bottom = BorderParams{style.bottom.style, media.computeValueAuto(style.bottom.width, size.width), style.bottom.color};
+		bottom = BorderParams{style.bottom.style,
+			media.computeValueAuto(style.bottom.width, size.width), style.bottom.color};
 	}
 	if (style.left.style != BorderStyle::None) {
-		left = BorderParams{style.left.style, media.computeValueAuto(style.left.width, size.width), style.left.color};
+		left = BorderParams{style.left.style, media.computeValueAuto(style.left.width, size.width),
+			style.left.color};
 	}
 
 	if (left.compare(right) && top.compare(bottom) && left.compare(top)) {
@@ -1059,15 +1100,15 @@ LayoutTable::Borders::Borders(LayoutTable &table) {
 		Table_Borders_fillExternalBorder(*this, left, top, right, bottom);
 	}
 
-	for (auto &it : table.cells) {
-		Table_Borders_fillCellBorder(*this, it);
-	}
+	for (auto &it : table.cells) { Table_Borders_fillCellBorder(*this, it); }
 }
 
 static float Border_getLeftHorz(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (col > 0) {
 		auto b = border.getHorz(row, col - 1);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1075,7 +1116,9 @@ static float Border_getLeftHorz(const LayoutTable::Borders &border, size_t row, 
 static float Border_getRightHorz(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (col < border.numCols - 1) {
 		auto b = border.getHorz(row, col + 1);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1083,7 +1126,9 @@ static float Border_getRightHorz(const LayoutTable::Borders &border, size_t row,
 static float Border_getLeftTopVert(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (row > 0) {
 		auto b = border.getVert(row - 1, col);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1091,7 +1136,9 @@ static float Border_getLeftTopVert(const LayoutTable::Borders &border, size_t ro
 static float Border_getRightTopVert(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (row > 0) {
 		auto b = border.getVert(row - 1, col + 1);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1099,7 +1146,9 @@ static float Border_getRightTopVert(const LayoutTable::Borders &border, size_t r
 static float Border_getLeftBottomVert(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (row < border.numRows) {
 		auto b = border.getVert(row, col);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1107,7 +1156,9 @@ static float Border_getLeftBottomVert(const LayoutTable::Borders &border, size_t
 static float Border_getRightBottomVert(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (row < border.numRows) {
 		auto b = border.getVert(row, col + 1);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1115,7 +1166,9 @@ static float Border_getRightBottomVert(const LayoutTable::Borders &border, size_
 static float Border_getTopVert(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (row > 0) {
 		auto b = border.getVert(row - 1, col);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1123,7 +1176,9 @@ static float Border_getTopVert(const LayoutTable::Borders &border, size_t row, s
 static float Border_getBottomVert(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (row < border.numRows - 1) {
 		auto b = border.getVert(row + 1, col);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1131,7 +1186,9 @@ static float Border_getBottomVert(const LayoutTable::Borders &border, size_t row
 static float Border_getTopLeftHorz(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (col > 0) {
 		auto b = border.getHorz(row, col - 1);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1139,7 +1196,9 @@ static float Border_getTopLeftHorz(const LayoutTable::Borders &border, size_t ro
 static float Border_getBottomLeftHorz(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (col > 0) {
 		auto b = border.getHorz(row + 1, col - 1);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1147,7 +1206,9 @@ static float Border_getBottomLeftHorz(const LayoutTable::Borders &border, size_t
 static float Border_getTopRightHorz(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (col < border.numCols) {
 		auto b = border.getHorz(row, col);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1155,7 +1216,9 @@ static float Border_getTopRightHorz(const LayoutTable::Borders &border, size_t r
 static float Border_getBottomRightHorz(const LayoutTable::Borders &border, size_t row, size_t col) {
 	if (col < border.numCols) {
 		auto b = border.getHorz(row + 1, col);
-		if (b.isVisible()) { return b.width; }
+		if (b.isVisible()) {
+			return b.width;
+		}
 	}
 	return 0.0f;
 }
@@ -1163,7 +1226,7 @@ static float Border_getBottomRightHorz(const LayoutTable::Borders &border, size_
 
 void LayoutTable::Borders::make(LayoutTable &table, LayoutResult *res) {
 	auto pos = table.layout->pos.position;
-	for (size_t i = 0; i < horizontal.size(); ++ i) {
+	for (size_t i = 0; i < horizontal.size(); ++i) {
 		size_t row = i / numCols;
 		size_t col = i % numCols;
 
@@ -1177,13 +1240,15 @@ void LayoutTable::Borders::make(LayoutTable &table, LayoutResult *res) {
 		if (horizontal[i].isVisible()) {
 			auto path = res->emplacePath(*table.layout, ZOrderBorder);
 			path->depth = table.layout->depth + 5;
-			path->drawHorizontalLineSegment(origin, table.cols[col].width, border.color, border.width, border.style,
-				Border_getLeftBottomVert(*this, row, col), Border_getLeftHorz(*this, row, col), Border_getLeftTopVert(*this, row, col),
-				Border_getRightTopVert(*this, row, col), Border_getRightHorz(*this, row, col), Border_getRightBottomVert(*this, row, col));
+			path->drawHorizontalLineSegment(origin, table.cols[col].width, border.color,
+					border.width, border.style, Border_getLeftBottomVert(*this, row, col),
+					Border_getLeftHorz(*this, row, col), Border_getLeftTopVert(*this, row, col),
+					Border_getRightTopVert(*this, row, col), Border_getRightHorz(*this, row, col),
+					Border_getRightBottomVert(*this, row, col));
 		}
 	}
 
-	for (size_t i = 0; i < vertical.size(); ++ i) {
+	for (size_t i = 0; i < vertical.size(); ++i) {
 		size_t row = i / (numCols + 1);
 		size_t col = i % (numCols + 1);
 
@@ -1197,9 +1262,12 @@ void LayoutTable::Borders::make(LayoutTable &table, LayoutResult *res) {
 		if (vertical[i].isVisible()) {
 			auto path = res->emplacePath(*table.layout, ZOrderBorder);
 			path->depth = table.layout->depth + 5;
-			path->drawVerticalLineSegment(origin, table.rows[row].height, border.color, border.width, border.style,
-				Border_getTopLeftHorz(*this, row, col), Border_getTopVert(*this, row, col), Border_getTopRightHorz(*this, row, col),
-				Border_getBottomRightHorz(*this, row, col), Border_getBottomVert(*this, row, col), Border_getBottomLeftHorz(*this, row, col));
+			path->drawVerticalLineSegment(origin, table.rows[row].height, border.color,
+					border.width, border.style, Border_getTopLeftHorz(*this, row, col),
+					Border_getTopVert(*this, row, col), Border_getTopRightHorz(*this, row, col),
+					Border_getBottomRightHorz(*this, row, col),
+					Border_getBottomVert(*this, row, col),
+					Border_getBottomLeftHorz(*this, row, col));
 		}
 	}
 }
@@ -1219,7 +1287,7 @@ BorderParams LayoutTable::Borders::getVert(size_t row, size_t col) const {
 }
 
 void LayoutTable::processTableBackground() {
-	auto flushRect = [this] (LayoutBlock &l, const Rect &rect, const Color4B &color) {
+	auto flushRect = [this](LayoutBlock &l, const Rect &rect, const Color4B &color) {
 		if (rect.size.width > 0.0f && rect.size.height > 0.0f) {
 			auto path = layout->engine->getResult()->emplacePath(*layout, ZOrderBackground);
 			path->depth = layout->depth + 2;
@@ -1237,7 +1305,7 @@ void LayoutTable::processTableBackground() {
 				size_t rowIdx = 0;
 				for (auto &cell : col.cells) {
 					if (cell->rowIndex != rowIdx) {
-						++ rowIdx;
+						++rowIdx;
 						continue;
 					}
 					auto &pos = cell->info->layout->pos;
@@ -1246,17 +1314,19 @@ void LayoutTable::processTableBackground() {
 						if (cell->colSpan == 1) {
 							height += rect.size.height;
 						} else {
-							flushRect(*layout, Rect(col.xPos, yPos, col.width, height), bg.backgroundColor);
+							flushRect(*layout, Rect(col.xPos, yPos, col.width, height),
+									bg.backgroundColor);
 							flushRect(*cell->info->layout, rect, bg.backgroundColor);
 							yPos = height + rect.size.height;
 							height = 0.0f;
 						}
 					} else {
-						flushRect(*layout, Rect(col.xPos, yPos, col.width, height), bg.backgroundColor);
+						flushRect(*layout, Rect(col.xPos, yPos, col.width, height),
+								bg.backgroundColor);
 						yPos = height + rect.size.height;
 						height = 0.0f;
 					}
-					++ rowIdx;
+					++rowIdx;
 				}
 				flushRect(*layout, Rect(col.xPos, yPos, col.width, height), bg.backgroundColor);
 			}
@@ -1275,7 +1345,7 @@ void LayoutTable::processTableBackground() {
 						continue;
 					}
 					if (cell->colIndex != colIdx) {
-						++ colIdx;
+						++colIdx;
 						continue;
 					}
 					auto &pos = cell->info->layout->pos;
@@ -1284,17 +1354,19 @@ void LayoutTable::processTableBackground() {
 						if (cell->rowSpan == 1) {
 							bgWidth += rect.size.width;
 						} else {
-							flushRect(*layout, Rect(xPos, row.yPos, bgWidth, row.height), bg.backgroundColor);
+							flushRect(*layout, Rect(xPos, row.yPos, bgWidth, row.height),
+									bg.backgroundColor);
 							flushRect(*cell->info->layout, rect, bg.backgroundColor);
 							xPos = bgWidth + rect.size.width;
 							bgWidth = 0.0f;
 						}
 					} else {
-						flushRect(*layout, Rect(xPos, row.yPos, bgWidth, row.height), bg.backgroundColor);
+						flushRect(*layout, Rect(xPos, row.yPos, bgWidth, row.height),
+								bg.backgroundColor);
 						xPos = bgWidth + rect.size.width;
 						bgWidth = 0.0f;
 					}
-					++ colIdx;
+					++colIdx;
 				}
 				flushRect(*layout, Rect(xPos, row.yPos, bgWidth, row.height), bg.backgroundColor);
 			}
@@ -1312,15 +1384,14 @@ void LayoutTable::processTableBackground() {
 			if (!captionLayout->objects.empty()) {
 				for (auto &it : captionLayout->objects) {
 					if (it->type == Object::Type::Label) {
-						WideString str; str.reserve(it->asLabel()->layout.chars.size());
-						it->asLabel()->layout.str([&] (char16_t ch) {
-							str.emplace_back(ch);
-						});
+						WideString str;
+						str.reserve(it->asLabel()->layout.chars.size());
+						it->asLabel()->layout.str([&](char16_t ch) { str.emplace_back(ch); });
 						caption = string::toUtf8<Interface>(str);
 					}
 				}
 			} else {
-				captionLayout->node.node->foreach([&] (const Node &node, size_t level) {
+				captionLayout->node.node->foreach ([&](const Node &node, size_t level) {
 					if (node.hasValue()) {
 						caption += string::toUtf8<Interface>(node.getValue());
 					}
@@ -1329,15 +1400,21 @@ void LayoutTable::processTableBackground() {
 		}
 
 		auto href = caption.empty()
-				? string::toString<Interface>("#", layout->node.node->getHtmlId(), "?min=", size_t(ceilf(origMinWidth)), "&max=", size_t(ceilf(origMaxWidth)))
-				: string::toString<Interface>("#", layout->node.node->getHtmlId(), "?min=", size_t(ceilf(origMinWidth)), "&max=", size_t(ceilf(origMaxWidth)), "&caption=", caption);
+				? string::toString<Interface>("#", layout->node.node->getHtmlId(),
+						  "?min=", size_t(ceilf(origMinWidth)),
+						  "&max=", size_t(ceilf(origMaxWidth)))
+				: string::toString<Interface>("#", layout->node.node->getHtmlId(),
+						  "?min=", size_t(ceilf(origMinWidth)),
+						  "&max=", size_t(ceilf(origMaxWidth)), "&caption=", caption);
 		auto target = "table";
 		auto res = layout->engine->getResult();
 		if (!href.empty()) {
 			layout->objects.emplace_back(res->emplaceLink(*layout,
-				Rect(-layout->pos.padding.left, -layout->pos.padding.top,
-					layout->pos.size.width + layout->pos.padding.left + layout->pos.padding.right,
-					layout->pos.size.height + layout->pos.padding.top + layout->pos.padding.bottom),
+					Rect(-layout->pos.padding.left, -layout->pos.padding.top,
+							layout->pos.size.width + layout->pos.padding.left
+									+ layout->pos.padding.right,
+							layout->pos.size.height + layout->pos.padding.top
+									+ layout->pos.padding.bottom),
 					href, target, WideStringView()));
 		}
 
@@ -1360,7 +1437,7 @@ void LayoutTable::processCaption(CaptionSide side) {
 
 		layout->layouts.emplace_back(captionLayout);
 
-		float nodeHeight =  captionLayout->getBoundingBox().size.height;
+		float nodeHeight = captionLayout->getBoundingBox().size.height;
 		if (side == CaptionSide::Top) {
 			layout->pos.margin.top += nodeHeight;
 			layout->pos.position.y += nodeHeight;
@@ -1371,4 +1448,4 @@ void LayoutTable::processCaption(CaptionSide side) {
 	layout->engine->popNode();
 }
 
-}
+} // namespace stappler::document

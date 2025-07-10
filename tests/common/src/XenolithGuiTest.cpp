@@ -49,20 +49,17 @@ struct XenolithGuiTest : Test {
 	virtual bool run() override {
 		using namespace stappler::xenolith::app;
 
-		auto mempool = memory::pool::create();
-		memory::pool::push(mempool);
+		memory::pool::perform_temporary([] {
+			auto caches = filesystem::findPath<Interface>(FileCategory::AppCache);
+			filesystem::remove(FileInfo{caches}, true, true);
+			filesystem::mkdir(FileInfo{caches});
 
-		auto caches = filesystem::findPath<Interface>(FileCategory::AppCache);
-		filesystem::remove(FileInfo{caches}, true, true);
-		filesystem::mkdir(FileInfo{caches});
+			xenolith::ApplicationInfo data;
 
-		xenolith::ApplicationInfo data;
-
-		auto app = Rc<TestAppDelegate>::create(move(data));
-		app->run();
-		app->waitStopped();
-
-		memory::pool::pop();
+			auto app = Rc<TestAppDelegate>::create(move(data));
+			app->run();
+			app->waitStopped();
+		});
 
 		return true;
 	}

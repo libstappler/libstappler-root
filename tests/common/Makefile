@@ -44,7 +44,6 @@ LOCAL_MODULES := \
 	stappler_zip \
 	stappler_threads \
 	stappler_network \
-	stappler_backtrace \
 	stappler_crypto_openssl \
 	stappler_font \
 	xenolith_core

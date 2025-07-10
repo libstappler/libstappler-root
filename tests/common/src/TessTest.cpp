@@ -21,6 +21,7 @@
  **/
 
 #include "SPCommon.h"
+#include "SPMemPoolApi.h"
 #include "Test.h"
 
 #if MODULE_XENOLITH_RENDERER_BASIC2D
@@ -39,10 +40,11 @@ struct TessTest : Test {
 
 	TessTest() : Test("TessTest") { }
 
-	void drawIcon(StringStream &stream, xenolith::basic2d::VectorCanvas *canvas, size_t i, size_t &failed, vg::DrawFlags style, bool antialiased) {
+	void drawIcon(StringStream &stream, xenolith::basic2d::VectorCanvas *canvas, size_t i,
+			size_t &failed, vg::DrawFlags style, bool antialiased) {
 		auto name = xenolith::getIconName(xenolith::IconName(i));
 		vg::VectorImage image;
-		image.init(xenolith::Size2(1024, 1024));
+		image.init(xenolith::Size2(1'024, 1'024));
 
 		xenolith::drawIcon(image, xenolith::IconName(i), 0.0f);
 
@@ -52,78 +54,79 @@ struct TessTest : Test {
 		path->setStrokeWidth(0.5f);
 
 		xenolith::basic2d::VectorCanvasConfig config;
-		config.targetSize = xenolith::Size2(1024, 1024);
+		config.targetSize = xenolith::Size2(1'024, 1'024);
 
 		auto res = canvas->draw(config, image.popData());
 		if (res->data.size() == 0) {
 			//auto pIt = paths.find(i);
 
-			stream << "\tFailed ("
-					<< (style == vg::DrawFlags::Stroke ? "Stroke" : "Fill")
-					<< ", " << (antialiased ? "aa" : "non-aa") << "): mode: " << toInt(canvas->getConfig().relocateRule) << ": " << name;
+			stream << "\tFailed (" << (style == vg::DrawFlags::Stroke ? "Stroke" : "Fill") << ", "
+				   << (antialiased ? "aa" : "non-aa")
+				   << "): mode: " << toInt(canvas->getConfig().relocateRule) << ": " << name;
 			/*for (auto &iit : pIt->second) {
 				stream << "\n\t\tPath: " << iit.str;
 			}*/
 
 			stream << "\n";
 
-			++ failed;
+			++failed;
 		}
 	}
 
 	virtual bool run() override {
-		StringStream stream; stream << "\n";
+		StringStream stream;
+		stream << "\n";
 		size_t failed = 0;
 		size_t failedStrokes = 0;
-		auto mempool = memory::pool::create();
-		memory::pool::push(mempool);
 
-		auto canvas = Rc<xenolith::basic2d::VectorCanvas>::create(false);
+		memory::pool::perform_temporary([&] {
+			auto canvas = Rc<xenolith::basic2d::VectorCanvas>::create(false);
 
-		size_t i = toInt(xenolith::IconName::Dynamic_Loader);
-		size_t max = toInt(xenolith::IconName::Max);
+			size_t i = toInt(xenolith::IconName::Dynamic_Loader);
+			size_t max = toInt(xenolith::IconName::Max);
 
-		for (; i < max; ++ i) {
-			auto name = xenolith::getIconName(xenolith::IconName(i));
-			vg::VectorImage image;
-			image.init(xenolith::Size2(1024, 1024));
-			xenolith::drawIcon(image, xenolith::IconName(i), 0.0f);
-			auto pIt = paths.emplace(i, Vector<PathData>()).first;
+			for (; i < max; ++i) {
+				auto name = xenolith::getIconName(xenolith::IconName(i));
+				vg::VectorImage image;
+				image.init(xenolith::Size2(1'024, 1'024));
+				xenolith::drawIcon(image, xenolith::IconName(i), 0.0f);
+				auto pIt = paths.emplace(i, Vector<PathData>()).first;
 
-			auto &path = image.getPaths();
-			for (auto &it : path) {
-				vg::VectorPath *path = it.second->getPath();
+				auto &path = image.getPaths();
+				for (auto &it : path) {
+					vg::VectorPath *path = it.second->getPath();
 
-				auto data = path->encode();
-				auto str = path->toString(true);
+					auto data = path->encode();
+					auto str = path->toString(true);
 
-				pIt->second.emplace_back(PathData{name.str<Interface>(), sp::move(str), sp::move(data)});
+					pIt->second.emplace_back(
+							PathData{name.str<Interface>(), sp::move(str), sp::move(data)});
+				}
 			}
-		}
 
-		i = toInt(xenolith::IconName::Dynamic_Loader);
-		for (; i < max; ++ i) {
-			drawIcon(stream, canvas, i, failedStrokes, vg::DrawFlags::Stroke, false);
-		}
-
-		for (size_t j = 0; j <= size_t(toInt(geom::Tesselator::RelocateRule::Monotonize)); ++ j) {
 			i = toInt(xenolith::IconName::Dynamic_Loader);
-
-			xenolith::basic2d::VectorCanvasConfig config;
-			config.relocateRule = geom::Tesselator::RelocateRule(j);
-			canvas->setConfig(config);
-
-			for (; i < max; ++ i) {
-				drawIcon(stream, canvas, i, failed, vg::DrawFlags::Fill, true);
+			for (; i < max; ++i) {
+				drawIcon(stream, canvas, i, failedStrokes, vg::DrawFlags::Stroke, false);
 			}
-		}
 
-		i = toInt(xenolith::IconName::Dynamic_Loader);
-		for (; i < max; ++ i) {
-			drawIcon(stream, canvas, i, failed, vg::DrawFlags::Fill, false);
-		}
+			for (size_t j = 0; j <= size_t(toInt(geom::Tesselator::RelocateRule::Monotonize));
+					++j) {
+				i = toInt(xenolith::IconName::Dynamic_Loader);
 
-		memory::pool::pop();
+				xenolith::basic2d::VectorCanvasConfig config;
+				config.relocateRule = geom::Tesselator::RelocateRule(j);
+				canvas->setConfig(config);
+
+				for (; i < max; ++i) {
+					drawIcon(stream, canvas, i, failed, vg::DrawFlags::Fill, true);
+				}
+			}
+
+			i = toInt(xenolith::IconName::Dynamic_Loader);
+			for (; i < max; ++i) {
+				drawIcon(stream, canvas, i, failed, vg::DrawFlags::Fill, false);
+			}
+		});
 
 		stream << "\tFailed total: " << failed << "\n";
 		stream << "\tFailed strokes: " << failedStrokes << "\n";
@@ -135,6 +138,6 @@ struct TessTest : Test {
 	Map<size_t, Vector<PathData>> paths;
 } _TessTest;
 
-}
+} // namespace stappler::app::test
 
 #endif

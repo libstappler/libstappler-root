@@ -23,6 +23,7 @@ THE SOFTWARE.
 
 #include "SPCommon.h"
 #include "SPFilepath.h"
+#include "SPMemPoolApi.h"
 #include "Test.h"
 
 #ifdef MODULE_STAPPLER_DATA
@@ -32,7 +33,7 @@ THE SOFTWARE.
 namespace STAPPLER_VERSIONIZED stappler::app::test {
 
 static constexpr StringView JsonExampleString(
-R"JsonString({
+		R"JsonString({
 	"glossary": {
 		"title": "example glossary",
 		"GlossDiv": {
@@ -67,27 +68,19 @@ static void runTest(std::ostream &out, const Vector<Bytes> &bytes, data::EncodeF
 	size_t uncompressed = 0;
 
 	for (auto &it : bytes) {
-		auto mempool = memory::pool::create();
-		memory::pool::push(mempool);
-
-		do {
+		mem_pool::pool::perform_temporary([&] {
 			t = Time::now();
 			auto d = data::read<Interface>(it);
 			accum1 += (Time::now() - t).toMicros();
-			memory::pool::pop();
 			data.emplace_back(d);
-		} while (0);
-
-		memory::pool::destroy(mempool);
+		});
 	}
 
 	size_t idx = 0;
 	for (auto &it : data) {
-		auto reserve = bytes[idx].size();
-		auto mempool = memory::pool::create();
-		memory::pool::push(mempool);
+		mem_pool::pool::perform_temporary([&] {
+			auto reserve = bytes[idx].size();
 
-		do {
 			t = Time::now();
 			auto d = data::write(it, fmt, reserve);
 			accum2 += (Time::now() - t).toMicros();
@@ -101,23 +94,20 @@ static void runTest(std::ostream &out, const Vector<Bytes> &bytes, data::EncodeF
 			} else {
 				uncompressed += d.size();
 			}
-		} while (0);
 
-		memory::pool::pop();
-		memory::pool::destroy(mempool);
-		++ idx;
+			++idx;
+		});
 	}
 
 	out << accum1 << ", " << accum2 << ", " << float(uncompressed) / float(compressed) << "\n";
 }
 
 static void runTestForPath(const FileInfo &path) {
-	auto mempool = memory::pool::create();
-	memory::pool::push(mempool);
+	memory::pool::context ctx(memory::pool::create(), memory::pool::finalize_flag::destroy);
 
 	Vector<Value> dataSource;
 
-	filesystem::ftw(path, [&] (const FileInfo &path, FileType type) {
+	filesystem::ftw(path, [&](const FileInfo &path, FileType type) {
 		if (type == FileType::File && filepath::lastExtension(path.path) == "json") {
 			auto val = data::readFile<Interface>(path);
 			if (val) {
@@ -131,16 +121,26 @@ static void runTestForPath(const FileInfo &path) {
 
 	Vector<Vector<Bytes>> testSources;
 
-	Vector<Pair<data::EncodeFormat, String>> formats {
+	Vector<Pair<data::EncodeFormat, String>> formats{
 		pair(data::EncodeFormat::Pretty, "Pretty,      "),
-		pair(data::EncodeFormat::Json,   "Json,        "),
-		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::LZ4Compression),   "Json/lz4,    "),
-		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::LZ4HCCompression), "Json/lz4HC,  "),
-		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::Brotli),           "Json/Brotli, "),
-		pair(data::EncodeFormat::Cbor,   "Cbor,        "),
-		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::LZ4Compression)  , "Cbor/lz4,    "),
-		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::LZ4HCCompression), "Cbor/lz4HC,  "),
-		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::Brotli),           "Cbor/Brotli, "),
+		pair(data::EncodeFormat::Json, "Json,        "),
+		pair(data::EncodeFormat(data::EncodeFormat::Json,
+					 data::EncodeFormat::Compression::LZ4Compression),
+				"Json/lz4,    "),
+		pair(data::EncodeFormat(data::EncodeFormat::Json,
+					 data::EncodeFormat::Compression::LZ4HCCompression),
+				"Json/lz4HC,  "),
+		pair(data::EncodeFormat(data::EncodeFormat::Json, data::EncodeFormat::Compression::Brotli),
+				"Json/Brotli, "),
+		pair(data::EncodeFormat::Cbor, "Cbor,        "),
+		pair(data::EncodeFormat(data::EncodeFormat::Cbor,
+					 data::EncodeFormat::Compression::LZ4Compression),
+				"Cbor/lz4,    "),
+		pair(data::EncodeFormat(data::EncodeFormat::Cbor,
+					 data::EncodeFormat::Compression::LZ4HCCompression),
+				"Cbor/lz4HC,  "),
+		pair(data::EncodeFormat(data::EncodeFormat::Cbor, data::EncodeFormat::Compression::Brotli),
+				"Cbor/Brotli, "),
 	};
 
 	testSources.resize(formats.size());
@@ -149,7 +149,7 @@ static void runTestForPath(const FileInfo &path) {
 		size_t i = 0;
 		for (auto &fmt : formats) {
 			testSources[i].emplace_back(data::write(it, fmt.first));
-			++ i;
+			++i;
 		}
 	}
 
@@ -157,11 +157,10 @@ static void runTestForPath(const FileInfo &path) {
 	StringStream tmp;
 	size_t i = 0;
 	for (auto &fmt : formats) {
-		memory::pool::push(mempool2);
-		runTest<memory::PoolInterface>(tmp, testSources[i], fmt.first);
-		memory::pool::pop();
-		memory::pool::clear(mempool2);
-		++ i;
+		memory::pool::perform_clear([&] {
+			runTest<memory::PoolInterface>(tmp, testSources[i], fmt.first);
+			++i;
+		}, mempool2);
 	}
 
 	tmp << "Type, Test, Read, Write, Compress\n";
@@ -172,25 +171,20 @@ static void runTestForPath(const FileInfo &path) {
 		i = 0;
 		for (auto &fmt : formats) {
 			tmp << "Pool, " << fmt.second;
-			memory::pool::push(mempool2);
-			runTest<memory::PoolInterface>(tmp, testSources[i], fmt.first);
-			memory::pool::pop();
-			memory::pool::clear(mempool2);
-			++ i;
+			memory::pool::perform_clear([&] {
+				runTest<memory::PoolInterface>(tmp, testSources[i], fmt.first);
+			}, mempool2);
+			++i;
 		}
 
 		i = 0;
 		for (auto &fmt : formats) {
 			tmp << "Std,  " << fmt.second;
 			runTest<Interface>(tmp, testSources[i], fmt.first);
-			++ i;
+			++i;
 		}
-		-- n;
+		--n;
 	}
-
-	memory::pool::destroy(mempool);
-
-	memory::pool::pop();
 }
 
 struct DataTranscodeTest : MemPoolTest {
@@ -219,7 +213,8 @@ struct DataTranscodeTest : MemPoolTest {
 #if MODULE_STAPPLER_BROTLI_LIB
 		runTest(stream, "Json->CborBrotli", count, passed, [&] {
 			auto data = data::read<Interface>(JsonExampleString);
-			auto cborBytes = data::write(data, EncodeFormat(EncodeFormat::Cbor, EncodeFormat::Brotli));
+			auto cborBytes =
+					data::write(data, EncodeFormat(EncodeFormat::Cbor, EncodeFormat::Brotli));
 			auto cborData = data::read<Interface>(cborBytes);
 			return data == cborData;
 		});
@@ -249,6 +244,6 @@ struct DataTranscodeTest : MemPoolTest {
 	}
 } _DataTranscodeTest;
 
-}
+} // namespace stappler::app::test
 
 #endif

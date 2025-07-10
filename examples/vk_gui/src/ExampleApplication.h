@@ -27,6 +27,7 @@
 
 namespace stappler::xenolith::app {
 
+/*
 // Класс использует базовую основу для приложения в виде vk::BootstrapApplication
 class ExampleApplication : public basic2d::BootstrapApplication {
 public:
@@ -39,6 +40,7 @@ protected:
 	// Переопределяем функцию создания сцены для окна
 	virtual Rc<Scene> createSceneForView(vk::View &view, const core::FrameConstraints &constraints) override;
 };
+*/
 
 }
 
