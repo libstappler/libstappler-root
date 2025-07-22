@@ -24,9 +24,9 @@
 #define EXAMPLES_VK_GUI_SRC_EXAMPLESCENE_H_
 
 #include "XL2dScene.h"
-#include "XL2dLabel.h"
+#include "XL2dScrollView.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
 // Используем базовую 2D-сцену в качестве основы
 class ExampleScene : public basic2d::Scene2d {
@@ -34,18 +34,18 @@ public:
 	virtual ~ExampleScene() = default;
 
 	// переопределяем создание сцены
-	virtual bool init(AppThread *, const core::FrameConstraints &constraints) override;
+	virtual bool init(NotNull<AppThread> app, NotNull<AppWindow>,
+			const core::FrameConstraints &constraints) override;
 
 	// переопределяем размещение объектов на сцене при изменении размера
 	virtual void handleContentSizeDirty() override;
+
+	virtual void handleEnter(Scene *) override;
 
 protected:
 	using Scene::init;
 
 	virtual void handlePresented(Director *) override;
-
-	// Текстовое поле Hello world
-	basic2d::Label *_helloWorldLabel = nullptr;
 };
 
 } // namespace stappler::xenolith::app

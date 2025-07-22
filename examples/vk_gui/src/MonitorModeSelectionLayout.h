@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2025 Stappler Team <admin@stappler.org>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,28 +20,31 @@
  THE SOFTWARE.
  **/
 
-#ifndef EXAMPLES_VK_HEADLESS_SRC_EXAMPLEAPPLICATION_H_
-#define EXAMPLES_VK_HEADLESS_SRC_EXAMPLEAPPLICATION_H_
+#ifndef EXAMPLES_VK_GUI_SRC_MONITORMODESELECTIONLAYOUT_H_
+#define EXAMPLES_VK_GUI_SRC_MONITORMODESELECTIONLAYOUT_H_
 
-#include "XL2dBootstrapApplication.h"
+#include "XL2dSceneLayout.h"
+#include "XL2dScrollView.h"
 
-namespace stappler::xenolith::app {
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
-/*
-// Класс использует базовую основу для приложения в виде vk::BootstrapApplication
-class ExampleApplication : public basic2d::BootstrapApplication {
+class MonitorModeSelectionLayout : public basic2d::SceneLayout2d {
 public:
-	virtual ~ExampleApplication();
+	virtual ~MonitorModeSelectionLayout() = default;
 
-	// Переопределяем функцию создания приложения
-	virtual bool init(ApplicationInfo &&) override;
+	virtual bool init(NotNull<ScreenInfo>, uint32_t index);
+
+	virtual void handleEnter(Scene *) override;
+	virtual void handleContentSizeDirty() override;
 
 protected:
-	// Переопределяем функцию создания сцены для окна
-	virtual Rc<Scene> createSceneForView(vk::View &view, const core::FrameConstraints &constraints) override;
+	// Текстовое поле Hello world
+	basic2d::ScrollView *_menu = nullptr;
+
+	uint32_t _monitorIndex = 0;
+	Rc<ScreenInfo> _screenInfo;
 };
-*/
 
-}
+} // namespace stappler::xenolith::app
 
-#endif /* EXAMPLES_VK_HEADLESS_SRC_EXAMPLEAPPLICATION_H_ */
+#endif // EXAMPLES_VK_GUI_SRC_MONITORMODESELECTIONLAYOUT_H_

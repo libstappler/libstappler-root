@@ -20,31 +20,6 @@
  THE SOFTWARE.
  **/
 
-#include "SPMemPoolInterface.h"
-#include "XLCommon.h"
-#include "SPData.h"
 #include "XLContext.h"
 
-namespace stappler::xenolith::app {
-
-static constexpr auto HELP_STRING(R"HelpString(testapp <options>)HelpString");
-
-SP_EXTERN_C int main(int argc, const char *argv[]) {
-	ContextConfig config(argc, argv);
-
-	if (hasFlag(config.flags, CommonFlags::Help)) {
-		std::cout << HELP_STRING << "\n";
-		ContextConfig::CommandLine.describe([&](StringView str) { std::cout << str; });
-		return 0;
-	}
-
-	if (hasFlag(config.flags, CommonFlags::Verbose)) {
-		std::cerr << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
-		std::cerr << " Options: " << stappler::data::EncodeFormat::Pretty << config.encode()
-				  << "\n";
-	}
-
-	return Rc<Context>::create(move(config))->run();
-}
-
-} // namespace stappler::xenolith::app
+int main(int argc, const char *argv[]) { return stappler::xenolith::Context::run(argc, argv); }

@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2025 Stappler Team <admin@stappler.org>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,26 +20,36 @@
  THE SOFTWARE.
  **/
 
-#include "ExampleApplication.h"
-#include "ExampleScene.h"
+#ifndef EXAMPLES_VK_GUI_SRC_GENERALLAYOUT_H_
+#define EXAMPLES_VK_GUI_SRC_GENERALLAYOUT_H_
 
-namespace stappler::xenolith::app {
-/*
-ExampleApplication::~ExampleApplication() { }
+#include "XL2dSceneLayout.h"
+#include "XL2dScrollView.h"
 
-bool ExampleApplication::init(ApplicationInfo &&data) {
-	if (!BootstrapApplication::init(move(data))) {
-		return false;
-	}
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
-	// Здесь должна быть пользовательская инициализация
+class GeneralLayout : public basic2d::SceneLayout2d {
+public:
+	virtual ~GeneralLayout() = default;
 
-	return true;
-}
+	virtual bool init() override;
 
-Rc<Scene> ExampleApplication::createSceneForView(vk::View &view, const core::FrameConstraints &constraints) {
-	// Создаём сцену с примером
-	return Rc<ExampleScene>::create(this, constraints);
-}
-*/
-}
+	virtual void handleEnter(Scene *) override;
+	virtual void handleContentSizeDirty() override;
+
+protected:
+	void rebuildMenu();
+	void toggleExitGuard();
+	void updateScreenInfo();
+
+	// Текстовое поле Hello world
+	basic2d::ScrollView *_menu = nullptr;
+
+	bool _exitGuardRetained = false;
+
+	Rc<ScreenInfo> _screenInfo;
+};
+
+} // namespace stappler::xenolith::app
+
+#endif // EXAMPLES_VK_GUI_SRC_GENERALLAYOUT_H_

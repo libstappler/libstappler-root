@@ -1,5 +1,5 @@
 /**
- Copyright (c) 2024 Stappler LLC <admin@stappler.dev>
+ Copyright (c) 2025 Stappler Team <admin@stappler.org>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -20,66 +20,69 @@
  THE SOFTWARE.
  **/
 
+#include "SPDso.h"
 #include "XLCommon.h"
+#include "XLContext.h"
 #include "XL2dSceneContent.h"
+#include "XLSimpleButton.h"
+#include "XLDirector.h"
+#include "XLAppWindow.h"
 #include "ExampleScene.h"
 
-namespace stappler::xenolith::app {
+#include "SPBitmap.h"
 
-bool ExampleScene::init(AppThread *app, const core::FrameConstraints &constraints) {
+#include "GeneralLayout.cc"
+#include "MonitorModeSelectionLayout.cc"
+
+namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
+
+bool ExampleScene::init(NotNull<AppThread> app, NotNull<AppWindow> window,
+		const core::FrameConstraints &constraints) {
+	// Используем примитивы из пакета simpleui
+	// Это также подключает и примитивы из basic2d, поверх которого реализован simpleui
+	using namespace simpleui;
+
 	// Инициализируем суперкласс
-	if (!Scene2d::init(app, constraints)) {
+	if (!Scene2d::init(app, window, constraints)) {
 		return false;
 	}
 
 	// Создаём объект, хранящий содержимое сцены
 	// Содержимое сцены связывается с конкретным проходом очереди рендеринга
 	// Для нескольких проходов в рамках одной сцены потребуется несколько таких объектов
-	auto content = Rc<basic2d::SceneContent2d>::create();
+	auto content = Rc<SceneContent2d>::create();
 
-	// Создаём в содержимом сцены текстовое поле
-	_helloWorldLabel = content->addChild(Rc<basic2d::Label>::create());
-	_helloWorldLabel->setString("Hello World");
-	_helloWorldLabel->setAnchorPoint(Anchor::Middle);
+	// Задаём параметры освещения по умолчанию, чтобы эффекты теней работали
+	// Модуль simpleui этого не делает, поскольку не использует тени,
+	// но модуль material2d настраивает себе свет сам
+	content->setDefaultLights();
+
+	// Запускаем основной слой интерфейса
+	content->pushLayout(Rc<GeneralLayout>::create());
 
 	// Применяем содержимое сцены
 	setContent(content);
 
-	// Настраиваем систему 2D-освещения (не обязательно, пример не использует тени)
-
-	auto color = Color4F::WHITE;
-	color.a = 0.5f;
-
-	// Свет сверху под углом, дающий удлиннение теней снизу
-	auto light = Rc<basic2d::SceneLight>::create(basic2d::SceneLightType::Ambient, Vec2(0.0f, 0.3f),
-			1.5f, color);
-
-	// Свет строго сверху, дающий базовые тени
-	auto ambient = Rc<basic2d::SceneLight>::create(basic2d::SceneLightType::Ambient,
-			Vec2(0.0f, 0.0f), 1.5f, color);
-
-	content->removeAllLights();
-
-	// Базовый белый заполняющий свет
-	content->setGlobalLight(Color4F::WHITE);
-
-	content->addLight(move(light));
-	content->addLight(move(ambient));
-
 	return true;
 }
 
-void ExampleScene::handleContentSizeDirty() {
-	Scene2d::handleContentSizeDirty();
+// Геометрия сцены изменилась, обнвляем содержимое соотвественно
+void ExampleScene::handleContentSizeDirty() { Scene2d::handleContentSizeDirty(); }
 
-	// Размещаем тексовое поле в нужном положении, в центре сцены
-	_helloWorldLabel->setPosition(_content->getContentSize() / 2.0f);
-}
+void ExampleScene::handleEnter(Scene *scene) { Scene2d::handleEnter(scene); }
 
+// Сцена была собрана и запущена режиссёром
 void ExampleScene::handlePresented(Director *dir) {
 	Scene2d::handlePresented(dir);
 
+	// Отображает итоговую архитектуру очереди отрисовки для сцены
 	_queue->describe([](StringView str) { std::cout << str; });
 }
+
+// Регистрируем ExampleScene как основной класс сцены для приложения
+// Под капотом:
+// - Создаётся функция, сопоставляющая окно приложения и сцену
+// - Эта функция регистрируется через механизм ShaderModule в качестве функции выбора сцены
+DEFINE_PRIMARY_SCENE_CLASS(ExampleScene)
 
 } // namespace stappler::xenolith::app

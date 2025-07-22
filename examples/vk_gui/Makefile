@@ -41,7 +41,8 @@ LOCAL_MODULES_PATHS = \
 # Используемые модули
 LOCAL_MODULES := \
 	xenolith_application \
-	xenolith_renderer_material2d \
+	xenolith_renderer_simpleui \
+	xenolith_backend_vk
 
 #	xenolith_resources_assets
 
@@ -52,9 +53,6 @@ LOCAL_INCLUDES_DIRS :=
 LOCAL_INCLUDES_OBJS := src
 
 LOCAL_SHADERS_DIR := shaders
-
-# Файл исходного кода, содержащий функцию main
-LOCAL_MAIN := main.cpp
 
 # Android config
 LOCAL_ANDROID_MK := proj.android/app/Android.mk # path to root Android.mk
