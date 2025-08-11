@@ -7,24 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2670E26B2CC5898700B3A76A /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2670E26A2CC5898700B3A76A /* main.cpp */; };
-		268C42302CC8F730006E6D5D /* core.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 268C422F2CC8F730006E6D5D /* core.framework */; };
-		268C42322CC8F730006E6D5D /* crypto.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 268C42312CC8F730006E6D5D /* crypto.framework */; };
-		268C42342CC8F730006E6D5D /* data.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 268C42332CC8F730006E6D5D /* data.framework */; };
+		260E7B412E03C995007F707F /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 260E7B402E03C995007F707F /* main.cpp */; };
+		260E7D682E03D2D1007F707F /* MacOsFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 260E7D672E03D2D1007F707F /* MacOsFramework.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		268C47C82CCA3696006E6D5D /* PBXContainerItemProxy */ = {
+		260E7D662E03D2D1007F707F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 268C479B2CCA368C006E6D5D /* core.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 268C47062CCA31A8006E6D5D;
-			remoteInfo = "libstappler-core";
+			containerPortal = 260E7A832E03C8CD007F707F /* genpasswd.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4263001DF756A0D0009AC7B1;
+			remoteInfo = MacOsFramework;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		2670E2312CC5852300B3A76A /* CopyFiles */ = {
+		260E761B2E0390DD007F707F /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -33,74 +31,65 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		268C422B2CC8F2D2006E6D5D /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		2670E2332CC5852300B3A76A /* commandline */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = commandline; sourceTree = BUILT_PRODUCTS_DIR; };
-		2670E26A2CC5898700B3A76A /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../main.cpp; sourceTree = SOURCE_ROOT; };
-		268C422F2CC8F730006E6D5D /* core.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = core.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		268C42312CC8F730006E6D5D /* crypto.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = crypto.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		268C42332CC8F730006E6D5D /* data.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = data.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		268C479B2CCA368C006E6D5D /* core.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = core.xcodeproj; path = "../../../core/proj.macos/core.xcodeproj"; sourceTree = "<group>"; };
-		26B574E72CC5BC45006C4372 /* macos.projectconfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = macos.projectconfig.xcconfig; sourceTree = "<group>"; };
+		260E761D2E0390DD007F707F /* commandline */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = commandline; sourceTree = BUILT_PRODUCTS_DIR; };
+		260E76322E039110007F707F /* MacOsFramework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MacOsFramework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		260E76392E0391F1007F707F /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		260E763B2E0391F8007F707F /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
+		260E763D2E039221007F707F /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		260E7A832E03C8CD007F707F /* genpasswd.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = genpasswd.xcodeproj; path = "stappler-build/mac/genpasswd.xcodeproj"; sourceTree = "<group>"; };
+		260E7B3F2E03C8DE007F707F /* project.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = project.xcconfig; path = "stappler-build/mac/project.xcconfig"; sourceTree = "<group>"; };
+		260E7B402E03C995007F707F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		2670E2302CC5852300B3A76A /* Frameworks */ = {
+		260E761A2E0390DD007F707F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				268C42302CC8F730006E6D5D /* core.framework in Frameworks */,
-				268C42322CC8F730006E6D5D /* crypto.framework in Frameworks */,
-				268C42342CC8F730006E6D5D /* data.framework in Frameworks */,
+				260E7D682E03D2D1007F707F /* MacOsFramework.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2670E22A2CC5852300B3A76A = {
+		260E76142E0390DD007F707F = {
 			isa = PBXGroup;
 			children = (
-				268C479B2CCA368C006E6D5D /* core.xcodeproj */,
-				2670E26A2CC5898700B3A76A /* main.cpp */,
-				2670E2502CC585B500B3A76A /* Frameworks */,
-				2670E2342CC5852300B3A76A /* Products */,
-				26B574E72CC5BC45006C4372 /* macos.projectconfig.xcconfig */,
+				260E7B3F2E03C8DE007F707F /* project.xcconfig */,
+				260E7B402E03C995007F707F /* main.cpp */,
+				260E7A832E03C8CD007F707F /* genpasswd.xcodeproj */,
+				260E76312E039110007F707F /* Frameworks */,
+				260E761E2E0390DD007F707F /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		2670E2342CC5852300B3A76A /* Products */ = {
+		260E761E2E0390DD007F707F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2670E2332CC5852300B3A76A /* commandline */,
+				260E761D2E0390DD007F707F /* commandline */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		2670E2502CC585B500B3A76A /* Frameworks */ = {
+		260E76312E039110007F707F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				268C422F2CC8F730006E6D5D /* core.framework */,
-				268C42312CC8F730006E6D5D /* crypto.framework */,
-				268C42332CC8F730006E6D5D /* data.framework */,
+				260E763D2E039221007F707F /* Foundation.framework */,
+				260E763B2E0391F8007F707F /* UniformTypeIdentifiers.framework */,
+				260E76392E0391F1007F707F /* CoreFoundation.framework */,
+				260E76322E039110007F707F /* MacOsFramework.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		268C479E2CCA368C006E6D5D /* Products */ = {
+		260E7A842E03C8CD007F707F /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				260E7D672E03D2D1007F707F /* MacOsFramework.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,87 +97,87 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2670E2322CC5852300B3A76A /* commandline */ = {
+		260E761C2E0390DD007F707F /* commandline */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2670E23A2CC5852300B3A76A /* Build configuration list for PBXNativeTarget "commandline" */;
+			buildConfigurationList = 260E76242E0390DD007F707F /* Build configuration list for PBXNativeTarget "commandline" */;
 			buildPhases = (
-				2670E22F2CC5852300B3A76A /* Sources */,
-				2670E2302CC5852300B3A76A /* Frameworks */,
-				2670E2312CC5852300B3A76A /* CopyFiles */,
-				268C422B2CC8F2D2006E6D5D /* Embed Frameworks */,
+				260E76192E0390DD007F707F /* Sources */,
+				260E761A2E0390DD007F707F /* Frameworks */,
+				260E761B2E0390DD007F707F /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				268C47C92CCA3696006E6D5D /* PBXTargetDependency */,
 			);
 			name = commandline;
 			packageProductDependencies = (
 			);
 			productName = commandline;
-			productReference = 2670E2332CC5852300B3A76A /* commandline */;
+			productReference = 260E761D2E0390DD007F707F /* commandline */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		2670E22B2CC5852300B3A76A /* Project object */ = {
+		260E76152E0390DD007F707F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 1640;
 				TargetAttributes = {
-					2670E2322CC5852300B3A76A = {
-						CreatedOnToolsVersion = 16.0;
+					260E761C2E0390DD007F707F = {
+						CreatedOnToolsVersion = 16.4;
 					};
 				};
 			};
-			buildConfigurationList = 2670E22E2CC5852300B3A76A /* Build configuration list for PBXProject "commandline" */;
+			buildConfigurationList = 260E76182E0390DD007F707F /* Build configuration list for PBXProject "commandline" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 2670E22A2CC5852300B3A76A;
+			mainGroup = 260E76142E0390DD007F707F;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 2670E2342CC5852300B3A76A /* Products */;
+			productRefGroup = 260E761E2E0390DD007F707F /* Products */;
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 268C479E2CCA368C006E6D5D /* Products */;
-					ProjectRef = 268C479B2CCA368C006E6D5D /* core.xcodeproj */;
+					ProductGroup = 260E7A842E03C8CD007F707F /* Products */;
+					ProjectRef = 260E7A832E03C8CD007F707F /* genpasswd.xcodeproj */;
 				},
 			);
 			projectRoot = "";
 			targets = (
-				2670E2322CC5852300B3A76A /* commandline */,
+				260E761C2E0390DD007F707F /* commandline */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXReferenceProxy section */
+		260E7D672E03D2D1007F707F /* MacOsFramework.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = MacOsFramework.framework;
+			remoteRef = 260E7D662E03D2D1007F707F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
 /* Begin PBXSourcesBuildPhase section */
-		2670E22F2CC5852300B3A76A /* Sources */ = {
+		260E76192E0390DD007F707F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2670E26B2CC5898700B3A76A /* main.cpp in Sources */,
+				260E7B412E03C995007F707F /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		268C47C92CCA3696006E6D5D /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "libstappler-core";
-			targetProxy = 268C47C82CCA3696006E6D5D /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
-		2670E2382CC5852300B3A76A /* Debug */ = {
+		260E76222E0390DD007F707F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -241,7 +230,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -249,7 +238,7 @@
 			};
 			name = Debug;
 		};
-		2670E2392CC5852300B3A76A /* Release */ = {
+		260E76232E0390DD007F707F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -296,60 +285,53 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
 			};
 			name = Release;
 		};
-		2670E23B2CC5852300B3A76A /* Debug */ = {
+		260E76252E0390DD007F707F /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 26B574E72CC5BC45006C4372 /* macos.projectconfig.xcconfig */;
+			baseConfigurationReference = 260E7B3F2E03C8DE007F707F /* project.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				MACOSX_DEPLOYMENT_TARGET = 12.4;
-				ONLY_ACTIVE_ARCH = NO;
-				OTHER_LDFLAGS = "$(STAPPLER_MACOS_GENERAL_LDFLAGS)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = macosx;
 			};
 			name = Debug;
 		};
-		2670E23C2CC5852300B3A76A /* Release */ = {
+		260E76262E0390DD007F707F /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 26B574E72CC5BC45006C4372 /* macos.projectconfig.xcconfig */;
+			baseConfigurationReference = 260E7B3F2E03C8DE007F707F /* project.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				MACOSX_DEPLOYMENT_TARGET = 12.4;
-				OTHER_LDFLAGS = "$(STAPPLER_MACOS_GENERAL_LDFLAGS)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = macosx;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2670E22E2CC5852300B3A76A /* Build configuration list for PBXProject "commandline" */ = {
+		260E76182E0390DD007F707F /* Build configuration list for PBXProject "commandline" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2670E2382CC5852300B3A76A /* Debug */,
-				2670E2392CC5852300B3A76A /* Release */,
+				260E76222E0390DD007F707F /* Debug */,
+				260E76232E0390DD007F707F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2670E23A2CC5852300B3A76A /* Build configuration list for PBXNativeTarget "commandline" */ = {
+		260E76242E0390DD007F707F /* Build configuration list for PBXNativeTarget "commandline" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2670E23B2CC5852300B3A76A /* Debug */,
-				2670E23C2CC5852300B3A76A /* Release */,
+				260E76252E0390DD007F707F /* Debug */,
+				260E76262E0390DD007F707F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 2670E22B2CC5852300B3A76A /* Project object */;
+	rootObject = 260E76152E0390DD007F707F /* Project object */;
 }

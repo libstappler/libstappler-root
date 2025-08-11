@@ -115,9 +115,6 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 	// выводим подробности об окружении, если запрошен флаг подробностей
 	if (opts.getBool("verbose")) {
 		std::cerr << " Current work dir: " << stappler::filesystem::currentDir<Interface>() << "\n";
-		std::cerr << " Documents dir: " << stappler::filesystem::documentsPathReadOnly<Interface>() << "\n";
-		std::cerr << " Cache dir: " << stappler::filesystem::cachesPathReadOnly<Interface>() << "\n";
-		std::cerr << " Writable dir: " << stappler::filesystem::writablePathReadOnly<Interface>() << "\n";
 		std::cerr << " Options: " << stappler::data::EncodeFormat::Pretty << opts << "\n";
 		if (!args.empty()) {
 			std::cerr << " Arguments: \n";

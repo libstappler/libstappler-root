@@ -154,7 +154,11 @@ SP_EXTERN_C int main(int argc, const char *argv[]) {
 		std::cout << "Wakeup: " << status << "\n";
 
 		status = looper->run();
+	
+		std::cout << "Wakeup 2: " << status << "\n";
 
+		status = looper->run();
+	
 		thread.join();
 		thread2.join();
 
