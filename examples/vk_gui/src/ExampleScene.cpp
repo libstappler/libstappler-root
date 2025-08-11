@@ -76,7 +76,7 @@ void ExampleScene::handlePresented(Director *dir) {
 	Scene2d::handlePresented(dir);
 
 	// Отображает итоговую архитектуру очереди отрисовки для сцены
-	_queue->describe([](StringView str) { std::cout << str; });
+	//_queue->describe([](StringView str) { std::cout << str; });
 }
 
 // Регистрируем ExampleScene как основной класс сцены для приложения

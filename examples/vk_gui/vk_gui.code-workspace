@@ -1,0 +1,33 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../core"
+		},
+		{
+			"path": "../../xenolith"
+		}
+	],
+	"settings": {
+		"makefile.launchConfigurations": [
+			{
+				"cwd": "${workspaceFolder}",
+				"binaryPath": "${workspaceFolder}/stappler-build/host/debug/gcc/testapp",
+				"binaryArgs": []
+			}
+		],
+		"makefile.configurations": [
+			{
+				"name" : "Debug",
+				"makeArgs": [
+					"-j8",
+				]
+			}
+		],
+		"editor.formatOnSave": true,
+		"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+		"clangd.arguments": ["-header-insertion=never"]
+	}
+}

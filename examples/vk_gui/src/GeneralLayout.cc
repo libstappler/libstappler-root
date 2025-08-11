@@ -21,12 +21,15 @@
  **/
 
 #include "GeneralLayout.h"
+#include "SPLog.h"
+#include "XL2dSceneLayout.h"
 #include "XLContextInfo.h"
 #include "XLSimpleButton.h"
 #include "XLDirector.h"
 #include "XLAppWindow.h"
 #include "XL2dSceneContent.h"
 #include "MonitorModeSelectionLayout.h"
+#include "XlCoreMonitorInfo.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
@@ -69,12 +72,14 @@ bool GeneralLayout::init() {
 }
 
 void GeneralLayout::handleEnter(Scene *scene) {
+	log::debug("GeneralLayout", "handleEnter");
 	SceneLayout2d::handleEnter(scene);
 	updateScreenInfo();
 	rebuildMenu();
 }
 
 void GeneralLayout::handleContentSizeDirty() {
+	log::debug("GeneralLayout", "handleContentSizeDirty");
 	SceneLayout2d::handleContentSizeDirty();
 
 	auto cs = getContentSize();
@@ -86,6 +91,14 @@ void GeneralLayout::handleContentSizeDirty() {
 	// Задаём размер меню
 	// Разворачиваем на полную высоту, но ограничиваем максимальную ширину
 	_menu->setContentSize(Size2(std::min(_contentSize.width, 480.0f), _contentSize.height));
+}
+
+void GeneralLayout::handleForeground(basic2d::SceneContent2d *l, basic2d::SceneLayout2d *overlay) {
+	log::debug("GeneralLayout", "handleForeground");
+	basic2d::SceneLayout2d::handleForeground(l, overlay);
+
+	updateScreenInfo();
+	rebuildMenu();
 }
 
 void GeneralLayout::rebuildMenu() {
@@ -125,11 +138,23 @@ void GeneralLayout::rebuildMenu() {
 					}, 200.0f);
 					_menu->getController()->onScrollPosition(true);
 				}
+				if (type == "text/plain" && !bytes.empty()) {
+					log::info("GeneralLayout", "Clipboard: ", bytes.readString());
+				}
 			}, [](SpanView<StringView> typeList) -> StringView {
 				StringView ret;
 				for (auto &it : typeList) {
 					if (it == "image/png") {
 						ret = it;
+						break;
+					}
+				}
+				if (ret.empty()) {
+					for (auto &it : typeList) {
+						if (it == "text/plain") {
+							ret = it;
+							break;
+						}
 					}
 				}
 				return ret;
@@ -168,12 +193,12 @@ void GeneralLayout::rebuildMenu() {
 
 	if (_director) {
 		auto w = _director->getWindow();
-		if (hasFlag(w->getCapabilities(), WindowCapabilities::FullscreenSwitch)) {
+		if (hasFlag(w->getCapabilities(), WindowCapabilities::Fullscreen)) {
 			if (w->isFullscreen()) {
 				_menu->getController()->addItem([this](const ScrollController::Item &) -> Rc<Node> {
 					return Rc<ButtonWithLabel>::create("Exit fullscreen", [this] {
-						_director->getWindow()->setFullscreen(MonitorId(MonitorId::None),
-								ModeInfo(ModeInfo::Current), [](Status) { });
+						_director->getWindow()->setFullscreen(FullscreenInfo(FullscreenInfo::None),
+								[](Status) { });
 					});
 				}, 64.0f, ZOrder(0));
 			}
@@ -235,6 +260,7 @@ void GeneralLayout::toggleExitGuard() {
 }
 
 void GeneralLayout::updateScreenInfo() {
+	log::debug("GeneralLayout", "updateScreenInfo");
 	using namespace simpleui;
 	if (_director) {
 		_director->getWindow()->acquireScreenInfo([this](NotNull<ScreenInfo> screenInfo) {

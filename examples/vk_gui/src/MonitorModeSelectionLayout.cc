@@ -26,6 +26,7 @@
 #include "XLSimpleButton.h"
 #include "XLDirector.h"
 #include "XLAppWindow.h"
+#include "XlCoreMonitorInfo.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
@@ -75,7 +76,8 @@ bool MonitorModeSelectionLayout::init(NotNull<ScreenInfo> info, uint32_t index) 
 			controller->addItem([this, name, mode](const ScrollController::Item &) -> Rc<Node> {
 				return Rc<ButtonWithLabel>::create(name, [this, mode] {
 					_director->getWindow()->setFullscreen(
-							MonitorId(_screenInfo->monitors[_monitorIndex]), ModeInfo(mode),
+							FullscreenInfo{_screenInfo->monitors[_monitorIndex], mode,
+								FullscreenFlags::Exclusive},
 							[this](Status s) {
 						if (s == Status::Ok) {
 							this->pop();

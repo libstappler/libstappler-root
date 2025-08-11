@@ -37,6 +37,9 @@ public:
 	virtual void handleEnter(Scene *) override;
 	virtual void handleContentSizeDirty() override;
 
+	virtual void handleForeground(basic2d::SceneContent2d *l,
+			basic2d::SceneLayout2d *overlay) override;
+
 protected:
 	void rebuildMenu();
 	void toggleExitGuard();
