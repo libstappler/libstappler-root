@@ -60,7 +60,7 @@ bool MonitorModeSelectionLayout::init(NotNull<ScreenInfo> info, uint32_t index) 
 
 		auto monName = toString("Fullscreen to: ", mon.name, " (", mon.edid.vendor, " ",
 				mon.edid.model, " ", mon.edid.serial, ")");
-		controller->addItem([this, monName](const ScrollController::Item &) -> Rc<Node> {
+		controller->addItem([monName](const ScrollController::Item &) -> Rc<Node> {
 			return Rc<ButtonWithLabel>::create(monName);
 		}, 48.0f);
 

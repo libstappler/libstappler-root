@@ -4,6 +4,9 @@
 			"path": "."
 		},
 		{
+			"path": "../../build"
+		},
+		{
 			"path": "../../core"
 		},
 		{
@@ -14,7 +17,17 @@
 		"makefile.launchConfigurations": [
 			{
 				"cwd": "${workspaceFolder}",
-				"binaryPath": "${workspaceFolder}/stappler-build/host/debug/gcc/testapp",
+				"binaryPath": "${workspaceFolder}/stappler-build/host/debug/clang/testapp",
+				"binaryArgs": []
+			},
+			{
+				"cwd": "${workspaceFolder}",
+				"binaryPath": "${workspaceFolder}/stappler-build/host/clang/gcc/testapp",
+				"binaryArgs": []
+			},
+			{
+				"cwd": "${workspaceFolder}/stappler-build/host/debug/clang",
+				"binaryPath": "${workspaceFolder}/stappler-build/host/debug/clang/testapp",
 				"binaryArgs": []
 			}
 		],
@@ -28,6 +41,7 @@
 		],
 		"editor.formatOnSave": true,
 		"editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
-		"clangd.arguments": ["-header-insertion=never"]
+		"clangd.arguments": ["-header-insertion=never", "--compile-commands-dir=${workspaceFolder}"],
+		"debug.allowBreakpointsEverywhere": true
 	}
 }
