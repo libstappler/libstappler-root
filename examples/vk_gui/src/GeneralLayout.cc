@@ -123,7 +123,7 @@ void GeneralLayout::rebuildMenu() {
 	controller->addItem([this](const ScrollController::Item &) -> Rc<Node> {
 		return Rc<ButtonWithLabel>::create("Read from clibboard", [this] {
 			_director->getApplication()->readFromClipboard(
-					[this](BytesView bytes, StringView type) {
+					[this](Status, BytesView bytes, StringView type) {
 				if (type == "image/png" && !bytes.empty()) {
 					auto tex = _director->getResourceCache()->addExternalEncodedImage("Clipboard",
 							core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM,
@@ -138,7 +138,7 @@ void GeneralLayout::rebuildMenu() {
 					}, 200.0f);
 					_menu->getController()->onScrollPosition(true);
 				}
-				if (type == "text/plain" && !bytes.empty()) {
+				if (type.starts_with("text/plain") && !bytes.empty()) {
 					log::info("GeneralLayout", "Clipboard: ", bytes.readString());
 				}
 			}, [](SpanView<StringView> typeList) -> StringView {
@@ -151,7 +151,7 @@ void GeneralLayout::rebuildMenu() {
 				}
 				if (ret.empty()) {
 					for (auto &it : typeList) {
-						if (it == "text/plain") {
+						if (it.starts_with("text/plain")) {
 							ret = it;
 							break;
 						}
@@ -172,13 +172,27 @@ void GeneralLayout::rebuildMenu() {
 		return Rc<ButtonWithLabel>::create("Capture screenshot", [this] {
 			_director->getWindow()->captureScreenshot(
 					[this](const core::ImageInfoData &image, BytesView data) {
-				auto bmp = core::getBitmap(image, data);
-				if (bmp) {
-					auto png = bmp.write();
+				struct BitmapContainer : public Ref {
+					Bitmap bmp;
+					BitmapContainer(Bitmap &&b) : bmp(sp::move(b)) { }
+				};
 
-					_director->getApplication()->writeToClipboard(png, "image/png");
-					log::debug("ExampleScene", "Capture screenshot");
-				}
+				auto container = Rc<BitmapContainer>::create(core::getBitmap(image, data));
+
+				auto imageTypes = Vector<StringView>{
+					"image/png",
+					"image/webp",
+				};
+				_director->getApplication()->writeToClipboard(
+						Function<Bytes(StringView)>([container](StringView type) -> Bytes {
+					if (type == "image/png") {
+						return container->bmp.write(bitmap::FileFormat::Png);
+					} else if (type == "image/webp") {
+						return container->bmp.write(bitmap::FileFormat::WebpLossless);
+					}
+					return Bytes();
+				}),
+						imageTypes);
 			});
 		});
 	}, 32.0f);
@@ -199,6 +213,17 @@ void GeneralLayout::rebuildMenu() {
 					return Rc<ButtonWithLabel>::create("Exit fullscreen", [this] {
 						_director->getWindow()->setFullscreen(FullscreenInfo(FullscreenInfo::None),
 								[](Status) { });
+					});
+				}, 64.0f, ZOrder(0));
+			} else {
+				_menu->getController()->addItem([this](const ScrollController::Item &) -> Rc<Node> {
+					return Rc<ButtonWithLabel>::create("Fullscreen on current", [this] {
+						_director->getWindow()->setFullscreen(
+								FullscreenInfo(FullscreenInfo::Current), [](Status s) {
+							if (s != Status::Ok) {
+								log::error("GeneralLayout", "Fail to set fullscreen: ", s);
+							}
+						});
 					});
 				}, 64.0f, ZOrder(0));
 			}

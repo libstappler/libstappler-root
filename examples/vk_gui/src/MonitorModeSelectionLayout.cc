@@ -66,7 +66,8 @@ bool MonitorModeSelectionLayout::init(NotNull<ScreenInfo> info, uint32_t index) 
 
 		uint32_t modeIndex = 0;
 		for (auto &mode : mon.modes) {
-			auto name = toString(mode.width, " x ", mode.height, " @ ", mode.rate);
+			auto name =
+					toString(mode.width, " x ", mode.height, " @ ", mode.rate, " x", mode.scale);
 			if (modeIndex == mon.currentMode) {
 				name = toString(name, " (current)");
 			}
@@ -79,7 +80,7 @@ bool MonitorModeSelectionLayout::init(NotNull<ScreenInfo> info, uint32_t index) 
 							FullscreenInfo{_screenInfo->monitors[_monitorIndex], mode,
 								FullscreenFlags::Exclusive},
 							[this](Status s) {
-						if (s == Status::Ok) {
+						if (s == Status::Ok || s == Status::Declined) {
 							this->pop();
 						} else {
 							log::error("MonitorModeSelectionLayout", "Fail to set fullscreen: ", s);

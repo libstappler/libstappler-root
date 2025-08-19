@@ -63,6 +63,8 @@ bool ExampleScene::init(NotNull<AppThread> app, NotNull<AppWindow> window,
 	// Применяем содержимое сцены
 	setContent(content);
 
+	setFpsVisible(true);
+
 	return true;
 }
 
