@@ -30,6 +30,7 @@
 #include "XL2dSceneContent.h"
 #include "MonitorModeSelectionLayout.h"
 #include "XlCoreMonitorInfo.h"
+#include "XLEventListener.h"
 
 namespace STAPPLER_VERSIONIZED stappler::xenolith::app {
 
@@ -48,23 +49,20 @@ bool GeneralLayout::init() {
 	// Для работы прокрутке необходим контроллер, который наполняется элементами вдоль основной оси
 	_menu->setController(Rc<ScrollController>::create());
 
-	auto inputListener = addComponent(Rc<InputListener>::create());
-	inputListener->setCloseRequestCallback([](bool value) {
-		if (value) {
-			log::debug("ExampleScene", "close request received");
+	auto eventListener = addSystem(Rc<EventListener>::create());
+	eventListener->listenForEvent(Context::onSystemNotification, [this](const Event &ev) {
+		auto n = SystemNotification(ev.getDataValue().getInteger());
+		if (n == SystemNotification::DisplayChanged) {
+			updateScreenInfo();
 		}
-		return true;
 	});
 
-	inputListener->setScreenUpdateCallback([this](bool value) {
-		// monitor list or modes lists updated
-		updateScreenInfo();
-		return true;
-	});
-
-	inputListener->setFullscreenCallback([this](bool value) {
+	auto inputListener = addSystem(Rc<InputListener>::create());
+	inputListener->setWindowStateCallback([this](WindowState state, WindowState changes) {
 		// enter or exit fullscreen mode
-		rebuildMenu();
+		if (hasFlag(changes, WindowState::Fullscreen)) {
+			rebuildMenu();
+		}
 		return true;
 	});
 
@@ -125,7 +123,8 @@ void GeneralLayout::rebuildMenu() {
 			_director->getApplication()->readFromClipboard(
 					[this](Status, BytesView bytes, StringView type) {
 				if (type == "image/png" && !bytes.empty()) {
-					auto tex = _director->getResourceCache()->addExternalEncodedImage("Clipboard",
+					auto tex = _director->getResourceCache()->addExternalEncodedImage(
+							toString("Clipboard", Time::now().toMicros()),
 							core::ImageInfo(core::ImageFormat::R8G8B8A8_UNORM,
 									core::ImageUsage::Sampled),
 							bytes);
@@ -141,6 +140,9 @@ void GeneralLayout::rebuildMenu() {
 				if (type.starts_with("text/plain") && !bytes.empty()) {
 					log::info("GeneralLayout", "Clipboard: ", bytes.readString());
 				}
+				if (type.starts_with("text/html") && !bytes.empty()) {
+					log::info("GeneralLayout", "Clipboard: ", bytes.readString());
+				}
 			}, [](SpanView<StringView> typeList) -> StringView {
 				StringView ret;
 				for (auto &it : typeList) {
@@ -151,6 +153,10 @@ void GeneralLayout::rebuildMenu() {
 				}
 				if (ret.empty()) {
 					for (auto &it : typeList) {
+						if (it.starts_with("text/html")) {
+							ret = it;
+							break;
+						}
 						if (it.starts_with("text/plain")) {
 							ret = it;
 							break;
@@ -197,18 +203,18 @@ void GeneralLayout::rebuildMenu() {
 		});
 	}, 32.0f);
 
-	/*controller->addItem([this](const ScrollController::Item &) -> Rc<Node> {
+	controller->addItem([this](const ScrollController::Item &) -> Rc<Node> {
 		// Cоздаём простую конпку
 		// Её позиционирование и размер контроллер прокрутки настроит сам
 		return Rc<ButtonWithLabel>::create(_exitGuardRetained ? "Disable Exit Guard"
 															  : "Enable Exit Guard",
 				[this] { toggleExitGuard(); });
-	}, 32.0f, ZOrder(0), "ExitGuardButton");*/
+	}, 32.0f, ZOrder(0), "ExitGuardButton");
 
 	if (_director) {
 		auto w = _director->getWindow();
 		if (hasFlag(w->getCapabilities(), WindowCapabilities::Fullscreen)) {
-			if (w->isFullscreen()) {
+			if (hasFlag(w->getWindowState(), WindowState::Fullscreen)) {
 				_menu->getController()->addItem([this](const ScrollController::Item &) -> Rc<Node> {
 					return Rc<ButtonWithLabel>::create("Exit fullscreen", [this] {
 						_director->getWindow()->setFullscreen(FullscreenInfo(FullscreenInfo::None),
@@ -263,10 +269,8 @@ void GeneralLayout::rebuildMenu() {
 }
 
 void GeneralLayout::toggleExitGuard() {
-	auto w = _director->getWindow();
-
 	if (!_exitGuardRetained) {
-		w->retainExitGuard();
+		_sceneContent->setCloseGuardEnabled(true);
 		_exitGuardRetained = true;
 
 		auto item = _menu->getController()->getItem("ExitGuardButton");
@@ -274,7 +278,7 @@ void GeneralLayout::toggleExitGuard() {
 			static_cast<simpleui::ButtonWithLabel *>(item->node)->setString("Disable Exit guard");
 		}
 	} else {
-		w->releaseExitGuard();
+		_sceneContent->setCloseGuardEnabled(false);
 		_exitGuardRetained = false;
 
 		auto item = _menu->getController()->getItem("ExitGuardButton");

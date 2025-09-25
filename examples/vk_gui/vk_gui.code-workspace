@@ -26,8 +26,8 @@
 				"binaryArgs": []
 			},
 			{
-				"cwd": "${workspaceFolder}/stappler-build/host/debug/clang",
-				"binaryPath": "${workspaceFolder}/stappler-build/host/debug/clang/testapp",
+				"cwd": "${workspaceFolder}",
+				"binaryPath": "${workspaceFolder}\\stappler-build\\host\\debug\\clang\\testapp.exe",
 				"binaryArgs": []
 			}
 		],

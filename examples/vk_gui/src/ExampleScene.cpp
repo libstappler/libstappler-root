@@ -27,6 +27,7 @@
 #include "XLSimpleButton.h"
 #include "XLDirector.h"
 #include "XLAppWindow.h"
+#include "XLSimpleCloseGuardWidget.h"
 #include "ExampleScene.h"
 
 #include "SPBitmap.h"
@@ -59,6 +60,11 @@ bool ExampleScene::init(NotNull<AppThread> app, NotNull<AppWindow> window,
 
 	// Запускаем основной слой интерфейса
 	content->pushLayout(Rc<GeneralLayout>::create());
+
+	// Устанавливаем стандартный виджет для подтверждения выхода
+	content->setCloseGuardWidgetContructor([](NotNull<SceneContent>) -> Rc<CloseGuardWidget> {
+		return Rc<CloseGuardWidgetDefault>::create();
+	});
 
 	// Применяем содержимое сцены
 	setContent(content);
